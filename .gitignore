@@ -1,0 +1,14 @@
+*.DS_Store
+*__pycache__*
+*.ipynb_checkpoints
+*__MACOSX
+.vscode
+data
+checkpoints
+*lsf.*
+cna2zscore_checkpoints
+src/slurm-*
+libs
+sample_data
+feature_extractors/UniDet
+feature_extractors/new_unidet/model/Unified_learned_OCIM_R50_6x+2x.pth

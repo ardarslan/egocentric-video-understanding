@@ -1,0 +1,10 @@
+ego4d
+torch
+ipykernel
+jupyter
+opencv-python-headless
+pillow==9.5.0
+torchvision
+pandas
+transformers
+git+https://github.com/facebookresearch/detectron2.git
