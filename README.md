@@ -1,8 +1,9 @@
 # Add the following lines to ~/.profile
 
 ```
-export EGO4D_DATA_DIR=/srv/beegfs02/scratch/aarslan_data/data
+export BEEGFS_SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 export SCRATCH=/scratch/aarslan
+export TMPDIR=/scratch/aarslan/pip_temp
 export LC_ALL=C.UTF-8
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 export PYENV_ROOT="$SCRATCH/.pyenv"
@@ -32,7 +33,7 @@ ssh aarslan@robustus.ee.ethz.ch
 # Start a VS Code Server
 
 ```
-srun --time 720 --mem=16G --cpus-per-task=2 --gres=gpu:2 --pty bash -i
+srun --time 720 --gres=gpu:1 --nodelist=biwirender07 --pty bash -i
 
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900-5999 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```
@@ -59,9 +60,12 @@ pyenv rehash
 pyenv global 3.9.9
 
 pyenv update
+
+exit
+
 ```
 
-Close the terminal and run a new one.
+Open a new terminal.
 
 
 ```
@@ -146,7 +150,7 @@ Execute the following two commands:
 ```
 screen
 
-ego4d --output_directory="$EGO4D_DATA_DIR/ego4d_data" --datasets full_scale annotations --metadata --benchmarks EM --version v2
+ego4d --output_directory="$BEEGFS_SCRATCH/ego4d_data" --datasets full_scale annotations --metadata --benchmarks EM --version v2
 
 rm -rf aws
 ```

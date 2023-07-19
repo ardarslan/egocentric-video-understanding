@@ -1,10 +1,13 @@
+black
+flake8
 ego4d
-torch
+Django
 ipykernel
 jupyter
 opencv-python-headless
 pillow==9.5.0
-torchvision
 pandas
 transformers
+torch
+torchvision
 git+https://github.com/facebookresearch/detectron2.git

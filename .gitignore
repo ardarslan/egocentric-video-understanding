@@ -10,5 +10,5 @@ cna2zscore_checkpoints
 src/slurm-*
 libs
 sample_data
-feature_extractors/UniDet
-feature_extractors/new_unidet/model/Unified_learned_OCIM_R50_6x+2x.pth
+frame_feature_extractors/visor_hos/models/model_final_hos.pth
+frame_feature_extractors/unidet/models/Unified_learned_OCIM_R50_6x+2x.pth
