@@ -33,7 +33,7 @@ ssh aarslan@robustus.ee.ethz.ch
 # Start a VS Code Server
 
 ```
-srun --time 720 --gres=gpu:1 --nodelist=biwirender07 --pty bash -i
+srun --time 720 --gres=gpu:4 --nodelist=biwirender07 --pty bash -i
 
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900-5999 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```

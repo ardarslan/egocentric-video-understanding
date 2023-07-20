@@ -9,25 +9,10 @@ from unidet.unidet.config import add_unidet_config
 from typing import List, Tuple, Any
 
 
-def setup_cfg(args):
-    # load config from file and command-line arguments
-    cfg = get_cfg()
-    add_unidet_config(cfg)
-    cfg.merge_from_file(args.unidet_config_file)
-    cfg.merge_from_list(args.unidet_opts)
-    # Set score_threshold for builtin models
-    cfg.MODEL.RETINANET.SCORE_THRESH_TEST = args.unidet_confidence_threshold
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = args.unidet_confidence_threshold
-    cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = args.unidet_confidence_threshold
-    cfg.freeze()
-    return cfg
-
-
 class UnidetFrameFeatureExtractor(object):
     def __init__(self, args):
-        self.batch_size = 1
         self.device = args.device
-        cfg = setup_cfg(args)
+        cfg = self.setup_cfg(args)
         metadata = MetadataCatalog.get("__unused")
         unified_label_file = json.load(open(cfg.MULTI_DATASET.UNIFIED_LABEL_FILE))
         metadata.thing_classes = ["{}".format([xx for xx in x["name"].split("_") if xx != ""][0]) for x in unified_label_file["categories"]]
@@ -46,9 +31,22 @@ class UnidetFrameFeatureExtractor(object):
         ]
         self.file_name_wo_ext = "unidet_features"
 
-    def extract_frame_features(self, frame_indices: List[int], frames: List[np.array]) -> List[Tuple[Any, ...]]:
-        """frames[0] is in BGR format. The model expects BGR as well."""
-        detections = self.unidet_predictor(frames[0])["instances"].to(torch.device("cpu"))
+    def setup_cfg(self, args):
+        # load config from file and command-line arguments
+        cfg = get_cfg()
+        add_unidet_config(cfg)
+        cfg.merge_from_file(args.unidet_config_file)
+        cfg.merge_from_list(args.unidet_opts)
+        # Set score_threshold for builtin models
+        cfg.MODEL.RETINANET.SCORE_THRESH_TEST = args.unidet_confidence_threshold
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = args.unidet_confidence_threshold
+        cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = args.unidet_confidence_threshold
+        cfg.freeze()
+        return cfg
+
+    def extract_frame_features(self, frame_index: int, frame: np.array) -> List[Tuple[Any, ...]]:
+        """frame is in BGR format. The model expects BGR as well."""
+        detections = self.unidet_predictor(frame)["instances"].to(torch.device("cpu"))
         features = []
         for current_detection_index in range(len(detections)):
             current_detection = detections[current_detection_index]
@@ -64,7 +62,7 @@ class UnidetFrameFeatureExtractor(object):
             )
             features.append(
                 (
-                    frame_indices[0],
+                    frame_index,
                     current_detection_index,
                     x_top_left,
                     y_top_left,

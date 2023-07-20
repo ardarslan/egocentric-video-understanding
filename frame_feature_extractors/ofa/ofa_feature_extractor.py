@@ -10,7 +10,6 @@ from typing import List, Tuple, Any
 
 class OFAFrameFeatureExtractor(object):
     def __init__(self, args):
-        self.batch_size = 4
         mean, std = [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]
         resolution = 256
         self.patch_resize_transform = transforms.Compose(
@@ -40,11 +39,11 @@ class OFAFrameFeatureExtractor(object):
         self.column_names = ["frame_index", "question", "answer"]
         self.file_name_wo_ext = "ofa_features"
 
-    def extract_frame_features(self, frame_indices: List[int], frames: List[np.array]) -> List[Tuple[Any, ...]]:
+    def extract_frame_features(self, frame_index: int, frame: np.array) -> List[Tuple[Any, ...]]:
         """
         frames[0]: in BGR format. The model expects RGB, so we do frame[:, :, ::-1].
         """
-        patch_images = torch.vstack([self.patch_resize_transform(Image.fromarray(frame[:, :, ::-1])).unsqueeze(0) for frame in frames])
+        patch_images = self.patch_resize_transform(Image.fromarray(frame[:, :, ::-1])).unsqueeze(0)
         features = []
         for question in self.questions:
             input_ids = self.question_input_ids_mapping[question]
@@ -59,6 +58,6 @@ class OFAFrameFeatureExtractor(object):
             gen_output = self.generator.generate([self.model], data)
             gen = [gen_output[i][0]["tokens"] for i in range(len(gen_output))]
             gen = self.model.generate(input_ids, patch_images=patch_images, num_beams=5, no_repeat_ngram_size=3)
-            answers = self.tokenizer.batch_decode(gen, skip_special_tokens=True)
-            features.extend([(frame_indices[i], question, answers[i]) for i in range(len(frame_indices))])
+            answer = self.tokenizer.batch_decode(gen, skip_special_tokens=True)[0]
+            features.append((frame_index, question, answer))
         return features

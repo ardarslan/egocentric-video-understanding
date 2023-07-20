@@ -17,7 +17,6 @@ class VisorHOSFrameFeatureExtractor(object):
         register_epick_instances("epick_visor_2022_val_hos", {}, f"{version}/annotations/val.json", f"{version}/val")
         MetadataCatalog.get("epick_visor_2022_val_hos").thing_classes = ["hand", "object"]
         self.metadata = MetadataCatalog.get("epick_visor_2022_val_hos")
-        self.batch_size = 1
         cfg = get_cfg()
         point_rend.add_pointrend_config(cfg)
         cfg.merge_from_file(args.visor_hos_config_file)
@@ -143,9 +142,9 @@ class VisorHOSFrameFeatureExtractor(object):
         center = [int((x0 + x1) / 2), int((y0 + y1) / 2)]
         return center
 
-    def extract_frame_features(self, frame_indices: List[int], frames: List[np.array]) -> List[Tuple[Any, ...]]:
+    def extract_frame_features(self, frame_index: int, frame: np.array) -> List[Tuple[Any, ...]]:
         # """frames[0] is in BGR format."""
-        detections = self.hos_postprocessing(self.visor_hos_predictor(frames[0]))["instances"]
+        detections = self.hos_postprocessing(self.visor_hos_predictor(frame))["instances"]
         features = []
         for current_detection_index in range(len(detections)):
             current_detection = detections[current_detection_index]
@@ -163,7 +162,7 @@ class VisorHOSFrameFeatureExtractor(object):
             )
             features.append(
                 (
-                    frame_indices[0],
+                    frame_index,
                     current_detection_index,
                     x_top_left,
                     y_top_left,

@@ -1,6 +1,7 @@
 import os
 import argparse
 
+import ray
 import cv2
 import numpy as np
 import pandas as pd
@@ -16,6 +17,7 @@ def get_parser():
 
     parser.add_argument("--feature_name", type=str, choices=["unidet", "ofa", "visor-hos"], default="unidet")
     parser.add_argument("--device", type=str, choices=["cpu", "cuda"], default="cuda")
+    parser.add_argument("--num_devices", type=int, default=4)
     parser.add_argument(
         "--input_folder_path",
         type=str,
@@ -70,31 +72,22 @@ class FeatureExtractor(object):
         else:
             raise Exception(f"{self.feature_name} is not a valid feature name.")
 
+    def frame_from_video(self, cap):
+        while cap.isOpened():
+            success, frame = cap.read()
+            if success:
+                yield frame
+            else:
+                break
+
+    @ray.remote(num_gpus=1)
+    def extract_frame_features(self, frame_index: int, frame: np.array):
+        return self.feature_extractor.extract_frame_features(frame_index=frame_index, frame=frame)
+
     def extract_features(self, input_video_file_path: str, output_folder_path: str):
         cap = cv2.VideoCapture(input_video_file_path)
-        frame_index = 0
-        features = []
-        frame_indices = []
-        frames = []
-
-        while True:
-            if len(frame_indices) == self.feature_extractor.batch_size:
-                frames = np.vstack(frames)
-                features.extend(self.feature_extractor.extract_frame_features(frame_indices=frame_indices, frames=frames))
-                frame_indices = []
-                frames = []
-
-            if len(frame_indices) < self.feature_extractor.batch_size:
-                success, frame = cap.read()
-                if not success:
-                    break
-                frame_indices.append(frame_index)
-                frames.append(frame[None, ...])
-                frame_index += 1
-
-        if len(frame_indices) > 0:
-            features.extend(self.feature_extractor.extract_frame_features(frame_indices=frame_indices, frames=frames))
-
+        frame_generator = self.frame_from_video(cap)
+        features = [ray.get([self.extract_frame_features.remote(frame_index, frame) for frame_index, frame in enumerate(frame_generator)])]
         features_df = pd.DataFrame(
             data=features,
             columns=self.feature_extractor.column_names,
@@ -107,24 +100,29 @@ class FeatureExtractor(object):
             sep="\t",
             index=False,
         )
-
         cap.release()
 
 
 if __name__ == "__main__":
     args = get_parser().parse_args()
+    if args.device == "cuda":
+        ray.init(num_gpus=args.num_devices)
+    elif args.device == "cpu":
+        ray.init(num_cpus=args.num_devices)
+
     feature_extractor = FeatureExtractor(args=args)
 
-    for _, relative_file_dir, file_names in tqdm(os.walk(args.input_folder_path)):
-        relative_file_dir = "/".join(relative_file_dir)
-        for file_name in file_names:
-            if file_name[-4:] != ".mp4":
-                continue
-            file_name_wo_ext = file_name[:-4]
-            current_input_video_file_path = os.path.join(args.input_folder_path, relative_file_dir, file_name)
-            current_output_folder_path = os.path.join(args.output_folder_path, relative_file_dir, file_name_wo_ext)
-            os.makedirs(current_output_folder_path, exist_ok=True)
-            feature_extractor.extract_features(
-                input_video_file_path=current_input_video_file_path,
-                output_folder_path=current_output_folder_path,
-            )
+    for file_name in tqdm(list(os.listdir(args.input_folder_path))):
+        if file_name[-4:] != ".mp4":
+            continue
+        file_name_wo_ext = file_name[:-4]
+        current_input_video_file_path = os.path.join(args.input_folder_path, file_name)
+        current_output_folder_path = os.path.join(args.output_folder_path, file_name_wo_ext)
+        if os.path.exists(os.path.join(current_output_folder_path, feature_extractor.file_name_wo_ext + ".tsv")):
+            continue
+        os.makedirs(current_output_folder_path, exist_ok=True)
+        feature_extractor.extract_features(
+            input_video_file_path=current_input_video_file_path,
+            output_folder_path=current_output_folder_path,
+        )
+    ray.shutdown()
