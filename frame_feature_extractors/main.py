@@ -118,7 +118,7 @@ if __name__ == "__main__":
         file_name_wo_ext = file_name[:-4]
         current_input_video_file_path = os.path.join(args.input_folder_path, file_name)
         current_output_folder_path = os.path.join(args.output_folder_path, file_name_wo_ext)
-        if os.path.exists(os.path.join(current_output_folder_path, feature_extractor.file_name_wo_ext + ".tsv")):
+        if os.path.exists(os.path.join(current_output_folder_path, feature_extractor.feature_extractor.file_name_wo_ext + ".tsv")):
             continue
         os.makedirs(current_output_folder_path, exist_ok=True)
         feature_extractor.extract_features(
