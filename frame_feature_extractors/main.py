@@ -2,127 +2,75 @@ import os
 import argparse
 
 import ray
-import cv2
-import numpy as np
-import pandas as pd
-from tqdm import tqdm
 
-from unidet.unidet_feature_extractor import UnidetFrameFeatureExtractor
-from ofa.ofa_feature_extractor import OFAFrameFeatureExtractor
-from visor_hos.visor_hos_feature_extractor import VisorHOSFrameFeatureExtractor
+from utils import get_frame_feature_extractor, get_column_names, get_output_file_name
+from frame_feature_extractor import FrameFeatureExtractor
 
 
-def get_parser():
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
 
-    parser.add_argument("--feature_name", type=str, choices=["unidet", "ofa", "visor-hos"], default="unidet")
-    parser.add_argument("--device", type=str, choices=["cpu", "cuda"], default="cuda")
+    parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
     parser.add_argument("--num_devices", type=int, default=4)
+    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--frame_feature_name", type=str, choices=["visor_hos", "unidet", "ofa"], default="ofa")
+
+    parser.add_argument("--unidet_confidence_threshold", type=float, default=0.4)
+    parser.add_argument(
+        "--unidet_model_file_path",
+        type=str,
+        default="/home/aarslan/mq/frame_feature_extractors/unidet/models/Unified_learned_OCIM_R50_6x+2x.pth",
+    )
+    parser.add_argument(
+        "--unidet_config_file_path",
+        type=str,
+        default="/home/aarslan/mq/frame_feature_extractors/unidet/configs/Unified_learned_OCIM_R50_6x+2x.yaml",
+    )
+
+    parser.add_argument("--visor_hos_confidence_threshold", type=float, default=0.4)
+    parser.add_argument(
+        "--visor_hos_model_file_path",
+        type=str,
+        default="/home/aarslan/mq/frame_feature_extractors/visor_hos/models/model_final_hos.pth",
+    )
+    parser.add_argument(
+        "--visor_hos_config_file_path",
+        type=str,
+        default="/home/aarslan/mq/frame_feature_extractors/visor_hos/configs/hos_pointrend_rcnn_R_50_FPN_1x.yaml",
+    )
+
+    parser.add_argument(
+        "--ofa_model_file_path",
+        type=str,
+        default="/scratch/aarslan/mq_libs/OFA-huge",
+    )
+
     parser.add_argument(
         "--input_folder_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/full_scale",
-        help="The directory of the input videos.",
+        default="/home/aarslan/mq/sample_data/inputs",
     )
     parser.add_argument(
         "--output_folder_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/frame_features",
-        help="The directory of the output videos.",
+        default="/home/aarslan/mq/sample_data/outputs",
     )
+    args = parser.parse_args()
 
-    # ofa configs
-    parser.add_argument(
-        "--ofa_checkpoint_dir",
-        type=str,
-        default="/scratch/aarslan/mq_libs/OFA-huge",
-        help="The directory of the checkpoint of the pre-trained OFA-huge model.",
-    )
+    ray.init(num_gpus=args.num_devices)
 
-    # unidet configs
-    parser.add_argument(
-        "--unidet_config_file",
-        default="/home/aarslan/mq/frame_feature_extractors/unidet/configs/Unified_learned_OCIM_R50_6x+2x.yaml",
-        type=str,
-    )
-    parser.add_argument("--unidet_confidence_threshold", type=float, default=0.4)
-    parser.add_argument(
-        "--unidet_opts",
-        type=list,
-        default=["MODEL.WEIGHTS", "/home/aarslan/mq/frame_feature_extractors/unidet/models/Unified_learned_OCIM_R50_6x+2x.pth", "MODEL.DEVICE", "cuda"],
-        nargs=argparse.REMAINDER,
-    )
+    frame_feature_extractor_pool = ray.util.ActorPool([get_frame_feature_extractor(args=args) for _ in range(args.num_devices)])
+    column_names = get_column_names(args=args)
+    output_file_name = get_output_file_name(args=args)
 
-    # visor-hos configs
-    parser.add_argument("--visor_hos_config_file", default="/home/aarslan/mq/frame_feature_extractors/visor_hos/configs/hos_pointrend_rcnn_R_50_FPN_1x.yaml", type=str)
-    parser.add_argument("--visor_hos_model_file", default="/home/aarslan/mq/frame_feature_extractors/visor_hos/models/model_final_hos.pth", type=str)
-
-    return parser
-
-
-class FeatureExtractor(object):
-    def __init__(self, args):
-        self.feature_name = args.feature_name
-        if self.feature_name == "unidet":
-            self.feature_extractor = UnidetFrameFeatureExtractor(args=args)
-        elif self.feature_name == "ofa":
-            self.feature_extractor = OFAFrameFeatureExtractor(args=args)
-        elif self.feature_name == "visor-hos":
-            self.feature_extractor = VisorHOSFrameFeatureExtractor(args=args)
-        else:
-            raise Exception(f"{self.feature_name} is not a valid feature name.")
-
-    def frame_from_video(self, cap):
-        while cap.isOpened():
-            success, frame = cap.read()
-            if success:
-                yield frame
-            else:
-                break
-
-    @ray.remote(num_gpus=1)
-    def extract_frame_features(self, frame_index: int, frame: np.array):
-        return self.feature_extractor.extract_frame_features(frame_index=frame_index, frame=frame)
-
-    def extract_features(self, input_video_file_path: str, output_folder_path: str):
-        cap = cv2.VideoCapture(input_video_file_path)
-        frame_generator = self.frame_from_video(cap)
-        features = [ray.get([self.extract_frame_features.remote(frame_index, frame) for frame_index, frame in enumerate(frame_generator)])]
-        features_df = pd.DataFrame(
-            data=features,
-            columns=self.feature_extractor.column_names,
+    for input_video_file_name in os.listdir(args.input_folder_path):
+        input_video_file_path = os.path.join(args.input_folder_path, input_video_file_name)
+        frame_indices_batches, frames_batches = FrameFeatureExtractor.get_frame_indices_batches_and_frames_batches(input_video_file_path=input_video_file_path, batch_size=args.batch_size)
+        results_list = frame_feature_extractor_pool.map(
+            lambda frame_feature_extractor, inputs: frame_feature_extractor.predictor_function.remote(inputs[0], inputs[1]), zip(frame_indices_batches, frames_batches)
         )
-        features_df.to_csv(
-            os.path.join(
-                output_folder_path,
-                self.feature_extractor.file_name_wo_ext + ".tsv",
-            ),
-            sep="\t",
-            index=False,
+        FrameFeatureExtractor.save_results(
+            input_video_file_path=input_video_file_path, results_list=results_list, output_folder_path=args.output_folder_path, column_names=column_names, output_file_name=output_file_name
         )
-        cap.release()
 
-
-if __name__ == "__main__":
-    args = get_parser().parse_args()
-    if args.device == "cuda":
-        ray.init(num_gpus=args.num_devices)
-    elif args.device == "cpu":
-        ray.init(num_cpus=args.num_devices)
-
-    feature_extractor = FeatureExtractor(args=args)
-
-    for file_name in tqdm(list(os.listdir(args.input_folder_path))):
-        if file_name[-4:] != ".mp4":
-            continue
-        file_name_wo_ext = file_name[:-4]
-        current_input_video_file_path = os.path.join(args.input_folder_path, file_name)
-        current_output_folder_path = os.path.join(args.output_folder_path, file_name_wo_ext)
-        if os.path.exists(os.path.join(current_output_folder_path, feature_extractor.feature_extractor.file_name_wo_ext + ".tsv")):
-            continue
-        os.makedirs(current_output_folder_path, exist_ok=True)
-        feature_extractor.extract_features(
-            input_video_file_path=current_input_video_file_path,
-            output_folder_path=current_output_folder_path,
-        )
     ray.shutdown()

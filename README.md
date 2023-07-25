@@ -33,7 +33,7 @@ ssh aarslan@robustus.ee.ethz.ch
 # Start a VS Code Server
 
 ```
-srun --time 720 --gres=gpu:4 --nodelist=biwirender07 --pty bash -i
+srun --time 720 --gres=gpu:6 --nodelist=biwirender17 --pty bash -i
 
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900-5999 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```
@@ -82,20 +82,12 @@ Add the following line to ~/.profile
 export PIP_CACHE_DIR=$SCRATCH/pip_cache/
 
 pip config set global.cache-dir $SCRATCH/pip_cache
-
-Check if the pip cache location is set correctly
-
-pip cache info
 ```
 
 # Install packages
 
 ```
 pip install --upgrade pip
-
-cd
-
-cd mq
 
 for line in $(cat requirements.txt); do pip install $line; done
 
