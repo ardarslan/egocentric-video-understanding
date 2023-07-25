@@ -25,6 +25,17 @@ def get_output_file_name(args):
         raise Exception(f"{args.frame_feature_name} is not a valid frame feature name.")
 
 
+def get_error_file_name(args):
+    if args.frame_feature_name == "unidet":
+        return UnidetFrameFeatureExtractor.error_file_name
+    elif args.frame_feature_name == "visor_hos":
+        return VisorHOSFrameFeatureExtractor.error_file_name
+    elif args.frame_feature_name == "ofa":
+        return OFAFrameFeatureExtractor.error_file_name
+    else:
+        raise Exception(f"{args.frame_feature_name} is not a valid frame feature name.")
+
+
 def get_column_names(args):
     if args.frame_feature_name == "unidet":
         return UnidetFrameFeatureExtractor.column_names

@@ -57,6 +57,10 @@ class VisorHOSFrameFeatureExtractor(FrameFeatureExtractor):
     def output_file_name(self):
         return "visor_hos_features.tsv"
 
+    @property
+    def error_file_name(self):
+        return "visor_hos_errors.txt"
+
     def _setup_cfg(self, args):
         # load config from file and command-line arguments
         cfg = get_cfg()

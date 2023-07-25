@@ -56,6 +56,10 @@ class OFAFrameFeatureExtractor(FrameFeatureExtractor):
     def output_file_name(self):
         return "ofa_features.tsv"
 
+    @property
+    def error_file_name(self):
+        return "ofa_errors.txt"
+
     def predictor_function(self, frame_indices_batch: List[int], frames_batch: List[np.array]):
         start = time.time()
         patch_images_batch = []
