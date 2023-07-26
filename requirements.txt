@@ -2,6 +2,8 @@ black
 flake8
 ego4d
 envyaml
+fairscale
+gdrive
 imutils
 ipykernel
 jupyter
@@ -9,6 +11,7 @@ opencv-python-headless
 pillow==9.5.0
 pandas
 ray
+timm
 transformers
 torch
 torchvision

@@ -33,7 +33,7 @@ ssh aarslan@robustus.ee.ethz.ch
 # Start a VS Code Server
 
 ```
-srun --time 720 --gres=gpu:6 --nodelist=biwirender17 --pty bash -i
+srun --time 720 --gres=gpu:4 --cpus-per-task=1 --nodes=4 --mem=10G --pty bash -i
 
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900-5999 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```
@@ -91,21 +91,37 @@ pip install --upgrade pip
 
 for line in $(cat requirements.txt); do pip install $line; done
 
-mkdir $SCRATCH/mq_libs
+cd
 
-cd $SCRATCH/mq_libs
+cd mq/frame_feature_extractors/ofa
 
-git clone --single-branch --branch feature/add_transformers https://github.com/OFA-Sys/OFA.git
+pip install ofa/transformers/
 
-pip install OFA/transformers/
+mkdir $SCRATCH/mq_pretrained_models
 
-python3 -m ipykernel install --user --name=mq
+cd $SCRATCH/mq_pretrained_models
+
+mkdir unidet
+
+gdrive --id 1C4sgkirmgMumKXXiLOPmCKNTZAc3oVbq -O unidet/Unified_learned_OCIM_R50_6x+2x.pth
+
+mkdir visor_hos
+
+wget https://www.dropbox.com/s/bfu94fpft2wi5sn/model_final_hos.pth?dl=0 -O visor_hos/model_final_hos.pth
 
 git clone https://huggingface.co/OFA-Sys/OFA-huge
 
-wget https://huggingface.co/OFA-Sys/ofa-huge/resolve/main/pytorch_model.bin -O $SCRATCH/mq_libs/OFA-huge/pytorch_model.bin
+mv OFA-huge ofa
 
-wget https://ofa-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/ofa_huge.pt -O $SCRATCH/mq_libs/OFA-huge/ofa_huge.pt
+wget https://huggingface.co/OFA-Sys/ofa-huge/resolve/main/pytorch_model.bin -O ofa/pytorch_model.bin
+
+wget https://ofa-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/ofa_huge.pt -O ofa/ofa_huge.pt
+
+mkdir blip
+
+wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth -O blip/model_base_capfilt_large.pth
+
+python3 -m ipykernel install --user --name=mq
 ```
 
 # Download dataset
