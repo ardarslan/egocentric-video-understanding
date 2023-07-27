@@ -1,0 +1,16 @@
+{
+    "python.languageServer": "Jedi",
+    "editor.formatOnSave": true,
+    "python.linting.lintOnSave": true,
+    "python.defaultInterpreterPath": "/scratch/aarslan/.pyenv/shims/python3",
+    "python.formatting.provider": "none",
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": [
+        "--max-line-length=200"
+    ],
+    "python.formatting.blackArgs": [
+        "--line-length=200"
+    ]
+}

@@ -1,0 +1,6 @@
+[submodule "/home/aarslan/mq/frame_feature_extractors/blipa"]
+	path = /home/aarslan/mq/frame_feature_extractors/blipa
+	url = https://github.com/salesforce/BLIP.git
+[submodule "/home/aarslan/mq/frame_feature_extractors/gsam/gsam"]
+	path = /home/aarslan/mq/frame_feature_extractors/gsam/gsam
+	url = https://github.com/IDEA-Research/Grounded-Segment-Anything.git

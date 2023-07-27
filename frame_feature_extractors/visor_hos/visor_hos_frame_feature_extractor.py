@@ -4,7 +4,7 @@ import ray
 import numpy as np
 import torch
 
-from visor_hos.hos.data.datasets.epick import register_epick_instances
+from visor_hos.visor_hos.data.datasets.epick import register_epick_instances
 from detectron2.modeling import build_model
 from detectron2.checkpoint import DetectionCheckpointer
 import detectron2.data.transforms as T

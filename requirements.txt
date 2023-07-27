@@ -1,9 +1,11 @@
+addict
 black
+cython
 flake8
 ego4d
 envyaml
 fairscale
-gdrive
+gdown
 imutils
 ipykernel
 jupyter
@@ -11,8 +13,10 @@ opencv-python-headless
 pillow==9.5.0
 pandas
 ray
+scipy
 timm
 transformers
 torch
 torchvision
+yapf
 git+https://github.com/facebookresearch/detectron2.git

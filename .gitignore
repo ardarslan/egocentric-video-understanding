@@ -2,13 +2,5 @@
 *__pycache__*
 *.ipynb_checkpoints
 *__MACOSX
-.vscode
-data
-checkpoints
-*lsf.*
-cna2zscore_checkpoints
-src/slurm-*
-libs
 sample_data
-frame_feature_extractors/visor_hos/models/model_final_hos.pth
-frame_feature_extractors/unidet/models/Unified_learned_OCIM_R50_6x+2x.pth
+error_files

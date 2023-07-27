@@ -10,6 +10,9 @@ export PYENV_ROOT="$SCRATCH/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init --path)"
 export PIP_CACHE_DIR=$SCRATCH/pip_cache/
+export AM_I_DOCKER=False
+export BUILD_WITH_CUDA=True
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 ```
 
 # Add the following lines to ~/.bashrc
@@ -45,6 +48,8 @@ rm -rf $SCRATCH/.pyenv
 
 rm -rf $SCRATCH/pip_cache
 
+rm -rf $SCRATCH/pip_temp
+
 cd
 
 cd mq
@@ -62,11 +67,10 @@ pyenv global 3.9.9
 pyenv update
 
 exit
-
 ```
 
-Open a new terminal.
-
+Open a new terminal:
+Ctrl + `
 
 ```
 pip config set install.user false
@@ -76,10 +80,6 @@ pip config set install.user false
 
 ```
 mkdir -p $SCRATCH/pip_cache/
-
-Add the following line to ~/.profile
-
-export PIP_CACHE_DIR=$SCRATCH/pip_cache/
 
 pip config set global.cache-dir $SCRATCH/pip_cache
 ```
@@ -91,19 +91,29 @@ pip install --upgrade pip
 
 for line in $(cat requirements.txt); do pip install $line; done
 
-cd
+cd /home/aarslan/mq/frame_feature_extractors/gsam/gsam
 
-cd mq/frame_feature_extractors/ofa
+python -m pip install -e GroundingDINO
+
+cd Tag2Text && pip install -r requirements.txt
+
+cd ~/mq/frame_feature_extractors/ofa
 
 pip install ofa/transformers/
 
+python3 -m ipykernel install --user --name=mq
+```
+
+# Download pre-trained models
+
+```
 mkdir $SCRATCH/mq_pretrained_models
 
 cd $SCRATCH/mq_pretrained_models
 
 mkdir unidet
 
-gdrive --id 1C4sgkirmgMumKXXiLOPmCKNTZAc3oVbq -O unidet/Unified_learned_OCIM_R50_6x+2x.pth
+gdown 1C4sgkirmgMumKXXiLOPmCKNTZAc3oVbq -O unidet/Unified_learned_OCIM_R50_6x+2x.pth
 
 mkdir visor_hos
 
@@ -121,7 +131,14 @@ mkdir blip
 
 wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth -O blip/model_base_capfilt_large.pth
 
-python3 -m ipykernel install --user --name=mq
+wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_vqa_capfilt_large.pth -O blip/model_base_vqa_capfilt_large.pth
+
+mkdir gsam
+
+wget https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth -O gsam/groundingdino_swint_ogc.pth
+
+wget https://huggingface.co/spaces/xinyu1205/Tag2Text/resolve/main/ram_swin_large_14m.pth -O gsam/ram_swin_large_14m.pth
+
 ```
 
 # Download dataset
