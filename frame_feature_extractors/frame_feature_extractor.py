@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import pandas as pd
-from imutils.video import FileVideoStream
 
 from typing import List
 
@@ -13,51 +12,52 @@ class FrameFeatureExtractor(ABC):
         pass
 
     @staticmethod
-    def get_inputs(input_video_file_path: str, batch_size: int, frame_feature_name: str, output_folder_path: str):
+    def get_inputs(cap, batch_size: int, frame_feature_name: str, output_subfolder_path: str, number_of_frames_per_video_part: int, global_frame_index):
         if frame_feature_name == "ego_hos":
-            input_video_file_name_wo_ext = input_video_file_path.split("/")[-1][:-4]
-            if not os.path.exists(os.path.join(output_folder_path, input_video_file_name_wo_ext, "unidet_features.tsv")):
+            if not os.path.exists(os.path.join(output_subfolder_path, "unidet_features.tsv")):
                 raise Exception("To extract ego_hos features, unidet features should be extracted first.")
-            if not os.path.exists(os.path.join(output_folder_path, input_video_file_name_wo_ext, "gsam_features.tsv")):
+            if not os.path.exists(os.path.join(output_subfolder_path, "gsam_features.tsv")):
                 raise Exception("To extract ego_hos features, gsam features should be extracted first.")
-            unidet_features = pd.read_csv(os.path.join(output_folder_path, input_video_file_name_wo_ext, "unidet_features.tsv"), sep="\t")
-            gsam_features = pd.read_csv(os.path.join(output_folder_path, input_video_file_name_wo_ext, "gsam_features.tsv"), sep="\t")
+            unidet_features = pd.read_csv(os.path.join(output_subfolder_path, "unidet_features.tsv"), sep="\t")
+            gsam_features = pd.read_csv(os.path.join(output_subfolder_path, "gsam_features.tsv"), sep="\t")
             unidet_features_batches = []
             gsam_features_batches = []
 
-        cap = FileVideoStream(input_video_file_path).start()
-        cap_is_opened = True
-        frame_index = 0
+        success = True
+        part_frame_index = 0
 
         frame_indices_batches = []
         frames_batches = []
 
-        while cap_is_opened:
+        while success:
             frame_indices_batch, frames_batch = [], []
             if frame_feature_name == "ego_hos":
                 unidet_features_batch, gsam_features_batch = [], []
 
             for i in range(batch_size):
-                frame = cap.read()
-                if frame is not None:
+                if part_frame_index == number_of_frames_per_video_part:
+                    success = False
+                    break
+                success, frame = cap.read()
+                if success:
                     frames_batch.append(frame)
-                    frame_indices_batch.append(frame_index)
+                    frame_indices_batch.append(global_frame_index.get_value())
                     if frame_feature_name == "ego_hos":
-                        relevant_unidet_feature_rows = [dict(row) for index, row in unidet_features[unidet_features["frame_index"] == frame_index].iterrows()]
-                        relevant_gsam_feature_rows = [dict(row) for index, row in gsam_features[gsam_features["frame_index"] == frame_index].iterrows()]
+                        relevant_unidet_feature_rows = [dict(row) for index, row in unidet_features[unidet_features["frame_index"] == global_frame_index.get_value()].iterrows()]
+                        relevant_gsam_feature_rows = [dict(row) for index, row in gsam_features[gsam_features["frame_index"] == global_frame_index.get_value()].iterrows()]
                         unidet_features_batch.append(relevant_unidet_feature_rows)
                         gsam_features_batch.append(relevant_gsam_feature_rows)
-                    frame_index += 1
+                    global_frame_index.increment_value()
+                    part_frame_index += 1
                 else:
-                    cap_is_opened = False
                     break
+
             if len(frames_batch) > 0:
                 frame_indices_batches.append(frame_indices_batch)
                 frames_batches.append(frames_batch)
                 if frame_feature_name == "ego_hos":
                     unidet_features_batches.append(unidet_features_batch)
                     gsam_features_batches.append(gsam_features_batch)
-        cap.stop()
         if frame_feature_name == "ego_hos":
             inputs = zip(frame_indices_batches, frames_batches, unidet_features_batches, gsam_features_batches)
         else:

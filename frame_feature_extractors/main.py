@@ -4,8 +4,11 @@ import traceback
 from datetime import datetime
 
 import ray
+import cv2
+import math
+from tqdm import tqdm
 
-from utils import get_frame_feature_extractor, get_column_names, get_output_file_name, get_error_file_name
+from utils import get_frame_feature_extractor, get_column_names, get_output_file_name, get_error_file_name, GlobalFrameIndex
 from frame_feature_extractor import FrameFeatureExtractor
 
 
@@ -13,9 +16,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
 
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
-    parser.add_argument("--num_devices", type=int, default=4)
-    parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument("--frame_feature_name", type=str, choices=["unidet", "visor_hos", "ego_hos", "gsam", "ofa", "blip_captioning", "blip_vqa"], default="unidet")
+    parser.add_argument("--num_devices", type=int, default=5)
+    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--number_of_frames_per_video_part", type=int, default=10000)
+    parser.add_argument("--frame_feature_name", type=str, choices=["unidet", "visor_hos", "ego_hos", "gsam", "ofa", "blip_captioning", "blip_vqa"], default="blip_captioning")
 
     parser.add_argument("--unidet_confidence_threshold", type=float, default=0.4)
     parser.add_argument(
@@ -26,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--unidet_config_file_path",
         type=str,
-        default="/home/aarslan/mq/frame_feature_extractors/unidet/configs/Unified_learned_OCIM_R50_6x+2x.yaml",
+        default="/home/aarslan/mq/frae_feature_extractors/unidet/configs/Unified_learned_OCIM_R50_6x+2x.yaml",
     )
 
     parser.add_argument("--visor_hos_confidence_threshold", type=float, default=0.4)
@@ -127,8 +131,9 @@ if __name__ == "__main__":
     column_names = get_column_names(args=args)
     output_file_name = get_output_file_name(args=args)
     error_file_name = get_error_file_name(args=args)
+    global_frame_index = GlobalFrameIndex()
 
-    for input_video_file_name in os.listdir(args.input_folder_path):
+    for input_video_file_name in tqdm(os.listdir(args.input_folder_path)):
         try:
             if input_video_file_name[-4:] != ".mp4":
                 continue
@@ -138,14 +143,35 @@ if __name__ == "__main__":
                 continue
 
             input_video_file_path = os.path.join(args.input_folder_path, input_video_file_name)
-            inputs = FrameFeatureExtractor.get_inputs(
-                input_video_file_path=input_video_file_path, batch_size=args.batch_size, frame_feature_name=args.frame_feature_name, output_folder_path=args.output_folder_path
-            )
+            output_subfolder_path = os.path.join(args.output_folder_path, input_video_file_name_wo_ext)
 
-            results_list = frame_feature_extractor_pool.map(lambda frame_feature_extractor, inpt: frame_feature_extractor.predictor_function.remote(*inpt), inputs)
+            results_list = []
+
+            cap = cv2.VideoCapture(input_video_file_path)
+
+            for _ in range(math.ceil(cap.get(cv2.CAP_PROP_FRAME_COUNT) / float(args.number_of_frames_per_video_part))):
+                current_inputs = FrameFeatureExtractor.get_inputs(
+                    cap=cap,
+                    batch_size=args.batch_size,
+                    frame_feature_name=args.frame_feature_name,
+                    output_subfolder_path=output_subfolder_path,
+                    number_of_frames_per_video_part=args.number_of_frames_per_video_part,
+                    global_frame_index=global_frame_index,
+                )
+
+                current_results_list = frame_feature_extractor_pool.map(
+                    lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(*current_input), current_inputs
+                )
+                results_list.extend(current_results_list)
+
+            cap.release()
 
             FrameFeatureExtractor.save_results(
-                input_video_file_path=input_video_file_path, results_list=results_list, output_folder_path=args.output_folder_path, column_names=column_names, output_file_name=output_file_name
+                input_video_file_path=input_video_file_path,
+                results_list=results_list,
+                output_folder_path=args.output_folder_path,
+                column_names=column_names,
+                output_file_name=output_file_name,
             )
         except Exception as e:
             print(f"{datetime.now():%Y-%m-%d %H:%M:%S%z} | Error with file {input_video_file_name}: \n")
