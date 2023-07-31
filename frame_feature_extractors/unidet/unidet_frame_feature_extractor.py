@@ -33,14 +33,6 @@ class UnidetFrameFeatureExtractor(FrameFeatureExtractor):
         )
 
     @property
-    def output_file_name(self):
-        return "unidet_features.tsv"
-
-    @property
-    def error_file_name(self):
-        return "unidet_errors.txt"
-
-    @property
     def column_names(self):
         return [
             "frame_index",

@@ -52,14 +52,6 @@ class GSAMFrameFeatureExtractor(FrameFeatureExtractor):
             "detection_score",
         ]
 
-    @property
-    def output_file_name(self):
-        return "gsam_features.tsv"
-
-    @property
-    def error_file_name(self):
-        return "gsam_errors.txt"
-
     def load_model(self, model_config_path, model_checkpoint_path, device):
         args = SLConfig.fromfile(model_config_path)
         args.device = device

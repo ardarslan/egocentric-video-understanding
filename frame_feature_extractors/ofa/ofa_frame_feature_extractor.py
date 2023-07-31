@@ -1,5 +1,4 @@
 import gc
-import time
 
 import ray
 import torch
@@ -52,16 +51,7 @@ class OFAFrameFeatureExtractor(FrameFeatureExtractor):
     def column_names(self):
         return ["frame_index", "question", "answer"]
 
-    @property
-    def output_file_name(self):
-        return "ofa_features.tsv"
-
-    @property
-    def error_file_name(self):
-        return "ofa_errors.txt"
-
     def predictor_function(self, frame_indices_batch: List[int], frames_batch: List[np.array]):
-        start = time.time()
         patch_images_batch = []
         for frame in frames_batch:
             patch_images = self.patch_resize_transform(Image.fromarray(frame[:, :, ::-1])).unsqueeze(0).to(self.args.device)
@@ -87,6 +77,4 @@ class OFAFrameFeatureExtractor(FrameFeatureExtractor):
             data = self.tokenizer.batch_decode(data, skip_special_tokens=True)
             for frame_index, answer in zip(frame_indices_batch, data):
                 predictions.append((frame_index, question, answer))
-        end = time.time()
-        print(f"Processed the current batch in {np.round(end-start, 2)} seconds.", flush=True)
         return predictions

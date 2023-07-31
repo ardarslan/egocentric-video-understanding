@@ -39,14 +39,6 @@ class BLIPVQAFrameFeatureExtractor(FrameFeatureExtractor):
         ]
 
     @property
-    def output_file_name(self):
-        return "blip_vqa_features.tsv"
-
-    @property
-    def error_file_name(self):
-        return "blip_vqa_errors.txt"
-
-    @property
     def column_names(self):
         return ["frame_index", "question", "answer"]
 

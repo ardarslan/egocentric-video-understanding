@@ -2,8 +2,8 @@
 
 ```
 export BEEGFS_SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
-export SCRATCH=/scratch/aarslan
-export TMPDIR=/scratch/aarslan/pip_temp
+export SCRATCH=/scratch/$USER
+export TMPDIR=/scratch/$USER/pip_temp
 export LC_ALL=C.UTF-8
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 export PYENV_ROOT="$SCRATCH/.pyenv"
@@ -41,104 +41,36 @@ srun --time 720 --gres=gpu:4 --cpus-per-task=1 --nodes=4 --mem=10G --pty bash -i
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900-5999 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```
 
-# Install new pyenv
+# Install pyenv
 
 ```
-rm -rf $SCRATCH/.pyenv
+chmod +x scripts/install_pyenv.sh
 
-rm -rf $SCRATCH/pip_cache
-
-rm -rf $SCRATCH/pip_temp
-
-cd
-
-cd mq
-
-chmod +x pyenv-installer
-
-bash ./pyenv-installer
-
-env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.9.9
-
-pyenv rehash
-
-pyenv global 3.9.9
-
-pyenv update
+./scripts/install_pyenv.sh
 
 exit
 ```
 
-Open a new terminal:
-Ctrl + `
-
-```
-pip config set install.user false
-```
-
-# Move pip's cache folder into scratch
-
-```
-mkdir -p $SCRATCH/pip_cache/
-
-pip config set global.cache-dir $SCRATCH/pip_cache
-```
-
 # Install packages
 
+Open a new terminal.
+
 ```
-pip install --upgrade pip
+chmod +x scripts/install_packages.sh
 
-for line in $(cat requirements.txt); do pip install $line; done
-
-cd /home/aarslan/mq/frame_feature_extractors/gsam/gsam
-
-python -m pip install -e GroundingDINO
-
-cd Tag2Text && pip install -r requirements.txt
-
-cd ~/mq/frame_feature_extractors/ofa
-
-pip install ofa/transformers/
-
-python3 -m ipykernel install --user --name=mq
+./scripts/install_packages.sh
 ```
+
+Windows + Shift + P
+
+Python: Clear Cache and Reload Window
 
 # Download pre-trained models
 
 ```
-mkdir $SCRATCH/mq_pretrained_models
+chmod +x scripts/download_pretrained_models.sh
 
-cd $SCRATCH/mq_pretrained_models
-
-mkdir unidet
-
-gdown 1C4sgkirmgMumKXXiLOPmCKNTZAc3oVbq -O unidet/Unified_learned_OCIM_R50_6x+2x.pth
-
-mkdir visor_hos
-
-wget https://www.dropbox.com/s/bfu94fpft2wi5sn/model_final_hos.pth?dl=0 -O visor_hos/model_final_hos.pth
-
-git clone https://huggingface.co/OFA-Sys/OFA-huge
-
-mv OFA-huge ofa
-
-wget https://huggingface.co/OFA-Sys/ofa-huge/resolve/main/pytorch_model.bin -O ofa/pytorch_model.bin
-
-wget https://ofa-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/ofa_huge.pt -O ofa/ofa_huge.pt
-
-mkdir blip
-
-wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth -O blip/model_base_capfilt_large.pth
-
-wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_vqa_capfilt_large.pth -O blip/model_base_vqa_capfilt_large.pth
-
-mkdir gsam
-
-wget https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth -O gsam/groundingdino_swint_ogc.pth
-
-wget https://huggingface.co/spaces/xinyu1205/Tag2Text/resolve/main/ram_swin_large_14m.pth -O gsam/ram_swin_large_14m.pth
-
+./scripts/download_pretrained_models.sh
 ```
 
 # Download dataset
@@ -172,6 +104,7 @@ Enter the AWS Access Key ID from the e-mail you received from Ego4D.
 Enter the AWS Secret Access Key from the e-mail you received from Ego4D.
 
 Execute the following two commands:
+
 ```
 screen
 

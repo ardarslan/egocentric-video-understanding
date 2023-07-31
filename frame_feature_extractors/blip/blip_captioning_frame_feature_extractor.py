@@ -33,14 +33,6 @@ class BLIPCaptioningFrameFeatureExtractor(FrameFeatureExtractor):
         self.model = self.model.to(self.args.device)
 
     @property
-    def output_file_name(self):
-        return "blip_captioning_features.tsv"
-
-    @property
-    def error_file_name(self):
-        return "blip_captioning_errors.txt"
-
-    @property
     def column_names(self):
         return ["frame_index", "question", "answer"]
 

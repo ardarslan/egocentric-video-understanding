@@ -4,71 +4,52 @@ from visor_hos.visor_hos_frame_feature_extractor import VisorHOSFrameFeatureExtr
 from blip.blip_captioning_frame_feature_extractor import BLIPCaptioningFrameFeatureExtractor
 from blip.blip_vqa_frame_feature_extractor import BLIPVQAFrameFeatureExtractor
 from gsam.gsam_frame_feature_extractor import GSAMFrameFeatureExtractor
+from ego_hos.ego_hos_frame_feature_extractor import EgoHOSFrameFeatureExtractor
 
 
 def get_frame_feature_extractor(args):
     if args.frame_feature_name == "unidet":
-        return UnidetFrameFeatureExtractor.remote(args=args)
+        remote_function = UnidetFrameFeatureExtractor.remote
     elif args.frame_feature_name == "visor_hos":
-        return VisorHOSFrameFeatureExtractor.remote(args=args)
+        remote_function = VisorHOSFrameFeatureExtractor.remote
     elif args.frame_feature_name == "ofa":
-        return OFAFrameFeatureExtractor.remote(args=args)
+        remote_function = OFAFrameFeatureExtractor.remote
     elif args.frame_feature_name == "blip_captioning":
-        return BLIPCaptioningFrameFeatureExtractor.remote(args=args)
+        remote_function = BLIPCaptioningFrameFeatureExtractor.remote
     elif args.frame_feature_name == "blip_vqa":
-        return BLIPVQAFrameFeatureExtractor.remote(args=args)
+        remote_function = BLIPVQAFrameFeatureExtractor.remote
     elif args.frame_feature_name == "gsam":
-        return GSAMFrameFeatureExtractor.remote(args=args)
+        remote_function = GSAMFrameFeatureExtractor.remote
+    elif args.frame_feature_name == "ego_hos":
+        remote_function = EgoHOSFrameFeatureExtractor.remote
     else:
         raise Exception(f"{args.frame_feature_name} is not a valid frame feature name.")
+    return remote_function(args=args)
 
 
 def get_output_file_name(args):
-    if args.frame_feature_name == "unidet":
-        return UnidetFrameFeatureExtractor.output_file_name
-    elif args.frame_feature_name == "visor_hos":
-        return VisorHOSFrameFeatureExtractor.output_file_name
-    elif args.frame_feature_name == "ofa":
-        return OFAFrameFeatureExtractor.output_file_name
-    elif args.frame_feature_name == "blip_captioning":
-        return BLIPCaptioningFrameFeatureExtractor.output_file_name
-    elif args.frame_feature_name == "blip_vqa":
-        return BLIPVQAFrameFeatureExtractor.output_file_name
-    elif args.frame_feature_name == "gsam":
-        return GSAMFrameFeatureExtractor.output_file_name
-    else:
-        raise Exception(f"{args.frame_feature_name} is not a valid frame feature name.")
+    return args.frame_feature_name + "_features.tsv"
 
 
 def get_error_file_name(args):
-    if args.frame_feature_name == "unidet":
-        return UnidetFrameFeatureExtractor.error_file_name
-    elif args.frame_feature_name == "visor_hos":
-        return VisorHOSFrameFeatureExtractor.error_file_name
-    elif args.frame_feature_name == "ofa":
-        return OFAFrameFeatureExtractor.error_file_name
-    elif args.frame_feature_name == "blip_captioning":
-        return BLIPCaptioningFrameFeatureExtractor.error_file_name
-    elif args.frame_feature_name == "blip_vqa":
-        return BLIPVQAFrameFeatureExtractor.error_file_name
-    elif args.frame_feature_name == "gsam":
-        return GSAMFrameFeatureExtractor.error_file_name
-    else:
-        raise Exception(f"{args.frame_feature_name} is not a valid frame feature name.")
+    return args.frame_feature_name + "_errors.tsv"
 
 
 def get_column_names(args):
     if args.frame_feature_name == "unidet":
-        return UnidetFrameFeatureExtractor.column_names
+        column_names = UnidetFrameFeatureExtractor.column_names
     elif args.frame_feature_name == "visor_hos":
-        return VisorHOSFrameFeatureExtractor.column_names
+        column_names = VisorHOSFrameFeatureExtractor.column_names
     elif args.frame_feature_name == "ofa":
-        return OFAFrameFeatureExtractor.column_names
+        column_names = OFAFrameFeatureExtractor.column_names
     elif args.frame_feature_name == "blip_captioning":
-        return BLIPCaptioningFrameFeatureExtractor.column_names
+        column_names = BLIPCaptioningFrameFeatureExtractor.column_names
     elif args.frame_feature_name == "blip_vqa":
-        return BLIPVQAFrameFeatureExtractor.column_names
+        column_names = BLIPVQAFrameFeatureExtractor.column_names
     elif args.frame_feature_name == "gsam":
-        return GSAMFrameFeatureExtractor.column_names
+        column_names = GSAMFrameFeatureExtractor.column_names
+    elif args.frame_feature_name == "ego_hos":
+        column_names = EgoHOSFrameFeatureExtractor.column_names
     else:
         raise Exception(f"{args.frame_feature_name} is not a valid frame feature name.")
+    return column_names
