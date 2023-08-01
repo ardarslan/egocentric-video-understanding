@@ -7,6 +7,7 @@ import ray
 import cv2
 import math
 from tqdm import tqdm
+from imutils.video import FileVideoStream
 
 from utils import get_frame_feature_extractor, get_column_names, get_output_file_name, get_error_file_name, GlobalFrameIndex
 from frame_feature_extractor import FrameFeatureExtractor
@@ -15,11 +16,12 @@ from frame_feature_extractor import FrameFeatureExtractor
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
 
+    parser.add_argument("--frame_feature_name", type=str, choices=["unidet", "visor_hos", "ego_hos", "gsam", "ofa", "blip_captioning", "blip_vqa"], required=True)
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
     parser.add_argument("--num_devices", type=int, default=5)
-    parser.add_argument("--batch_size", type=int, default=4)
-    parser.add_argument("--number_of_frames_per_video_part", type=int, default=10000)
-    parser.add_argument("--frame_feature_name", type=str, choices=["unidet", "visor_hos", "ego_hos", "gsam", "ofa", "blip_captioning", "blip_vqa"], default="blip_captioning")
+    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--number_of_processed_frames_per_second", type=int, default=6)
+    parser.add_argument("--number_of_frames_per_video_part", type=int, default=30000)
 
     parser.add_argument("--unidet_confidence_threshold", type=float, default=0.4)
     parser.add_argument(
@@ -30,7 +32,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--unidet_config_file_path",
         type=str,
-        default="/home/aarslan/mq/frae_feature_extractors/unidet/configs/Unified_learned_OCIM_R50_6x+2x.yaml",
+        default="/home/aarslan/mq/frame_feature_extractors/unidet/configs/Unified_learned_OCIM_R50_6x+2x.yaml",
     )
 
     parser.add_argument("--visor_hos_confidence_threshold", type=float, default=0.4)
@@ -147,14 +149,21 @@ if __name__ == "__main__":
 
             results_list = []
 
-            cap = cv2.VideoCapture(input_video_file_path)
+            cap = FileVideoStream(input_video_file_path).start()
 
-            for _ in range(math.ceil(cap.get(cv2.CAP_PROP_FRAME_COUNT) / float(args.number_of_frames_per_video_part))):
+            frames_per_second = cap.stream.get(cv2.CAP_PROP_FPS)
+
+            number_of_processed_frames_per_second = args.number_of_processed_frames_per_second
+
+            stride_for_processing_frames = int(frames_per_second / float(number_of_processed_frames_per_second))
+
+            for _ in tqdm(list(range(math.ceil(cap.stream.get(cv2.CAP_PROP_FRAME_COUNT) / float(args.number_of_frames_per_video_part))))):
                 current_inputs = FrameFeatureExtractor.get_inputs(
                     cap=cap,
                     batch_size=args.batch_size,
                     frame_feature_name=args.frame_feature_name,
                     output_subfolder_path=output_subfolder_path,
+                    stride_for_processing_frames=stride_for_processing_frames,
                     number_of_frames_per_video_part=args.number_of_frames_per_video_part,
                     global_frame_index=global_frame_index,
                 )
@@ -162,9 +171,10 @@ if __name__ == "__main__":
                 current_results_list = frame_feature_extractor_pool.map(
                     lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(*current_input), current_inputs
                 )
+
                 results_list.extend(current_results_list)
 
-            cap.release()
+            cap.stop()
 
             FrameFeatureExtractor.save_results(
                 input_video_file_path=input_video_file_path,
