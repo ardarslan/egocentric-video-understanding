@@ -8,7 +8,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "cwd": "${workspaceFolder}/frame_feature_extractors"
+            "cwd": "${workspaceFolder}/scripts/05_visualize_frame_features/ag_thesis_230716/webserver"
         },
     ]
 }
