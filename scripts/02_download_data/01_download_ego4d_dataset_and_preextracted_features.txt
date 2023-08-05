@@ -43,5 +43,6 @@ mv $SCRATCH/ego4d_data/v2/internvideo_pt $SCRATCH/ego4d_data/v2/internvideo
 
 python3 ~/mq/scripts/07_reproduce_baseline_results/ego4d_asl/convert_annotation.py --input_annotation_folder_path /srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/annotations/ --video_features_folder_path /srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/ --ego4d_json_path /srv/beegfs02/scratch/aarslan_data/data/ego4d_data/ego4d.json --output_annotation_file_path /home/aarslan/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json
 
-# python3 ~/mq/scripts/02_download_data/extra_clip_remover.py --input_json_folder_path $SCRATCH/ego4d_data/v2/annotations --clips_folder_path $SCRATCH/ego4d_data/v2/clips
+python3 ~/mq/scripts/02_download_data/extra_clip_remover.py --annotations_json_file_path /home/aarslan/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json --clips_folder_path $SCRATCH/ego4d_data/v2/clips --egovlp_egonce_features_folder_path $SCRATCH/ego4d_data/v2/egovlp_egonce --internvideo_features_folder_path $SCRATCH/ego4d_data/v2/internvideo --omnivore_features_folder_path $SCRATCH/ego4d_data/v2/omnivore_clip --slowfast_features_folder_path $SCRATCH/ego4d_data/v2/slowfast_clip
+
 ```
