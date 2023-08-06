@@ -15,17 +15,17 @@ from frame_feature_extractor import FrameFeatureExtractor
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
 
-    parser.add_argument("--frame_feature_name", type=str, choices=["unidet", "visor_hos", "ego_hos", "gsam", "ofa", "blip_captioning", "blip_vqa"], required=True)
+    parser.add_argument("--frame_feature_name", type=str, choices=["unidet", "visor_hos", "ego_hos", "gsam", "ofa", "blip_captioning", "blip_vqa"], default="unidet")
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
-    parser.add_argument("--num_devices", type=int, default=4)
+    parser.add_argument("--num_devices", type=int, default=5)
     parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument("--annotations_json_file_path", type=str, default="~/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json")
+    parser.add_argument("--annotations_json_file_path", type=str, default="/home/aarslan/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json")
 
     parser.add_argument("--unidet_confidence_threshold", type=float, default=0.4)
     parser.add_argument(
         "--unidet_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/unidet/Unified_learned_OCIM_R50_6x+2x.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/unidet/Unified_learned_OCIM_R50_6x+2x.pth",
     )
     parser.add_argument(
         "--unidet_config_file_path",
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--visor_hos_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/visor_hos/model_final_hos.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/visor_hos/model_final_hos.pth",
     )
     parser.add_argument(
         "--visor_hos_config_file_path",
@@ -48,18 +48,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ofa_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/ofa",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/ofa",
     )
 
     parser.add_argument(
         "--blip_captioning_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/blip/model_base_capfilt_large.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/blip/model_base_capfilt_large.pth",
     )
     parser.add_argument(
         "--blip_vqa_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/blip/model_base_vqa_capfilt_large.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/blip/model_base_vqa_capfilt_large.pth",
     )
 
     parser.add_argument(
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ego_hos_seg_twohands_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/ego_hos/seg_twohands_ccda/best_mIoU_iter_56000.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/ego_hos/seg_twohands_ccda/best_mIoU_iter_56000.pth",
     )
     parser.add_argument(
         "--ego_hos_twohands_to_cb_config_file_path",
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ego_hos_twohands_to_cb_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/ego_hos/twohands_to_cb_ccda/best_mIoU_iter_76000.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/ego_hos/twohands_to_cb_ccda/best_mIoU_iter_76000.pth",
     )
     parser.add_argument(
         "--ego_hos_twohands_cb_to_obj2_config_file_path",
@@ -102,18 +102,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ego_hos_twohands_cb_to_obj2_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/ego_hos/twohands_cb_to_obj2_ccda/best_mIoU_iter_32000.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/ego_hos/twohands_cb_to_obj2_ccda/best_mIoU_iter_32000.pth",
     )
 
     parser.add_argument(
         "--input_folder_path",
         type=str,
-        default="$SCRATCH/ego4d_data/v2/clips",
+        default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/clips",
     )
     parser.add_argument(
         "--output_folder_path",
         type=str,
-        default="$SCRATCH/ego4d_data/v2/frame_features",
+        default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/frame_features",
     )
     parser.add_argument(
         "--error_folder_path",
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
     os.makedirs(args.error_folder_path, exist_ok=True)
 
-    ray.init(num_gpus=args.num_devices)
+    ray.init(num_gpus=args.num_devices, num_cpus=args.num_devices)
 
     frame_feature_extractor_pool = ray.util.ActorPool([get_frame_feature_extractor(args=args) for _ in range(args.num_devices)])
     column_names = get_column_names(args=args)

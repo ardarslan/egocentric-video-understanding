@@ -53,5 +53,3 @@ def get_column_names(args):
     else:
         raise Exception(f"{args.frame_feature_name} is not a valid frame feature name.")
     return column_names
-
-

@@ -6,19 +6,21 @@ rm -rf ~/.cache
 
 pip config set install.user false
 
-mkdir -p $SCRATCH/pip_cache/
+mkdir -p $SCRATCH/pip_temp
+
+export TMPDIR=$SCRATCH/pip_temp
+
+mkdir -p $SCRATCH/pip_cache
 
 pip config set global.cache-dir $SCRATCH/pip_cache
 
 pip install --upgrade pip
 
-for line in $(cat requirements.txt); do pip install $line; done
 
-mim install mmcv-full==1.6.0
 
-cd ~/mq/scripts/04_extract_frame_features/ego_hos/ego_hos/mmsegmentation
+pip install torch
 
-pip install -v -e .
+pip install torchvision
 
 cd ~/mq/scripts/04_extract_frame_features/gsam
 
@@ -40,6 +42,22 @@ sed -i 's/from models/from gsam.gsam.Tag2Text.models/g' ~/mq/scripts/04_extract_
 
 sed -i 's/from models/from gsam.gsam.Tag2Text.models/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/Tag2Text/inference_ram.py
 
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/datasets/transforms.py
+
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/groundingdino.py
+
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/util/utils.py
+
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/backbone/backbone.py
+
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/backbone/position_encoding.py
+
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/backbone/swin_transformer.py
+
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/transformer.py
+
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/ms_deform_attn.py
+
 touch ~/mq/scripts/04_extract_frame_features/gsam/gsam/Tag2Text/models/__init__.py
 
 rm -rf ~/mq/scripts/04_extract_frame_features/gsam/Tag2Text/.git
@@ -48,9 +66,17 @@ rm -rf ~/mq/scripts/04_extract_frame_features/gsam/VISAM
 
 rm -rf ~/mq/scripts/04_extract_frame_features/gsam/grounded-sam-osx
 
-pip install ~/mq/scripts/04_extract_frame_features/ofa/ofa/transformers
+cd ~/mq/scripts/01_setup_environment
 
-python3 ~/mq/scripts/07_reproduce_baseline_results/ego4d_asl/convert_annotation.py --input_annotation_folder_path $SCRATCH/ego4d_data/v2/annotations/ --video_features_folder_path $SCRATCH/ego4d_data/v2/ --ego4d_json_path $SCRATCH/ego4d_data/ego4d.json --output_annotation_file_path ~/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json
+for line in $(cat requirements.txt); do pip install $line; done
+
+mim install mmcv-full==1.6.0
+
+cd ~/mq/scripts/04_extract_frame_features/ego_hos/ego_hos/mmsegmentation
+
+pip install -v -e .
+
+pip install ~/mq/scripts/04_extract_frame_features/ofa/ofa/transformers
 
 cd ~/mq/scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils
 
@@ -63,3 +89,5 @@ rm -rf $SCRATCH/pip_cache
 rm -rf $SCRATCH/pip_temp
 
 rm -rf ~/.cache
+
+export TMPDIR=/home/aarslan/mq/tmp

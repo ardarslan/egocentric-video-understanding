@@ -26,14 +26,32 @@ Enter the AWS Access Key ID from the e-mail you received from Ego4D (https://ego
 
 Enter the AWS Secret Access Key from the e-mail you received from Ego4D.
 
-Execute the following two commands:
+Execute the following commands:
 
 ```
+
 screen
 
 ego4d --output_directory="$SCRATCH/ego4d_data" --datasets annotations clips omnivore_video_swinl slowfast8x8_r101_k400 --metadata --benchmarks EM --version v2
 
 python3 ~/mq/scripts/02_download_data/clip_feature_extractor.py --annotations_folder_path $SCRATCH/ego4d_data/v2/annotations --slowfast_video_features_folder_path $SCRATCH/ego4d_data/v2/slowfast8x8_r101_k400 --omnivore_video_features_folder_path $SCRATCH/ego4d_data/v2/omnivore_video_swinl --slowfast_clip_features_folder_path $SCRATCH/ego4d_data/v2/slowfast_clip --omnivore_clip_features_folder_path $SCRATCH/ego4d_data/v2/omnivore_clip
+
+python3 ~/mq/scripts/07_reproduce_baseline_results/ego4d_asl/convert_annotation.py --input_annotation_folder_path /srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/annotations/ --video_features_folder_path /srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/ --ego4d_json_path /srv/beegfs02/scratch/aarslan_data/data/ego4d_data/ego4d.json --output_annotation_file_path /home/aarslan/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json
+
+rm -rf omnivore_video_swinl
+
+rm -rf slowfast8x8_r101_k400
+
+
+wget https://zenodo.org/record/7340838/files/ego4d_mq_videointern_eccv2022_verb_features.zip -O $SCRATCH/ego4d_data/v2/internvideo.zip
+
+python3 /home/aarslan/mq/scripts/02_download_data/unzipper.py --zip_file_path $SCRATCH/ego4d_data/v2/internvideo.zip --unzipped_folder_path $SCRATCH/ego4d_data/v2/internvideo
+
+cd $SCRATCH/ego4d_data/v2/internvideo
+
+mv ego4d_mq_videointern_eccv2022_verb_features/* .
+
+rm -rf $SCRATCH/ego4d_data/v2/internvideo.zip
 
 python3 ~/mq/scripts/02_download_data/internvideo_pkl_to_pt_convertor.py --internvideo_pkl_clip_features_folder_path $SCRATCH/ego4d_data/v2/internvideo --internvideo_pt_clip_features_folder_path $SCRATCH/ego4d_data/v2/internvideo_pt
 
@@ -41,7 +59,20 @@ rm -rf $SCRATCH/ego4d_data/v2/internvideo
 
 mv $SCRATCH/ego4d_data/v2/internvideo_pt $SCRATCH/ego4d_data/v2/internvideo
 
-python3 ~/mq/scripts/07_reproduce_baseline_results/ego4d_asl/convert_annotation.py --input_annotation_folder_path /srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/annotations/ --video_features_folder_path /srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/ --ego4d_json_path /srv/beegfs02/scratch/aarslan_data/data/ego4d_data/ego4d.json --output_annotation_file_path /home/aarslan/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json
+
+gdown 1CDRV0FIMXp3wB5Q1o_UcXla7Xw7P5ORG -O $SCRATCH/ego4d_data/v2/egovlp_egonce.zip
+
+python3 /home/aarslan/mq/scripts/02_download_data/unzipper.py --zip_file_path $SCRATCH/ego4d_data/v2/egovlp_egonce.zip --unzipped_folder_path $SCRATCH/ego4d_data/v2/egovlp_egonce
+
+cd /srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/egovlp_egonce
+
+rm -rf __MACOSX
+
+mv egovlp_egonce/* .
+
+rm -rf egovlp_egonce
+
+
 
 python3 ~/mq/scripts/02_download_data/extra_clip_remover.py --annotations_json_file_path /home/aarslan/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json --clips_folder_path $SCRATCH/ego4d_data/v2/clips --egovlp_egonce_features_folder_path $SCRATCH/ego4d_data/v2/egovlp_egonce --internvideo_features_folder_path $SCRATCH/ego4d_data/v2/internvideo --omnivore_features_folder_path $SCRATCH/ego4d_data/v2/omnivore_clip --slowfast_features_folder_path $SCRATCH/ego4d_data/v2/slowfast_clip
 

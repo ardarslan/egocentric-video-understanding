@@ -1,3 +1,7 @@
+git+https://github.com/facebookresearch/detectron2.git
+tensorboard
+transformers
+opencv-python-headless
 addict
 black
 cython
@@ -15,7 +19,6 @@ joblib
 jupyter
 matplotlib
 numpy
-opencv-python-headless
 openmim
 packaging
 pandas
@@ -25,10 +28,5 @@ pyyaml
 ray
 scikit-image
 scipy
-tensorboard
 timm
-transformers
-torch
-torchvision
 yapf
-git+https://github.com/facebookresearch/detectron2.git

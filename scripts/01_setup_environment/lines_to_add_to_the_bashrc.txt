@@ -5,3 +5,4 @@ function localpip {
     PATH=$PYTHONUSERBASE/bin:$PATH
     export PYTHONUSERBASE PATH
 }
+

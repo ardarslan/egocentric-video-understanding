@@ -1,6 +1,4 @@
 export SCRATCH="/srv/beegfs02/scratch/aarslan_data/data"
-mkdir $SCRATCH/pip_temp
-export TMPDIR="$SCRATCH/pip_temp"
 export PIP_CACHE_DIR="$SCRATCH/pip_cache/"
 export PYENV_ROOT="$SCRATCH/.pyenv"
 export LC_ALL="C.UTF-8"
@@ -10,3 +8,4 @@ eval "$(pyenv init --path)"
 export AM_I_DOCKER=False
 export BUILD_WITH_CUDA=True
 export CUDA_HOME="/usr/lib/nvidia-cuda-toolkit"
+export TMPDIR=~/mq/tmp

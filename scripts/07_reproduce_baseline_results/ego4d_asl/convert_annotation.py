@@ -1,9 +1,10 @@
 import os
 import json
 import argparse
-
 import torch
+
 from tqdm import tqdm
+
 
 activity_dict = {
     "Beer pong": 0,
@@ -207,6 +208,7 @@ activity_dict = {
     "Making an omelette": 198,
     "Laying tile": 199,
 }
+
 thumos_dict = {
     "BaseballPitch": 0,
     "BasketballDunk": 1,
@@ -343,6 +345,7 @@ ego4d_dict = {
     "hang_clothes_to_dry": 109,
 }
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
 
@@ -390,15 +393,13 @@ if __name__ == "__main__":
             fps = feats.shape[0] / v_duration
             fps_bak = feats_bak.shape[0] / v_duration
         except Exception as e:
-            if e == "":
-                e = ""
-            # fps = 1.8741513727840071
-            # fps_bak = 1.8741513727840071
-            continue
+            e = ""
+            e += ""
+            fps = 1.8741513727840071
+            fps_bak = 1.8741513727840071
         assert fps == fps_bak
         for clip in clips:
             clip_id = clip["clip_uid"]
-
             if clip_id not in clip_annot_1.keys():
                 clip_annot_1[clip_id] = {}
                 clip_annot_1[clip_id]["video_id"] = vid
@@ -409,9 +410,7 @@ if __name__ == "__main__":
                 clip_annot_1[clip_id]["v_duration"] = v_duration
                 clip_annot_1[clip_id]["fps"] = fps
                 clip_annot_1[clip_id]["annotations"] = []
-
                 clip_annot_1[clip_id]["subset"] = video["split"]
-
             if video["split"] != "test":
                 annotations = clip["annotations"]
                 for cnt, annot in enumerate(annotations):

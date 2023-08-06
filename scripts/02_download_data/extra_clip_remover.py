@@ -16,7 +16,7 @@ if __name__ == "__main__":
     with open(args.annotations_json_file_path, "r") as annotations_json_file:
         annotations_json_dict = json.load(annotations_json_file)
         clip_uids = frozenset(annotations_json_dict.keys())
-    
+
     for folder_path in [args.clips_folder_path, args.egovlp_egonce_features_folder_path, args.internvideo_features_folder_path, args.omnivore_features_folder_path, args.slowfast_features_folder_path]:
         for file_name in os.listdir(folder_path):
             if file_name.split(".")[0] not in clip_uids:
