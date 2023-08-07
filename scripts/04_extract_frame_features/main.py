@@ -15,7 +15,7 @@ from frame_feature_extractor import FrameFeatureExtractor
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
 
-    parser.add_argument("--frame_feature_name", type=str, choices=["unidet", "visor_hos", "ego_hos", "gsam", "ofa", "blip_captioning", "blip_vqa"], default="unidet")
+    parser.add_argument("--frame_feature_name", type=str, choices=["unidet", "visor_hos", "ego_hos", "gsam", "ofa", "blip_captioning", "blip_vqa"], required=True)
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
     parser.add_argument("--num_devices", type=int, default=5)
     parser.add_argument("--batch_size", type=int, default=8)
