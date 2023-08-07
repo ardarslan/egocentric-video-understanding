@@ -1,16 +1,17 @@
 import os
+import json
+import math
 import argparse
 import traceback
 from datetime import datetime
 
+import cv2
 import ray
-import json
 from tqdm import tqdm
 from imutils.video import FileVideoStream
 
-from utils import get_frame_feature_extractor, get_column_names, get_output_file_name, get_error_file_name
+from utils import get_frame_feature_extractor, get_column_names, get_output_file_name, get_error_file_name, GlobalFrameIndex
 from frame_feature_extractor import FrameFeatureExtractor
-from utils import GlobalFrameIndex
 
 
 if __name__ == "__main__":
@@ -139,19 +140,14 @@ if __name__ == "__main__":
         annotations_dict = json.load(annotations_json_file)
         clip_uids = sorted(list(annotations_dict.keys()))
 
-    first_quarter_start_index = 0
-    second_quarter_start_index = int(len(clip_uids) / 4)
-    third_quarter_start_index = int(len(clip_uids) / 2)
-    fourth_quarter_start_index = int(3 * len(clip_uids) / 4)
-
     if args.quarter_index == 0:
-        clip_uids = clip_uids[first_quarter_start_index:second_quarter_start_index]
+        clip_uids = clip_uids[: int(len(clip_uids) / 4)]
     elif args.quarter_index == 1:
-        clip_uids = clip_uids[second_quarter_start_index:third_quarter_start_index]
+        clip_uids = clip_uids[int(len(clip_uids) / 4) : int(len(clip_uids) / 2)]
     elif args.quarter_index == 2:
-        clip_uids = clip_uids[third_quarter_start_index:fourth_quarter_start_index]
+        clip_uids = clip_uids[int(len(clip_uids) / 2) : int(3 * len(clip_uids) / 4)]
     elif args.quarter_index == 3:
-        clip_uids = clip_uids[fourth_quarter_start_index:]
+        clip_uids = clip_uids[int(3 * len(clip_uids) / 4) :]
 
     for clip_uid in tqdm(clip_uids):
         try:
@@ -166,7 +162,7 @@ if __name__ == "__main__":
             global_frame_index = GlobalFrameIndex()
 
             results_list = []
-            for _ in range():
+            for _ in range(int(math.ceil(cap.stream.get(cv2.CAP_PROP_FRAME_COUNT) / float(args.num_frames_per_processing_split)))):
                 inputs = FrameFeatureExtractor.get_inputs(
                     cap=cap,
                     batch_size=args.batch_size,
