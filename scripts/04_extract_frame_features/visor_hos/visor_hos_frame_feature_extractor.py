@@ -216,4 +216,8 @@ class VisorHOSFrameFeatureExtractor(FrameFeatureExtractor):
                         detection_score,
                     )
                 )
+        del frame_indices_batch
+        del predictions_batch
+        gc.collect()
+        torch.cuda.empty_cache()
         return postprocessed_predictions

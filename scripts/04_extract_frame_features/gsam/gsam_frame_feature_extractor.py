@@ -1,3 +1,5 @@
+import gc
+
 import torch
 import numpy as np
 from PIL import Image
@@ -134,4 +136,8 @@ class GSAMFrameFeatureExtractor(FrameFeatureExtractor):
                         current_detection_score,
                     )
                 )
+        del frame_indices_batch
+        del frames_batch
+        gc.collect()
+        torch.cuda.empty_cache()
         return predictions

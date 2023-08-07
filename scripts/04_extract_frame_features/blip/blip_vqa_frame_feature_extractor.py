@@ -61,5 +61,8 @@ class BLIPVQAFrameFeatureExtractor(FrameFeatureExtractor):
                     predictions.append((frame_index, question, answer))
 
         del preprocessed_frames_batch
+        del frame_indices_batch
+        gc.collect()
+        torch.cuda.empty_cache()
 
         return predictions

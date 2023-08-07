@@ -56,7 +56,7 @@ class OFAFrameFeatureExtractor(FrameFeatureExtractor):
         for frame in frames_batch:
             patch_images = self.patch_resize_transform(Image.fromarray(frame[:, :, ::-1])).unsqueeze(0).to(self.args.device)
             patch_images_batch.append(patch_images)
-        del patch_images
+        del frames_batch
         gc.collect()
         torch.cuda.empty_cache()
         patch_images_batch = torch.vstack(patch_images_batch)
@@ -77,4 +77,8 @@ class OFAFrameFeatureExtractor(FrameFeatureExtractor):
             data = self.tokenizer.batch_decode(data, skip_special_tokens=True)
             for frame_index, answer in zip(frame_indices_batch, data):
                 predictions.append((frame_index, question, answer))
+        del patch_images_batch
+        del frame_indices_batch
+        gc.collect()
+        torch.cuda.empty_cache()
         return predictions

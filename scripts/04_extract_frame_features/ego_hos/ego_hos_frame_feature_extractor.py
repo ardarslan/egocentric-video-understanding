@@ -1,3 +1,5 @@
+import gc
+
 import ray
 import torch
 import numpy as np
@@ -160,4 +162,10 @@ class EgoHOSFrameFeatureExtractor(FrameFeatureExtractor):
                                     object_label,
                                 )
                             )
+        del frame_indices_batch
+        del frames_batch
+        del unidet_features_batch
+        del gsam_features_batch
+        gc.collect()
+        torch.cuda.empty_cache()
         return predictions

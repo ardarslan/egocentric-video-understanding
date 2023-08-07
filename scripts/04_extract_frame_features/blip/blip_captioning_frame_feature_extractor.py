@@ -53,5 +53,8 @@ class BLIPCaptioningFrameFeatureExtractor(FrameFeatureExtractor):
             for frame_index, image_caption in zip(frame_indices_batch, image_captions):
                 predictions.append((frame_index, "Image Caption", image_caption))
         del preprocessed_frames_batch
+        del frame_indices_batch
+        gc.collect()
+        torch.cuda.empty_cache()
 
         return predictions

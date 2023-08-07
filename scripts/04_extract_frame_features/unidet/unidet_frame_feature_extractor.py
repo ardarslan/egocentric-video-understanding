@@ -1,3 +1,4 @@
+import gc
 import json
 
 from frame_feature_extractor import FrameFeatureExtractor
@@ -66,8 +67,14 @@ class UnidetFrameFeatureExtractor(FrameFeatureExtractor):
             frame = frame.astype("float32").transpose(2, 0, 1)  # HWC->CHW
             frame = torch.tensor(frame, device=self.args.device)
             preprocessed_frames_batch.append({"image": frame, "height": frame.shape[1], "width": frame.shape[2]})
+
         with torch.no_grad():
             predictions = self.model(preprocessed_frames_batch)
+
+        del preprocessed_frames_batch
+        gc.collect()
+        torch.cuda.empty_cache()
+
         postprocessed_predictions = []
         for frame_index, current_frame_detections in zip(frame_indices_batch, predictions):
             try:
@@ -97,4 +104,8 @@ class UnidetFrameFeatureExtractor(FrameFeatureExtractor):
                         detection_score,
                     )
                 )
+        del predictions
+        del frame_indices_batch
+        gc.collect()
+        torch.cuda.empty_cache()
         return postprocessed_predictions
