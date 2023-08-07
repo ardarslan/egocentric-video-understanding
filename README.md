@@ -19,7 +19,7 @@ du -sch .[!.]* * | sort -h
 # Start a VS Code Server
 
 ```
-srun --time 720 --gres=gpu:5 --cpus-per-task=5 --mem=40G --pty bash -i
+srun --time 720 --gres=gpu:5 --cpus-per-task=5 --mem=60G --pty bash -i
 
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```
