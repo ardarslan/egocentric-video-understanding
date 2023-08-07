@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--frame_feature_name", type=str, choices=["unidet", "visor_hos", "ego_hos", "gsam", "ofa", "blip_captioning", "blip_vqa"], required=True)
     parser.add_argument("--num_devices", type=int, required=True)
-    parser.add_argument("--first_clip_index", type=int, required=True)
+    parser.add_argument("--quarter_index", type=int, required=True)
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--annotations_json_file_path", type=str, default="/home/aarslan/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json")
@@ -136,7 +136,20 @@ if __name__ == "__main__":
     with open(args.annotations_json_file_path, "r") as annotations_json_file:
         annotations_dict = json.load(annotations_json_file)
         clip_uids = sorted(list(annotations_dict.keys()))
-        clip_uids = clip_uids[args.first_clip_index :]
+
+    first_quarter_start_index = 0
+    second_quarter_start_index = int(len(clip_uids) / 4)
+    third_quarter_start_index = int(len(clip_uids) / 2)
+    fourth_quarter_start_index = int(3 * len(clip_uids) / 4)
+
+    if args.quarter_index == 0:
+        clip_uids = clip_uids[first_quarter_start_index:second_quarter_start_index]
+    elif args.quarter_index == 1:
+        clip_uids = clip_uids[second_quarter_start_index:third_quarter_start_index]
+    elif args.quarter_index == 2:
+        clip_uids = clip_uids[third_quarter_start_index:fourth_quarter_start_index]
+    elif args.quarter_index == 3:
+        clip_uids = clip_uids[fourth_quarter_start_index:]
 
     for clip_uid in tqdm(clip_uids):
         try:
