@@ -53,3 +53,14 @@ def get_column_names(args):
     else:
         raise Exception(f"{args.frame_feature_name} is not a valid frame feature name.")
     return column_names
+
+
+class GlobalFrameIndex(object):
+    def __init__(self):
+        self.value = 0
+
+    def get_value(self):
+        return self.value
+
+    def increment_value(self):
+        self.value += 1

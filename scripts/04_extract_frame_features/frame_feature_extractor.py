@@ -12,7 +12,7 @@ class FrameFeatureExtractor(ABC):
         pass
 
     @staticmethod
-    def get_inputs(cap, batch_size: int, frame_feature_name: str, output_subfolder_path: str):
+    def get_inputs(cap, batch_size: int, frame_feature_name: str, output_subfolder_path: str, num_frames_per_processing_split: int, global_frame_index):
         if frame_feature_name == "ego_hos":
             if not os.path.exists(os.path.join(output_subfolder_path, "unidet_features.tsv")):
                 raise Exception("To extract ego_hos features, unidet features should be extracted first.")
@@ -23,11 +23,12 @@ class FrameFeatureExtractor(ABC):
             unidet_features_batches = []
             gsam_features_batches = []
 
-        frame_index = 0
         cap_is_opened = True
 
         frame_indices_batches = []
         frames_batches = []
+
+        current_processing_split_frame_index = 0
 
         while cap_is_opened:
             frame_indices_batch, frames_batch = [], []
@@ -36,18 +37,25 @@ class FrameFeatureExtractor(ABC):
 
             for i in range(batch_size):
                 frame = cap.read()
+
                 if frame is None:  # Reached the end of the video.
                     cap_is_opened = False
                     break
                 else:  # We got a valid frame. The current frame will be added to the current batch.
                     frames_batch.append(frame)
-                    frame_indices_batch.append(frame_index)
-                    frame_index += 1
+                    current_global_frame_index = global_frame_index.get_value()
+                    frame_indices_batch.append(current_global_frame_index)
+                    global_frame_index.increment_value()
+                    current_processing_split_frame_index += 1
                     if frame_feature_name == "ego_hos":
-                        relevant_unidet_feature_rows = [dict(row) for index, row in unidet_features[unidet_features["frame_index"] == frame_index].iterrows()]
-                        relevant_gsam_feature_rows = [dict(row) for index, row in gsam_features[gsam_features["frame_index"] == frame_index].iterrows()]
+                        relevant_unidet_feature_rows = [dict(row) for index, row in unidet_features[unidet_features["frame_index"] == current_global_frame_index].iterrows()]
+                        relevant_gsam_feature_rows = [dict(row) for index, row in gsam_features[gsam_features["frame_index"] == current_global_frame_index].iterrows()]
                         unidet_features_batch.append(relevant_unidet_feature_rows)
                         gsam_features_batch.append(relevant_gsam_feature_rows)
+
+                    if current_processing_split_frame_index == num_frames_per_processing_split:
+                        cap_is_opened = False
+                        break
 
             if len(frames_batch) > 0:
                 frame_indices_batches.append(frame_indices_batch)
@@ -55,6 +63,7 @@ class FrameFeatureExtractor(ABC):
                 if frame_feature_name == "ego_hos":
                     unidet_features_batches.append(unidet_features_batch)
                     gsam_features_batches.append(gsam_features_batch)
+
         if frame_feature_name == "ego_hos":
             inputs = zip(frame_indices_batches, frames_batches, unidet_features_batches, gsam_features_batches)
         else:

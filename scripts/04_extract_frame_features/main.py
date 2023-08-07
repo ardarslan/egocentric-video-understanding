@@ -10,6 +10,7 @@ from imutils.video import FileVideoStream
 
 from utils import get_frame_feature_extractor, get_column_names, get_output_file_name, get_error_file_name
 from frame_feature_extractor import FrameFeatureExtractor
+from utils import GlobalFrameIndex
 
 
 if __name__ == "__main__":
@@ -20,6 +21,7 @@ if __name__ == "__main__":
     parser.add_argument("--quarter_index", type=int, required=True)
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
     parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--num_frames_per_processing_split", type=int, default=10000)
     parser.add_argument("--annotations_json_file_path", type=str, default="/home/aarslan/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json")
 
     parser.add_argument("--unidet_confidence_threshold", type=float, default=0.4)
@@ -161,10 +163,20 @@ if __name__ == "__main__":
 
             cap = FileVideoStream(input_video_file_path).start()
 
-            inputs = FrameFeatureExtractor.get_inputs(cap=cap, batch_size=args.batch_size, frame_feature_name=args.frame_feature_name, output_subfolder_path=output_subfolder_path)
+            global_frame_index = GlobalFrameIndex()
 
-            results_list = frame_feature_extractor_pool.map(lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(*current_input), inputs)
-
+            results_list = []
+            for _ in range():
+                inputs = FrameFeatureExtractor.get_inputs(
+                    cap=cap,
+                    batch_size=args.batch_size,
+                    frame_feature_name=args.frame_feature_name,
+                    output_subfolder_path=output_subfolder_path,
+                    num_frames_per_processing_split=args.num_frames_per_processing_split,
+                    global_frame_index=global_frame_index,
+                )
+                current_results_list = frame_feature_extractor_pool.map(lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(*current_input), inputs)
+                results_list.extend(current_results_list)
             cap.stop()
 
             FrameFeatureExtractor.save_results(
