@@ -352,22 +352,22 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_annotation_folder_path",
         type=str,
-        default="$SCRATCH/ego4d_data/v2/annotations/",
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/annotations/",
     )
     parser.add_argument(
         "--video_features_folder_path",
         type=str,
-        default="$SCRATCH/ego4d_data/v2/",
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/",
     )
     parser.add_argument(
         "--ego4d_json_path",
         type=str,
-        default="$SCRATCH/ego4d_data/ego4d.json",
+        default=f"{os.environ['SCRATCH']}/ego4d_data/ego4d.json",
     )
     parser.add_argument(
         "--output_annotation_file_path",
         type=str,
-        default="$CODE/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json",
+        default=f"{os.environ['CODE']}/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json",
     )
     args = parser.parse_args()
 

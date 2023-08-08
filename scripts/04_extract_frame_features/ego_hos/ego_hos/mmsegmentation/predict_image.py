@@ -83,32 +83,32 @@ def inference_segmentor(model, img, previous_results):
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--ego_hos_seg_twohands_config_file_path",
-    default="$CODE/scripts/extract_frame_features/ego_hos/configs/seg_twohands_ccda.py",
+    default=f"{os.environ['CODE']}/scripts/extract_frame_features/ego_hos/configs/seg_twohands_ccda.py",
     type=str,
 )
 parser.add_argument(
     "--ego_hos_seg_twohands_model_file_path",
-    default="$SCRATCH/mq_libs/ego_hos/seg_twohands_ccda/best_mIoU_iter_56000.pth",
+    default=f"{os.environ['SCRATCH']}/mq_libs/ego_hos/seg_twohands_ccda/best_mIoU_iter_56000.pth",
     type=str,
 )
 parser.add_argument(
     "--ego_hos_twohands_to_cb_config_file_path",
-    default="$CODE/scripts/extract_frame_features/ego_hos/configs/twohands_to_cb_ccda.py",
+    default=f"{os.environ['CODE']}/scripts/extract_frame_features/ego_hos/configs/twohands_to_cb_ccda.py",
     type=str,
 )
 parser.add_argument(
     "--ego_hos_twohands_to_cb_model_file_path",
-    default="$SCRATCH/mq_libs/ego_hos/twohands_to_cb_ccda/best_mIoU_iter_76000.pth",
+    default=f"{os.environ['SCRATCH']}/mq_libs/ego_hos/twohands_to_cb_ccda/best_mIoU_iter_76000.pth",
     type=str,
 )
 parser.add_argument(
     "--ego_hos_twohands_cb_to_obj2_config_file_path",
-    default="$CODE/scripts/extract_frame_features/ego_hos/configs/twohands_cb_to_obj2_ccda.py",
+    default=f"{os.environ['CODE']}/scripts/extract_frame_features/ego_hos/configs/twohands_cb_to_obj2_ccda.py",
     type=str,
 )
 parser.add_argument(
     "--ego_hos_twohands_cb_to_obj2_model_file_path",
-    default="$SCRATCH/mq_libs/ego_hos/twohands_cb_to_obj2_ccda/best_mIoU_iter_32000.pth",
+    default=f"{os.environ['SCRATCH']}/mq_libs/ego_hos/twohands_cb_to_obj2_ccda/best_mIoU_iter_32000.pth",
     type=str,
 )
 args = parser.parse_args()

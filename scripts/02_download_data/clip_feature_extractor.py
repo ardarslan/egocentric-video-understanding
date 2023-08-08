@@ -12,27 +12,27 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
     parser.add_argument(
         "--annotations_folder_path",
-        default="$SCRATCH/ego4d_data/v2/annotations",
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/annotations",
         type=str,
     )
     parser.add_argument(
         "--slowfast_video_features_folder_path",
-        default="$SCRATCH/ego4d_data/v2/slowfast8x8_r101_k400",
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/slowfast8x8_r101_k400",
         type=str,
     )
     parser.add_argument(
         "--omnivore_video_features_folder_path",
-        default="$SCRATCH/ego4d_data/v2/omnivore_video_swinl",
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/omnivore_video_swinl",
         type=str,
     )
     parser.add_argument(
         "--slowfast_clip_features_folder_path",
-        default="$SCRATCH/ego4d_data/v2/slowfast_clip",
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/slowfast_clip",
         type=str,
     )
     parser.add_argument(
         "--omnivore_clip_features_folder_path",
-        default="$SCRATCH/ego4d_data/v2/omnivore_clip",
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/omnivore_clip",
         type=str,
     )
     args = parser.parse_args()

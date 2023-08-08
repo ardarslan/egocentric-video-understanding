@@ -49,66 +49,66 @@ if __name__ == "__main__":
     parser.add_argument(
         "--annotations_json_file_path",
         type=str,
-        default="$CODE/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json",
+        default=f"{os.environ['CODE']}/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json",
     )
 
     parser.add_argument("--unidet_confidence_threshold", type=float, default=0.4)
     parser.add_argument(
         "--unidet_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/unidet/Unified_learned_OCIM_R50_6x+2x.pth",
+        default=f"{os.environ['SCRATCH']}/mq_libs/unidet/Unified_learned_OCIM_R50_6x+2x.pth",
     )
     parser.add_argument(
         "--unidet_config_file_path",
         type=str,
-        default="$CODE/scripts/04_extract_frame_features/unidet/configs/Unified_learned_OCIM_R50_6x+2x.yaml",
+        default=f"{os.environ['CODE']}/scripts/04_extract_frame_features/unidet/configs/Unified_learned_OCIM_R50_6x+2x.yaml",
     )
 
     parser.add_argument("--visor_hos_confidence_threshold", type=float, default=0.4)
     parser.add_argument(
         "--visor_hos_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/visor_hos/model_final_hos.pth",
+        default=f"{os.environ['SCRATCH']}/mq_libs/visor_hos/model_final_hos.pth",
     )
     parser.add_argument(
         "--visor_hos_config_file_path",
         type=str,
-        default="$CODE/scripts/04_extract_frame_features/visor_hos/configs/hos_pointrend_rcnn_R_50_FPN_1x.yaml",
+        default=f"{os.environ['CODE']}/scripts/04_extract_frame_features/visor_hos/configs/hos_pointrend_rcnn_R_50_FPN_1x.yaml",
     )
 
     parser.add_argument(
         "--ofa_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/ofa",
+        default=f"{os.environ['SCRATCH']}/mq_libs/ofa",
     )
 
     parser.add_argument(
         "--blip_captioning_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/blip/model_base_capfilt_large.pth",
+        default=f"{os.environ['SCRATCH']}/mq_libs/blip/model_base_capfilt_large.pth",
     )
     parser.add_argument(
         "--blip_vqa_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/blip/model_base_vqa_capfilt_large.pth",
+        default=f"{os.environ['SCRATCH']}/mq_libs/blip/model_base_vqa_capfilt_large.pth",
     )
 
     parser.add_argument(
         "--gsam_grounding_config_file_path",
         type=str,
-        default="$CODE/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py",
+        default=f"{os.environ['CODE']}/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py",
         help="path to config file",
     )
     parser.add_argument(
         "--gsam_grounding_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/gsam/groundingdino_swint_ogc.pth",
+        default=f"{os.environ['SCRATCH']}/mq_libs/gsam/groundingdino_swint_ogc.pth",
         help="path to checkpoint file",
     )
     parser.add_argument(
         "--gsam_ram_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/gsam/ram_swin_large_14m.pth",
+        default=f"{os.environ['SCRATCH']}/mq_libs/gsam/ram_swin_large_14m.pth",
         help="path to checkpoint file",
     )
     parser.add_argument(
@@ -124,48 +124,48 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ego_hos_seg_twohands_config_file_path",
         type=str,
-        default="$CODE/scripts/04_extract_frame_features/ego_hos/configs/seg_twohands_ccda.py",
+        default=f"{os.environ['CODE']}/scripts/04_extract_frame_features/ego_hos/configs/seg_twohands_ccda.py",
     )
     parser.add_argument(
         "--ego_hos_seg_twohands_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/ego_hos/seg_twohands_ccda/best_mIoU_iter_56000.pth",
+        default=f"{os.environ['SCRATCH']}/mq_libs/ego_hos/seg_twohands_ccda/best_mIoU_iter_56000.pth",
     )
     parser.add_argument(
         "--ego_hos_twohands_to_cb_config_file_path",
         type=str,
-        default="$CODE/scripts/04_extract_frame_features/ego_hos/configs/twohands_to_cb_ccda.py",
+        default=f"{os.environ['CODE']}/scripts/04_extract_frame_features/ego_hos/configs/twohands_to_cb_ccda.py",
     )
     parser.add_argument(
         "--ego_hos_twohands_to_cb_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/ego_hos/twohands_to_cb_ccda/best_mIoU_iter_76000.pth",
+        default=f"{os.environ['SCRATCH']}/mq_libs/ego_hos/twohands_to_cb_ccda/best_mIoU_iter_76000.pth",
     )
     parser.add_argument(
         "--ego_hos_twohands_cb_to_obj2_config_file_path",
         type=str,
-        default="$CODE/scripts/04_extract_frame_features/ego_hos/configs/twohands_cb_to_obj2_ccda.py",
+        default=f"{os.environ['CODE']}/scripts/04_extract_frame_features/ego_hos/configs/twohands_cb_to_obj2_ccda.py",
     )
     parser.add_argument(
         "--ego_hos_twohands_cb_to_obj2_model_file_path",
         type=str,
-        default="$SCRATCH/mq_libs/ego_hos/twohands_cb_to_obj2_ccda/best_mIoU_iter_32000.pth",
+        default=f"{os.environ['SCRATCH']}/mq_libs/ego_hos/twohands_cb_to_obj2_ccda/best_mIoU_iter_32000.pth",
     )
 
     parser.add_argument(
         "--input_folder_path",
         type=str,
-        default="$SCRATCH/ego4d_data/v2/clips",
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/clips",
     )
     parser.add_argument(
         "--output_folder_path",
         type=str,
-        default="$SCRATCH/ego4d_data/v2/frame_features",
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/frame_features",
     )
     parser.add_argument(
         "--error_folder_path",
         type=str,
-        default="$CODE/error_files/",
+        default=f"{os.environ['CODE']}/error_files/",
     )
 
     args = parser.parse_args()
