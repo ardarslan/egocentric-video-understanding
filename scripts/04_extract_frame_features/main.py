@@ -56,7 +56,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--unidet_model_file_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/datamq_libs/unidet/Unified_learned_OCIM_R50_6x+2x.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/unidet/Unified_learned_OCIM_R50_6x+2x.pth",
     )
     parser.add_argument(
         "--unidet_config_file_path",
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--visor_hos_model_file_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/datamq_libs/visor_hos/model_final_hos.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/visor_hos/model_final_hos.pth",
     )
     parser.add_argument(
         "--visor_hos_config_file_path",
@@ -79,18 +79,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ofa_model_file_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/datamq_libs/ofa",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/ofa",
     )
 
     parser.add_argument(
         "--blip_captioning_model_file_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/datamq_libs/blip/model_base_capfilt_large.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/blip/model_base_capfilt_large.pth",
     )
     parser.add_argument(
         "--blip_vqa_model_file_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/datamq_libs/blip/model_base_vqa_capfilt_large.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/blip/model_base_vqa_capfilt_large.pth",
     )
 
     parser.add_argument(
@@ -102,13 +102,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--gsam_grounding_model_file_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/datamq_libs/gsam/groundingdino_swint_ogc.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/gsam/groundingdino_swint_ogc.pth",
         help="path to checkpoint file",
     )
     parser.add_argument(
         "--gsam_ram_model_file_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/datamq_libs/gsam/ram_swin_large_14m.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/gsam/ram_swin_large_14m.pth",
         help="path to checkpoint file",
     )
     parser.add_argument(
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ego_hos_seg_twohands_model_file_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/datamq_libs/ego_hos/seg_twohands_ccda/best_mIoU_iter_56000.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/ego_hos/seg_twohands_ccda/best_mIoU_iter_56000.pth",
     )
     parser.add_argument(
         "--ego_hos_twohands_to_cb_config_file_path",
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ego_hos_twohands_to_cb_model_file_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/datamq_libs/ego_hos/twohands_to_cb_ccda/best_mIoU_iter_76000.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/ego_hos/twohands_to_cb_ccda/best_mIoU_iter_76000.pth",
     )
     parser.add_argument(
         "--ego_hos_twohands_cb_to_obj2_config_file_path",
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ego_hos_twohands_cb_to_obj2_model_file_path",
         type=str,
-        default="/srv/beegfs02/scratch/aarslan_data/datamq_libs/ego_hos/twohands_cb_to_obj2_ccda/best_mIoU_iter_32000.pth",
+        default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/ego_hos/twohands_cb_to_obj2_ccda/best_mIoU_iter_32000.pth",
     )
 
     parser.add_argument(
