@@ -125,6 +125,8 @@ mamba deactivate
 
 rm -rf $SCRATCH/mambaforge/envs/mq
 
+(AIT Server) module load cuda/11.3
+
 mamba create -n mq python=3.9.9
 
 mamba activate mq
@@ -150,11 +152,11 @@ pip install --upgrade pip
 
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu115
 
-pip install --user mmcv-full==1.6.0
+pip install mmcv-full==1.6.0
 
 cd $CODE/scripts/04_extract_frame_features/ego_hos/ego_hos/mmsegmentation
 
-pip install --user -v -e .
+pip install -v -e .
 
 cd $CODE/scripts/04_extract_frame_features/gsam
 
@@ -166,7 +168,7 @@ cd gsam
 
 git submodule update --init --recursive
 
-pip install -e GroundingDINO --user
+pip install -e GroundingDINO
 
 rm -rf .git
 
@@ -204,7 +206,7 @@ cd $SCRATCH/mq_libs
 
 git clone https://github.com/facebookresearch/detectron2.git
 
-pip install --user -e detectron2
+pip install -e detectron2
 
 cd $CODE/scripts/01_setup_environment
 
@@ -214,7 +216,7 @@ pip install $CODE/scripts/04_extract_frame_features/ofa/ofa/transformers
 
 cd $CODE/scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils
 
-python3 setup.py install --user
+python3 setup.py install
 
 python3 -m ipykernel install --user --name=mq
 
