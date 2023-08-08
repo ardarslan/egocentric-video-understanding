@@ -20,8 +20,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
 
     parser.add_argument("--frame_feature_name", type=str, choices=["unidet", "visor_hos", "ego_hos", "gsam", "ofa", "blip_captioning", "blip_vqa"], required=True)
-    parser.add_argument("--num_devices", type=int, required=True)
-    parser.add_argument("--quarter_index", type=int, required=True)
+    parser.add_argument("--num_devices", type=int, default=torch.cuda.device_count())
+    parser.add_argument("--quarter_index", type=int, choices=[0, 1, 2, 3], required=True)
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--num_frames_per_processing_split", type=int, default=3000)
@@ -150,6 +150,8 @@ if __name__ == "__main__":
         clip_uids = clip_uids[int(len(clip_uids) / 2) : int(3 * len(clip_uids) / 4)]
     elif args.quarter_index == 3:
         clip_uids = clip_uids[int(3 * len(clip_uids) / 4) :]
+    else:
+        raise Exception(f"{args.quarter_index} is not a valid quarter index.")
 
     for clip_uid in tqdm(clip_uids):
         try:

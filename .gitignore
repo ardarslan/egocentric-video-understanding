@@ -5,3 +5,4 @@
 sample_data
 error_files
 tmp
+*slurm-*.out*
