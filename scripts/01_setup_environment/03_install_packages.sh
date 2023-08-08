@@ -1,11 +1,3 @@
-mamba deactivate
-
-rm -rf $SCRATCH/mambaforge/envs/mq
-
-mamba create -n mq python=3.9.9
-
-mamba activate mq
-
 rm -rf ~/.cache
 
 rm -rf $SCRATCH/pip_cache

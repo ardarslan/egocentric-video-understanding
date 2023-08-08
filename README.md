@@ -145,6 +145,13 @@ exit
 Open a new terminal.
 
 ```
+mamba deactivate
+
+rm -rf $SCRATCH/mambaforge/envs/mq
+
+mamba create -n mq python=3.9.9
+
+mamba activate mq
 
 cd ~/mq/scripts/01_setup_environment/
 
