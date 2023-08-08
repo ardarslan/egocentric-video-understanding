@@ -1,8 +1,0 @@
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-function localpip {
-    PYTHONUSERBASE=$SCRATCH
-    PATH=$PYTHONUSERBASE/bin:$PATH
-    export PYTHONUSERBASE PATH
-}
-

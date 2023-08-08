@@ -51,6 +51,8 @@ cd $SCRATCH/ego4d_data/v2/internvideo
 
 mv ego4d_mq_videointern_eccv2022_verb_features/* .
 
+rm -rf ego4d_mq_videointern_eccv2022_verb_features
+
 rm -rf $SCRATCH/ego4d_data/v2/internvideo.zip
 
 python3 ~/mq/scripts/02_download_data/internvideo_pkl_to_pt_convertor.py --internvideo_pkl_clip_features_folder_path $SCRATCH/ego4d_data/v2/internvideo --internvideo_pt_clip_features_folder_path $SCRATCH/ego4d_data/v2/internvideo_pt

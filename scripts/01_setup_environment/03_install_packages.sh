@@ -1,26 +1,26 @@
+rm -rf ~/.cache
+
 rm -rf $SCRATCH/pip_cache
 
 rm -rf $SCRATCH/pip_temp
 
-rm -rf ~/.cache
-
-pip config set install.user false
-
-mkdir -p $SCRATCH/pip_temp
+mkdir $SCRATCH/pip_temp
 
 export TMPDIR=$SCRATCH/pip_temp
 
-mkdir -p $SCRATCH/pip_cache
+mkdir $SCRATCH/pip_cache
 
-pip config set global.cache-dir $SCRATCH/pip_cache
+export PIP_CACHE_DIR=$SCRATCH/pip_cache
 
 pip install --upgrade pip
 
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu115
 
+pip install mmcv-full==1.6.0
 
-pip install torch
+cd ~/mq/scripts/04_extract_frame_features/ego_hos/ego_hos/mmsegmentation
 
-pip install torchvision
+pip install -v -e .
 
 cd ~/mq/scripts/04_extract_frame_features/gsam
 
@@ -66,15 +66,15 @@ rm -rf ~/mq/scripts/04_extract_frame_features/gsam/VISAM
 
 rm -rf ~/mq/scripts/04_extract_frame_features/gsam/grounded-sam-osx
 
+cd /srv/beegfs02/scratch/aarslan_data/data/mq_libs
+
+git clone https://github.com/facebookresearch/detectron2.git
+
+pip install -e detectron2
+
 cd ~/mq/scripts/01_setup_environment
 
-for line in $(cat requirements.txt); do pip install $line; done
-
-mim install mmcv-full==1.6.0
-
-cd ~/mq/scripts/04_extract_frame_features/ego_hos/ego_hos/mmsegmentation
-
-pip install -v -e .
+pip install -r requirements.txt
 
 pip install ~/mq/scripts/04_extract_frame_features/ofa/ofa/transformers
 

@@ -4,10 +4,50 @@
 ssh aarslan@robustus.ee.ethz.ch
 ```
 
+# Clone this repository
+
+```
+cd
+
+git clone git@github.com:ardarslan/mq.git
+```
+
+# Update paths
+
+CVL Server:
+
+```
+cd ~/mq
+
+find . -type f -exec sed -i 's/\/srv\/beegfs02\/scratch\/aarslan_data\/data/\/data\/aarslan/g' {} +
+
+find . -type f -exec sed -i 's/\/home\/aarslan\/mq/\/local\/home\/aarslan\/mq/g' {} +
+
+```
+
+
+AIT Server:
+
+```
+cd ~/mq
+
+find . -type f -exec sed -i 's/\/data\/aarslan/\/srv\/beegfs02\/scratch\/aarslan_data\/data/g' {} +
+
+find . -type f -exec sed -i 's/\/local\/home\/aarslan\/mq/\/home\/aarslan\/mq/g' {} +
+```
+
 # Check resource availability
+
+CVL Server:
 
 ```
 grep --color=always --extended-regexp 'free|$' /home/sladmcvl/smon.txt
+```
+
+AIT Server:
+
+```
+nvidia-smi
 ```
 
 # List folders, hidden folders, files and hidden files and show the largest one at the bottom
@@ -18,11 +58,17 @@ du -sch .[!.]* * | sort -h
 
 # Start a VS Code Server
 
+CVL Server:
+
 ```
-srun --time 720 --gres=gpu:5 --cpus-per-task=5 --mem=60G --pty bash -i
+srun --time 720 --gres=gpu:1 --cpus-per-task=1 --mem=10G --pty bash -i
 
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```
+
+AIT Server:
+
+Use remote-ssh extension of your local VS Code.
 
 # Start a Jupyter Notebook
 
@@ -35,35 +81,76 @@ jupyter notebook --no-browser --port 5998 --ip $(hostname -f)
 # Go into mq folder
 
 ```
-cd mq
+cd ~/mq
 ```
 
-# 01_01 - Update ~/.profile and ~/.bashrc files
+# 01_01 - Update ~/.profile and also export them
 
 ```
-chmod +x scripts/01_setup_environment/01_update_profile_and_bashrc.sh
+export LC_ALL=C.UTF-8
 
-./scripts/01_setup_environment/01_update_profile_and_bashrc.sh
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export AM_I_DOCKER=False
+
+export BUILD_WITH_CUDA=True
 ```
 
-# 01_02 - Install pyenv
-
+CVL Server:
 ```
-chmod +x scripts/01_setup_environment/02_install_pyenv.sh
+export TMPDIR=/home/aarslan/mq/tmp
 
-./scripts/01_setup_environment/02_install_pyenv.sh
+export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+```
+
+AIT Server:
+```
+export TMPDIR=/local/home/aarslan/mq/tmp
+
+export SCRATCH=/data/aarslan
+
+export CUDA_HOME=/usr/local/cuda
+```
+
+# 01_02 - Install package manager
+
+cd ~/mq
+
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
+
+chmod +x Mambaforge-Linux-x86_64.sh
+
+rm -rf /srv/beegfs02/scratch/aarslan_data/data/mambaforge
+
+./Mambaforge-Linux-x86_64.sh (Use /srv/beegfs02/scratch/aarslan_data/data/mambaforge for mambaforge path)
+
+rm -rf Mambaforge-Linux-x86_64.sh
 
 exit
-```
+
+(Open a new terminal)
+
+mamba deactivate
+
+(AIT Server) module load cuda/11.3
+
+mamba create -n mq python=3.9.9
+
+mamba activate mq
 
 # 01_03 - Install packages
 
 Open a new terminal.
 
 ```
-chmod +x scripts/01_setup_environment/03_install_packages.sh
 
-./scripts/01_setup_environment/03_install_packages.sh
+cd ~/mq/scripts/01_setup_environment/
+
+chmod +x 03_install_packages.sh
+
+./03_install_packages.sh
 ```
 
 Windows + Shift + P
@@ -77,40 +164,43 @@ Follow the instructions in scripts/02_download_data/01_download_ego4d_dataset_an
 # 02_02 - Download pre-trained models of frame feature extractors
 
 ```
-chmod +x scripts/02_download_data/02_download_pretrained_models_of_frame_feature_extractors.sh
+cd ~/mq/scripts/02_download_data
 
-./scripts/02_download_data/02_download_pretrained_models_of_frame_feature_extractors.sh
+chmod +x 02_download_pretrained_models_of_frame_feature_extractors.sh
+
+./02_download_pretrained_models_of_frame_feature_extractors.sh
 ```
 
 # 03 - Check annotation distribution
 
-(NOT IMPLEMENTED YET)
+Implemented in ~/mq/scripts/03_analyze_data/check_annotation_distribution.ipynb
 
 # 04 - Extract frame features
 
+CVL Server:
+
+```
+cd ~/mq/scripts/04_extract_frame_features
+
+sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>"
 ```
 
-cd ~/mq/scripts/03_extract_frame_features/ofa
+AIT Server:
 
-pip install ofa/transformers
+```
+cd ~/mq/scripts/04_extract_frame_features
 
 screen
 
-cd ~/mq/scripts/04_extract_frame_features
+mamba deactivate
 
-python3 main.py --frame_feature_name unidet
+module load cuda/11.8
 
-python3 main.py --frame_feature_name visor_hos
+mamba activate mq
 
-python3 main.py --frame_feature_name ego_hos
+chmod +x main.sh
 
-python3 main.py --frame_feature_name gsam
-
-python3 main.py --frame_feature_name ofa
-
-python3 main.py --frame_feature_name blip_captioning
-
-python3 main.py --frame_feature_name blip_vqa
+./main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>"
 ```
 
 # 05 - Visualize frame features

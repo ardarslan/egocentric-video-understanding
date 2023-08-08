@@ -10,38 +10,82 @@ stride = 16
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
-    parser.add_argument("--annotations_folder_path", default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/annotations", type=str)
-    parser.add_argument("--slowfast_video_features_folder_path", default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/slowfast8x8_r101_k400", type=str)
-    parser.add_argument("--omnivore_video_features_folder_path", default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/omnivore_video_swinl", type=str)
-    parser.add_argument("--slowfast_clip_features_folder_path", default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/slowfast_clip", type=str)
-    parser.add_argument("--omnivore_clip_features_folder_path", default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/omnivore_clip", type=str)
+    parser.add_argument(
+        "--annotations_folder_path",
+        default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/annotations",
+        type=str,
+    )
+    parser.add_argument(
+        "--slowfast_video_features_folder_path",
+        default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/slowfast8x8_r101_k400",
+        type=str,
+    )
+    parser.add_argument(
+        "--omnivore_video_features_folder_path",
+        default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/omnivore_video_swinl",
+        type=str,
+    )
+    parser.add_argument(
+        "--slowfast_clip_features_folder_path",
+        default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/slowfast_clip",
+        type=str,
+    )
+    parser.add_argument(
+        "--omnivore_clip_features_folder_path",
+        default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/omnivore_clip",
+        type=str,
+    )
     args = parser.parse_args()
 
     os.makedirs(args.slowfast_clip_features_folder_path, exist_ok=True)
     os.makedirs(args.omnivore_clip_features_folder_path, exist_ok=True)
 
-    with open(os.path.join(args.annotations_folder_path, "moments_train.json"), "r") as moments_train_json_file:
+    with open(
+        os.path.join(args.annotations_folder_path, "moments_train.json"), "r"
+    ) as moments_train_json_file:
         moments_train_json_dict = json.load(moments_train_json_file)
-    with open(os.path.join(args.annotations_folder_path, "moments_val.json"), "r") as moments_val_json_file:
+    with open(
+        os.path.join(args.annotations_folder_path, "moments_val.json"), "r"
+    ) as moments_val_json_file:
         moments_val_json_dict = json.load(moments_val_json_file)
-    with open(os.path.join(args.annotations_folder_path, "moments_test_unannotated.json"), "r") as moments_test_json_file:
+    with open(
+        os.path.join(args.annotations_folder_path, "moments_test_unannotated.json"), "r"
+    ) as moments_test_json_file:
         moments_test_json_dict = json.load(moments_test_json_file)
 
-    for json_dict in [moments_train_json_dict, moments_val_json_dict, moments_test_json_dict]:
+    for json_dict in [
+        moments_train_json_dict,
+        moments_val_json_dict,
+        moments_test_json_dict,
+    ]:
         for video_dict in tqdm(json_dict["videos"]):
             video_uid = video_dict["video_uid"]
             try:
-                slowfast_video_features = torch.load(os.path.join(args.slowfast_video_features_folder_path, video_uid + ".pt")).numpy()
+                slowfast_video_features = torch.load(
+                    os.path.join(
+                        args.slowfast_video_features_folder_path, video_uid + ".pt"
+                    )
+                ).numpy()
             except Exception as e:
                 e = ""
-                print(f"Slowfast features are not available for video with video uid: {video_uid}." + e)
+                print(
+                    f"Slowfast features are not available for video with video uid: {video_uid}."
+                    + e
+                )
                 continue
 
             try:
-                omnivore_video_features = torch.load(os.path.join(args.omnivore_video_features_folder_path, video_uid + ".pt")).numpy()
+                omnivore_video_features = torch.load(
+                    os.path.join(
+                        args.omnivore_video_features_folder_path, video_uid + ".pt"
+                    )
+                ).numpy()
             except Exception as e:
                 e = ""
-                print(f"Omnivore features are not available for video with video uid: {video_uid}." + e)
+                print(
+                    f"Omnivore features are not available for video with video uid: {video_uid}."
+                    + e
+                )
                 continue
             for clip_dict in video_dict["clips"]:
                 clip_uid = clip_dict["clip_uid"]
@@ -82,9 +126,13 @@ if __name__ == "__main__":
 
                 torch.save(
                     torch.tensor(slowfast_clip_features),
-                    os.path.join(args.slowfast_clip_features_folder_path, clip_uid + ".pt"),
+                    os.path.join(
+                        args.slowfast_clip_features_folder_path, clip_uid + ".pt"
+                    ),
                 )
                 torch.save(
                     torch.tensor(omnivore_clip_features),
-                    os.path.join(args.omnivore_clip_features_folder_path, clip_uid + ".pt"),
+                    os.path.join(
+                        args.omnivore_clip_features_folder_path, clip_uid + ".pt"
+                    ),
                 )
