@@ -22,15 +22,7 @@ class UnidetFrameFeatureExtractor(FrameFeatureExtractor):
         super().__init__()
         self.args = args
         self.cfg = self._setup_cfg(args=args)
-        unified_label_file = json.load(
-            open(
-                os.path.join(
-                    os.environ["CODE"],
-                    "scripts/04_extract_frame_features/unidet/datasets/label_spaces",
-                    self.cfg.MULTI_DATASET.UNIFIED_LABEL_FILE,
-                )
-            )
-        )
+        unified_label_file = json.load(self.cfg.MULTI_DATASET.UNIFIED_LABEL_FILE)
         self.classes = [
             "{}".format([xx for xx in x["name"].split("_") if xx != ""][0])
             for x in unified_label_file["categories"]
@@ -65,6 +57,11 @@ class UnidetFrameFeatureExtractor(FrameFeatureExtractor):
         cfg.MODEL.DEVICE = args.device
         cfg.MODEL.WEIGHTS = args.unidet_model_file_path
         # Set score_threshold for builtin models
+        cfg.MULTI_DATASET.UNIFIED_LABEL_FILE = os.path.join(
+            os.environ["CODE"],
+            "scripts/04_extract_frame_features/unidet/datasets/label_spaces",
+            cfg.MULTI_DATASET.UNIFIED_LABEL_FILE,
+        )
         cfg.MODEL.RETINANET.SCORE_THRESH_TEST = args.unidet_confidence_threshold
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = args.unidet_confidence_threshold
         cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = (
