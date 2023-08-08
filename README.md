@@ -150,11 +150,11 @@ pip install --upgrade pip
 
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu115
 
-pip install mmcv-full==1.6.0
+pip install --user mmcv-full==1.6.0
 
 cd $CODE/scripts/04_extract_frame_features/ego_hos/ego_hos/mmsegmentation
 
-pip install -v -e .
+pip install --user -v -e .
 
 cd $CODE/scripts/04_extract_frame_features/gsam
 
@@ -166,7 +166,7 @@ cd gsam
 
 git submodule update --init --recursive
 
-pip install -e GroundingDINO
+pip install -e GroundingDINO --user
 
 rm -rf .git
 
@@ -204,7 +204,7 @@ cd $SCRATCH/mq_libs
 
 git clone https://github.com/facebookresearch/detectron2.git
 
-pip install -e detectron2
+pip install --user -e detectron2
 
 cd $CODE/scripts/01_setup_environment
 
