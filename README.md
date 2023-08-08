@@ -1,7 +1,15 @@
-# Login to CVL Server
+# Login to Server
+
+CVL Server:
 
 ```
 ssh aarslan@robustus.ee.ethz.ch
+```
+
+AIT Server:
+
+```
+ssh aarslan@ait-server-03
 ```
 
 # Clone this repository
