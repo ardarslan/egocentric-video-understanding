@@ -25,6 +25,6 @@ then
    helpFunction
 fi
 
-export TMPDIR="/home/aarslan/mq/tmp"
-cd ~/mq/scripts/04_extract_frame_features
+export TMPDIR="$CODE/tmp"
+cd $CODE/scripts/04_extract_frame_features
 python3 main.py --frame_feature_name $FRAME_FEATURE_NAME --quarter_index $QUARTER_INDEX

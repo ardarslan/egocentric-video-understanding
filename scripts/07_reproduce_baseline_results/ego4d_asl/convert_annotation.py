@@ -349,17 +349,41 @@ ego4d_dict = {
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
 
-    parser.add_argument("--input_annotation_folder_path", type=str, default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/annotations/")
-    parser.add_argument("--video_features_folder_path", type=str, default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/")
-    parser.add_argument("--ego4d_json_path", type=str, default="/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/ego4d.json")
-    parser.add_argument("--output_annotation_file_path", type=str, default="/home/aarslan/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json")
+    parser.add_argument(
+        "--input_annotation_folder_path",
+        type=str,
+        default="$SCRATCH/ego4d_data/v2/annotations/",
+    )
+    parser.add_argument(
+        "--video_features_folder_path",
+        type=str,
+        default="$SCRATCH/ego4d_data/v2/",
+    )
+    parser.add_argument(
+        "--ego4d_json_path",
+        type=str,
+        default="$SCRATCH/ego4d_data/ego4d.json",
+    )
+    parser.add_argument(
+        "--output_annotation_file_path",
+        type=str,
+        default="$CODE/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json",
+    )
     args = parser.parse_args()
 
-    annot_path_train = os.path.join(args.input_annotation_folder_path, "moments_train.json")
+    annot_path_train = os.path.join(
+        args.input_annotation_folder_path, "moments_train.json"
+    )
     annot_path_val = os.path.join(args.input_annotation_folder_path, "moments_val.json")
-    annot_path_test = os.path.join(args.input_annotation_folder_path, "moments_test_unannotated.json")
-    feat_path_omni = os.path.join(args.video_features_folder_path, "omnivore_video_swinl")
-    feat_path_slowfast = os.path.join(args.video_features_folder_path, "slowfast8x8_r101_k400")
+    annot_path_test = os.path.join(
+        args.input_annotation_folder_path, "moments_test_unannotated.json"
+    )
+    feat_path_omni = os.path.join(
+        args.video_features_folder_path, "omnivore_video_swinl"
+    )
+    feat_path_slowfast = os.path.join(
+        args.video_features_folder_path, "slowfast8x8_r101_k400"
+    )
 
     with open(annot_path_train, "r") as f:
         v_annot_train = json.load(f)
@@ -380,7 +404,9 @@ if __name__ == "__main__":
         v_all_duration[v_id] = v_dur
 
     v_annot = {}
-    v_annot["videos"] = v_annot_train["videos"] + v_annot_val["videos"] + v_annot_test["videos"]
+    v_annot["videos"] = (
+        v_annot_train["videos"] + v_annot_val["videos"] + v_annot_test["videos"]
+    )
 
     clip_annot_1 = {}
     for video in tqdm(v_annot["videos"]):
@@ -404,7 +430,9 @@ if __name__ == "__main__":
                 clip_annot_1[clip_id] = {}
                 clip_annot_1[clip_id]["video_id"] = vid
                 clip_annot_1[clip_id]["clip_id"] = clip_id
-                clip_annot_1[clip_id]["duration"] = clip["video_end_sec"] - clip["video_start_sec"]
+                clip_annot_1[clip_id]["duration"] = (
+                    clip["video_end_sec"] - clip["video_start_sec"]
+                )
                 clip_annot_1[clip_id]["parent_start_sec"] = clip["video_start_sec"]
                 clip_annot_1[clip_id]["parent_end_sec"] = clip["video_end_sec"]
                 clip_annot_1[clip_id]["v_duration"] = v_duration
@@ -417,7 +445,10 @@ if __name__ == "__main__":
                     for label in annot["labels"]:
                         if label["primary"]:
                             new_item = {}
-                            new_item["segment"] = [label["start_time"], label["end_time"]]
+                            new_item["segment"] = [
+                                label["start_time"],
+                                label["end_time"],
+                            ]
                             new_item["label"] = label["label"]
                             new_item["label_id"] = ego4d_dict[label["label"]]
                             clip_annot_1[clip_id]["annotations"].append(new_item)

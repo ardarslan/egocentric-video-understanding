@@ -74,39 +74,41 @@ def inference_segmentor(model, img, previous_results):
 
     # forward the model
     with torch.no_grad():
-        result = model(return_loss=False, rescale=True, previous_results=previous_results, **data)
+        result = model(
+            return_loss=False, rescale=True, previous_results=previous_results, **data
+        )
     return result
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--ego_hos_seg_twohands_config_file_path",
-    default="/home/aarslan/mq/scripts/extract_frame_features/ego_hos/configs/seg_twohands_ccda.py",
+    default="$CODE/scripts/extract_frame_features/ego_hos/configs/seg_twohands_ccda.py",
     type=str,
 )
 parser.add_argument(
     "--ego_hos_seg_twohands_model_file_path",
-    default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/ego_hos/seg_twohands_ccda/best_mIoU_iter_56000.pth",
+    default="$SCRATCH/mq_libs/ego_hos/seg_twohands_ccda/best_mIoU_iter_56000.pth",
     type=str,
 )
 parser.add_argument(
     "--ego_hos_twohands_to_cb_config_file_path",
-    default="/home/aarslan/mq/scripts/extract_frame_features/ego_hos/configs/twohands_to_cb_ccda.py",
+    default="$CODE/scripts/extract_frame_features/ego_hos/configs/twohands_to_cb_ccda.py",
     type=str,
 )
 parser.add_argument(
     "--ego_hos_twohands_to_cb_model_file_path",
-    default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/ego_hos/twohands_to_cb_ccda/best_mIoU_iter_76000.pth",
+    default="$SCRATCH/mq_libs/ego_hos/twohands_to_cb_ccda/best_mIoU_iter_76000.pth",
     type=str,
 )
 parser.add_argument(
     "--ego_hos_twohands_cb_to_obj2_config_file_path",
-    default="/home/aarslan/mq/scripts/extract_frame_features/ego_hos/configs/twohands_cb_to_obj2_ccda.py",
+    default="$CODE/scripts/extract_frame_features/ego_hos/configs/twohands_cb_to_obj2_ccda.py",
     type=str,
 )
 parser.add_argument(
     "--ego_hos_twohands_cb_to_obj2_model_file_path",
-    default="/srv/beegfs02/scratch/aarslan_data/data/mq_libs/ego_hos/twohands_cb_to_obj2_ccda/best_mIoU_iter_32000.pth",
+    default="$SCRATCH/mq_libs/ego_hos/twohands_cb_to_obj2_ccda/best_mIoU_iter_32000.pth",
     type=str,
 )
 args = parser.parse_args()
@@ -133,15 +135,15 @@ alpha = 0.5
 
 img_path = "/home/aarslan/EgoHOS/testimages/inputs/first_person_cooking.png"
 
-seg_twohands_result = inference_segmentor(seg_twohands_model, img_path, previous_results={})[0].astype(np.uint8)
+seg_twohands_result = inference_segmentor(
+    seg_twohands_model, img_path, previous_results={}
+)[0].astype(np.uint8)
 
 twohands_to_cb_result = inference_segmentor(
     twohands_to_cb_model,
     img_path,
     previous_results={"seg_twohands_result": Image.fromarray(seg_twohands_result)},
-)[
-    0
-].astype(np.uint8)
+)[0].astype(np.uint8)
 
 twohands_cb_to_obj2_result = inference_segmentor(
     twohands_cb_to_obj2_model,

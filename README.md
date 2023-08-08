@@ -20,30 +20,6 @@ cd
 git clone git@github.com:ardarslan/mq.git
 ```
 
-# Update paths
-
-CVL Server:
-
-```
-cd ~/mq
-
-find . -type f -exec sed -i 's/\/srv\/beegfs02\/scratch\/aarslan_data\/data/\/data\/aarslan/g' {} +
-
-find . -type f -exec sed -i 's/\/home\/aarslan\/mq/\/local\/home\/aarslan\/mq/g' {} +
-
-```
-
-
-AIT Server:
-
-```
-cd ~/mq
-
-find . -type f -exec sed -i 's/\/data\/aarslan/\/srv\/beegfs02\/scratch\/aarslan_data\/data/g' {} +
-
-find . -type f -exec sed -i 's/\/local\/home\/aarslan\/mq/\/home\/aarslan\/mq/g' {} +
-```
-
 # Check resource availability
 
 CVL Server:
@@ -81,7 +57,7 @@ Use remote-ssh extension of your local VS Code.
 # Start a Jupyter Notebook
 
 ```
-cd ~/mq
+cd $CODE
 
 jupyter notebook --no-browser --port 5998 --ip $(hostname -f)
 ```
@@ -89,15 +65,13 @@ jupyter notebook --no-browser --port 5998 --ip $(hostname -f)
 # Go into mq folder
 
 ```
-cd ~/mq
+cd $CODE
 ```
 
 # 01_01 - Update ~/.profile and also export them
 
 ```
 export LC_ALL=C.UTF-8
-
-export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
 export AM_I_DOCKER=False
 
@@ -106,7 +80,9 @@ export BUILD_WITH_CUDA=True
 
 CVL Server:
 ```
-export TMPDIR=/home/aarslan/mq/tmp
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
 export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 
@@ -115,7 +91,7 @@ export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
 AIT Server:
 ```
-export TMPDIR=/local/home/aarslan/mq/tmp
+export CODE=/local/home/aarslan/mq
 
 export SCRATCH=/data/aarslan
 
@@ -124,15 +100,15 @@ export CUDA_HOME=/usr/local/cuda
 
 # 01_02 - Install package manager
 
-cd ~/mq
+cd $CODE
 
 wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
 
 chmod +x Mambaforge-Linux-x86_64.sh
 
-rm -rf /srv/beegfs02/scratch/aarslan_data/data/mambaforge
+rm -rf $SCRATCH/mambaforge
 
-./Mambaforge-Linux-x86_64.sh (Use /srv/beegfs02/scratch/aarslan_data/data/mambaforge for mambaforge path)
+./Mambaforge-Linux-x86_64.sh (Use $SCRATCH/mambaforge for mambaforge path)
 
 rm -rf Mambaforge-Linux-x86_64.sh
 
@@ -153,7 +129,7 @@ mamba create -n mq python=3.9.9
 
 mamba activate mq
 
-cd ~/mq/scripts/01_setup_environment/
+cd $CODE/scripts/01_setup_environment/
 
 
 rm -rf ~/.cache
@@ -176,11 +152,11 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu115
 
 pip install mmcv-full==1.6.0
 
-cd ~/mq/scripts/04_extract_frame_features/ego_hos/ego_hos/mmsegmentation
+cd $CODE/scripts/04_extract_frame_features/ego_hos/ego_hos/mmsegmentation
 
 pip install -v -e .
 
-cd ~/mq/scripts/04_extract_frame_features/gsam
+cd $CODE/scripts/04_extract_frame_features/gsam
 
 rm -rf gsam
 
@@ -194,49 +170,49 @@ pip install -e GroundingDINO
 
 rm -rf .git
 
-sed -i -e 's/from models/from gsam.gsam.Tag2Text.models/g' -e 's/from data/from gsam.gsam.Tag2Text.data/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/Tag2Text/models/tag2text.py
+sed -i -e 's/from models/from gsam.gsam.Tag2Text.models/g' -e 's/from data/from gsam.gsam.Tag2Text.data/g' $CODE/scripts/04_extract_frame_features/gsam/gsam/Tag2Text/models/tag2text.py
 
-sed -i 's/from models/from gsam.gsam.Tag2Text.models/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/Tag2Text/models/utils.py
+sed -i 's/from models/from gsam.gsam.Tag2Text.models/g' $CODE/scripts/04_extract_frame_features/gsam/gsam/Tag2Text/models/utils.py
 
-sed -i 's/from models/from gsam.gsam.Tag2Text.models/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/Tag2Text/inference_ram.py
+sed -i 's/from models/from gsam.gsam.Tag2Text.models/g' $CODE/scripts/04_extract_frame_features/gsam/gsam/Tag2Text/inference_ram.py
 
-sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/datasets/transforms.py
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' $CODE/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/datasets/transforms.py
 
-sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/groundingdino.py
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' $CODE/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/groundingdino.py
 
-sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/util/utils.py
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' $CODE/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/util/utils.py
 
-sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/backbone/backbone.py
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' $CODE/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/backbone/backbone.py
 
-sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/backbone/position_encoding.py
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' $CODE/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/backbone/position_encoding.py
 
-sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/backbone/swin_transformer.py
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' $CODE/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/backbone/swin_transformer.py
 
-sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/transformer.py
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' $CODE/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/transformer.py
 
-sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' ~/mq/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/ms_deform_attn.py
+sed -i 's/from groundingdino/from gsam.gsam.GroundingDINO.groundingdino/g' $CODE/scripts/04_extract_frame_features/gsam/gsam/GroundingDINO/groundingdino/models/GroundingDINO/ms_deform_attn.py
 
-touch ~/mq/scripts/04_extract_frame_features/gsam/gsam/Tag2Text/models/__init__.py
+touch $CODE/scripts/04_extract_frame_features/gsam/gsam/Tag2Text/models/__init__.py
 
-rm -rf ~/mq/scripts/04_extract_frame_features/gsam/Tag2Text/.git
+rm -rf $CODE/scripts/04_extract_frame_features/gsam/Tag2Text/.git
 
-rm -rf ~/mq/scripts/04_extract_frame_features/gsam/VISAM
+rm -rf $CODE/scripts/04_extract_frame_features/gsam/VISAM
 
-rm -rf ~/mq/scripts/04_extract_frame_features/gsam/grounded-sam-osx
+rm -rf $CODE/scripts/04_extract_frame_features/gsam/grounded-sam-osx
 
-cd /srv/beegfs02/scratch/aarslan_data/data/mq_libs
+cd $SCRATCH/mq_libs
 
 git clone https://github.com/facebookresearch/detectron2.git
 
 pip install -e detectron2
 
-cd ~/mq/scripts/01_setup_environment
+cd $CODE/scripts/01_setup_environment
 
 pip install -r requirements.txt
 
-pip install ~/mq/scripts/04_extract_frame_features/ofa/ofa/transformers
+pip install $CODE/scripts/04_extract_frame_features/ofa/ofa/transformers
 
-cd ~/mq/scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils
+cd $CODE/scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils
 
 python3 setup.py install --user
 
@@ -247,8 +223,6 @@ rm -rf $SCRATCH/pip_cache
 rm -rf $SCRATCH/pip_temp
 
 rm -rf ~/.cache
-
-export TMPDIR=/home/aarslan/mq/tmp
 
 ```
 
@@ -263,7 +237,7 @@ Follow the instructions in scripts/02_download_data/01_download_ego4d_dataset_an
 # 02_02 - Download pre-trained models of frame feature extractors
 
 ```
-cd ~/mq/scripts/02_download_data
+cd $CODE/scripts/02_download_data
 
 chmod +x 02_download_pretrained_models_of_frame_feature_extractors.sh
 
@@ -272,14 +246,16 @@ chmod +x 02_download_pretrained_models_of_frame_feature_extractors.sh
 
 # 03 - Check annotation distribution
 
-Implemented in ~/mq/scripts/03_analyze_data/check_annotation_distribution.ipynb
+Implemented in $CODE/scripts/03_analyze_data/check_annotation_distribution.ipynb
 
 # 04 - Extract frame features
 
 CVL Server:
 
 ```
-cd ~/mq/scripts/04_extract_frame_features
+export TMPDIR=$CODE_DIR/tmp
+
+cd $CODE/scripts/04_extract_frame_features
 
 sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>"
 ```
@@ -287,7 +263,9 @@ sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FE
 AIT Server:
 
 ```
-cd ~/mq/scripts/04_extract_frame_features
+export TMPDIR=$CODE_DIR/tmp
+
+cd $CODE/scripts/04_extract_frame_features
 
 screen
 
@@ -311,9 +289,9 @@ python3 manage.py runserver 5999
 
 # 07 - Reproduce baseline results
 
-python3 ~/mq/scripts/07_reproduce_baseline_results/ego4d_asl/convert_annotation.py --input_annotation_folder_path $SCRATCH/ego4d_data/v2/annotations/ --video_features_folder_path $SCRATCH/ego4d_data/v2/ --ego4d_json_path $SCRATCH/ego4d_data/ego4d.json --output_annotation_file_path ~/mq/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json
+python3 $CODE/scripts/07_reproduce_baseline_results/ego4d_asl/convert_annotation.py --input_annotation_folder_path $SCRATCH/ego4d_data/v2/annotations/ --video_features_folder_path $SCRATCH/ego4d_data/v2/ --ego4d_json_path $SCRATCH/ego4d_data/ego4d.json --output_annotation_file_path $CODE/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json
 
-cd ~/mq/scripts/07_reproduce_baseline_results/ego4d_asl
+cd $CODE/scripts/07_reproduce_baseline_results/ego4d_asl
 
 python3 train.py configs/baseline.yaml --combine_train
 

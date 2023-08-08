@@ -4,10 +4,10 @@ val_split: ['test']
 init_rand_seed: 0
 dataset: {
   json_file: ./data/ego4d/ego4d_clip_annotations_v3.json,
-  feat_folder: ['/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/egovlp_egonce', 
-                '/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/slowfast_clip', 
-                '/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/omnivore_clip',
-                '/srv/beegfs02/scratch/aarslan_data/data/ego4d_data/v2/internvideo'],
+  feat_folder: ['$SCRATCH/ego4d_data/v2/egovlp_egonce',
+                '$SCRATCH/ego4d_data/v2/slowfast_clip',
+                '$SCRATCH/ego4d_data/v2/omnivore_clip',
+                '$SCRATCH/ego4d_data/v2/internvideo'],
   file_prefix: ,
   file_ext: .pt,
   num_classes: 110,
