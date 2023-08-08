@@ -22,7 +22,9 @@ class UnidetFrameFeatureExtractor(FrameFeatureExtractor):
         super().__init__()
         self.args = args
         self.cfg = self._setup_cfg(args=args)
-        unified_label_file = json.load(self.cfg.MULTI_DATASET.UNIFIED_LABEL_FILE)
+        unified_label_file = json.load(
+            open(self.cfg.MULTI_DATASET.UNIFIED_LABEL_FILE, "r")
+        )
         self.classes = [
             "{}".format([xx for xx in x["name"].split("_") if xx != ""][0])
             for x in unified_label_file["categories"]
