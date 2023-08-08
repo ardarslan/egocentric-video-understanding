@@ -66,6 +66,8 @@ gdown 1CDRV0FIMXp3wB5Q1o_UcXla7Xw7P5ORG -O $SCRATCH/ego4d_data/v2/egovlp_egonce.
 
 python3 $CODE/scripts/02_download_data/unzipper.py --zip_file_path $SCRATCH/ego4d_data/v2/egovlp_egonce.zip --unzipped_folder_path $SCRATCH/ego4d_data/v2/egovlp_egonce
 
+rm -rf $SCRATCH/ego4d_data/v2/egovlp_egonce.zip
+
 cd $SCRATCH/ego4d_data/v2/egovlp_egonce
 
 rm -rf __MACOSX

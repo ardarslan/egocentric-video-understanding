@@ -208,6 +208,8 @@ git clone https://github.com/facebookresearch/detectron2.git
 
 pip install -e detectron2
 
+sed -i 's/(point_indices \/\/ W)/torch.div(point_indices, W, rounding_mode="floor")/g' $SCRATCH/mq_libs/detectron2/projects/PointRend/point_rend/point_features.py
+
 cd $CODE/scripts/01_setup_environment
 
 pip install -r requirements.txt
@@ -255,8 +257,6 @@ Implemented in $CODE/scripts/03_analyze_data/check_annotation_distribution.ipynb
 CVL Server:
 
 ```
-export TMPDIR=$CODE/tmp
-
 cd $CODE/scripts/04_extract_frame_features
 
 sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>"
