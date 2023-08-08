@@ -10,3 +10,4 @@ scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils/build/lib.linux-x86_6
 scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils/build/temp.linux-x86_64-3.9/csrc/nms_cpu.o
 scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils/dist/nms_1d_cpu-0.0.0-py3.9-linux-x86_64.egg
 scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils/nms_1d_cpu.egg-info/PKG-INFO
+scripts/04_extract_frame_features/gsam/gsam

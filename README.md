@@ -200,12 +200,6 @@ cd ~/mq/scripts/04_extract_frame_features
 
 screen
 
-mamba deactivate
-
-module load cuda/11.8
-
-mamba activate mq
-
 chmod +x main.sh
 
 ./main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>"
