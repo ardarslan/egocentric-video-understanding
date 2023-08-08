@@ -21,8 +21,19 @@ class UnidetFrameFeatureExtractor(FrameFeatureExtractor):
         super().__init__()
         self.args = args
         self.cfg = self._setup_cfg(args=args)
-        unified_label_file = json.load(open(self.cfg.MULTI_DATASET.UNIFIED_LABEL_FILE))
-        self.classes = ["{}".format([xx for xx in x["name"].split("_") if xx != ""][0]) for x in unified_label_file["categories"]]
+        unified_label_file = json.load(
+            open(
+                os.path.join(
+                    os.environ["CODE"],
+                    "scripts/04_extract_frame_features/unidet/datasets/label_spaces",
+                    self.cfg.MULTI_DATASET.UNIFIED_LABEL_FILE,
+                )
+            )
+        )
+        self.classes = [
+            "{}".format([xx for xx in x["name"].split("_") if xx != ""][0])
+            for x in unified_label_file["categories"]
+        ]
         self.model = build_model(self.cfg)
         self.model.eval()
         checkpointer = DetectionCheckpointer(self.model)
@@ -55,18 +66,24 @@ class UnidetFrameFeatureExtractor(FrameFeatureExtractor):
         # Set score_threshold for builtin models
         cfg.MODEL.RETINANET.SCORE_THRESH_TEST = args.unidet_confidence_threshold
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = args.unidet_confidence_threshold
-        cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = args.unidet_confidence_threshold
+        cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = (
+            args.unidet_confidence_threshold
+        )
         cfg.freeze()
         return cfg
 
-    def predictor_function(self, frame_indices_batch: List[int], frames_batch: List[np.array]):
+    def predictor_function(
+        self, frame_indices_batch: List[int], frames_batch: List[np.array]
+    ):
         preprocessed_frames_batch = []
         for frame in frames_batch:
             frame = frame[:, :, ::-1]  # BGR->RGB
             frame = self.aug.get_transform(frame).apply_image(frame)
             frame = frame.astype("float32").transpose(2, 0, 1)  # HWC->CHW
             frame = torch.tensor(frame, device=self.args.device)
-            preprocessed_frames_batch.append({"image": frame, "height": frame.shape[1], "width": frame.shape[2]})
+            preprocessed_frames_batch.append(
+                {"image": frame, "height": frame.shape[1], "width": frame.shape[2]}
+            )
 
         with torch.no_grad():
             predictions = self.model(preprocessed_frames_batch)
@@ -76,7 +93,9 @@ class UnidetFrameFeatureExtractor(FrameFeatureExtractor):
         torch.cuda.empty_cache()
 
         postprocessed_predictions = []
-        for frame_index, current_frame_detections in zip(frame_indices_batch, predictions):
+        for frame_index, current_frame_detections in zip(
+            frame_indices_batch, predictions
+        ):
             try:
                 num_detections = len(current_frame_detections["instances"])
             except NotImplementedError:

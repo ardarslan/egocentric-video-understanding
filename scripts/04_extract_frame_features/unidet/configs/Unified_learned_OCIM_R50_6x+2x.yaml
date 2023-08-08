@@ -23,7 +23,7 @@ MULTI_DATASET:
   NUM_CLASSES: [365, 80, 500, 37]
   DATA_RATIO: [1, 1, 1, 1]
   USE_CAS: [True, False, True, False]
-  UNIFIED_LABEL_FILE: '${CODE}/scripts/04_extract_frame_features/unidet/datasets/label_spaces/learned_mAP+M.json'
+  UNIFIED_LABEL_FILE: 'learned_mAP+M.json'
   # MATCH_NOVEL_CLASSES_FILE: 'datasets/label_spaces/mAP_val+M_722_4d_labelmap_test.json'
   # UNIFIED_EVAL: True
   # UNIFIED_NOVEL_CLASSES_EVAL: True
