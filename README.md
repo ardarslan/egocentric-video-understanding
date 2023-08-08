@@ -253,7 +253,7 @@ Implemented in $CODE/scripts/03_analyze_data/check_annotation_distribution.ipynb
 CVL Server:
 
 ```
-export TMPDIR=$CODE_DIR/tmp
+export TMPDIR=$CODE/tmp
 
 cd $CODE/scripts/04_extract_frame_features
 
@@ -263,8 +263,6 @@ sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FE
 AIT Server:
 
 ```
-export TMPDIR=$CODE_DIR/tmp
-
 cd $CODE/scripts/04_extract_frame_features
 
 screen
