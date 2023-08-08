@@ -1,5 +1,3 @@
-import gc
-
 import ray
 import numpy as np
 import torch
@@ -24,7 +22,12 @@ class VisorHOSFrameFeatureExtractor(FrameFeatureExtractor):
         self.args = args
         self.cfg = self._setup_cfg(args=args)
         version = "datasets/epick_visor_coco_hos"
-        register_epick_instances("epick_visor_2022_val_hos", {}, f"{version}/annotations/val.json", f"{version}/val")
+        register_epick_instances(
+            "epick_visor_2022_val_hos",
+            {},
+            f"{version}/annotations/val.json",
+            f"{version}/val",
+        )
         self.classes = ["hand", "object"]
 
         self.args = args
@@ -145,7 +148,9 @@ class VisorHOSFrameFeatureExtractor(FrameFeatureExtractor):
                                     [
                                         self._get_offset(
                                             box,
-                                            obj.pred_boxes.tensor.cpu().detach().numpy()[0],
+                                            obj.pred_boxes.tensor.cpu()
+                                            .detach()
+                                            .numpy()[0],
                                         )
                                     ]
                                 ),
@@ -167,32 +172,23 @@ class VisorHOSFrameFeatureExtractor(FrameFeatureExtractor):
 
         return {"instances": ho}
 
-    def predictor_function(self, frame_indices_batch: List[int], frames_batch: List[np.array]):
-        preprocessed_frames_batch = []
-        for frame in frames_batch:
+    def predictor_function(
+        self, frame_indices_batch: List[int], frames_batch: List[np.array]
+    ):
+        predictions = []
+        for frame_index, frame in zip(frame_indices_batch, frames_batch):
             frame = frame[:, :, ::-1]  # BGR->RGB
             frame = self.aug.get_transform(frame).apply_image(frame)
             frame = frame.astype("float32").transpose(2, 0, 1)  # HWC->CHW
             frame = torch.tensor(frame, device=self.args.device)
-            preprocessed_frames_batch.append({"image": frame, "height": frame.shape[1], "width": frame.shape[2]})
-        del frames_batch
-        gc.collect()
-        torch.cuda.empty_cache()
-        with torch.no_grad():
-            predictions_batch = self.model(preprocessed_frames_batch)
-
-        predictions_batch = [self._postprocessing_function(predictions) for predictions in predictions_batch]
-        del preprocessed_frames_batch
-        gc.collect()
-        torch.cuda.empty_cache()
-        postprocessed_predictions = []
-        for frame_index, current_frame_detections in zip(frame_indices_batch, predictions_batch):
+            frame = {"image": frame, "height": frame.shape[1], "width": frame.shape[2]}
+            frame = self._postprocessing_function(self.model([frame]))
             try:
-                num_detections = len(current_frame_detections["instances"])
+                num_detections = len(frame["instances"])
             except NotImplementedError:
                 continue
             for detection_index in range(num_detections):
-                detection = current_frame_detections["instances"][detection_index]
+                detection = frame["instances"][detection_index]
                 (
                     x_top_left,
                     y_top_left,
@@ -204,7 +200,7 @@ class VisorHOSFrameFeatureExtractor(FrameFeatureExtractor):
                 if predicted_class_index != 1:
                     continue
                 text_label = self.classes[predicted_class_index]
-                postprocessed_predictions.append(
+                predictions.append(
                     (
                         frame_index,
                         detection_index,
@@ -216,8 +212,5 @@ class VisorHOSFrameFeatureExtractor(FrameFeatureExtractor):
                         detection_score,
                     )
                 )
-        del frame_indices_batch
-        del predictions_batch
-        gc.collect()
-        torch.cuda.empty_cache()
-        return postprocessed_predictions
+
+        return predictions

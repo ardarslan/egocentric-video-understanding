@@ -259,7 +259,7 @@ CVL Server:
 ```
 cd $CODE/scripts/04_extract_frame_features
 
-sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>"
+sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
 ```
 
 AIT Server:
