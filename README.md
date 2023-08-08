@@ -140,14 +140,6 @@ exit
 
 (Open a new terminal)
 
-mamba deactivate
-
-(AIT Server) module load cuda/11.3
-
-mamba create -n mq python=3.9.9
-
-mamba activate mq
-
 # 01_03 - Install packages
 
 Open a new terminal.
