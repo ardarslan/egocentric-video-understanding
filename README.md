@@ -267,6 +267,10 @@ CVL Server:
 ```
 cd $CODE/scripts/04_extract_frame_features
 
+mamba deactivate
+
+mamba activate mq_data
+
 sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
 ```
 
@@ -276,6 +280,10 @@ AIT Server:
 cd $CODE/scripts/04_extract_frame_features
 
 screen
+
+mamba deactivate
+
+mamba activate mq_data
 
 chmod +x main.sh
 
@@ -296,6 +304,10 @@ python3 manage.py runserver 5999
 (NOT IMPLEMENTED YET)
 
 # 07 - Reproduce baseline results
+
+mamba deactivate
+
+mamba activate mq_model
 
 cd $CODE/scripts/07_reproduce_baseline_results/ego4d_asl
 
