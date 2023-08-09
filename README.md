@@ -45,7 +45,7 @@ du -sch .[!.]* * | sort -h
 CVL Server:
 
 ```
-srun --time 720 --gres=gpu:1 --cpus-per-task=1 --mem=10G --pty bash -i
+srun --time 720 --cpus-per-task=1 --mem=50G --pty bash -i
 
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```
@@ -118,7 +118,7 @@ exit
 
 # 01_03 - Install MQ data packages
 
-Open a new terminal.
+Open a new terminal. Make sure you have a GPU.
 
 ```
 mamba deactivate
@@ -228,11 +228,29 @@ rm -rf ~/.cache
 
 # 01_04 - Install MQ model packages
 
+rm -rf ~/.cache
+
+rm -rf $SCRATCH/pip_cache
+
+rm -rf $SCRATCH/pip_temp
+
+mkdir $SCRATCH/pip_temp
+
+export TMPDIR=$SCRATCH/pip_temp
+
+mkdir $SCRATCH/pip_cache
+
+export PIP_CACHE_DIR=$SCRATCH/pip_cache
+
+pip install --upgrade pip
+
 mamba deactivate
 
 mamba create -n mq_model python=3.8
 
 mamba activate mq_model
+
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu115
 
 cd $CODE/scripts/01_setup_environment
 
@@ -303,7 +321,7 @@ python3 manage.py runserver 5999
 
 (NOT IMPLEMENTED YET)
 
-# 07 - Reproduce baseline results
+# 07 - Reproduce baseline results (Works in CVL Server)
 
 mamba deactivate
 
@@ -311,7 +329,7 @@ mamba activate mq_model
 
 cd $CODE/scripts/07_reproduce_baseline_results
 
-python3 train.py configs/baseline.yaml --combine_train
+sbatch --time 720 --gres=gpu:1 --nodelist=biwirender05 train_combine.sh
 
 # 08 - Reproduce our results
 
