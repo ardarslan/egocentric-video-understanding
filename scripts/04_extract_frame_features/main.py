@@ -49,7 +49,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--annotations_json_file_path",
         type=str,
-        default=f"{os.environ['CODE']}/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v4.json",
+        default=f"{os.environ['CODE']}/scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v4.json",
     )
 
     parser.add_argument("--unidet_confidence_threshold", type=float, default=0.4)
