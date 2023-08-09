@@ -329,7 +329,7 @@ mamba activate mq_model
 
 cd $CODE/scripts/07_reproduce_baseline_results
 
-sbatch --time 720 --gres=gpu:1 --nodelist=biwirender05 train_combine.sh
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=2 --nodelist=biwirender10 train_combine.sh
 
 # 08 - Reproduce our results
 
