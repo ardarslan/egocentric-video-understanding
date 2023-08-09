@@ -6,7 +6,7 @@ sample_data
 error_files
 tmp
 *slurm-*.out*
-scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils/nms_1d_cpu.egg-info/PKG_INFO
+scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils/nms_1d_cpu.egg-info
 scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils/dist
 scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils/build
 scripts/04_extract_frame_features/gsam/gsam
