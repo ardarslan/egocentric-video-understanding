@@ -1,3 +1,5 @@
+import sys
+
 import os
 import json
 import h5py
@@ -70,6 +72,7 @@ class Ego4dDataset(Dataset):
 
         # load database and select the subset
         dict_db, label_dict = self._load_json_db(self.json_file)
+
         # proposal vs action categories
         assert (num_classes == 1) or (len(label_dict) == num_classes)
         self.data_list = dict_db

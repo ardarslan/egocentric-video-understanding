@@ -238,7 +238,7 @@ cd $CODE/scripts/01_setup_environment
 
 pip install -r mq_model_requirements.txt
 
-cd $CODE/scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils
+cd $CODE/scripts/07_reproduce_baseline_results/libs/utils
 
 python3 setup.py install
 
@@ -309,7 +309,7 @@ mamba deactivate
 
 mamba activate mq_model
 
-cd $CODE/scripts/07_reproduce_baseline_results/ego4d_asl
+cd $CODE/scripts/07_reproduce_baseline_results
 
 python3 train.py configs/baseline.yaml --combine_train
 

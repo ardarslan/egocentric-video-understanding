@@ -2,7 +2,7 @@
     "python.languageServer": "Jedi",
     "editor.formatOnSave": true,
     "python.linting.lintOnSave": true,
-    "python.defaultInterpreterPath": "/scratch/aarslan/.pyenv/shims/python3",
+    "python.defaultInterpreterPath": "/srv/beegfs02/scratch/aarslan_data/data/mambaforge/envs/mq_model/bin/python3",
     "python.formatting.provider": "none",
     "editor.defaultFormatter": "ms-python.black-formatter",
     "python.linting.pylintEnabled": false,
