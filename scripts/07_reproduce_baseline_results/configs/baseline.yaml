@@ -3,7 +3,7 @@ train_split: ['train', 'val']
 val_split: ['test']
 init_rand_seed: 0
 dataset: {
-  json_file: ./data/ego4d/ego4d_clip_annotations_v3.json,
+  json_file: ./data/ego4d/ego4d_clip_annotations_v4.json,
   feat_folder: ['ego4d_data/v2/egovlp_egonce',
                 'ego4d_data/v2/slowfast_clip',
                 'ego4d_data/v2/omnivore_clip',
