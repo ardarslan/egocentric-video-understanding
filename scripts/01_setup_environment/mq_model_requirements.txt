@@ -1,0 +1,7 @@
+h5py
+joblib
+numpy
+pandas
+pyyaml
+tensorboard
+transformers

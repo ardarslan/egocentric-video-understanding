@@ -182,7 +182,8 @@ class VisorHOSFrameFeatureExtractor(FrameFeatureExtractor):
             frame = frame.astype("float32").transpose(2, 0, 1)  # HWC->CHW
             frame = torch.tensor(frame, device=self.args.device)
             frame = {"image": frame, "height": frame.shape[1], "width": frame.shape[2]}
-            frame = self._postprocessing_function(self.model([frame]))
+            with torch.no_grad():
+                frame = self._postprocessing_function(self.model([frame])[0])
             try:
                 num_detections = len(frame["instances"])
             except NotImplementedError:

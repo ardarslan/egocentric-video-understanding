@@ -116,20 +116,20 @@ exit
 
 (Open a new terminal)
 
-# 01_03 - Install packages
+# 01_03 - Install MQ data packages
 
 Open a new terminal.
 
 ```
 mamba deactivate
 
-rm -rf $SCRATCH/mambaforge/envs/mq
+rm -rf $SCRATCH/mambaforge/envs/mq_data
 
 (AIT Server) module load cuda/11.3
 
-mamba create -n mq python=3.9.9
+mamba create -n mq_data python=3.9.9
 
-mamba activate mq
+mamba activate mq_data
 
 cd $CODE/scripts/01_setup_environment/
 
@@ -216,10 +216,6 @@ pip install -r requirements.txt
 
 pip install $CODE/scripts/04_extract_frame_features/ofa/ofa/transformers
 
-cd $CODE/scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils
-
-python3 setup.py install
-
 python3 -m ipykernel install --user --name=mq
 
 rm -rf $SCRATCH/pip_cache
@@ -230,9 +226,21 @@ rm -rf ~/.cache
 
 ```
 
-Windows + Shift + P
+# 01_04 - Install MQ model packages
 
-Python: Clear Cache and Reload Window
+mamba deactivate
+
+mamba create -n mq_model python=3.8
+
+mamba activate mq_model
+
+cd $CODE/scripts/01_setup_environment
+
+pip install -r mq_model_requirements.txt
+
+cd $CODE/scripts/07_reproduce_baseline_results/ego4d_asl/libs/utils
+
+python3 setup.py install
 
 # 02_01 - Download Ego4D dataset and pre-extracted features
 
@@ -271,7 +279,7 @@ screen
 
 chmod +x main.sh
 
-./main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>"
+./main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
 ```
 
 # 05 - Visualize frame features
@@ -288,8 +296,6 @@ python3 manage.py runserver 5999
 (NOT IMPLEMENTED YET)
 
 # 07 - Reproduce baseline results
-
-python3 $CODE/scripts/07_reproduce_baseline_results/ego4d_asl/convert_annotation.py --input_annotation_folder_path $SCRATCH/ego4d_data/v2/annotations/ --video_features_folder_path $SCRATCH/ego4d_data/v2/ --ego4d_json_path $SCRATCH/ego4d_data/ego4d.json --output_annotation_file_path $CODE/scripts/07_reproduce_baseline_results/ego4d_asl/data/ego4d/ego4d_clip_annotations_v3.json
 
 cd $CODE/scripts/07_reproduce_baseline_results/ego4d_asl
 
