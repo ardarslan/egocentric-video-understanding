@@ -47,7 +47,7 @@ class Ego4dDataset(Dataset):
             self.file_prefix = file_prefix
         else:
             self.file_prefix = ""
-        self.file_ext = file_ext
+        self.file_ext = ".pt"
         self.json_file = json_file
 
         # anet uses fixed length features, make sure there is no downsampling
