@@ -74,19 +74,19 @@ if __name__ == "__main__":
                 )
                 continue
 
-            try:
-                omnivore_video_features = torch.load(
-                    os.path.join(
-                        args.omnivore_video_features_folder_path, video_uid + ".pt"
-                    )
-                ).numpy()
-            except Exception as e:
-                e = ""
-                print(
-                    f"Omnivore features are not available for video with video uid: {video_uid}."
-                    + e
-                )
-                continue
+            # try:
+            #     omnivore_video_features = torch.load(
+            #         os.path.join(
+            #             args.omnivore_video_features_folder_path, video_uid + ".pt"
+            #         )
+            #     ).numpy()
+            # except Exception as e:
+            #     e = ""
+            #     print(
+            #         f"Omnivore features are not available for video with video uid: {video_uid}."
+            #         + e
+            #     )
+            #     continue
             for clip_dict in video_dict["clips"]:
                 clip_uid = clip_dict["clip_uid"]
 
@@ -118,11 +118,11 @@ if __name__ == "__main__":
 
                 if ei > len(slowfast_video_features):
                     raise ValueError("end index exceeds slowfast feature length")
-                if ei > len(omnivore_video_features):
-                    raise ValueError("end index exceeds omnivore feature length")
+                # if ei > len(omnivore_video_features):
+                #     raise ValueError("end index exceeds omnivore feature length")
 
                 slowfast_clip_features = slowfast_video_features[si:ei]
-                omnivore_clip_features = omnivore_video_features[si:ei]
+                # omnivore_clip_features = omnivore_video_features[si:ei]
 
                 torch.save(
                     torch.tensor(slowfast_clip_features),
@@ -130,9 +130,9 @@ if __name__ == "__main__":
                         args.slowfast_clip_features_folder_path, clip_uid + ".pt"
                     ),
                 )
-                torch.save(
-                    torch.tensor(omnivore_clip_features),
-                    os.path.join(
-                        args.omnivore_clip_features_folder_path, clip_uid + ".pt"
-                    ),
-                )
+                # torch.save(
+                #     torch.tensor(omnivore_clip_features),
+                #     os.path.join(
+                #         args.omnivore_clip_features_folder_path, clip_uid + ".pt"
+                #     ),
+                # )

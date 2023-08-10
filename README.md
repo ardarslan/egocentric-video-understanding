@@ -79,6 +79,8 @@ cd $CODE/scripts/07_reproduce_baseline_results
 
 python -m pdb train.py
 
+c
+
 ```
 
 Use "c" to continue until the first breakpoint.
