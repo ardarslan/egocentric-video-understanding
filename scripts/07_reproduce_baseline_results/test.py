@@ -22,19 +22,26 @@ from libs.utils import valid_one_epoch, ANETdetection, fix_random_seed, infer_on
 def main(args):
     """0. load config"""
     # sanity check
-    ckpt = os.path.join(os.environ["SCRATCH"], args.ckpt)
 
     if os.path.isfile(args.config):
         cfg = load_config(args.config)
     else:
         raise ValueError("Config file does not exist.")
+
+    cfg["ckpt"] = os.path.join(os.environ["SCRATCH"], cfg["ckpt"])
+    feat_folder_names = cfg["dataset"]["feat_folder"]
+    cfg["dataset"]["feat_folder"] = [
+        os.path.join(os.environ["SCRATCH"], feat_folder_name)
+        for feat_folder_name in feat_folder_names
+    ]
+
     assert len(cfg["val_split"]) > 0, "Test set must be specified!"
-    if ".pth.tar" in ckpt:
-        assert os.path.isfile(ckpt), "CKPT file does not exist!"
-        ckpt_file = ckpt
+    if ".pth.tar" in cfg["ckpt"]:
+        assert os.path.isfile(cfg["ckpt"]), "CKPT file does not exist!"
+        ckpt_file = cfg["ckpt"]
     else:
-        assert os.path.isdir(ckpt), "CKPT file folder does not exist!"
-        ckpt_file_list = sorted(glob.glob(os.path.join(ckpt, "*.pth.tar")))
+        assert os.path.isdir(cfg["ckpt"]), "CKPT file folder does not exist!"
+        ckpt_file_list = sorted(glob.glob(os.path.join(cfg["ckpt"], "*.pth.tar")))
         ckpt_file = ckpt_file_list[-1]
 
     if args.topk > 0:
