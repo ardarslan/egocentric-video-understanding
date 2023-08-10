@@ -219,10 +219,7 @@ class Ego4dDataset(Dataset):
             all_features = []
             for f_t in self.feat_folder:
                 filename = os.path.join(f_t, self.file_prefix + clip_name + self.file_ext)
-                try:
-                    feats = torch.load(filename)
-                except:
-                    pdb.set_trace()
+                feats = torch.load(filename)
                 # case 1: variable length features for training
                 if self.feat_stride > 0 and (not self.force_upsampling):
                     # var length features

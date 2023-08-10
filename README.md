@@ -301,7 +301,7 @@ chmod +x 02_download_pretrained_models_of_frame_feature_extractors.sh
 ./02_download_pretrained_models_of_frame_feature_extractors.sh
 ```
 
-# 03 - Check annotation distribution
+# 03 - Analyze annotations
 
 Implemented in $CODE/scripts/03_analyze_data/check_annotation_distribution.ipynb
 
@@ -357,6 +357,8 @@ mamba activate mq_model
 cd $CODE/scripts/07_reproduce_baseline_results
 
 sbatch --time 720 --gres=gpu:1 --cpus-per-task=2 --nodelist=biwirender10 train_combine.sh
+
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=2 --nodelist=biwirender10 test.sh
 
 # 08 - Reproduce our results
 
