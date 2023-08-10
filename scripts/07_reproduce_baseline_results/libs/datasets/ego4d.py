@@ -1,6 +1,7 @@
 import sys
 
 import os
+import pdb
 import json
 import h5py
 import numpy as np
@@ -218,7 +219,10 @@ class Ego4dDataset(Dataset):
             all_features = []
             for f_t in self.feat_folder:
                 filename = os.path.join(f_t, self.file_prefix + clip_name + self.file_ext)
-                feats = torch.load(filename)
+                try:
+                    feats = torch.load(filename)
+                except:
+                    pdb.set_trace()
                 # case 1: variable length features for training
                 if self.feat_stride > 0 and (not self.force_upsampling):
                     # var length features
