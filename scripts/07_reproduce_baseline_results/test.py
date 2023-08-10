@@ -22,17 +22,19 @@ from libs.utils import valid_one_epoch, ANETdetection, fix_random_seed, infer_on
 def main(args):
     """0. load config"""
     # sanity check
+    ckpt = os.path.join(os.environ["SCRATCH"], args.ckpt)
+
     if os.path.isfile(args.config):
         cfg = load_config(args.config)
     else:
         raise ValueError("Config file does not exist.")
     assert len(cfg["val_split"]) > 0, "Test set must be specified!"
-    if ".pth.tar" in args.ckpt:
-        assert os.path.isfile(args.ckpt), "CKPT file does not exist!"
-        ckpt_file = args.ckpt
+    if ".pth.tar" in ckpt:
+        assert os.path.isfile(ckpt), "CKPT file does not exist!"
+        ckpt_file = ckpt
     else:
-        assert os.path.isdir(args.ckpt), "CKPT file folder does not exist!"
-        ckpt_file_list = sorted(glob.glob(os.path.join(args.ckpt, "*.pth.tar")))
+        assert os.path.isdir(ckpt), "CKPT file folder does not exist!"
+        ckpt_file_list = sorted(glob.glob(os.path.join(ckpt, "*.pth.tar")))
         ckpt_file = ckpt_file_list[-1]
 
     if args.topk > 0:
@@ -106,8 +108,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Train a point-based transformer for action localization"
     )
-    parser.add_argument("--config", type=str, help="path to a config file")
-    parser.add_argument("--ckpt", type=str, help="path to a checkpoint")
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="configs/baseline.yaml",
+        help="path to a config file",
+    )
+    parser.add_argument(
+        "--ckpt",
+        type=str,
+        default="baseline_outputs/baseline/epoch_014.pth.tar",
+        help="path to a checkpoint",
+    )
     parser.add_argument(
         "-t",
         "--topk",

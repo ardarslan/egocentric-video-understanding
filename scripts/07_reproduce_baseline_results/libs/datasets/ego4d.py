@@ -80,7 +80,11 @@ class Ego4dDataset(Dataset):
         self.label_dict = label_dict
 
         # dataset specific attributes
-        self.db_attributes = {"dataset_name": "ego4d moment query 1.3", "tiou_thresholds": np.linspace(0.1, 0.5, 5), "empty_label_ids": []}
+        self.db_attributes = {
+            "dataset_name": "ego4d moment query 1.3",
+            "tiou_thresholds": np.linspace(0.1, 0.5, 5),
+            "empty_label_ids": [],
+        }
         # self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
 
     def get_attributes(self):
@@ -113,7 +117,9 @@ class Ego4dDataset(Dataset):
             else:
                 assert False, "Unknown video FPS."
             duration = value["duration"]
-            segmentation_labels = torch.zeros((int(duration), self.num_classes), dtype=torch.float)
+            segmentation_labels = torch.zeros(
+                (int(duration), self.num_classes), dtype=torch.float
+            )
 
             # get annotations if available
             if ("annotations" in value) and (len(value["annotations"]) > 0):
@@ -180,7 +186,9 @@ class Ego4dDataset(Dataset):
 
         # egovlp
         if isinstance(self.feat_folder, str):
-            filename = os.path.join(self.feat_folder, self.file_prefix + clip_name + self.file_ext)
+            filename = os.path.join(
+                self.feat_folder, self.file_prefix + clip_name + self.file_ext
+            )
             feats = torch.load(filename)
             # case 1: variable length features for training
             if self.feat_stride > 0 and (not self.force_upsampling):
@@ -191,8 +199,13 @@ class Ego4dDataset(Dataset):
                     feats = feats[:: self.downsample_rate, :]
                     feat_stride = self.feat_stride * self.downsample_rate
             # case 2: variable length features for input, yet resized for training
-            elif self.feat_stride > 0 and self.force_upsampling:  # activitynet 会upsample到fixed length
-                feat_stride = float((feats.shape[0] - 1) * self.feat_stride + self.num_frames) / self.max_seq_len
+            elif (
+                self.feat_stride > 0 and self.force_upsampling
+            ):  # activitynet 会upsample到fixed length
+                feat_stride = (
+                    float((feats.shape[0] - 1) * self.feat_stride + self.num_frames)
+                    / self.max_seq_len
+                )
                 # center the features
                 num_frames = feat_stride
             # case 3: fixed length features for input
@@ -212,13 +225,29 @@ class Ego4dDataset(Dataset):
 
             # resize the features if needed
             if (feats.shape[-1] != self.max_seq_len) and self.force_upsampling:
-                resize_feats = F.interpolate(feats.unsqueeze(0), size=self.max_seq_len, mode="linear", align_corners=False)
-                segmentation_labels = F.interpolate(segmentation_labels.unsqueeze(0).unsqueeze(0), size=(self.max_seq_len, self.num_classes), mode="nearest").squeeze(0).squeeze(0)
+                resize_feats = F.interpolate(
+                    feats.unsqueeze(0),
+                    size=self.max_seq_len,
+                    mode="linear",
+                    align_corners=False,
+                )
+                segmentation_labels = (
+                    F.interpolate(
+                        segmentation_labels.unsqueeze(0).unsqueeze(0),
+                        size=(self.max_seq_len, self.num_classes),
+                        mode="nearest",
+                    )
+                    .squeeze(0)
+                    .squeeze(0)
+                )
                 feats = resize_feats.squeeze(0)  # [d,192]       upsample到一个fixed length
         else:
             all_features = []
             for f_t in self.feat_folder:
-                filename = os.path.join(f_t, self.file_prefix + clip_name + self.file_ext)
+                filename = os.path.join(
+                    f_t, self.file_prefix + clip_name + self.file_ext
+                )
+                pdb.set_trace()
                 feats = torch.load(filename)
                 # case 1: variable length features for training
                 if self.feat_stride > 0 and (not self.force_upsampling):
@@ -229,8 +258,13 @@ class Ego4dDataset(Dataset):
                         feats = feats[:: self.downsample_rate, :]
                         feat_stride = self.feat_stride * self.downsample_rate
                 # case 2: variable length features for input, yet resized for training
-                elif self.feat_stride > 0 and self.force_upsampling:  # activitynet 会upsample到fixed length
-                    feat_stride = float((feats.shape[0] - 1) * self.feat_stride + self.num_frames) / self.max_seq_len
+                elif (
+                    self.feat_stride > 0 and self.force_upsampling
+                ):  # activitynet 会upsample到fixed length
+                    feat_stride = (
+                        float((feats.shape[0] - 1) * self.feat_stride + self.num_frames)
+                        / self.max_seq_len
+                    )
                     # center the features
                     num_frames = feat_stride
                 # case 3: fixed length features for input
@@ -250,9 +284,24 @@ class Ego4dDataset(Dataset):
 
                 # resize the features if needed
                 if (feats.shape[-1] != self.max_seq_len) and self.force_upsampling:
-                    resize_feats = F.interpolate(feats.unsqueeze(0), size=self.max_seq_len, mode="linear", align_corners=False)
-                    segmentation_labels = F.interpolate(segmentation_labels.unsqueeze(0).unsqueeze(0), size=(self.max_seq_len, self.num_classes), mode="nearest").squeeze(0).squeeze(0)
-                    feats = resize_feats.squeeze(0)  # [d,192]       upsample到一个fixed length
+                    resize_feats = F.interpolate(
+                        feats.unsqueeze(0),
+                        size=self.max_seq_len,
+                        mode="linear",
+                        align_corners=False,
+                    )
+                    segmentation_labels = (
+                        F.interpolate(
+                            segmentation_labels.unsqueeze(0).unsqueeze(0),
+                            size=(self.max_seq_len, self.num_classes),
+                            mode="nearest",
+                        )
+                        .squeeze(0)
+                        .squeeze(0)
+                    )
+                    feats = resize_feats.squeeze(
+                        0
+                    )  # [d,192]       upsample到一个fixed length
 
                 all_features.append(feats)
                 feats = torch.cat(all_features, dim=0)
@@ -260,7 +309,10 @@ class Ego4dDataset(Dataset):
         # convert time stamp (in second) into temporal feature grids
         # ok to have small negative values here
         if clip_info["segments"] is not None:
-            segments = torch.from_numpy((clip_info["segments"] * clip_info["fps"] - 0.5 * num_frames) / feat_stride)  # 到frame数
+            segments = torch.from_numpy(
+                (clip_info["segments"] * clip_info["fps"] - 0.5 * num_frames)
+                / feat_stride
+            )  # 到frame数
             labels = torch.from_numpy(clip_info["labels"])
             # for activity net, we have a few videos with a bunch of missing frames
             # here is a quick fix for training
@@ -272,7 +324,9 @@ class Ego4dDataset(Dataset):
                         # skip an action outside of the feature map
                         continue
                     # skip an action that is mostly outside of the feature map
-                    ratio = (min(seg[1].item(), vid_len) - seg[0].item()) / (seg[1].item() - seg[0].item())
+                    ratio = (min(seg[1].item(), vid_len) - seg[0].item()) / (
+                        seg[1].item() - seg[0].item()
+                    )
                     if ratio >= self.trunc_thresh:
                         valid_seg_list.append(seg.clamp(max=vid_len, min=0))
                         # some weird bug here if not converting to size 1 tensor
@@ -309,6 +363,8 @@ class Ego4dDataset(Dataset):
         # no truncation is needed
         # truncate the features during training             truncate一下，并且保证有action在里面（iou大于threshold）
         if self.is_training and (segments is not None):
-            data_dict = truncate_feats(data_dict, self.max_seq_len, self.trunc_thresh, self.crop_ratio)
+            data_dict = truncate_feats(
+                data_dict, self.max_seq_len, self.trunc_thresh, self.crop_ratio
+            )
 
         return data_dict
