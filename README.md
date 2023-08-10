@@ -45,7 +45,7 @@ du -sch .[!.]* * | sort -h
 CVL Server:
 
 ```
-srun --time 720 --cpus-per-task=1 --mem=50G --pty bash -i
+srun --time 720 --gres=gpu:1 --cpus-per-task=1 --mem=10G --pty bash -i
 
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```
@@ -61,6 +61,31 @@ cd $CODE
 
 jupyter notebook --no-browser --port 5998 --ip $(hostname -f)
 ```
+
+# Debug Baseline Repository
+
+Import "pdb" package in the files that you want to add a breakpoint to.
+
+Add "pdb.set_trace()" to the lines that you want to add a breakpoint at.
+
+```
+srun --time 720 --gres=gpu:1 --cpus-per-task=1 --nodelist=biwirender05 --pty bash -i
+
+mamba deactivate
+
+mamba activate mq_model
+
+cd $CODE/scripts/07_reproduce_baseline_results
+
+python -m pdb train.py
+
+```
+
+Use "c" to continue until the first breakpoint.
+
+Use "n" to make one step.
+
+Use "s" to step in.
 
 # Go into mq folder
 
