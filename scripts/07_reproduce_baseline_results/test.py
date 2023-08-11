@@ -28,7 +28,7 @@ def main(args):
     else:
         raise ValueError("Config file does not exist.")
 
-    cfg["ckpt"] = os.path.join(os.environ["SCRATCH"], cfg["ckpt"])
+    cfg["ckpt"] = os.path.join(os.environ["SCRATCH"], args.ckpt)
     feat_folder_names = cfg["dataset"]["feat_folder"]
     cfg["dataset"]["feat_folder"] = [
         os.path.join(os.environ["SCRATCH"], feat_folder_name)
