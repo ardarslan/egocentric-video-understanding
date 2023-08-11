@@ -609,13 +609,12 @@ class PtTransformer(nn.Module):
         """
         Generate batched features and masks from a list of dict items
         """
-        import pdb
-
-        pdb.set_trace()
-        feats = [x["feats"] for x in video_list if len(x["labels"]) > 0]
-        segmentation_labels = [
-            x["segmentation_labels"] for x in video_list if len(x["labels"]) > 0
-        ]
+        # feats = [x["feats"] for x in video_list if len(x["labels"]) > 0]
+        # segmentation_labels = [
+        #     x["segmentation_labels"] for x in video_list if len(x["labels"]) > 0
+        # ]
+        feats = [x["feats"] for x in video_list]
+        segmentation_labels = [x["segmentation_labels"] for x in video_list]
 
         feats_lens = torch.as_tensor([feat.shape[-1] for feat in feats])
         max_len = feats_lens.max(0).values.item()
