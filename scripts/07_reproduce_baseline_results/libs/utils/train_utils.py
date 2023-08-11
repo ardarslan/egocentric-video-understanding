@@ -730,9 +730,6 @@ def infer_one_epoch(
         # forward the model (wo. grad)
         with torch.no_grad():
             # import ipdb;ipdb.set_trace()
-            import pdb
-
-            pdb.set_trace()
             output = model(video_list, is_training=False)
             # upack the results into ANet format
             num_vids = len(output)
