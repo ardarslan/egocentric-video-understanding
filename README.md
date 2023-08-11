@@ -12,6 +12,12 @@ AIT Server:
 ssh aarslan@ait-server-03
 ```
 
+Euler:
+
+```
+ssh aarslan@euler.ethz.ch
+```
+
 # Clone this repository
 
 ```
@@ -106,6 +112,7 @@ export BUILD_WITH_CUDA=True
 ```
 
 CVL Server:
+
 ```
 export CODE=/home/aarslan/mq
 
@@ -117,12 +124,23 @@ export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 ```
 
 AIT Server:
+
 ```
 export CODE=/local/home/aarslan/mq
 
 export SCRATCH=/data/aarslan
 
 export CUDA_HOME=/usr/local/cuda
+```
+
+Euler:
+
+```
+export CODE=/cluster/home/aarslan/mq
+
+export SCRATCH=/cluster/home/
+
+export
 ```
 
 # 01_02 - Install package manager
@@ -153,6 +171,8 @@ mamba deactivate
 rm -rf $SCRATCH/mambaforge/envs/mq_data
 
 (AIT Server) module load cuda/11.3
+
+(Euler) module load gcc/8.2.0 python_gpu/3.9.9 eth_proxy
 
 mamba create -n mq_data python=3.9.9
 

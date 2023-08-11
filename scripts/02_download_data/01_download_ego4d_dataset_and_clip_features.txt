@@ -44,11 +44,6 @@ ego4d --output_directory="$SCRATCH/ego4d_data" --datasets slowfast8x8_r101_k400 
 
 
 
-python3 $CODE/scripts/02_download_data/output_all_clip_names.py --annotations_folder_path $SCRATCH/ego4d_data/v2/annotations --all_clip_names_file_path $SCRATCH/ego4d_data/v2/all_clip_names.txt
-
-python3 $CODE/scripts/02_download_data/output_missing_slowfast_clip_names.py --annotations_folder_path $SCRATCH/ego4d_data/v2/annotations --missing_slowfast_clip_names_file_path $SCRATCH/ego4d_data/v2/missing_slowfast_clip_names.txt
-
-
 
 
 python3 $CODE/scripts/02_download_data/clip_feature_extractor.py --annotations_folder_path $SCRATCH/ego4d_data/v2/annotations --slowfast_video_features_folder_path $SCRATCH/ego4d_data/v2/slowfast8x8_r101_k400 --omnivore_video_features_folder_path $SCRATCH/ego4d_data/v2/omnivore_video_swinl --slowfast_clip_features_folder_path $SCRATCH/ego4d_data/v2/slowfast_clip --omnivore_clip_features_folder_path $SCRATCH/ego4d_data/v2/omnivore_clip
