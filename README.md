@@ -362,6 +362,19 @@ sbatch --time 720 --gres=gpu:1 --cpus-per-task=2 --nodelist=biwirender10 test.sh
 
 python merge_submission.py
 
+
+From terminal of your computer run the following lines:
+
+```
+cd ~/Desktop
+
+scp aarslan@robustus.ee.ethz.ch:/home/aarslan/mq/scripts/07_reproduce_baseline_results/submission_final.json submission_final.json
+```
+
+Login to https://eval.ai/auth/login
+
+Submit submission_final.json to https://eval.ai/web/challenges/challenge-page/1626/leaderboard.
+
 # 08 - Reproduce our results
 
 (NOT IMPLEMENTED YET)
