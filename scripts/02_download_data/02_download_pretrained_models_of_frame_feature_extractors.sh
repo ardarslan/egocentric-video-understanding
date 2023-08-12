@@ -1,3 +1,5 @@
+#!/bin/bash
+
 mkdir $SCRATCH/mq_libs
 
 cd $SCRATCH/mq_libs

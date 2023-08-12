@@ -6,12 +6,6 @@ CVL Server:
 ssh aarslan@robustus.ee.ethz.ch
 ```
 
-AIT Server:
-
-```
-ssh aarslan@ait-server-03
-```
-
 Euler:
 
 ```
@@ -34,12 +28,6 @@ CVL Server:
 grep --color=always --extended-regexp 'free|$' /home/sladmcvl/smon.txt
 ```
 
-AIT Server:
-
-```
-nvidia-smi
-```
-
 # List folders, hidden folders, files and hidden files and show the largest one at the bottom
 
 ```
@@ -56,9 +44,9 @@ srun --time 720 --gres=gpu:1 --cpus-per-task=1 --mem=10G --pty bash -i
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```
 
-AIT Server:
+Euler:
 
-Use remote-ssh extension of your local VS Code.
+Go to https://jupyter.euler.hpc.ethz.ch in your browser.
 
 # Start a Jupyter Notebook
 
@@ -123,24 +111,12 @@ export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 ```
 
-AIT Server:
-
-```
-export CODE=/local/home/aarslan/mq
-
-export SCRATCH=/data/aarslan
-
-export CUDA_HOME=/usr/local/cuda
-```
-
 Euler:
 
 ```
 export CODE=/cluster/home/aarslan/mq
 
-export SCRATCH=/cluster/home/
-
-export
+export SCRATCH=/cluster/scratch/aarslan
 ```
 
 # 01_02 - Install package manager
@@ -163,16 +139,11 @@ exit
 
 # 01_03 - Install MQ data packages
 
-Open a new terminal. Make sure you have a GPU.
-
+Open a new terminal.
 ```
 mamba deactivate
 
 rm -rf $SCRATCH/mambaforge/envs/mq_data
-
-(AIT Server) module load cuda/11.3
-
-(Euler) module load gcc/8.2.0 python_gpu/3.9.9 eth_proxy
 
 mamba create -n mq_data python=3.9.9
 
@@ -197,7 +168,23 @@ export PIP_CACHE_DIR=$SCRATCH/pip_cache
 
 pip install --upgrade pip
 
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu115
+(
+For Euler:
+
+mamba deactivate
+
+module load gcc/8.2.0 python_gpu/3.9.9 eth_proxy
+
+mamba activate mq_data
+
+cd $CODE/scripts/01_setup_environment
+
+chmod +x install_torch_torchvision.sh
+
+sbatch --gpus=1 install_torch_torchvision.sh
+)
+
+
 
 pip install mmcv-full==1.6.0
 
@@ -337,22 +324,6 @@ mamba deactivate
 mamba activate mq_data
 
 sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
-```
-
-AIT Server:
-
-```
-cd $CODE/scripts/04_extract_frame_features
-
-screen
-
-mamba deactivate
-
-mamba activate mq_data
-
-chmod +x main.sh
-
-./main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
 ```
 
 # 05 - Visualize frame features

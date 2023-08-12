@@ -61,7 +61,7 @@ if __name__ == "__main__":
         for video in annotations_json_dict["videos"]:
             video_uid = video["video_uid"]
             if video_uid in missing_slowfast_video_uids:
-                missing_slowfast_clip_uids.extend(
+                missing_slowfast_video_uids.append(
                     [clip["clip_uid"] for clip in video["clips"]]
                 )
     with open(args.missing_slowfast_clip_names_file_path, "w") as writer:
