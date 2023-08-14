@@ -155,8 +155,6 @@ rm -rf Mambaforge-Linux-x86_64.sh
 
 exit
 
-(Open a new terminal)
-
 # 01_03 - Install MQ data packages
 
 Open a new terminal.
@@ -353,7 +351,7 @@ python manage.py migrate
 
 python manage.py runserver 5960
 
-Go to http://bender59.ee.ethz.ch:5960/ in your browser.
+Go to http://bmiccomp01.ee.ethz.ch:5960/ in your browser.
 
 <!-- (NOT IMPLEMENTED YET)
 
