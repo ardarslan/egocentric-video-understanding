@@ -39,9 +39,7 @@ if __name__ == "__main__":
         ],
         required=True,
     )
-    parser.add_argument(
-        "--quarter_index", type=int, choices=[0, 1, 2, 3], required=True
-    )
+    parser.add_argument("--quarter_index", type=int, choices=[0, 1, 2, 3], required=True)
     parser.add_argument("--num_devices", type=int, default=torch.cuda.device_count())
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
     parser.add_argument("--batch_size", type=int, default=2)
@@ -49,7 +47,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--annotations_json_file_path",
         type=str,
-        default=f"{os.environ['CODE']}/scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v4.json",
+        default=f"{os.environ['CODE']}/scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json",
     )
 
     parser.add_argument("--unidet_confidence_threshold", type=float, default=0.4)
@@ -111,15 +109,9 @@ if __name__ == "__main__":
         default=f"{os.environ['SCRATCH']}/mq_libs/gsam/ram_swin_large_14m.pth",
         help="path to checkpoint file",
     )
-    parser.add_argument(
-        "--gsam_box_threshold", type=float, default=0.25, help="box threshold"
-    )
-    parser.add_argument(
-        "--gsam_text_threshold", type=float, default=0.2, help="text threshold"
-    )
-    parser.add_argument(
-        "--gsam_iou_threshold", type=float, default=0.5, help="iou threshold"
-    )
+    parser.add_argument("--gsam_box_threshold", type=float, default=0.25, help="box threshold")
+    parser.add_argument("--gsam_text_threshold", type=float, default=0.2, help="text threshold")
+    parser.add_argument("--gsam_iou_threshold", type=float, default=0.5, help="iou threshold")
 
     parser.add_argument(
         "--ego_hos_seg_twohands_config_file_path",
@@ -174,9 +166,7 @@ if __name__ == "__main__":
 
     ray.init(num_gpus=args.num_devices, num_cpus=args.num_devices)
 
-    frame_feature_extractor_pool = ray.util.ActorPool(
-        [get_frame_feature_extractor(args=args) for _ in range(args.num_devices)]
-    )
+    frame_feature_extractor_pool = ray.util.ActorPool([get_frame_feature_extractor(args=args) for _ in range(args.num_devices)])
     column_names = get_column_names(args=args)
     output_file_name = get_output_file_name(args=args)
     error_file_name = get_error_file_name(args=args)
@@ -198,14 +188,10 @@ if __name__ == "__main__":
 
     for clip_uid in tqdm(clip_uids):
         try:
-            if os.path.exists(
-                os.path.join(args.output_folder_path, clip_uid, output_file_name)
-            ):
+            if os.path.exists(os.path.join(args.output_folder_path, clip_uid, output_file_name)):
                 continue
 
-            input_video_file_path = os.path.join(
-                args.input_folder_path, clip_uid + ".mp4"
-            )
+            input_video_file_path = os.path.join(args.input_folder_path, clip_uid + ".mp4")
             output_subfolder_path = os.path.join(args.output_folder_path, clip_uid)
 
             cap = FileVideoStream(input_video_file_path).start()
@@ -213,14 +199,7 @@ if __name__ == "__main__":
             global_frame_index = GlobalFrameIndex()
 
             results_list = []
-            for _ in range(
-                int(
-                    math.ceil(
-                        cap.stream.get(cv2.CAP_PROP_FRAME_COUNT)
-                        / float(args.num_frames_per_processing_split)
-                    )
-                )
-            ):
+            for _ in range(int(math.ceil(cap.stream.get(cv2.CAP_PROP_FRAME_COUNT) / float(args.num_frames_per_processing_split)))):
                 inputs = FrameFeatureExtractor.get_inputs(
                     cap=cap,
                     batch_size=args.batch_size,
@@ -230,9 +209,7 @@ if __name__ == "__main__":
                     global_frame_index=global_frame_index,
                 )
                 current_results_list = frame_feature_extractor_pool.map(
-                    lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(
-                        *current_input
-                    ),
+                    lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(*current_input),
                     inputs,
                 )
                 del inputs
@@ -249,18 +226,12 @@ if __name__ == "__main__":
                 output_file_name=output_file_name,
             )
         except Exception as e:
-            print(
-                f"{datetime.now():%Y-%m-%d %H:%M:%S%z} | Error with file {clip_uid}.mp4: \n"
-            )
+            print(f"{datetime.now():%Y-%m-%d %H:%M:%S%z} | Error with file {clip_uid}.mp4: \n")
             print(traceback.format_exc())
             e = "-" * 100
             print(e)
-            with open(
-                os.path.join(args.error_folder_path, error_file_name), "a"
-            ) as error_file_writer:
-                error_file_writer.write(
-                    f"{datetime.now():%Y-%m-%d %H:%M:%S%z} | Error with file {clip_uid}.mp4: \n"
-                )
+            with open(os.path.join(args.error_folder_path, error_file_name), "a") as error_file_writer:
+                error_file_writer.write(f"{datetime.now():%Y-%m-%d %H:%M:%S%z} | Error with file {clip_uid}.mp4: \n")
                 error_file_writer.write(traceback.format_exc())
                 error_file_writer.write(e)
 
