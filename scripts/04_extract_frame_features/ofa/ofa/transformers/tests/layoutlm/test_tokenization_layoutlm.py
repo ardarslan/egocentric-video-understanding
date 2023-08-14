@@ -26,7 +26,6 @@ from ..test_tokenization_common import TokenizerTesterMixin
 
 @require_tokenizers
 class LayoutLMTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
-
     tokenizer_class = LayoutLMTokenizer
     rust_tokenizer_class = LayoutLMTokenizerFast
     test_rust_tokenizer = True
@@ -67,7 +66,9 @@ class LayoutLMTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
         tokens = tokenizer.tokenize("UNwant\u00E9d,running")
         self.assertListEqual(tokens, ["un", "##want", "##ed", ",", "runn", "##ing"])
-        self.assertListEqual(tokenizer.convert_tokens_to_ids(tokens), [7, 4, 5, 10, 8, 9])
+        self.assertListEqual(
+            tokenizer.convert_tokens_to_ids(tokens), [7, 4, 5, 10, 8, 9]
+        )
 
     def test_special_tokens_as_you_expect(self):
         """If you are training a seq2seq model that expects a decoder_prefix token make sure it is prepended to decoder_input_ids"""

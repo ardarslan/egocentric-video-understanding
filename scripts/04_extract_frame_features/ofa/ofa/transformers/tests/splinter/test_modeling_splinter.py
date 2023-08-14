@@ -28,7 +28,9 @@ if is_torch_available():
     import torch
 
     from transformers import SplinterConfig, SplinterForQuestionAnswering, SplinterModel
-    from transformers.models.splinter.modeling_splinter import SPLINTER_PRETRAINED_MODEL_ARCHIVE_LIST
+    from transformers.models.splinter.modeling_splinter import (
+        SPLINTER_PRETRAINED_MODEL_ARCHIVE_LIST,
+    )
 
 
 class SplinterModelTester:
@@ -89,14 +91,20 @@ class SplinterModelTester:
 
         token_type_ids = None
         if self.use_token_type_ids:
-            token_type_ids = ids_tensor([self.batch_size, self.seq_length], self.type_vocab_size)
+            token_type_ids = ids_tensor(
+                [self.batch_size, self.seq_length], self.type_vocab_size
+            )
 
         sequence_labels = None
         token_labels = None
         choice_labels = None
         if self.use_labels:
-            sequence_labels = ids_tensor([self.batch_size], self.type_sequence_label_size)
-            token_labels = ids_tensor([self.batch_size, self.seq_length], self.num_labels)
+            sequence_labels = ids_tensor(
+                [self.batch_size], self.type_sequence_label_size
+            )
+            token_labels = ids_tensor(
+                [self.batch_size, self.seq_length], self.num_labels
+            )
             choice_labels = ids_tensor([self.batch_size], self.num_choices)
 
         config = SplinterConfig(
@@ -114,21 +122,48 @@ class SplinterModelTester:
             initializer_range=self.initializer_range,
         )
 
-        return config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
+        return (
+            config,
+            input_ids,
+            token_type_ids,
+            input_mask,
+            sequence_labels,
+            token_labels,
+            choice_labels,
+        )
 
     def create_and_check_model(
-        self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
+        self,
+        config,
+        input_ids,
+        token_type_ids,
+        input_mask,
+        sequence_labels,
+        token_labels,
+        choice_labels,
     ):
         model = SplinterModel(config=config)
         model.to(torch_device)
         model.eval()
-        result = model(input_ids, attention_mask=input_mask, token_type_ids=token_type_ids)
+        result = model(
+            input_ids, attention_mask=input_mask, token_type_ids=token_type_ids
+        )
         result = model(input_ids, token_type_ids=token_type_ids)
         result = model(input_ids)
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, self.seq_length, self.hidden_size))
+        self.parent.assertEqual(
+            result.last_hidden_state.shape,
+            (self.batch_size, self.seq_length, self.hidden_size),
+        )
 
     def create_and_check_for_question_answering(
-        self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
+        self,
+        config,
+        input_ids,
+        token_type_ids,
+        input_mask,
+        sequence_labels,
+        token_labels,
+        choice_labels,
     ):
         model = SplinterForQuestionAnswering(config=config)
         model.to(torch_device)
@@ -140,8 +175,12 @@ class SplinterModelTester:
             start_positions=sequence_labels,
             end_positions=sequence_labels,
         )
-        self.parent.assertEqual(result.start_logits.shape, (self.batch_size, self.seq_length))
-        self.parent.assertEqual(result.end_logits.shape, (self.batch_size, self.seq_length))
+        self.parent.assertEqual(
+            result.start_logits.shape, (self.batch_size, self.seq_length)
+        )
+        self.parent.assertEqual(
+            result.end_logits.shape, (self.batch_size, self.seq_length)
+        )
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -154,13 +193,16 @@ class SplinterModelTester:
             token_labels,
             choice_labels,
         ) = config_and_inputs
-        inputs_dict = {"input_ids": input_ids, "token_type_ids": token_type_ids, "attention_mask": input_mask}
+        inputs_dict = {
+            "input_ids": input_ids,
+            "token_type_ids": token_type_ids,
+            "attention_mask": input_mask,
+        }
         return config, inputs_dict
 
 
 @require_torch
 class SplinterModelTest(ModelTesterMixin, unittest.TestCase):
-
     all_model_classes = (
         (
             SplinterModel,
@@ -172,7 +214,9 @@ class SplinterModelTest(ModelTesterMixin, unittest.TestCase):
 
     def setUp(self):
         self.model_tester = SplinterModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=SplinterConfig, hidden_size=37)
+        self.config_tester = ConfigTester(
+            self, config_class=SplinterConfig, hidden_size=37
+        )
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -207,7 +251,26 @@ class SplinterModelIntegrationTest(unittest.TestCase):
         # Input: "[CLS] Brad was born in [QUESTION] . He returned to the United Kingdom later . [SEP]"
         # Output should be the span "the United Kingdom"
         input_ids = torch.tensor(
-            [[101, 7796, 1108, 1255, 1107, 104, 119, 1124, 1608, 1106, 1103, 1244, 2325, 1224, 119, 102]]
+            [
+                [
+                    101,
+                    7796,
+                    1108,
+                    1255,
+                    1107,
+                    104,
+                    119,
+                    1124,
+                    1608,
+                    1106,
+                    1103,
+                    1244,
+                    2325,
+                    1224,
+                    119,
+                    102,
+                ]
+            ]
         )
         output = model(input_ids)
 

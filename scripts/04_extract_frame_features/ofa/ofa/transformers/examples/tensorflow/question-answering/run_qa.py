@@ -60,21 +60,33 @@ class ModelArguments:
     """
 
     model_name_or_path: str = field(
-        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+        metadata={
+            "help": "Path to pretrained model or model identifier from huggingface.co/models"
+        }
     )
     config_name: Optional[str] = field(
-        default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
+        default=None,
+        metadata={
+            "help": "Pretrained config name or path if not the same as model_name"
+        },
     )
     tokenizer_name: Optional[str] = field(
-        default=None, metadata={"help": "Pretrained tokenizer name or path if not the same as model_name"}
+        default=None,
+        metadata={
+            "help": "Pretrained tokenizer name or path if not the same as model_name"
+        },
     )
     cache_dir: Optional[str] = field(
         default=None,
-        metadata={"help": "Path to directory to store the pretrained models downloaded from huggingface.co"},
+        metadata={
+            "help": "Path to directory to store the pretrained models downloaded from huggingface.co"
+        },
     )
     model_revision: str = field(
         default="main",
-        metadata={"help": "The specific model version to use (can be a branch name, tag name or commit id)."},
+        metadata={
+            "help": "The specific model version to use (can be a branch name, tag name or commit id)."
+        },
     )
     use_auth_token: bool = field(
         default=False,
@@ -92,22 +104,33 @@ class DataTrainingArguments:
     """
 
     dataset_name: Optional[str] = field(
-        default=None, metadata={"help": "The name of the dataset to use (via the datasets library)."}
+        default=None,
+        metadata={"help": "The name of the dataset to use (via the datasets library)."},
     )
     dataset_config_name: Optional[str] = field(
-        default=None, metadata={"help": "The configuration name of the dataset to use (via the datasets library)."}
+        default=None,
+        metadata={
+            "help": "The configuration name of the dataset to use (via the datasets library)."
+        },
     )
-    train_file: Optional[str] = field(default=None, metadata={"help": "The input training data file (a text file)."})
+    train_file: Optional[str] = field(
+        default=None, metadata={"help": "The input training data file (a text file)."}
+    )
     validation_file: Optional[str] = field(
         default=None,
-        metadata={"help": "An optional input evaluation data file to evaluate the perplexity on (a text file)."},
+        metadata={
+            "help": "An optional input evaluation data file to evaluate the perplexity on (a text file)."
+        },
     )
     test_file: Optional[str] = field(
         default=None,
-        metadata={"help": "An optional input test data file to evaluate the perplexity on (a text file)."},
+        metadata={
+            "help": "An optional input test data file to evaluate the perplexity on (a text file)."
+        },
     )
     overwrite_cache: bool = field(
-        default=False, metadata={"help": "Overwrite the cached training and evaluation sets"}
+        default=False,
+        metadata={"help": "Overwrite the cached training and evaluation sets"},
     )
     preprocessing_num_workers: Optional[int] = field(
         default=None,
@@ -150,7 +173,8 @@ class DataTrainingArguments:
         },
     )
     version_2_with_negative: bool = field(
-        default=False, metadata={"help": "If true, some of the examples do not have an answer."}
+        default=False,
+        metadata={"help": "If true, some of the examples do not have an answer."},
     )
     null_score_diff_threshold: float = field(
         default=0.0,
@@ -162,11 +186,15 @@ class DataTrainingArguments:
     )
     doc_stride: int = field(
         default=128,
-        metadata={"help": "When splitting up a long document into chunks, how much stride to take between chunks."},
+        metadata={
+            "help": "When splitting up a long document into chunks, how much stride to take between chunks."
+        },
     )
     n_best_size: int = field(
         default=20,
-        metadata={"help": "The total number of n-best predictions to generate when looking for an answer."},
+        metadata={
+            "help": "The total number of n-best predictions to generate when looking for an answer."
+        },
     )
     max_answer_length: int = field(
         default=30,
@@ -183,20 +211,32 @@ class DataTrainingArguments:
             and self.validation_file is None
             and self.test_file is None
         ):
-            raise ValueError("Need either a dataset name or a training/validation file/test_file.")
+            raise ValueError(
+                "Need either a dataset name or a training/validation file/test_file."
+            )
         else:
             if self.train_file is not None:
                 extension = self.train_file.split(".")[-1]
-                assert extension in ["csv", "json"], "`train_file` should be a csv or a json file."
+                assert extension in [
+                    "csv",
+                    "json",
+                ], "`train_file` should be a csv or a json file."
             if self.validation_file is not None:
                 extension = self.validation_file.split(".")[-1]
-                assert extension in ["csv", "json"], "`validation_file` should be a csv or a json file."
+                assert extension in [
+                    "csv",
+                    "json",
+                ], "`validation_file` should be a csv or a json file."
             if self.test_file is not None:
                 extension = self.test_file.split(".")[-1]
-                assert extension in ["csv", "json"], "`test_file` should be a csv or a json file."
+                assert extension in [
+                    "csv",
+                    "json",
+                ], "`test_file` should be a csv or a json file."
 
 
 # endregion
+
 
 # region Helper classes
 class SavePretrainedCallback(tf.keras.callbacks.Callback):
@@ -220,11 +260,15 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TFTrainingArguments))
+    parser = HfArgumentParser(
+        (ModelArguments, DataTrainingArguments, TFTrainingArguments)
+    )
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
-        model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+        model_args, data_args, training_args = parser.parse_json_file(
+            json_file=os.path.abspath(sys.argv[1])
+        )
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
@@ -234,8 +278,13 @@ def main():
 
     # region Checkpoints
     checkpoint = None
-    if len(os.listdir(training_args.output_dir)) > 0 and not training_args.overwrite_output_dir:
-        if (output_dir / CONFIG_NAME).is_file() and (output_dir / TF2_WEIGHTS_NAME).is_file():
+    if (
+        len(os.listdir(training_args.output_dir)) > 0
+        and not training_args.overwrite_output_dir
+    ):
+        if (output_dir / CONFIG_NAME).is_file() and (
+            output_dir / TF2_WEIGHTS_NAME
+        ).is_file():
             checkpoint = output_dir
             logger.info(
                 f"Checkpoint detected, resuming training from checkpoint in {training_args.output_dir}. To avoid this"
@@ -279,7 +328,11 @@ def main():
     # download the dataset.
     if data_args.dataset_name is not None:
         # Downloading and loading a dataset from the hub.
-        datasets = load_dataset(data_args.dataset_name, data_args.dataset_config_name, cache_dir=model_args.cache_dir)
+        datasets = load_dataset(
+            data_args.dataset_name,
+            data_args.dataset_config_name,
+            cache_dir=model_args.cache_dir,
+        )
     else:
         data_files = {}
         if data_args.train_file is not None:
@@ -292,7 +345,12 @@ def main():
         if data_args.test_file is not None:
             data_files["test"] = data_args.test_file
             extension = data_args.test_file.split(".")[-1]
-        datasets = load_dataset(extension, data_files=data_files, field="data", cache_dir=model_args.cache_dir)
+        datasets = load_dataset(
+            extension,
+            data_files=data_files,
+            field="data",
+            cache_dir=model_args.cache_dir,
+        )
     # See more about loading any type of standard or custom dataset (from files, python dict, pandas DataFrame, etc) at
     # https://huggingface.co/docs/datasets/loading_datasets.html.
     # endregion
@@ -303,13 +361,17 @@ def main():
     # The .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
     config = AutoConfig.from_pretrained(
-        model_args.config_name if model_args.config_name else model_args.model_name_or_path,
+        model_args.config_name
+        if model_args.config_name
+        else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
     )
     tokenizer = AutoTokenizer.from_pretrained(
-        model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
+        model_args.tokenizer_name
+        if model_args.tokenizer_name
+        else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         use_fast=True,
         revision=model_args.model_revision,
@@ -348,8 +410,12 @@ def main():
         )
     max_seq_length = min(data_args.max_seq_length, tokenizer.model_max_length)
 
-    if data_args.pad_to_max_length or isinstance(training_args.strategy, tf.distribute.TPUStrategy):
-        logger.info("Padding all batches to max length because argument was set or we're on TPU.")
+    if data_args.pad_to_max_length or isinstance(
+        training_args.strategy, tf.distribute.TPUStrategy
+    ):
+        logger.info(
+            "Padding all batches to max length because argument was set or we're on TPU."
+        )
         padding = "max_length"
     else:
         padding = False
@@ -359,7 +425,9 @@ def main():
         # Some of the questions have lots of whitespace on the left, which is not useful and will make the
         # truncation of the context fail (the tokenized question will take a lots of space). So we remove that
         # left whitespace
-        examples[question_column_name] = [q.lstrip() for q in examples[question_column_name]]
+        examples[question_column_name] = [
+            q.lstrip() for q in examples[question_column_name]
+        ]
 
         # Tokenize our examples with truncation and maybe padding, but keep the overflows using a stride. This results
         # in one example possible giving several features when a context is long, each of those features having a
@@ -417,13 +485,19 @@ def main():
                     token_end_index -= 1
 
                 # Detect if the answer is out of the span (in which case this feature is labeled with the CLS index).
-                if not (offsets[token_start_index][0] <= start_char and offsets[token_end_index][1] >= end_char):
+                if not (
+                    offsets[token_start_index][0] <= start_char
+                    and offsets[token_end_index][1] >= end_char
+                ):
                     tokenized_examples["start_positions"].append(cls_index)
                     tokenized_examples["end_positions"].append(cls_index)
                 else:
                     # Otherwise move the token_start_index and token_end_index to the two ends of the answer.
                     # Note: we could go after the last offset if the answer is the last word (edge case).
-                    while token_start_index < len(offsets) and offsets[token_start_index][0] <= start_char:
+                    while (
+                        token_start_index < len(offsets)
+                        and offsets[token_start_index][0] <= start_char
+                    ):
                         token_start_index += 1
                     tokenized_examples["start_positions"].append(token_start_index - 1)
                     while offsets[token_end_index][1] >= end_char:
@@ -458,7 +532,9 @@ def main():
         # Some of the questions have lots of whitespace on the left, which is not useful and will make the
         # truncation of the context fail (the tokenized question will take a lots of space). So we remove that
         # left whitespace
-        examples[question_column_name] = [q.lstrip() for q in examples[question_column_name]]
+        examples[question_column_name] = [
+            q.lstrip() for q in examples[question_column_name]
+        ]
 
         # Tokenize our examples with truncation and maybe padding, but keep the overflows using a stride. This results
         # in one example possible giving several features when a context is long, each of those features having a
@@ -526,7 +602,9 @@ def main():
         predict_examples = datasets["test"]
         if data_args.max_predict_samples is not None:
             # We will select sample from whole data
-            predict_examples = predict_examples.select(range(data_args.max_predict_samples))
+            predict_examples = predict_examples.select(
+                range(data_args.max_predict_samples)
+            )
         # Predict Feature Creation
         predict_dataset = predict_examples.map(
             prepare_validation_features,
@@ -537,7 +615,9 @@ def main():
         )
         if data_args.max_predict_samples is not None:
             # During Feature creation dataset samples might increase, we will select required samples again
-            predict_dataset = predict_dataset.select(range(data_args.max_predict_samples))
+            predict_dataset = predict_dataset.select(
+                range(data_args.max_predict_samples)
+            )
         processed_datasets["test"] = predict_dataset
     # endregion
 
@@ -558,12 +638,17 @@ def main():
         # Format the result to the format the metric expects.
         if data_args.version_2_with_negative:
             formatted_predictions = [
-                {"id": k, "prediction_text": v, "no_answer_probability": 0.0} for k, v in predictions.items()
+                {"id": k, "prediction_text": v, "no_answer_probability": 0.0}
+                for k, v in predictions.items()
             ]
         else:
-            formatted_predictions = [{"id": k, "prediction_text": v} for k, v in predictions.items()]
+            formatted_predictions = [
+                {"id": k, "prediction_text": v} for k, v in predictions.items()
+            ]
 
-        references = [{"id": ex["id"], "answers": ex[answer_column_name]} for ex in examples]
+        references = [
+            {"id": ex["id"], "answers": ex[answer_column_name]} for ex in examples
+        ]
         return EvalPrediction(predictions=formatted_predictions, label_ids=references)
 
     metric = load_metric("squad_v2" if data_args.version_2_with_negative else "squad")
@@ -623,8 +708,12 @@ def main():
         if training_args.do_eval:
             logger.info("*** Evaluation ***")
             eval_inputs = {
-                "input_ids": tf.ragged.constant(processed_datasets["validation"]["input_ids"]).to_tensor(),
-                "attention_mask": tf.ragged.constant(processed_datasets["validation"]["attention_mask"]).to_tensor(),
+                "input_ids": tf.ragged.constant(
+                    processed_datasets["validation"]["input_ids"]
+                ).to_tensor(),
+                "attention_mask": tf.ragged.constant(
+                    processed_datasets["validation"]["attention_mask"]
+                ).to_tensor(),
             }
             eval_predictions = model.predict(eval_inputs)
 
@@ -643,8 +732,12 @@ def main():
         if training_args.do_predict:
             logger.info("*** Predict ***")
             predict_inputs = {
-                "input_ids": tf.ragged.constant(processed_datasets["test"]["input_ids"]).to_tensor(),
-                "attention_mask": tf.ragged.constant(processed_datasets["test"]["attention_mask"]).to_tensor(),
+                "input_ids": tf.ragged.constant(
+                    processed_datasets["test"]["input_ids"]
+                ).to_tensor(),
+                "attention_mask": tf.ragged.constant(
+                    processed_datasets["test"]["attention_mask"]
+                ).to_tensor(),
             }
             test_predictions = model.predict(predict_inputs)
             post_processed_test = post_processing_function(

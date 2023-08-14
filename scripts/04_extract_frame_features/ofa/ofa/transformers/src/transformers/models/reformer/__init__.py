@@ -18,11 +18,19 @@
 
 from typing import TYPE_CHECKING
 
-from ...file_utils import _LazyModule, is_sentencepiece_available, is_tokenizers_available, is_torch_available
+from ...file_utils import (
+    _LazyModule,
+    is_sentencepiece_available,
+    is_tokenizers_available,
+    is_torch_available,
+)
 
 
 _import_structure = {
-    "configuration_reformer": ["REFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP", "ReformerConfig"],
+    "configuration_reformer": [
+        "REFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "ReformerConfig",
+    ],
 }
 
 if is_sentencepiece_available():
@@ -46,7 +54,10 @@ if is_torch_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_reformer import REFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP, ReformerConfig
+    from .configuration_reformer import (
+        REFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        ReformerConfig,
+    )
 
     if is_sentencepiece_available():
         from .tokenization_reformer import ReformerTokenizer
@@ -70,4 +81,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

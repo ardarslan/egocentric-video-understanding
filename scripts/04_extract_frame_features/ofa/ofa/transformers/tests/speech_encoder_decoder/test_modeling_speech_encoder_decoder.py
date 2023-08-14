@@ -22,7 +22,9 @@ from transformers.testing_utils import require_torch, slow, torch_device
 
 from ..bert.test_modeling_bert import BertModelTester
 from ..speech_to_text.test_modeling_speech_to_text import Speech2TextModelTester
-from ..speech_to_text_2.test_modeling_speech_to_text_2 import Speech2Text2StandaloneDecoderModelTester
+from ..speech_to_text_2.test_modeling_speech_to_text_2 import (
+    Speech2Text2StandaloneDecoderModelTester,
+)
 from ..test_modeling_common import floats_tensor, ids_tensor, random_attention_mask
 from ..wav2vec2.test_modeling_wav2vec2 import Wav2Vec2ModelTester
 
@@ -39,7 +41,9 @@ if is_torch_available():
         Wav2Vec2Model,
     )
     from transformers.modeling_outputs import BaseModelOutput
-    from transformers.models.speech_to_text.modeling_speech_to_text import Speech2TextEncoder
+    from transformers.models.speech_to_text.modeling_speech_to_text import (
+        Speech2TextEncoder,
+    )
 
 
 @require_torch
@@ -64,7 +68,11 @@ class EncoderDecoderMixin:
         input_features=None,
         **kwargs
     ):
-        encoder_decoder_config = SpeechEncoderDecoderConfig.from_encoder_decoder_configs(config, decoder_config)
+        encoder_decoder_config = (
+            SpeechEncoderDecoderConfig.from_encoder_decoder_configs(
+                config, decoder_config
+            )
+        )
         self.assertTrue(encoder_decoder_config.decoder.is_decoder)
 
         enc_dec_model = SpeechEncoderDecoderModel(encoder_decoder_config)
@@ -82,7 +90,8 @@ class EncoderDecoderMixin:
         )
 
         self.assertEqual(
-            outputs_encoder_decoder["logits"].shape, (decoder_input_ids.shape + (decoder_config.vocab_size,))
+            outputs_encoder_decoder["logits"].shape,
+            (decoder_input_ids.shape + (decoder_config.vocab_size,)),
         )
 
     def check_encoder_decoder_model(
@@ -96,8 +105,12 @@ class EncoderDecoderMixin:
         input_features=None,
         **kwargs
     ):
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = SpeechEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = SpeechEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         self.assertTrue(enc_dec_model.config.decoder.is_decoder)
         self.assertTrue(enc_dec_model.config.decoder.add_cross_attention)
         self.assertTrue(enc_dec_model.config.is_encoder_decoder)
@@ -111,9 +124,12 @@ class EncoderDecoderMixin:
             output_hidden_states=True,
         )
         self.assertEqual(
-            outputs_encoder_decoder["logits"].shape, (decoder_input_ids.shape + (decoder_config.vocab_size,))
+            outputs_encoder_decoder["logits"].shape,
+            (decoder_input_ids.shape + (decoder_config.vocab_size,)),
         )
-        encoder_outputs = BaseModelOutput(last_hidden_state=outputs_encoder_decoder.encoder_hidden_states[-1])
+        encoder_outputs = BaseModelOutput(
+            last_hidden_state=outputs_encoder_decoder.encoder_hidden_states[-1]
+        )
         outputs_encoder_decoder = enc_dec_model(
             encoder_outputs=encoder_outputs,
             decoder_input_ids=decoder_input_ids,
@@ -122,7 +138,8 @@ class EncoderDecoderMixin:
         )
 
         self.assertEqual(
-            outputs_encoder_decoder["logits"].shape, (decoder_input_ids.shape + (decoder_config.vocab_size,))
+            outputs_encoder_decoder["logits"].shape,
+            (decoder_input_ids.shape + (decoder_config.vocab_size,)),
         )
 
     def check_encoder_decoder_model_with_inputs(
@@ -137,8 +154,12 @@ class EncoderDecoderMixin:
         **kwargs
     ):
         inputs = input_values if input_features is None else input_features
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = SpeechEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = SpeechEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         enc_dec_model.to(torch_device)
 
         outputs_encoder_decoder = enc_dec_model(
@@ -149,7 +170,8 @@ class EncoderDecoderMixin:
             output_hidden_states=True,
         )
         self.assertEqual(
-            outputs_encoder_decoder["logits"].shape, (decoder_input_ids.shape + (decoder_config.vocab_size,))
+            outputs_encoder_decoder["logits"].shape,
+            (decoder_input_ids.shape + (decoder_config.vocab_size,)),
         )
         outputs_encoder_decoder_kwarg = enc_dec_model(
             inputs=inputs,
@@ -159,7 +181,8 @@ class EncoderDecoderMixin:
             output_hidden_states=True,
         )
         self.assertEqual(
-            outputs_encoder_decoder_kwarg["logits"].shape, (decoder_input_ids.shape + (decoder_config.vocab_size,))
+            outputs_encoder_decoder_kwarg["logits"].shape,
+            (decoder_input_ids.shape + (decoder_config.vocab_size,)),
         )
 
     def check_encoder_decoder_model_from_pretrained(
@@ -174,9 +197,17 @@ class EncoderDecoderMixin:
         input_features=None,
         **kwargs
     ):
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        kwargs = {"encoder_model": encoder_model, "decoder_model": decoder_model, "return_dict": return_dict}
-        enc_dec_model = SpeechEncoderDecoderModel.from_encoder_decoder_pretrained(**kwargs)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        kwargs = {
+            "encoder_model": encoder_model,
+            "decoder_model": decoder_model,
+            "return_dict": return_dict,
+        }
+        enc_dec_model = SpeechEncoderDecoderModel.from_encoder_decoder_pretrained(
+            **kwargs
+        )
         enc_dec_model.to(torch_device)
         outputs_encoder_decoder = enc_dec_model(
             input_values=input_values,
@@ -189,7 +220,8 @@ class EncoderDecoderMixin:
         )
 
         self.assertEqual(
-            outputs_encoder_decoder["logits"].shape, (decoder_input_ids.shape + (decoder_config.vocab_size,))
+            outputs_encoder_decoder["logits"].shape,
+            (decoder_input_ids.shape + (decoder_config.vocab_size,)),
         )
 
     def check_save_and_load(
@@ -203,8 +235,12 @@ class EncoderDecoderMixin:
         input_features=None,
         **kwargs
     ):
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = SpeechEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = SpeechEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         enc_dec_model.to(torch_device)
         enc_dec_model.eval()
         with torch.no_grad():
@@ -246,8 +282,12 @@ class EncoderDecoderMixin:
         input_features=None,
         **kwargs
     ):
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = SpeechEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = SpeechEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         enc_dec_model.to(torch_device)
         enc_dec_model.eval()
         with torch.no_grad():
@@ -296,8 +336,12 @@ class EncoderDecoderMixin:
         # make the decoder inputs a different shape from the encoder inputs to harden the test
         decoder_input_ids = decoder_input_ids[:, :-1]
         decoder_attention_mask = decoder_attention_mask[:, :-1]
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = SpeechEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = SpeechEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         enc_dec_model.to(torch_device)
         outputs_encoder_decoder = enc_dec_model(
             input_values=input_values,
@@ -313,8 +357,13 @@ class EncoderDecoderMixin:
         encoder_attentions = outputs_encoder_decoder["encoder_attentions"]
         self.assertEqual(len(encoder_attentions), config.num_hidden_layers)
 
-        seq_len = enc_dec_model.encoder._get_feat_extract_output_lengths(inputs.shape[1])
-        self.assertEqual(encoder_attentions[0].shape[-3:], (config.num_attention_heads, seq_len, seq_len))
+        seq_len = enc_dec_model.encoder._get_feat_extract_output_lengths(
+            inputs.shape[1]
+        )
+        self.assertEqual(
+            encoder_attentions[0].shape[-3:],
+            (config.num_attention_heads, seq_len, seq_len),
+        )
 
         decoder_attentions = outputs_encoder_decoder["decoder_attentions"]
         num_decoder_layers = (
@@ -326,7 +375,11 @@ class EncoderDecoderMixin:
 
         self.assertEqual(
             decoder_attentions[0].shape[-3:],
-            (decoder_config.num_attention_heads, decoder_input_ids.shape[-1], decoder_input_ids.shape[-1]),
+            (
+                decoder_config.num_attention_heads,
+                decoder_input_ids.shape[-1],
+                decoder_input_ids.shape[-1],
+            ),
         )
 
         cross_attentions = outputs_encoder_decoder["cross_attentions"]
@@ -335,19 +388,29 @@ class EncoderDecoderMixin:
         cross_attention_input_seq_len = decoder_input_ids.shape[-1]
         self.assertEqual(
             cross_attentions[0].shape[-3:],
-            (decoder_config.num_attention_heads, cross_attention_input_seq_len, seq_len),
+            (
+                decoder_config.num_attention_heads,
+                cross_attention_input_seq_len,
+                seq_len,
+            ),
         )
 
     def check_encoder_decoder_model_generate(
         self, config, decoder_config, input_values=None, input_features=None, **kwargs
     ):
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = SpeechEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = SpeechEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         enc_dec_model.to(torch_device)
 
         # make sure EOS token is set to None to prevent early stopping of generation
         enc_dec_model.config.eos_token_id = None
-        if hasattr(enc_dec_model.config, "decoder") and hasattr(enc_dec_model.config.decoder, "eos_token_id"):
+        if hasattr(enc_dec_model.config, "decoder") and hasattr(
+            enc_dec_model.config.decoder, "eos_token_id"
+        ):
             enc_dec_model.config.decoder.eos_token_id = None
 
         inputs = input_values if input_features is None else input_features
@@ -356,7 +419,9 @@ class EncoderDecoderMixin:
         generated_output = enc_dec_model.generate(
             inputs, decoder_start_token_id=enc_dec_model.config.decoder.pad_token_id
         )
-        self.assertEqual(generated_output.shape, (inputs.shape[0],) + (decoder_config.max_length,))
+        self.assertEqual(
+            generated_output.shape, (inputs.shape[0],) + (decoder_config.max_length,)
+        )
 
     def test_encoder_decoder_model(self):
         input_ids_dict = self.prepare_config_and_inputs()
@@ -372,11 +437,15 @@ class EncoderDecoderMixin:
 
     def test_encoder_decoder_model_from_pretrained(self):
         input_ids_dict = self.prepare_config_and_inputs()
-        self.check_encoder_decoder_model_from_pretrained(**input_ids_dict, return_dict=False)
+        self.check_encoder_decoder_model_from_pretrained(
+            **input_ids_dict, return_dict=False
+        )
 
     def test_encoder_decoder_model_from_pretrained_return_dict(self):
         input_ids_dict = self.prepare_config_and_inputs()
-        self.check_encoder_decoder_model_from_pretrained(**input_ids_dict, return_dict=True)
+        self.check_encoder_decoder_model_from_pretrained(
+            **input_ids_dict, return_dict=True
+        )
 
     def test_save_and_load_from_pretrained(self):
         input_ids_dict = self.prepare_config_and_inputs()
@@ -445,7 +514,9 @@ class Wav2Vec2BertModelTest(EncoderDecoderMixin, unittest.TestCase):
         bert_model_tester = BertModelTester(self)
         wav2vec2_model_tester = Wav2Vec2ModelTester(self)
         encoder_config_and_inputs = wav2vec2_model_tester.prepare_config_and_inputs()
-        decoder_config_and_inputs = bert_model_tester.prepare_config_and_inputs_for_decoder()
+        decoder_config_and_inputs = (
+            bert_model_tester.prepare_config_and_inputs_for_decoder()
+        )
         (
             config,
             input_values,
@@ -487,7 +558,9 @@ class Speech2TextBertModelTest(EncoderDecoderMixin, unittest.TestCase):
             "facebook/s2t-small-librispeech-asr", "bert-base-cased"
         )
         batch_size = 13
-        input_features = floats_tensor([batch_size, 7, 80], model.encoder.config.vocab_size)
+        input_features = floats_tensor(
+            [batch_size, 7, 80], model.encoder.config.vocab_size
+        )
         attention_mask = random_attention_mask([batch_size, 7])
         decoder_input_ids = ids_tensor([batch_size, 4], model.decoder.config.vocab_size)
         decoder_attention_mask = random_attention_mask([batch_size, 4])
@@ -509,7 +582,9 @@ class Speech2TextBertModelTest(EncoderDecoderMixin, unittest.TestCase):
         bert_model_tester = BertModelTester(self)
         speech2text_model_tester = Speech2TextModelTester(self)
         encoder_config_and_inputs = speech2text_model_tester.prepare_config_and_inputs()
-        decoder_config_and_inputs = bert_model_tester.prepare_config_and_inputs_for_decoder()
+        decoder_config_and_inputs = (
+            bert_model_tester.prepare_config_and_inputs_for_decoder()
+        )
 
         config, inputs = encoder_config_and_inputs
         input_features = inputs["input_features"]
@@ -575,7 +650,12 @@ class Wav2Vec2Speech2Text2(EncoderDecoderMixin, unittest.TestCase):
             input_values,
             input_mask,
         ) = encoder_config_and_inputs
-        (decoder_config, decoder_input_ids, decoder_attention_mask, _) = decoder_config_and_inputs
+        (
+            decoder_config,
+            decoder_input_ids,
+            decoder_attention_mask,
+            _,
+        ) = decoder_config_and_inputs
 
         # make sure that cross attention layers are added
         decoder_config.add_cross_attention = True

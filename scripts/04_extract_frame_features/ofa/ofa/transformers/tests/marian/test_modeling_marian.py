@@ -20,7 +20,13 @@ import unittest
 from huggingface_hub.hf_api import list_models
 from transformers import MarianConfig, is_torch_available
 from transformers.file_utils import cached_property
-from transformers.testing_utils import require_sentencepiece, require_tokenizers, require_torch, slow, torch_device
+from transformers.testing_utils import (
+    require_sentencepiece,
+    require_tokenizers,
+    require_torch,
+    slow,
+    torch_device,
+)
 
 from ..generation.test_generation_utils import GenerationTesterMixin
 from ..test_configuration_common import ConfigTester
@@ -66,11 +72,17 @@ def prepare_marian_inputs_dict(
     if decoder_attention_mask is None:
         decoder_attention_mask = decoder_input_ids.ne(config.pad_token_id)
     if head_mask is None:
-        head_mask = torch.ones(config.encoder_layers, config.encoder_attention_heads, device=torch_device)
+        head_mask = torch.ones(
+            config.encoder_layers, config.encoder_attention_heads, device=torch_device
+        )
     if decoder_head_mask is None:
-        decoder_head_mask = torch.ones(config.decoder_layers, config.decoder_attention_heads, device=torch_device)
+        decoder_head_mask = torch.ones(
+            config.decoder_layers, config.decoder_attention_heads, device=torch_device
+        )
     if cross_attn_head_mask is None:
-        cross_attn_head_mask = torch.ones(config.decoder_layers, config.decoder_attention_heads, device=torch_device)
+        cross_attn_head_mask = torch.ones(
+            config.decoder_layers, config.decoder_attention_heads, device=torch_device
+        )
     return {
         "input_ids": input_ids,
         "decoder_input_ids": decoder_input_ids,
@@ -124,12 +136,16 @@ class MarianModelTester:
         self.decoder_start_token_id = decoder_start_token_id
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size).clamp(
+        input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size
+        ).clamp(
             3,
         )
         input_ids[:, -1] = self.eos_token_id  # Eos Token
 
-        decoder_input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+        decoder_input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size
+        )
 
         config = self.get_config()
         inputs_dict = prepare_marian_inputs_dict(config, input_ids, decoder_input_ids)
@@ -165,7 +181,12 @@ class MarianModelTester:
         head_mask = inputs_dict["head_mask"]
 
         # first forward pass
-        outputs = model(input_ids, attention_mask=attention_mask, head_mask=head_mask, use_cache=True)
+        outputs = model(
+            input_ids,
+            attention_mask=attention_mask,
+            head_mask=head_mask,
+            use_cache=True,
+        )
 
         output, past_key_values = outputs.to_tuple()
 
@@ -177,20 +198,28 @@ class MarianModelTester:
         next_input_ids = torch.cat([input_ids, next_tokens], dim=-1)
         next_attention_mask = torch.cat([attention_mask, next_attn_mask], dim=-1)
 
-        output_from_no_past = model(next_input_ids, attention_mask=next_attention_mask)["last_hidden_state"]
-        output_from_past = model(next_tokens, attention_mask=next_attention_mask, past_key_values=past_key_values)[
+        output_from_no_past = model(next_input_ids, attention_mask=next_attention_mask)[
             "last_hidden_state"
         ]
+        output_from_past = model(
+            next_tokens,
+            attention_mask=next_attention_mask,
+            past_key_values=past_key_values,
+        )["last_hidden_state"]
 
         # select random slice
         random_slice_idx = ids_tensor((1,), output_from_past.shape[-1]).item()
-        output_from_no_past_slice = output_from_no_past[:, -3:, random_slice_idx].detach()
+        output_from_no_past_slice = output_from_no_past[
+            :, -3:, random_slice_idx
+        ].detach()
         output_from_past_slice = output_from_past[:, :, random_slice_idx].detach()
 
         self.parent.assertTrue(output_from_past_slice.shape[1] == next_tokens.shape[1])
 
         # test that outputs are equal for slice
-        self.parent.assertTrue(torch.allclose(output_from_past_slice, output_from_no_past_slice, atol=1e-3))
+        self.parent.assertTrue(
+            torch.allclose(output_from_past_slice, output_from_no_past_slice, atol=1e-3)
+        )
 
     def check_encoder_decoder_model_standalone(self, config, inputs_dict):
         model = MarianModel(config=config).to(torch_device).eval()
@@ -204,11 +233,14 @@ class MarianModelTester:
             encoder.save_pretrained(tmpdirname)
             encoder = MarianEncoder.from_pretrained(tmpdirname).to(torch_device)
 
-        encoder_last_hidden_state_2 = encoder(inputs_dict["input_ids"], attention_mask=inputs_dict["attention_mask"])[
-            0
-        ]
+        encoder_last_hidden_state_2 = encoder(
+            inputs_dict["input_ids"], attention_mask=inputs_dict["attention_mask"]
+        )[0]
 
-        self.parent.assertTrue((encoder_last_hidden_state_2 - encoder_last_hidden_state).abs().max().item() < 1e-3)
+        self.parent.assertTrue(
+            (encoder_last_hidden_state_2 - encoder_last_hidden_state).abs().max().item()
+            < 1e-3
+        )
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             decoder = model.get_decoder()
@@ -222,7 +254,9 @@ class MarianModelTester:
             encoder_attention_mask=inputs_dict["attention_mask"],
         )[0]
 
-        self.parent.assertTrue((last_hidden_state_2 - last_hidden_state).abs().max().item() < 1e-3)
+        self.parent.assertTrue(
+            (last_hidden_state_2 - last_hidden_state).abs().max().item() < 1e-3
+        )
 
 
 @require_torch
@@ -247,12 +281,16 @@ class MarianModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase
 
             with tempfile.TemporaryDirectory() as tmpdirname:
                 model.save_pretrained(tmpdirname)
-                model2, info = model_class.from_pretrained(tmpdirname, output_loading_info=True)
+                model2, info = model_class.from_pretrained(
+                    tmpdirname, output_loading_info=True
+                )
             self.assertEqual(info["missing_keys"], [])
 
     def test_decoder_model_past_with_large_inputs(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_decoder_model_past_large_inputs(*config_and_inputs)
+        self.model_tester.create_and_check_decoder_model_past_large_inputs(
+            *config_and_inputs
+        )
 
     def test_encoder_decoder_model_standalone(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs_for_common()
@@ -266,7 +304,9 @@ class MarianModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase
         if torch_device == "cuda":
             model.half()
         model.generate(input_ids, attention_mask=attention_mask)
-        model.generate(num_beams=4, do_sample=True, early_stopping=False, num_return_sequences=3)
+        model.generate(
+            num_beams=4, do_sample=True, early_stopping=False, num_return_sequences=3
+        )
 
     def test_share_encoder_decoder_embeddings(self):
         config, input_dict = self.model_tester.prepare_config_and_inputs()
@@ -274,15 +314,25 @@ class MarianModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase
         # check if embeddings are shared by default
         for model_class in self.all_model_classes:
             model = model_class(config)
-            self.assertIs(model.get_encoder().embed_tokens, model.get_decoder().embed_tokens)
-            self.assertIs(model.get_encoder().embed_tokens.weight, model.get_decoder().embed_tokens.weight)
+            self.assertIs(
+                model.get_encoder().embed_tokens, model.get_decoder().embed_tokens
+            )
+            self.assertIs(
+                model.get_encoder().embed_tokens.weight,
+                model.get_decoder().embed_tokens.weight,
+            )
 
         # check if embeddings are not shared when config.share_encoder_decoder_embeddings = False
         config.share_encoder_decoder_embeddings = False
         for model_class in self.all_model_classes:
             model = model_class(config)
-            self.assertIsNot(model.get_encoder().embed_tokens, model.get_decoder().embed_tokens)
-            self.assertIsNot(model.get_encoder().embed_tokens.weight, model.get_decoder().embed_tokens.weight)
+            self.assertIsNot(
+                model.get_encoder().embed_tokens, model.get_decoder().embed_tokens
+            )
+            self.assertIsNot(
+                model.get_encoder().embed_tokens.weight,
+                model.get_decoder().embed_tokens.weight,
+            )
 
         # check if a model with shared embeddings can be saved and loaded with share_encoder_decoder_embeddings = False
         config, _ = self.model_tester.prepare_config_and_inputs()
@@ -290,9 +340,16 @@ class MarianModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase
             model = model_class(config)
             with tempfile.TemporaryDirectory() as tmpdirname:
                 model.save_pretrained(tmpdirname)
-                model = model_class.from_pretrained(tmpdirname, share_encoder_decoder_embeddings=False)
-                self.assertIsNot(model.get_encoder().embed_tokens, model.get_decoder().embed_tokens)
-                self.assertIsNot(model.get_encoder().embed_tokens.weight, model.get_decoder().embed_tokens.weight)
+                model = model_class.from_pretrained(
+                    tmpdirname, share_encoder_decoder_embeddings=False
+                )
+                self.assertIsNot(
+                    model.get_encoder().embed_tokens, model.get_decoder().embed_tokens
+                )
+                self.assertIsNot(
+                    model.get_encoder().embed_tokens.weight,
+                    model.get_decoder().embed_tokens.weight,
+                )
 
     def test_resize_decoder_token_embeddings(self):
         config, _ = self.model_tester.prepare_config_and_inputs()
@@ -308,14 +365,19 @@ class MarianModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase
         for model_class in self.all_model_classes:
             model = model_class(config)
             model.resize_decoder_token_embeddings(config.vocab_size + 1)
-            self.assertEqual(model.get_decoder().embed_tokens.weight.shape, (config.vocab_size + 1, config.d_model))
+            self.assertEqual(
+                model.get_decoder().embed_tokens.weight.shape,
+                (config.vocab_size + 1, config.d_model),
+            )
 
         # check if lm_head is also resized
         config, _ = self.model_tester.prepare_config_and_inputs()
         config.share_encoder_decoder_embeddings = False
         model = MarianMTModel(config)
         model.resize_decoder_token_embeddings(config.vocab_size + 1)
-        self.assertEqual(model.lm_head.weight.shape, (config.vocab_size + 1, config.d_model))
+        self.assertEqual(
+            model.lm_head.weight.shape, (config.vocab_size + 1, config.d_model)
+        )
 
     def test_tie_word_embeddings_decoder(self):
         pass
@@ -394,7 +456,9 @@ class MarianIntegrationTest(unittest.TestCase):
 
     @cached_property
     def model(self):
-        model: MarianMTModel = AutoModelWithLMHead.from_pretrained(self.model_name).to(torch_device)
+        model: MarianMTModel = AutoModelWithLMHead.from_pretrained(self.model_name).to(
+            torch_device
+        )
         c = model.config
         self.assertListEqual(c.bad_words_ids, [[c.pad_token_id]])
         self.assertEqual(c.max_length, 512)
@@ -410,14 +474,19 @@ class MarianIntegrationTest(unittest.TestCase):
         self.assertListEqual(self.expected_text, generated_words)
 
     def translate_src_text(self, **tokenizer_kwargs):
-        model_inputs = self.tokenizer(self.src_text, padding=True, return_tensors="pt", **tokenizer_kwargs).to(
-            torch_device
-        )
+        model_inputs = self.tokenizer(
+            self.src_text, padding=True, return_tensors="pt", **tokenizer_kwargs
+        ).to(torch_device)
         self.assertEqual(self.model.device, model_inputs.input_ids.device)
         generated_ids = self.model.generate(
-            model_inputs.input_ids, attention_mask=model_inputs.attention_mask, num_beams=2, max_length=128
+            model_inputs.input_ids,
+            attention_mask=model_inputs.attention_mask,
+            num_beams=2,
+            max_length=128,
         )
-        generated_words = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+        generated_words = self.tokenizer.batch_decode(
+            generated_ids, skip_special_tokens=True
+        )
         return generated_words
 
 
@@ -443,7 +512,9 @@ class TestMarian_EN_DE_More(MarianIntegrationTest):
         }
         self.assertSetEqual(desired_keys, set(model_inputs.keys()))
         model_inputs["decoder_input_ids"] = shift_tokens_right(
-            model_inputs.labels, self.tokenizer.pad_token_id, self.model.config.decoder_start_token_id
+            model_inputs.labels,
+            self.tokenizer.pad_token_id,
+            self.model.config.decoder_start_token_id,
         )
         model_inputs["return_dict"] = True
         model_inputs["use_cache"] = False
@@ -459,8 +530,20 @@ class TestMarian_EN_DE_More(MarianIntegrationTest):
         self.assertEqual(expected, ids)
 
     def test_pad_not_split(self):
-        input_ids_w_pad = self.tokenizer(["I am a small frog <pad>"], return_tensors="pt").input_ids[0].tolist()
-        expected_w_pad = [38, 121, 14, 697, 38848, self.tokenizer.pad_token_id, 0]  # pad
+        input_ids_w_pad = (
+            self.tokenizer(["I am a small frog <pad>"], return_tensors="pt")
+            .input_ids[0]
+            .tolist()
+        )
+        expected_w_pad = [
+            38,
+            121,
+            14,
+            697,
+            38848,
+            self.tokenizer.pad_token_id,
+            0,
+        ]  # pad
         self.assertListEqual(expected_w_pad, input_ids_w_pad)
 
     @slow
@@ -530,8 +613,12 @@ class TestMarian_MT_EN(MarianIntegrationTest):
 
     src = "mt"
     tgt = "en"
-    src_text = ["Billi messu b'mod ġentili, Ġesù fejjaq raġel li kien milqut bil - marda kerha tal - ġdiem."]
-    expected_text = ["Touching gently, Jesus healed a man who was affected by the sad disease of leprosy."]
+    src_text = [
+        "Billi messu b'mod ġentili, Ġesù fejjaq raġel li kien milqut bil - marda kerha tal - ġdiem."
+    ]
+    expected_text = [
+        "Touching gently, Jesus healed a man who was affected by the sad disease of leprosy."
+    ]
 
     @slow
     def test_batch_generation_mt_en(self):
@@ -576,7 +663,9 @@ class TestMarian_en_ROMANCE(MarianIntegrationTest):
     @slow
     def test_pipeline(self):
         device = 0 if torch_device == "cuda" else -1
-        pipeline = TranslationPipeline(self.model, self.tokenizer, framework="pt", device=device)
+        pipeline = TranslationPipeline(
+            self.model, self.tokenizer, framework="pt", device=device
+        )
         output = pipeline(self.src_text)
         self.assertEqual(self.expected_text, [x["translation_text"] for x in output])
 
@@ -611,11 +700,23 @@ class TestConversionUtils(unittest.TestCase):
             "opus-mt-en-de",  # standard name
             "opus-mt-en-de",  # standard name
         ]
-        expected = ["opus-mt-ZH-fi", "opus-mt-cmn_cn-fi", "opus-mt-en-de", "opus-mt-en-de"]
-        self.assertListEqual(expected, [convert_opus_name_to_hf_name(x) for x in old_names])
+        expected = [
+            "opus-mt-ZH-fi",
+            "opus-mt-cmn_cn-fi",
+            "opus-mt-en-de",
+            "opus-mt-en-de",
+        ]
+        self.assertListEqual(
+            expected, [convert_opus_name_to_hf_name(x) for x in old_names]
+        )
 
     def test_undoing_renaming(self):
-        hf_names = ["opus-mt-ZH-fi", "opus-mt-cmn_cn-fi", "opus-mt-en-de", "opus-mt-en-de"]
+        hf_names = [
+            "opus-mt-ZH-fi",
+            "opus-mt-cmn_cn-fi",
+            "opus-mt-en-de",
+            "opus-mt-en-de",
+        ]
         converted_opus_names = [convert_hf_name_to_opus_name(x) for x in hf_names]
         expected_opus_names = [
             "cmn+cn+yue+ze_zh+zh_cn+zh_CN+zh_HK+zh_tw+zh_TW+zh_yue+zhs+zht+zh-fi",
@@ -683,15 +784,21 @@ class MarianStandaloneDecoderModelTester:
         self.decoder_attention_idx = 1
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.decoder_seq_length], self.vocab_size)
+        input_ids = ids_tensor(
+            [self.batch_size, self.decoder_seq_length], self.vocab_size
+        )
 
         attention_mask = None
         if self.use_attention_mask:
-            attention_mask = ids_tensor([self.batch_size, self.decoder_seq_length], vocab_size=2)
+            attention_mask = ids_tensor(
+                [self.batch_size, self.decoder_seq_length], vocab_size=2
+            )
 
         lm_labels = None
         if self.use_labels:
-            lm_labels = ids_tensor([self.batch_size, self.decoder_seq_length], self.vocab_size)
+            lm_labels = ids_tensor(
+                [self.batch_size, self.decoder_seq_length], self.vocab_size
+            )
 
         config = MarianConfig(
             vocab_size=self.vocab_size,
@@ -742,15 +849,21 @@ class MarianStandaloneDecoderModelTester:
         next_input_ids = torch.cat([input_ids, next_tokens], dim=-1)
 
         output_from_no_past = model(next_input_ids)["last_hidden_state"]
-        output_from_past = model(next_tokens, past_key_values=past_key_values)["last_hidden_state"]
+        output_from_past = model(next_tokens, past_key_values=past_key_values)[
+            "last_hidden_state"
+        ]
 
         # select random slice
         random_slice_idx = ids_tensor((1,), output_from_past.shape[-1]).item()
-        output_from_no_past_slice = output_from_no_past[:, next_input_ids.shape[-1] - 1, random_slice_idx].detach()
+        output_from_no_past_slice = output_from_no_past[
+            :, next_input_ids.shape[-1] - 1, random_slice_idx
+        ].detach()
         output_from_past_slice = output_from_past[:, 0, random_slice_idx].detach()
 
         # test that outputs are equal for slice
-        assert torch.allclose(output_from_past_slice, output_from_no_past_slice, atol=1e-3)
+        assert torch.allclose(
+            output_from_past_slice, output_from_no_past_slice, atol=1e-3
+        )
 
     def create_and_check_decoder_model_attention_mask_past(
         self,
@@ -768,36 +881,51 @@ class MarianStandaloneDecoderModelTester:
         attn_mask[:, half_seq_length:] = 0
 
         # first forward pass
-        past_key_values = model(input_ids, attention_mask=attn_mask, use_cache=True)["past_key_values"]
+        past_key_values = model(input_ids, attention_mask=attn_mask, use_cache=True)[
+            "past_key_values"
+        ]
 
         # create hypothetical next token and extent to next_input_ids
         next_tokens = ids_tensor((self.batch_size, 1), config.vocab_size)
 
         # change a random masked slice from input_ids
         random_seq_idx_to_change = ids_tensor((1,), half_seq_length).item() + 1
-        random_other_next_tokens = ids_tensor((self.batch_size, 1), config.vocab_size).squeeze(-1)
+        random_other_next_tokens = ids_tensor(
+            (self.batch_size, 1), config.vocab_size
+        ).squeeze(-1)
         input_ids[:, -random_seq_idx_to_change] = random_other_next_tokens
 
         # append to next input_ids and attn_mask
         next_input_ids = torch.cat([input_ids, next_tokens], dim=-1)
         attn_mask = torch.cat(
-            [attn_mask, torch.ones((attn_mask.shape[0], 1), dtype=torch.long, device=torch_device)],
+            [
+                attn_mask,
+                torch.ones(
+                    (attn_mask.shape[0], 1), dtype=torch.long, device=torch_device
+                ),
+            ],
             dim=1,
         )
 
         # get two different outputs
-        output_from_no_past = model(next_input_ids, attention_mask=attn_mask)["last_hidden_state"]
-        output_from_past = model(next_tokens, attention_mask=attn_mask, past_key_values=past_key_values)[
+        output_from_no_past = model(next_input_ids, attention_mask=attn_mask)[
             "last_hidden_state"
         ]
+        output_from_past = model(
+            next_tokens, attention_mask=attn_mask, past_key_values=past_key_values
+        )["last_hidden_state"]
 
         # select random slice
         random_slice_idx = ids_tensor((1,), output_from_past.shape[-1]).item()
-        output_from_no_past_slice = output_from_no_past[:, next_input_ids.shape[-1] - 1, random_slice_idx].detach()
+        output_from_no_past_slice = output_from_no_past[
+            :, next_input_ids.shape[-1] - 1, random_slice_idx
+        ].detach()
         output_from_past_slice = output_from_past[:, 0, random_slice_idx].detach()
 
         # test that outputs are equal for slice
-        assert torch.allclose(output_from_past_slice, output_from_no_past_slice, atol=1e-3)
+        assert torch.allclose(
+            output_from_past_slice, output_from_no_past_slice, atol=1e-3
+        )
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -816,8 +944,12 @@ class MarianStandaloneDecoderModelTester:
 
 
 @require_torch
-class MarianStandaloneDecoderModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
-    all_model_classes = (MarianDecoder, MarianForCausalLM) if is_torch_available() else ()
+class MarianStandaloneDecoderModelTest(
+    ModelTesterMixin, GenerationTesterMixin, unittest.TestCase
+):
+    all_model_classes = (
+        (MarianDecoder, MarianForCausalLM) if is_torch_available() else ()
+    )
     all_generative_model_classes = (MarianForCausalLM,) if is_torch_available() else ()
     test_pruning = False
     is_encoder_decoder = False
@@ -837,7 +969,9 @@ class MarianStandaloneDecoderModelTest(ModelTesterMixin, GenerationTesterMixin, 
 
     def test_decoder_model_attn_mask_past(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_decoder_model_attention_mask_past(*config_and_inputs)
+        self.model_tester.create_and_check_decoder_model_attention_mask_past(
+            *config_and_inputs
+        )
 
     def test_retain_grad_hidden_states_attentions(self):
         # decoder cannot keep gradients

@@ -34,7 +34,12 @@ from ...file_utils import (
     add_start_docstrings,
     add_start_docstrings_to_model_forward,
 )
-from ...modeling_outputs import BaseModelOutput, CausalLMOutput, SequenceClassifierOutput, TokenClassifierOutput
+from ...modeling_outputs import (
+    BaseModelOutput,
+    CausalLMOutput,
+    SequenceClassifierOutput,
+    TokenClassifierOutput,
+)
 from ...modeling_utils import PreTrainedModel
 from ...pytorch_utils import torch_int_div
 from ...utils import logging
@@ -61,8 +66,12 @@ _CTC_EXPECTED_LOSS = 12.51
 # Audio class docstring
 _FEAT_EXTRACTOR_FOR_DOC = "Wav2Vec2FeatureExtractor"
 _SEQ_CLASS_CHECKPOINT = "hf-internal-testing/tiny-random-wavlm"
-_SEQ_CLASS_EXPECTED_OUTPUT = "'no'"  # TODO(anton) - could you quickly fine-tune a KS WavLM Model
-_SEQ_CLASS_EXPECTED_LOSS = 0.7  # TODO(anton) - could you quickly fine-tune a KS WavLM Model
+_SEQ_CLASS_EXPECTED_OUTPUT = (
+    "'no'"  # TODO(anton) - could you quickly fine-tune a KS WavLM Model
+)
+_SEQ_CLASS_EXPECTED_LOSS = (
+    0.7  # TODO(anton) - could you quickly fine-tune a KS WavLM Model
+)
 
 # Frame class docstring
 _FRAME_CLASS_CHECKPOINT = "microsoft/wavlm-base-plus-sd"
@@ -232,7 +241,11 @@ def _compute_mask_indices(
             dummy_mask_idx = spec_aug_mask_idx[0]
 
         spec_aug_mask_idx = np.concatenate(
-            [spec_aug_mask_idx, np.ones(max_num_masked_span - num_masked_span, dtype=np.int32) * dummy_mask_idx]
+            [
+                spec_aug_mask_idx,
+                np.ones(max_num_masked_span - num_masked_span, dtype=np.int32)
+                * dummy_mask_idx,
+            ]
         )
         spec_aug_mask_idxs.append(spec_aug_mask_idx)
 
@@ -242,18 +255,22 @@ def _compute_mask_indices(
     spec_aug_mask_idxs = np.broadcast_to(
         spec_aug_mask_idxs[:, :, None], (batch_size, max_num_masked_span, mask_length)
     )
-    spec_aug_mask_idxs = spec_aug_mask_idxs.reshape(batch_size, max_num_masked_span * mask_length)
+    spec_aug_mask_idxs = spec_aug_mask_idxs.reshape(
+        batch_size, max_num_masked_span * mask_length
+    )
 
     # add offset to the starting indexes so that that indexes now create a span
     offsets = np.arange(mask_length)[None, None, :]
-    offsets = np.broadcast_to(offsets, (batch_size, max_num_masked_span, mask_length)).reshape(
-        batch_size, max_num_masked_span * mask_length
-    )
+    offsets = np.broadcast_to(
+        offsets, (batch_size, max_num_masked_span, mask_length)
+    ).reshape(batch_size, max_num_masked_span * mask_length)
     spec_aug_mask_idxs = spec_aug_mask_idxs + offsets
 
     # ensure that we cannot have indices larger than sequence_length
     if spec_aug_mask_idxs.max() > sequence_length - 1:
-        spec_aug_mask_idxs[spec_aug_mask_idxs > sequence_length - 1] = sequence_length - 1
+        spec_aug_mask_idxs[spec_aug_mask_idxs > sequence_length - 1] = (
+            sequence_length - 1
+        )
 
     # scatter indices to mask
     np.put_along_axis(spec_aug_mask, spec_aug_mask_idxs, 1, -1)
@@ -327,7 +344,9 @@ class WavLMGroupNormConvLayer(nn.Module):
         )
         self.activation = ACT2FN[config.feat_extract_activation]
 
-        self.layer_norm = nn.GroupNorm(num_groups=self.out_conv_dim, num_channels=self.out_conv_dim, affine=True)
+        self.layer_norm = nn.GroupNorm(
+            num_groups=self.out_conv_dim, num_channels=self.out_conv_dim, affine=True
+        )
 
     def forward(self, hidden_states):
         hidden_states = self.conv(hidden_states)
@@ -393,10 +412,14 @@ class WavLMFeatureEncoder(nn.Module):
 
         if config.feat_extract_norm == "group":
             conv_layers = [WavLMGroupNormConvLayer(config, layer_id=0)] + [
-                WavLMNoLayerNormConvLayer(config, layer_id=i + 1) for i in range(config.num_feat_extract_layers - 1)
+                WavLMNoLayerNormConvLayer(config, layer_id=i + 1)
+                for i in range(config.num_feat_extract_layers - 1)
             ]
         elif config.feat_extract_norm == "layer":
-            conv_layers = [WavLMLayerNormConvLayer(config, layer_id=i) for i in range(config.num_feat_extract_layers)]
+            conv_layers = [
+                WavLMLayerNormConvLayer(config, layer_id=i)
+                for i in range(config.num_feat_extract_layers)
+            ]
         else:
             raise ValueError(
                 f"`config.feat_extract_norm` is {config.feat_extract_norm}, but has to be one of ['group', 'layer']"
@@ -517,24 +540,32 @@ class WavLMAttention(nn.Module):
         if position_bias is None:
             position_bias = self.compute_bias(tgt_len, tgt_len)
             position_bias = (
-                position_bias.unsqueeze(0).repeat(bsz, 1, 1, 1).view(bsz * self.num_heads, tgt_len, tgt_len)
+                position_bias.unsqueeze(0)
+                .repeat(bsz, 1, 1, 1)
+                .view(bsz * self.num_heads, tgt_len, tgt_len)
             )
 
         # Compute relative position bias:
         # 1) get reshape hidden_states
-        gated_hidden_states = hidden_states.view(hidden_states.shape[:-1] + (self.num_heads, -1))
+        gated_hidden_states = hidden_states.view(
+            hidden_states.shape[:-1] + (self.num_heads, -1)
+        )
         gated_hidden_states = gated_hidden_states.permute(0, 2, 1, 3)
 
         # 2) project hidden states
         relative_position_proj = self.gru_rel_pos_linear(gated_hidden_states)
-        relative_position_proj = relative_position_proj.view(gated_hidden_states.shape[:-1] + (2, 4)).sum(-1)
+        relative_position_proj = relative_position_proj.view(
+            gated_hidden_states.shape[:-1] + (2, 4)
+        ).sum(-1)
 
         # 3) compute gate for position bias from projected hidden states
         gate_a, gate_b = torch.sigmoid(relative_position_proj).chunk(2, dim=-1)
         gate_output = gate_a * (gate_b * self.gru_rel_pos_const - 1.0) + 2.0
 
         # 4) apply gate to position bias to compute gated position_bias
-        gated_position_bias = gate_output.view(bsz * self.num_heads, -1, 1) * position_bias
+        gated_position_bias = (
+            gate_output.view(bsz * self.num_heads, -1, 1) * position_bias
+        )
         gated_position_bias = gated_position_bias.view((-1, tgt_len, tgt_len))
 
         attn_output, attn_weights = self.torch_multi_head_self_attention(
@@ -603,12 +634,16 @@ class WavLMAttention(nn.Module):
         memory_position = torch.arange(key_length, dtype=torch.long)[None, :]
         relative_position = memory_position - context_position
         relative_position_bucket = self._relative_positions_bucket(relative_position)
-        relative_position_bucket = relative_position_bucket.to(self.rel_attn_embed.weight.device)
+        relative_position_bucket = relative_position_bucket.to(
+            self.rel_attn_embed.weight.device
+        )
         values = self.rel_attn_embed(relative_position_bucket)
         values = values.permute([2, 0, 1])
         return values
 
-    def _relative_positions_bucket(self, relative_positions: torch.FloatTensor) -> torch.FloatTensor:
+    def _relative_positions_bucket(
+        self, relative_positions: torch.FloatTensor
+    ) -> torch.FloatTensor:
         num_buckets = self.num_buckets // 2
 
         relative_buckets = (relative_positions > 0).to(torch.long) * num_buckets
@@ -618,14 +653,23 @@ class WavLMAttention(nn.Module):
         is_small = relative_positions < max_exact
 
         relative_positions_if_large = torch.log(relative_positions.float() / max_exact)
-        relative_positions_if_large = relative_positions_if_large / math.log(self.max_distance / max_exact)
-        relative_positions_if_large = relative_positions_if_large * (num_buckets - max_exact)
-        relative_postion_if_large = (max_exact + relative_positions_if_large).to(torch.long)
+        relative_positions_if_large = relative_positions_if_large / math.log(
+            self.max_distance / max_exact
+        )
+        relative_positions_if_large = relative_positions_if_large * (
+            num_buckets - max_exact
+        )
+        relative_postion_if_large = (max_exact + relative_positions_if_large).to(
+            torch.long
+        )
         relative_postion_if_large = torch.min(
-            relative_postion_if_large, torch.full_like(relative_postion_if_large, num_buckets - 1)
+            relative_postion_if_large,
+            torch.full_like(relative_postion_if_large, num_buckets - 1),
         )
 
-        relative_buckets += torch.where(is_small, relative_positions, relative_postion_if_large)
+        relative_buckets += torch.where(
+            is_small, relative_positions, relative_postion_if_large
+        )
         return relative_buckets
 
 
@@ -635,7 +679,9 @@ class WavLMFeedForward(nn.Module):
         super().__init__()
         self.intermediate_dropout = nn.Dropout(config.activation_dropout)
 
-        self.intermediate_dense = nn.Linear(config.hidden_size, config.intermediate_size)
+        self.intermediate_dense = nn.Linear(
+            config.hidden_size, config.intermediate_size
+        )
         if isinstance(config.hidden_act, str):
             self.intermediate_act_fn = ACT2FN[config.hidden_act]
         else:
@@ -668,9 +714,18 @@ class WavLMEncoderLayer(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout)
         self.layer_norm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.feed_forward = WavLMFeedForward(config)
-        self.final_layer_norm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.final_layer_norm = nn.LayerNorm(
+            config.hidden_size, eps=config.layer_norm_eps
+        )
 
-    def forward(self, hidden_states, attention_mask=None, position_bias=None, output_attentions=False, index=0):
+    def forward(
+        self,
+        hidden_states,
+        attention_mask=None,
+        position_bias=None,
+        output_attentions=False,
+        index=0,
+    ):
         attn_residual = hidden_states
         hidden_states, attn_weights, position_bias = self.attention(
             hidden_states,
@@ -709,9 +764,17 @@ class WavLMEncoderLayerStableLayerNorm(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout)
         self.layer_norm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.feed_forward = WavLMFeedForward(config)
-        self.final_layer_norm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.final_layer_norm = nn.LayerNorm(
+            config.hidden_size, eps=config.layer_norm_eps
+        )
 
-    def forward(self, hidden_states, attention_mask=None, position_bias=None, output_attentions=False):
+    def forward(
+        self,
+        hidden_states,
+        attention_mask=None,
+        position_bias=None,
+        output_attentions=False,
+    ):
         attn_residual = hidden_states
         hidden_states = self.layer_norm(hidden_states)
         hidden_states, attn_weights, position_bias = self.attention(
@@ -722,7 +785,9 @@ class WavLMEncoderLayerStableLayerNorm(nn.Module):
         )
         hidden_states = self.dropout(hidden_states)
         hidden_states = attn_residual + hidden_states
-        hidden_states = hidden_states + self.feed_forward(self.final_layer_norm(hidden_states))
+        hidden_states = hidden_states + self.feed_forward(
+            self.final_layer_norm(hidden_states)
+        )
 
         outputs = (hidden_states, position_bias)
 
@@ -740,7 +805,10 @@ class WavLMEncoder(nn.Module):
         self.layer_norm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.hidden_dropout)
         self.layers = nn.ModuleList(
-            [WavLMEncoderLayer(config, has_relative_position_bias=(i == 0)) for i in range(config.num_hidden_layers)]
+            [
+                WavLMEncoderLayer(config, has_relative_position_bias=(i == 0))
+                for i in range(config.num_hidden_layers)
+            ]
         )
         self.gradient_checkpointing = False
 
@@ -774,7 +842,11 @@ class WavLMEncoder(nn.Module):
             # add LayerDrop (see https://arxiv.org/abs/1909.11556 for description)
             dropout_probability = np.random.uniform(0, 1)
 
-            skip_the_layer = self.training and i > 0 and (dropout_probability < self.config.layerdrop)
+            skip_the_layer = (
+                self.training
+                and i > 0
+                and (dropout_probability < self.config.layerdrop)
+            )
             if not skip_the_layer or deepspeed_zero3_is_enabled:
                 # under deepspeed zero3 all gpus must run in sync
                 if self.gradient_checkpointing and self.training:
@@ -812,7 +884,11 @@ class WavLMEncoder(nn.Module):
             all_hidden_states = all_hidden_states + (hidden_states,)
 
         if not return_dict:
-            return tuple(v for v in [hidden_states, all_hidden_states, all_self_attentions] if v is not None)
+            return tuple(
+                v
+                for v in [hidden_states, all_hidden_states, all_self_attentions]
+                if v is not None
+            )
         return BaseModelOutput(
             last_hidden_state=hidden_states,
             hidden_states=all_hidden_states,
@@ -829,7 +905,9 @@ class WavLMEncoderStableLayerNorm(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout)
         self.layers = nn.ModuleList(
             [
-                WavLMEncoderLayerStableLayerNorm(config, has_relative_position_bias=(i == 0))
+                WavLMEncoderLayerStableLayerNorm(
+                    config, has_relative_position_bias=(i == 0)
+                )
                 for i in range(config.num_hidden_layers)
             ]
         )
@@ -864,7 +942,11 @@ class WavLMEncoderStableLayerNorm(nn.Module):
             # add LayerDrop (see https://arxiv.org/abs/1909.11556 for description)
             dropout_probability = np.random.uniform(0, 1)
 
-            skip_the_layer = self.training and i > 0 and (dropout_probability < self.config.layerdrop)
+            skip_the_layer = (
+                self.training
+                and i > 0
+                and (dropout_probability < self.config.layerdrop)
+            )
             if not skip_the_layer or deepspeed_zero3_is_enabled:
                 # under deepspeed zero3 all gpus must run in sync
                 # XXX: could optimize this like synced_gpus in generate_utils but not sure if it's worth the code complication
@@ -903,9 +985,15 @@ class WavLMEncoderStableLayerNorm(nn.Module):
             all_hidden_states = all_hidden_states + (hidden_states,)
 
         if not return_dict:
-            return tuple(v for v in [hidden_states, all_hidden_states, all_self_attentions] if v is not None)
+            return tuple(
+                v
+                for v in [hidden_states, all_hidden_states, all_self_attentions]
+                if v is not None
+            )
         return BaseModelOutput(
-            last_hidden_state=hidden_states, hidden_states=all_hidden_states, attentions=all_self_attentions
+            last_hidden_state=hidden_states,
+            hidden_states=all_hidden_states,
+            attentions=all_self_attentions,
         )
 
 
@@ -929,9 +1017,15 @@ class WavLMGumbelVectorQuantizer(nn.Module):
 
         # storage for codebook variables (codewords)
         self.codevectors = nn.Parameter(
-            torch.FloatTensor(1, self.num_groups * self.num_vars, config.codevector_dim // self.num_groups)
+            torch.FloatTensor(
+                1,
+                self.num_groups * self.num_vars,
+                config.codevector_dim // self.num_groups,
+            )
         )
-        self.weight_proj = nn.Linear(config.conv_dim[-1], self.num_groups * self.num_vars)
+        self.weight_proj = nn.Linear(
+            config.conv_dim[-1], self.num_groups * self.num_vars
+        )
 
         # can be decayed for training
         self.temperature = 2
@@ -939,7 +1033,9 @@ class WavLMGumbelVectorQuantizer(nn.Module):
     @staticmethod
     def _compute_perplexity(probs):
         marginal_probs = probs.mean(dim=0)
-        perplexity = torch.exp(-torch.sum(marginal_probs * torch.log(marginal_probs + 1e-7), dim=-1)).sum()
+        perplexity = torch.exp(
+            -torch.sum(marginal_probs * torch.log(marginal_probs + 1e-7), dim=-1)
+        ).sum()
         return perplexity
 
     def forward(self, hidden_states):
@@ -947,16 +1043,23 @@ class WavLMGumbelVectorQuantizer(nn.Module):
 
         # project to codevector dim
         hidden_states = self.weight_proj(hidden_states)
-        hidden_states = hidden_states.view(batch_size * sequence_length * self.num_groups, -1)
+        hidden_states = hidden_states.view(
+            batch_size * sequence_length * self.num_groups, -1
+        )
 
         if self.training:
             # sample code vector probs via gumbel in differentiateable way
-            codevector_probs = nn.functional.gumbel_softmax(hidden_states.float(), tau=self.temperature, hard=True)
+            codevector_probs = nn.functional.gumbel_softmax(
+                hidden_states.float(), tau=self.temperature, hard=True
+            )
             codevector_probs = codevector_probs.type_as(hidden_states)
 
             # compute perplexity
             codevector_soft_dist = torch.softmax(
-                hidden_states.view(batch_size * sequence_length, self.num_groups, -1).float(), dim=-1
+                hidden_states.view(
+                    batch_size * sequence_length, self.num_groups, -1
+                ).float(),
+                dim=-1,
             )
             perplexity = self._compute_perplexity(codevector_soft_dist)
         else:
@@ -966,14 +1069,18 @@ class WavLMGumbelVectorQuantizer(nn.Module):
             codevector_probs = hidden_states.new_zeros(*hidden_states.shape).scatter_(
                 -1, codevector_idx.view(-1, 1), 1.0
             )
-            codevector_probs = codevector_probs.view(batch_size * sequence_length, self.num_groups, -1)
+            codevector_probs = codevector_probs.view(
+                batch_size * sequence_length, self.num_groups, -1
+            )
 
             perplexity = self._compute_perplexity(codevector_probs)
 
         codevector_probs = codevector_probs.view(batch_size * sequence_length, -1)
         # use probs to retrieve codevectors
         codevectors_per_group = codevector_probs.unsqueeze(-1) * self.codevectors
-        codevectors = codevectors_per_group.view(batch_size * sequence_length, self.num_groups, self.num_vars, -1)
+        codevectors = codevectors_per_group.view(
+            batch_size * sequence_length, self.num_groups, self.num_vars, -1
+        )
         codevectors = codevectors.sum(-2).view(batch_size, sequence_length, -1)
 
         return codevectors, perplexity
@@ -991,7 +1098,9 @@ class WavLMAdapter(nn.Module):
         else:
             self.proj = self.proj_layer_norm = None
 
-        self.layers = nn.ModuleList(WavLMAdapterLayer(config) for _ in range(config.num_adapter_layers))
+        self.layers = nn.ModuleList(
+            WavLMAdapterLayer(config) for _ in range(config.num_adapter_layers)
+        )
         self.layerdrop = config.layerdrop
 
     def forward(self, hidden_states):
@@ -1054,7 +1163,8 @@ class WavLMPreTrainedModel(PreTrainedModel):
             nn.init.normal_(
                 module.conv.weight,
                 mean=0,
-                std=2 * math.sqrt(1 / (module.conv.kernel_size[0] * module.conv.in_channels)),
+                std=2
+                * math.sqrt(1 / (module.conv.kernel_size[0] * module.conv.in_channels)),
             )
             nn.init.constant_(module.conv.bias, 0)
         elif isinstance(module, WavLMFeatureProjection):
@@ -1073,11 +1183,15 @@ class WavLMPreTrainedModel(PreTrainedModel):
             nn.init.kaiming_normal_(module.weight)
 
             if module.bias is not None:
-                k = math.sqrt(module.groups / (module.in_channels * module.kernel_size[0]))
+                k = math.sqrt(
+                    module.groups / (module.in_channels * module.kernel_size[0])
+                )
                 nn.init.uniform_(module.bias, a=-k, b=k)
 
     def _get_feat_extract_output_lengths(
-        self, input_lengths: Union[torch.LongTensor, int], add_adapter: Optional[bool] = None
+        self,
+        input_lengths: Union[torch.LongTensor, int],
+        add_adapter: Optional[bool] = None,
     ):
         """
         Computes the output length of the convolutional layers
@@ -1090,37 +1204,55 @@ class WavLMPreTrainedModel(PreTrainedModel):
             # from https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
             return torch_int_div(input_length - kernel_size, stride) + 1
 
-        for kernel_size, stride in zip(self.config.conv_kernel, self.config.conv_stride):
+        for kernel_size, stride in zip(
+            self.config.conv_kernel, self.config.conv_stride
+        ):
             input_lengths = _conv_out_length(input_lengths, kernel_size, stride)
 
         if add_adapter:
             for _ in range(self.config.num_adapter_layers):
-                input_lengths = _conv_out_length(input_lengths, 1, self.config.adapter_stride)
+                input_lengths = _conv_out_length(
+                    input_lengths, 1, self.config.adapter_stride
+                )
 
         return input_lengths
 
     def _get_feature_vector_attention_mask(
-        self, feature_vector_length: int, attention_mask: torch.LongTensor, add_adapter=None
+        self,
+        feature_vector_length: int,
+        attention_mask: torch.LongTensor,
+        add_adapter=None,
     ):
         # Effectively attention_mask.sum(-1), but not inplace to be able to run
         # on inference mode.
         non_padded_lengths = attention_mask.cumsum(dim=-1)[:, -1]
 
-        output_lengths = self._get_feat_extract_output_lengths(non_padded_lengths, add_adapter=add_adapter)
+        output_lengths = self._get_feat_extract_output_lengths(
+            non_padded_lengths, add_adapter=add_adapter
+        )
         output_lengths = output_lengths.to(torch.long)
 
         batch_size = attention_mask.shape[0]
 
         attention_mask = torch.zeros(
-            (batch_size, feature_vector_length), dtype=attention_mask.dtype, device=attention_mask.device
+            (batch_size, feature_vector_length),
+            dtype=attention_mask.dtype,
+            device=attention_mask.device,
         )
         # these two operations makes sure that all values before the output lengths idxs are attended to
-        attention_mask[(torch.arange(attention_mask.shape[0], device=attention_mask.device), output_lengths - 1)] = 1
+        attention_mask[
+            (
+                torch.arange(attention_mask.shape[0], device=attention_mask.device),
+                output_lengths - 1,
+            )
+        ] = 1
         attention_mask = attention_mask.flip([-1]).cumsum(-1).flip([-1]).bool()
         return attention_mask
 
     def _set_gradient_checkpointing(self, module, value=False):
-        if isinstance(module, (WavLMEncoder, WavLMEncoderStableLayerNorm, WavLMFeatureEncoder)):
+        if isinstance(
+            module, (WavLMEncoder, WavLMEncoderStableLayerNorm, WavLMFeatureEncoder)
+        ):
             module.gradient_checkpointing = value
 
 
@@ -1194,7 +1326,9 @@ class WavLMModel(WavLMPreTrainedModel):
 
         # model only needs masking vector if mask prob is > 0.0
         if config.mask_time_prob > 0.0 or config.mask_feature_prob > 0.0:
-            self.masked_spec_embed = nn.Parameter(torch.FloatTensor(config.hidden_size).uniform_())
+            self.masked_spec_embed = nn.Parameter(
+                torch.FloatTensor(config.hidden_size).uniform_()
+            )
 
         if config.do_stable_layer_norm:
             self.encoder = WavLMEncoderStableLayerNorm(config)
@@ -1245,7 +1379,9 @@ class WavLMModel(WavLMPreTrainedModel):
 
         if mask_time_indices is not None:
             # apply SpecAugment along time axis with given mask_time_indices
-            hidden_states[mask_time_indices] = self.masked_spec_embed.to(hidden_states.dtype)
+            hidden_states[mask_time_indices] = self.masked_spec_embed.to(
+                hidden_states.dtype
+            )
         elif self.config.mask_time_prob > 0 and self.training:
             mask_time_indices = _compute_mask_indices(
                 (batch_size, sequence_length),
@@ -1254,8 +1390,12 @@ class WavLMModel(WavLMPreTrainedModel):
                 attention_mask=attention_mask,
                 min_masks=self.config.mask_time_min_masks,
             )
-            mask_time_indices = torch.tensor(mask_time_indices, device=hidden_states.device, dtype=torch.bool)
-            hidden_states[mask_time_indices] = self.masked_spec_embed.to(hidden_states.dtype)
+            mask_time_indices = torch.tensor(
+                mask_time_indices, device=hidden_states.device, dtype=torch.bool
+            )
+            hidden_states[mask_time_indices] = self.masked_spec_embed.to(
+                hidden_states.dtype
+            )
 
         if self.config.mask_feature_prob > 0 and self.training:
             # generate indices & apply SpecAugment along feature axis
@@ -1265,8 +1405,12 @@ class WavLMModel(WavLMPreTrainedModel):
                 mask_length=self.config.mask_feature_length,
                 min_masks=self.config.mask_feature_min_masks,
             )
-            mask_feature_indices = torch.tensor(mask_feature_indices, device=hidden_states.device, dtype=torch.bool)
-            mask_feature_indices = mask_feature_indices[:, None].expand(-1, sequence_length, -1)
+            mask_feature_indices = torch.tensor(
+                mask_feature_indices, device=hidden_states.device, dtype=torch.bool
+            )
+            mask_feature_indices = mask_feature_indices[:, None].expand(
+                -1, sequence_length, -1
+            )
             hidden_states[mask_feature_indices] = 0
 
         return hidden_states
@@ -1289,11 +1433,19 @@ class WavLMModel(WavLMPreTrainedModel):
         output_hidden_states=None,
         return_dict=None,
     ):
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         extract_features = self.feature_extractor(input_values)
         extract_features = extract_features.transpose(1, 2)
@@ -1306,7 +1458,9 @@ class WavLMModel(WavLMPreTrainedModel):
 
         hidden_states, extract_features = self.feature_projection(extract_features)
         hidden_states = self._mask_hidden_states(
-            hidden_states, mask_time_indices=mask_time_indices, attention_mask=attention_mask
+            hidden_states,
+            mask_time_indices=mask_time_indices,
+            attention_mask=attention_mask,
         )
 
         encoder_outputs = self.encoder(
@@ -1353,7 +1507,9 @@ class WavLMForCTC(WavLMPreTrainedModel):
                 "or define `vocab_size` of your model's configuration."
             )
         output_hidden_size = (
-            config.output_hidden_size if hasattr(config, "add_adapter") and config.add_adapter else config.hidden_size
+            config.output_hidden_size
+            if hasattr(config, "add_adapter") and config.add_adapter
+            else config.hidden_size
         )
         self.lm_head = nn.Linear(output_hidden_size, config.vocab_size)
 
@@ -1405,7 +1561,9 @@ class WavLMForCTC(WavLMPreTrainedModel):
             config.vocab_size - 1]`.
         """
 
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         outputs = self.wavlm(
             input_values,
@@ -1422,15 +1580,20 @@ class WavLMForCTC(WavLMPreTrainedModel):
 
         loss = None
         if labels is not None:
-
             if labels.max() >= self.config.vocab_size:
-                raise ValueError(f"Label values must be <= vocab_size: {self.config.vocab_size}")
+                raise ValueError(
+                    f"Label values must be <= vocab_size: {self.config.vocab_size}"
+                )
 
             # retrieve loss input_lengths from attention_mask
             attention_mask = (
-                attention_mask if attention_mask is not None else torch.ones_like(input_values, dtype=torch.long)
+                attention_mask
+                if attention_mask is not None
+                else torch.ones_like(input_values, dtype=torch.long)
             )
-            input_lengths = self._get_feat_extract_output_lengths(attention_mask.sum(-1)).to(torch.long)
+            input_lengths = self._get_feat_extract_output_lengths(
+                attention_mask.sum(-1)
+            ).to(torch.long)
 
             # assuming that padded tokens are filled with -100
             # when not being attended to
@@ -1439,7 +1602,9 @@ class WavLMForCTC(WavLMPreTrainedModel):
             flattened_targets = labels.masked_select(labels_mask)
 
             # ctc_loss doesn't support fp16
-            log_probs = nn.functional.log_softmax(logits, dim=-1, dtype=torch.float32).transpose(0, 1)
+            log_probs = nn.functional.log_softmax(
+                logits, dim=-1, dtype=torch.float32
+            ).transpose(0, 1)
 
             with torch.backends.cudnn.flags(enabled=False):
                 loss = nn.functional.ctc_loss(
@@ -1457,7 +1622,10 @@ class WavLMForCTC(WavLMPreTrainedModel):
             return ((loss,) + output) if loss is not None else output
 
         return CausalLMOutput(
-            loss=loss, logits=logits, hidden_states=outputs.hidden_states, attentions=outputs.attentions
+            loss=loss,
+            logits=logits,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
         )
 
 
@@ -1478,7 +1646,9 @@ class WavLMForSequenceClassification(WavLMPreTrainedModel):
                 "Sequence classification does not support the use of WavLM adapters (config.add_adapter=True)"
             )
         self.wavlm = WavLMModel(config)
-        num_layers = config.num_hidden_layers + 1  # transformer layers + input embeddings
+        num_layers = (
+            config.num_hidden_layers + 1
+        )  # transformer layers + input embeddings
         if config.use_weighted_layer_sum:
             self.layer_weights = nn.Parameter(torch.ones(num_layers) / num_layers)
         self.projector = nn.Linear(config.hidden_size, config.classifier_proj_size)
@@ -1540,8 +1710,12 @@ class WavLMForSequenceClassification(WavLMPreTrainedModel):
             `config.num_labels > 1` a classification loss is computed (Cross-Entropy).
         """
 
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-        output_hidden_states = True if self.config.use_weighted_layer_sum else output_hidden_states
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
+        output_hidden_states = (
+            True if self.config.use_weighted_layer_sum else output_hidden_states
+        )
 
         outputs = self.wavlm(
             input_values,
@@ -1563,9 +1737,13 @@ class WavLMForSequenceClassification(WavLMPreTrainedModel):
         if attention_mask is None:
             pooled_output = hidden_states.mean(dim=1)
         else:
-            padding_mask = self._get_feature_vector_attention_mask(hidden_states.shape[1], attention_mask)
+            padding_mask = self._get_feature_vector_attention_mask(
+                hidden_states.shape[1], attention_mask
+            )
             hidden_states[~padding_mask] = 0.0
-            pooled_output = hidden_states.sum(dim=1) / padding_mask.sum(dim=1).view(-1, 1)
+            pooled_output = hidden_states.sum(dim=1) / padding_mask.sum(dim=1).view(
+                -1, 1
+            )
 
         logits = self.classifier(pooled_output)
 
@@ -1602,7 +1780,9 @@ class WavLMForAudioFrameClassification(WavLMPreTrainedModel):
                 "Audio frame classification does not support the use of WavLM adapters (config.add_adapter=True)"
             )
         self.wavlm = WavLMModel(config)
-        num_layers = config.num_hidden_layers + 1  # transformer layers + input embeddings
+        num_layers = (
+            config.num_hidden_layers + 1
+        )  # transformer layers + input embeddings
         if config.use_weighted_layer_sum:
             self.layer_weights = nn.Parameter(torch.ones(num_layers) / num_layers)
         self.classifier = nn.Linear(config.hidden_size, config.num_labels)
@@ -1660,8 +1840,12 @@ class WavLMForAudioFrameClassification(WavLMPreTrainedModel):
             `config.num_labels > 1` a classification loss is computed (Cross-Entropy).
         """
 
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-        output_hidden_states = True if self.config.use_weighted_layer_sum else output_hidden_states
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
+        output_hidden_states = (
+            True if self.config.use_weighted_layer_sum else output_hidden_states
+        )
 
         outputs = self.wavlm(
             input_values,
@@ -1700,7 +1884,9 @@ class AMSoftmaxLoss(nn.Module):
         self.scale = scale
         self.margin = margin
         self.num_labels = num_labels
-        self.weight = nn.Parameter(torch.randn(input_dim, num_labels), requires_grad=True)
+        self.weight = nn.Parameter(
+            torch.randn(input_dim, num_labels), requires_grad=True
+        )
         self.loss = nn.CrossEntropyLoss()
 
     def forward(self, hidden_states, labels):
@@ -1721,7 +1907,9 @@ class AMSoftmaxLoss(nn.Module):
 class TDNNLayer(nn.Module):
     def __init__(self, config, layer_id=0):
         super().__init__()
-        self.in_conv_dim = config.tdnn_dim[layer_id - 1] if layer_id > 0 else config.tdnn_dim[layer_id]
+        self.in_conv_dim = (
+            config.tdnn_dim[layer_id - 1] if layer_id > 0 else config.tdnn_dim[layer_id]
+        )
         self.out_conv_dim = config.tdnn_dim[layer_id]
         self.kernel_size = config.tdnn_kernel[layer_id]
         self.dilation = config.tdnn_dilation[layer_id]
@@ -1756,7 +1944,9 @@ class WavLMForXVector(WavLMPreTrainedModel):
         super().__init__(config)
 
         self.wavlm = WavLMModel(config)
-        num_layers = config.num_hidden_layers + 1  # transformer layers + input embeddings
+        num_layers = (
+            config.num_hidden_layers + 1
+        )  # transformer layers + input embeddings
         if config.use_weighted_layer_sum:
             self.layer_weights = nn.Parameter(torch.ones(num_layers) / num_layers)
         self.projector = nn.Linear(config.hidden_size, config.tdnn_dim[0])
@@ -1764,8 +1954,12 @@ class WavLMForXVector(WavLMPreTrainedModel):
         tdnn_layers = [TDNNLayer(config, i) for i in range(len(config.tdnn_dim))]
         self.tdnn = nn.ModuleList(tdnn_layers)
 
-        self.feature_extractor = nn.Linear(config.tdnn_dim[-1] * 2, config.xvector_output_dim)
-        self.classifier = nn.Linear(config.xvector_output_dim, config.xvector_output_dim)
+        self.feature_extractor = nn.Linear(
+            config.tdnn_dim[-1] * 2, config.xvector_output_dim
+        )
+        self.classifier = nn.Linear(
+            config.xvector_output_dim, config.xvector_output_dim
+        )
 
         self.objective = AMSoftmaxLoss(config.xvector_output_dim, config.num_labels)
 
@@ -1838,8 +2032,12 @@ class WavLMForXVector(WavLMPreTrainedModel):
             `config.num_labels > 1` a classification loss is computed (Cross-Entropy).
         """
 
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-        output_hidden_states = True if self.config.use_weighted_layer_sum else output_hidden_states
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
+        output_hidden_states = (
+            True if self.config.use_weighted_layer_sum else output_hidden_states
+        )
 
         outputs = self.wavlm(
             input_values,
@@ -1867,8 +2065,12 @@ class WavLMForXVector(WavLMPreTrainedModel):
             mean_features = hidden_states.mean(dim=1)
             std_features = hidden_states.std(dim=1)
         else:
-            feat_extract_output_lengths = self._get_feat_extract_output_lengths(attention_mask.sum(dim=1))
-            tdnn_output_lengths = self._get_tdnn_output_lengths(feat_extract_output_lengths)
+            feat_extract_output_lengths = self._get_feat_extract_output_lengths(
+                attention_mask.sum(dim=1)
+            )
+            tdnn_output_lengths = self._get_tdnn_output_lengths(
+                feat_extract_output_lengths
+            )
             mean_features = []
             std_features = []
             for i, length in enumerate(tdnn_output_lengths):
@@ -1886,7 +2088,9 @@ class WavLMForXVector(WavLMPreTrainedModel):
             loss = self.objective(logits, labels)
 
         if not return_dict:
-            output = (logits, output_embeddings) + outputs[_HIDDEN_STATES_START_POSITION:]
+            output = (logits, output_embeddings) + outputs[
+                _HIDDEN_STATES_START_POSITION:
+            ]
             return ((loss,) + output) if loss is not None else output
 
         return XVectorOutput(

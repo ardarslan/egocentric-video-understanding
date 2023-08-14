@@ -50,7 +50,12 @@ if TYPE_CHECKING:
     from .tokenization_rag import RagTokenizer
 
     if is_torch_available():
-        from .modeling_rag import RagModel, RagPreTrainedModel, RagSequenceForGeneration, RagTokenForGeneration
+        from .modeling_rag import (
+            RagModel,
+            RagPreTrainedModel,
+            RagSequenceForGeneration,
+            RagTokenForGeneration,
+        )
 
     if is_tf_available():
         from .modeling_tf_rag import (
@@ -63,4 +68,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

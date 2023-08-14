@@ -18,11 +18,19 @@
 
 from typing import TYPE_CHECKING
 
-from ...file_utils import _LazyModule, is_tokenizers_available, is_torch_available, is_vision_available
+from ...file_utils import (
+    _LazyModule,
+    is_tokenizers_available,
+    is_torch_available,
+    is_vision_available,
+)
 
 
 _import_structure = {
-    "configuration_layoutlmv2": ["LAYOUTLMV2_PRETRAINED_CONFIG_ARCHIVE_MAP", "LayoutLMv2Config"],
+    "configuration_layoutlmv2": [
+        "LAYOUTLMV2_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "LayoutLMv2Config",
+    ],
     "tokenization_layoutlmv2": ["LayoutLMv2Tokenizer"],
 }
 
@@ -45,7 +53,10 @@ if is_torch_available():
     ]
 
 if TYPE_CHECKING:
-    from .configuration_layoutlmv2 import LAYOUTLMV2_PRETRAINED_CONFIG_ARCHIVE_MAP, LayoutLMv2Config
+    from .configuration_layoutlmv2 import (
+        LAYOUTLMV2_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        LayoutLMv2Config,
+    )
     from .tokenization_layoutlmv2 import LayoutLMv2Tokenizer
 
     if is_tokenizers_available():
@@ -68,4 +79,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

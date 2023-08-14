@@ -34,21 +34,27 @@ def main(arg_dict=None):
     parser.add_argument("--generator_videos", action="append", type=str, default=None)
     parser.add_argument("--device", type=str, default=DEFAULT_DEVICE)
     parser.add_argument("--output_dir", type=str, default=INPAINTING_DATA_DIR)
-    parser.add_argument("--set_size", action='store_true', default=False)
+    parser.add_argument("--set_size", action="store_true", default=False)
     parser.add_argument("--width", type=int, default=None)
     parser.add_argument("--height", type=int, default=None)
-    parser.add_argument("--model", type=str, choices=["e2fgvi", "e2fgvi_hq"], default="e2fgvi")
+    parser.add_argument(
+        "--model", type=str, choices=["e2fgvi", "e2fgvi_hq"], default="e2fgvi"
+    )
     parser.add_argument("--hos_version", type=str, default="egohos")
     parser.add_argument("--step", type=int, default=10)
     parser.add_argument("--num_ref", type=int, default=8)
     parser.add_argument("--neighbor_stride", type=int, default=12)
-    parser.add_argument("-f", "--f", help="Dummy argument to make ipython work", default="")
+    parser.add_argument(
+        "-f", "--f", help="Dummy argument to make ipython work", default=""
+    )
     args, _ = parser.parse_known_args(arg_dict_to_list(arg_dict))
 
     if args.generator_videos is None:
         args.generator_videos = get_video_list()
     else:
-        args.generator_videos = [s.strip() for v in args.generator_videos for s in v.split(",")]
+        args.generator_videos = [
+            s.strip() for v in args.generator_videos for s in v.split(",")
+        ]
 
     if args.model == "e2fgvi":
         checkpoint_path = "release_model/E2FGVI-CVPR22.pth"
@@ -58,7 +64,6 @@ def main(arg_dict=None):
     ref_length = args.step  # ref_step
     num_ref = args.num_ref
     neighbor_stride = args.neighbor_stride
-
 
     # sample reference frames from the whole video
     def get_ref_index(f, neighbor_ids, length):
@@ -77,7 +82,6 @@ def main(arg_dict=None):
                     ref_index.append(i)
         return ref_index
 
-
     # read frame-wise masks
     def read_mask(mpath, size):
         masks = []
@@ -86,11 +90,11 @@ def main(arg_dict=None):
         for mp in mnames:
             m = Image.open(os.path.join(mpath, mp))
             m = m.resize(size, Image.NEAREST)
-            m = np.array(m.convert('L'))
+            m = np.array(m.convert("L"))
             m = np.array(m > 0).astype(np.uint8)
-            m = cv2.dilate(m,
-                        cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3)),
-                        iterations=4)
+            m = cv2.dilate(
+                m, cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3)), iterations=4
+            )
             masks.append(Image.fromarray(m * 255))
         return masks
 
@@ -110,7 +114,7 @@ def main(arg_dict=None):
         else:
             lst = os.listdir(vname)
             lst.sort()
-            fr_lst = [vname + '/' + name for name in lst]
+            fr_lst = [vname + "/" + name for name in lst]
             for fr in fr_lst:
                 image = cv2.imread(fr)
                 image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
@@ -127,19 +131,22 @@ def main(arg_dict=None):
     else:
         size = None
 
-    net = importlib.import_module('model.' + args.model)
+    net = importlib.import_module("model." + args.model)
     model = net.InpaintGenerator().to(device)
     data = torch.load(checkpoint_path, map_location=device)
     model.load_state_dict(data)
-    print(f'Loading model from: {checkpoint_path}')
+    print(f"Loading model from: {checkpoint_path}")
     model.eval()
 
     for video_id in args.generator_videos:
         # 1st pass: get track boundaries
         # gen = get_action_recognition_frame_gen(subsets=["val"], videos=[video_id])
-        reader = VideoReader(get_video_path(video_id), get_extracted_frame_dir_path(video_id),
-                             assumed_fps=EK_ASSUMED_FPS)
-        
+        reader = VideoReader(
+            get_video_path(video_id),
+            get_extracted_frame_dir_path(video_id),
+            assumed_fps=EK_ASSUMED_FPS,
+        )
+
         range_obj = range(len(reader))
 
         print()
@@ -154,15 +161,20 @@ def main(arg_dict=None):
         for frame_idx in tqdm(range_obj):
             frame_id = fmt_frame(video_id, frame_idx)
             try:
-                img_np = reader.get_frame(frame_idx).copy()  # avoid "negative stride" error
+                img_np = reader.get_frame(
+                    frame_idx
+                ).copy()  # avoid "negative stride" error
             except ToggleableException as ex:
                 print(f"Could not read frame {frame_idx} of {video_id}:", ex)
                 continue
             img = Image.fromarray(img_np)
 
-            if ((size[0] is not None and img.width != size[0])
-                or (size[1] is not None and img.height != size[1])):
-                img = img.resize((size[0] or img.width, size[1] or img.height), Image.BILINEAR)
+            if (size[0] is not None and img.width != size[0]) or (
+                size[1] is not None and img.height != size[1]
+            ):
+                img = img.resize(
+                    (size[0] or img.width, size[1] or img.height), Image.BILINEAR
+                )
                 frames_np.append(np.array(img))
             else:
                 frames_np.append(img_np)
@@ -172,7 +184,9 @@ def main(arg_dict=None):
             # read mask
 
             mask = None
-            path_hands = CHANNEL_FRAME_PATH_FUNCTS["hos_hands"](video_id, frame_idx, frame_id, hos_version)
+            path_hands = CHANNEL_FRAME_PATH_FUNCTS["hos_hands"](
+                video_id, frame_idx, frame_id, hos_version
+            )
 
             if isfile(path_hands):
                 pkl = read_pkl(path_hands)
@@ -181,12 +195,17 @@ def main(arg_dict=None):
                     mask = np.array(np.logical_or(pkl == 1, pkl == 2)).astype(np.uint8)
                 else:
                     mask = np.zeros(frames_np[0].shape)
-                    for cls, handside, mask_inst, box in zip(pkl["instances"].pred_classes, pkl["instances"].pred_handsides, pkl["instances"].pred_masks, pkl["instances"].pred_boxes):
+                    for cls, handside, mask_inst, box in zip(
+                        pkl["instances"].pred_classes,
+                        pkl["instances"].pred_handsides,
+                        pkl["instances"].pred_masks,
+                        pkl["instances"].pred_boxes,
+                    ):
                         if cls == 0:  # 0: hand
                             if mask is None:
-                                mask = (mask_inst > 0)
+                                mask = mask_inst > 0
                             else:
-                                mask |= (mask_inst > 0)
+                                mask |= mask_inst > 0
 
                     if mask is not None:
                         mask = mask.astype(np.uint8)
@@ -194,15 +213,16 @@ def main(arg_dict=None):
             if mask is None:
                 mask = np.zeros(frames_np[0].shape)
 
-            if ((size[0] is not None and mask.shape[1] != size[0])
-                or (size[1] is not None and mask.shape[0] != size[1])):
+            if (size[0] is not None and mask.shape[1] != size[0]) or (
+                size[1] is not None and mask.shape[0] != size[1]
+            ):
                 img = Image.fromarray(mask)
                 img = img.resize(size, Image.NEAREST)
-                mask = np.array(img.convert('L'))
+                mask = np.array(img.convert("L"))
 
-            mask = cv2.dilate(mask,
-                              cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3)),
-                              iterations=4)
+            mask = cv2.dilate(
+                mask, cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3)), iterations=4
+            )
             masks.append(Image.fromarray(mask * 255))
 
             # !!!!!!!!!!
@@ -218,7 +238,7 @@ def main(arg_dict=None):
         ]
         masks = to_tensors()(masks).unsqueeze(0)
         imgs, masks = imgs.to(device), masks.to(device)
-        
+
         print()
         print("Processing step 2/3: inpainting")
         print()
@@ -227,8 +247,11 @@ def main(arg_dict=None):
 
         for f in tqdm(range(0, len(frames), neighbor_stride)):
             neighbor_ids = [
-                i for i in range(max(0, f - neighbor_stride),
-                                 min(len(frames), f + neighbor_stride + 1))
+                i
+                for i in range(
+                    max(0, f - neighbor_stride),
+                    min(len(frames), f + neighbor_stride + 1),
+                )
             ]
             ref_ids = get_ref_index(f, neighbor_ids, len(frames))
             selected_imgs = imgs[:1, neighbor_ids + ref_ids, :, :, :]
@@ -239,31 +262,33 @@ def main(arg_dict=None):
                 mod_size_w = 108
                 h_pad = (mod_size_h - h % mod_size_h) % mod_size_h
                 w_pad = (mod_size_w - w % mod_size_w) % mod_size_w
-                masked_imgs = torch.cat(
-                    [masked_imgs, torch.flip(masked_imgs, [3])],
-                    3)[:, :, :, :h + h_pad, :]
-                masked_imgs = torch.cat(
-                    [masked_imgs, torch.flip(masked_imgs, [4])],
-                    4)[:, :, :, :, :w + w_pad]
+                masked_imgs = torch.cat([masked_imgs, torch.flip(masked_imgs, [3])], 3)[
+                    :, :, :, : h + h_pad, :
+                ]
+                masked_imgs = torch.cat([masked_imgs, torch.flip(masked_imgs, [4])], 4)[
+                    :, :, :, :, : w + w_pad
+                ]
                 pred_imgs, _ = model(masked_imgs, len(neighbor_ids))
                 pred_imgs = pred_imgs[:, :, :h, :w]
                 pred_imgs = (pred_imgs + 1) / 2
                 pred_imgs = pred_imgs.cpu().permute(0, 2, 3, 1).numpy() * 255
                 for i in range(len(neighbor_ids)):
                     idx = neighbor_ids[i]
-                    img = np.array(pred_imgs[i]).astype(
-                        np.uint8) * binary_masks[idx] + frames[idx] * (
-                            1 - binary_masks[idx])
+                    img = np.array(pred_imgs[i]).astype(np.uint8) * binary_masks[
+                        idx
+                    ] + frames[idx] * (1 - binary_masks[idx])
                     if comp_frames[idx] is None:
                         comp_frames[idx] = img
                     else:
-                        comp_frames[idx] = comp_frames[idx].astype(
-                            np.float32) * 0.5 + img.astype(np.float32) * 0.5
+                        comp_frames[idx] = (
+                            comp_frames[idx].astype(np.float32) * 0.5
+                            + img.astype(np.float32) * 0.5
+                        )
 
         print()
         print("Processing step 3/3: saving inpainted images")
         print()
-        
+
         video_output_dir = join(args.output_dir, f"e2fgvi_{args.hos_version}", video_id)
         os.makedirs(video_output_dir, exist_ok=True)
         for frame_idx, frame_np in tqdm(enumerate(comp_frames)):

@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 from typing import Dict, List, Optional
@@ -68,15 +68,15 @@ class TransformerEncoderLayer(nn.Module):
         super().__init__()
         self.args = args
         self.embed_dim = args.encoder_embed_dim
-        self.quant_noise = getattr(args, 'quant_noise_pq', 0)
-        self.quant_noise_block_size = getattr(args, 'quant_noise_pq_block_size', 8) or 8
+        self.quant_noise = getattr(args, "quant_noise_pq", 0)
+        self.quant_noise_block_size = getattr(args, "quant_noise_pq_block_size", 8) or 8
         self.self_attn = self.build_self_attention(self.embed_dim, args)
         self.self_attn_layer_norm = LayerNorm(self.embed_dim)
         self.dropout_module = FairseqDropout(
             args.dropout, module_name=self.__class__.__name__
         )
         self.activation_fn = utils.get_activation_fn(
-            activation=getattr(args, 'activation_fn', 'relu') or "relu"
+            activation=getattr(args, "activation_fn", "relu") or "relu"
         )
         activation_dropout_p = getattr(args, "activation_dropout", 0) or 0
         if activation_dropout_p == 0:
@@ -99,16 +99,33 @@ class TransformerEncoderLayer(nn.Module):
             self.quant_noise_block_size,
         )
 
-        self.attn_ln = LayerNorm(self.embed_dim) if getattr(args, 'scale_attn', False) else None
+        self.attn_ln = (
+            LayerNorm(self.embed_dim) if getattr(args, "scale_attn", False) else None
+        )
         self.nh = self.self_attn.num_heads
         self.head_dim = self.self_attn.head_dim
 
-        self.ffn_layernorm = LayerNorm(args.encoder_ffn_embed_dim) if getattr(args, 'scale_fc', False) else None
-        self.w_resid = nn.Parameter(torch.ones(self.embed_dim, ), requires_grad=True) if getattr(args, 'scale_resids', False) else None
+        self.ffn_layernorm = (
+            LayerNorm(args.encoder_ffn_embed_dim)
+            if getattr(args, "scale_fc", False)
+            else None
+        )
+        self.w_resid = (
+            nn.Parameter(
+                torch.ones(
+                    self.embed_dim,
+                ),
+                requires_grad=True,
+            )
+            if getattr(args, "scale_resids", False)
+            else None
+        )
 
         self.final_layer_norm = LayerNorm(self.embed_dim)
 
-        self.drop_path = DropPath(drop_path_rate) if drop_path_rate > 0.0 else nn.Identity()
+        self.drop_path = (
+            DropPath(drop_path_rate) if drop_path_rate > 0.0 else nn.Identity()
+        )
 
     def build_fc1(self, input_dim, output_dim, q_noise, qn_block_size):
         return quant_noise(
@@ -129,7 +146,7 @@ class TransformerEncoderLayer(nn.Module):
             q_noise=self.quant_noise,
             qn_block_size=self.quant_noise_block_size,
             scale_factor=args.attn_scale_factor,
-            scale_heads=getattr(args, 'scale_heads', False)
+            scale_heads=getattr(args, "scale_heads", False),
         )
 
     def residual_connection(self, x, residual):
@@ -148,10 +165,13 @@ class TransformerEncoderLayer(nn.Module):
                 if k in state_dict:
                     state_dict["{}.{}.{}".format(name, new, m)] = state_dict[k]
                     del state_dict[k]
-                if "{}.{}.{}".format(name, new, m) not in state_dict and "{}.{}".format(new, m) in self.state_dict():
-                    state_dict[
-                        "{}.{}.{}".format(name, new, m)
-                    ] = self.state_dict()["{}.{}".format(new, m)]
+                if (
+                    "{}.{}.{}".format(name, new, m) not in state_dict
+                    and "{}.{}".format(new, m) in self.state_dict()
+                ):
+                    state_dict["{}.{}.{}".format(name, new, m)] = self.state_dict()[
+                        "{}.{}".format(new, m)
+                    ]
 
         prefix = name + "." if name != "" else ""
         for param_name, param_tensor in self.state_dict().items():
@@ -163,7 +183,7 @@ class TransformerEncoderLayer(nn.Module):
         x,
         encoder_padding_mask: Optional[Tensor],
         attn_mask: Optional[Tensor] = None,
-        self_attn_bias: Optional[Tensor] = None
+        self_attn_bias: Optional[Tensor] = None,
     ):
         """
         Args:
@@ -187,8 +207,7 @@ class TransformerEncoderLayer(nn.Module):
         # will become -inf, which results in NaN in model parameters
         if attn_mask is not None:
             attn_mask = attn_mask.masked_fill(
-                attn_mask.to(torch.bool),
-                -1e8 if x.dtype == torch.float32 else -1e4
+                attn_mask.to(torch.bool), -1e8 if x.dtype == torch.float32 else -1e4
             )
 
         residual = x
@@ -201,7 +220,7 @@ class TransformerEncoderLayer(nn.Module):
             key_padding_mask=encoder_padding_mask,
             need_weights=False,
             attn_mask=attn_mask,
-            attn_bias=self_attn_bias
+            attn_bias=self_attn_bias,
         )
         if self.attn_ln is not None:
             x = self.attn_ln(x)
@@ -245,7 +264,12 @@ class TransformerDecoderLayer(nn.Module):
     """
 
     def __init__(
-        self, args, no_encoder_attn=False, add_bias_kv=False, add_zero_attn=False, drop_path_rate=0.0
+        self,
+        args,
+        no_encoder_attn=False,
+        add_bias_kv=False,
+        add_zero_attn=False,
+        drop_path_rate=0.0,
     ):
         super().__init__()
         self.embed_dim = args.decoder_embed_dim
@@ -263,8 +287,12 @@ class TransformerDecoderLayer(nn.Module):
             add_bias_kv=add_bias_kv,
             add_zero_attn=add_zero_attn,
         )
-        self.self_attn_ln = LayerNorm(self.embed_dim) if getattr(args, 'scale_attn', False) else None
-        self.cross_attn_ln = LayerNorm(self.embed_dim) if getattr(args, 'scale_attn', False) else None
+        self.self_attn_ln = (
+            LayerNorm(self.embed_dim) if getattr(args, "scale_attn", False) else None
+        )
+        self.cross_attn_ln = (
+            LayerNorm(self.embed_dim) if getattr(args, "scale_attn", False) else None
+        )
         self.nh = self.self_attn.num_heads
         self.head_dim = self.self_attn.head_dim
 
@@ -295,8 +323,21 @@ class TransformerDecoderLayer(nn.Module):
             self.encoder_attn = self.build_encoder_attention(self.embed_dim, args)
             self.encoder_attn_layer_norm = LayerNorm(self.embed_dim, export=export)
 
-        self.ffn_layernorm = LayerNorm(args.decoder_ffn_embed_dim) if getattr(args, 'scale_fc', False) else None
-        self.w_resid = nn.Parameter(torch.ones(self.embed_dim, ), requires_grad=True) if getattr(args, 'scale_resids', False) else None
+        self.ffn_layernorm = (
+            LayerNorm(args.decoder_ffn_embed_dim)
+            if getattr(args, "scale_fc", False)
+            else None
+        )
+        self.w_resid = (
+            nn.Parameter(
+                torch.ones(
+                    self.embed_dim,
+                ),
+                requires_grad=True,
+            )
+            if getattr(args, "scale_resids", False)
+            else None
+        )
 
         self.fc1 = self.build_fc1(
             self.embed_dim,
@@ -316,7 +357,9 @@ class TransformerDecoderLayer(nn.Module):
 
         self.onnx_trace = False
 
-        self.drop_path = DropPath(drop_path_rate) if drop_path_rate > 0.0 else nn.Identity()
+        self.drop_path = (
+            DropPath(drop_path_rate) if drop_path_rate > 0.0 else nn.Identity()
+        )
 
     def build_fc1(self, input_dim, output_dim, q_noise, qn_block_size):
         return quant_noise(nn.Linear(input_dim, output_dim), q_noise, qn_block_size)
@@ -337,7 +380,7 @@ class TransformerDecoderLayer(nn.Module):
             q_noise=self.quant_noise,
             qn_block_size=self.quant_noise_block_size,
             scale_factor=args.attn_scale_factor,
-            scale_heads=getattr(args, 'scale_heads', False)
+            scale_heads=getattr(args, "scale_heads", False),
         )
 
     def build_encoder_attention(self, embed_dim, args):
@@ -351,7 +394,7 @@ class TransformerDecoderLayer(nn.Module):
             q_noise=self.quant_noise,
             qn_block_size=self.quant_noise_block_size,
             scale_factor=args.attn_scale_factor,
-            scale_heads=getattr(args, 'scale_heads', False)
+            scale_heads=getattr(args, "scale_heads", False),
         )
 
     def prepare_for_onnx_export_(self):
@@ -373,7 +416,7 @@ class TransformerDecoderLayer(nn.Module):
         need_attn: bool = False,
         need_head_weights: bool = False,
         self_attn_bias: Optional[Tensor] = None,
-        cross_attn_bias: Optional[Tensor] = None
+        cross_attn_bias: Optional[Tensor] = None,
     ):
         """
         Args:
@@ -437,7 +480,7 @@ class TransformerDecoderLayer(nn.Module):
             incremental_state=incremental_state,
             need_weights=False,
             attn_mask=self_attn_mask,
-            attn_bias=self_attn_bias
+            attn_bias=self_attn_bias,
         )
         if self.self_attn_ln is not None:
             x = self.self_attn_ln(x)
@@ -470,7 +513,7 @@ class TransformerDecoderLayer(nn.Module):
                 static_kv=True,
                 need_weights=need_attn or (not self.training and self.need_attn),
                 need_head_weights=need_head_weights,
-                attn_bias=cross_attn_bias
+                attn_bias=cross_attn_bias,
             )
             if self.cross_attn_ln is not None:
                 x = self.cross_attn_ln(x)
@@ -527,14 +570,15 @@ class TransformerDecoderLayer(nn.Module):
             for m in ("weight", "bias"):
                 k = "{}.layer_norms.{}.{}".format(name, old, m)
                 if k in state_dict:
-                    state_dict[
-                        "{}.{}.{}".format(name, new, m)
-                    ] = state_dict[k]
+                    state_dict["{}.{}.{}".format(name, new, m)] = state_dict[k]
                     del state_dict[k]
-                if "{}.{}.{}".format(name, new, m) not in state_dict and "{}.{}".format(new, m) in self.state_dict():
-                    state_dict[
-                        "{}.{}.{}".format(name, new, m)
-                    ] = self.state_dict()["{}.{}".format(new, m)]
+                if (
+                    "{}.{}.{}".format(name, new, m) not in state_dict
+                    and "{}.{}".format(new, m) in self.state_dict()
+                ):
+                    state_dict["{}.{}.{}".format(name, new, m)] = self.state_dict()[
+                        "{}.{}".format(new, m)
+                    ]
 
         prefix = name + "." if name != "" else ""
         for param_name, param_tensor in self.state_dict().items():

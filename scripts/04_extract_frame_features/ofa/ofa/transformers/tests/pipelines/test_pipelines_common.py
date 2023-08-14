@@ -35,7 +35,12 @@ from transformers import (
 )
 from transformers.pipelines import get_task
 from transformers.pipelines.base import _pad
-from transformers.testing_utils import is_pipeline_test, nested_simplify, require_tf, require_torch
+from transformers.testing_utils import (
+    is_pipeline_test,
+    nested_simplify,
+    require_tf,
+    require_torch,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -65,8 +70,12 @@ def get_tiny_config_from_class(configuration_class):
 
     try:
         model_slug = model_type.replace("-", "_")
-        module = importlib.import_module(f".test_modeling_{model_slug}", package=f"tests.{model_slug}")
-        model_tester_class = getattr(module, f"{camel_case_model_name}ModelTester", None)
+        module = importlib.import_module(
+            f".test_modeling_{model_slug}", package=f"tests.{model_slug}"
+        )
+        model_tester_class = getattr(
+            module, f"{camel_case_model_name}ModelTester", None
+        )
     except (ImportError, AttributeError):
         logger.error(f"No model tester class for {configuration_class.__name__}")
         return
@@ -83,7 +92,9 @@ def get_tiny_config_from_class(configuration_class):
         config = model_tester.get_config()
     else:
         config = None
-        logger.warning(f"Model tester {model_tester_class.__name__} has no `get_config()`.")
+        logger.warning(
+            f"Model tester {model_tester_class.__name__} has no `get_config()`."
+        )
 
     return config
 
@@ -99,12 +110,16 @@ def get_tiny_tokenizer_from_checkpoint(checkpoint):
         return tokenizer
     logger.info("Training new from iterator ...")
     vocabulary = string.ascii_letters + string.digits + " "
-    tokenizer = tokenizer.train_new_from_iterator(vocabulary, vocab_size=len(vocabulary), show_progress=False)
+    tokenizer = tokenizer.train_new_from_iterator(
+        vocabulary, vocab_size=len(vocabulary), show_progress=False
+    )
     logger.info("Trained.")
     return tokenizer
 
 
-def get_tiny_feature_extractor_from_checkpoint(checkpoint, tiny_config, feature_extractor_class):
+def get_tiny_feature_extractor_from_checkpoint(
+    checkpoint, tiny_config, feature_extractor_class
+):
     try:
         feature_extractor = AutoFeatureExtractor.from_pretrained(checkpoint)
     except Exception:
@@ -116,12 +131,15 @@ def get_tiny_feature_extractor_from_checkpoint(checkpoint, tiny_config, feature_
         except Exception:
             feature_extractor = None
     if hasattr(tiny_config, "image_size") and feature_extractor:
-        feature_extractor = feature_extractor.__class__(size=tiny_config.image_size, crop_size=tiny_config.image_size)
+        feature_extractor = feature_extractor.__class__(
+            size=tiny_config.image_size, crop_size=tiny_config.image_size
+        )
 
     # Speech2TextModel specific.
     if hasattr(tiny_config, "input_feat_per_channel") and feature_extractor:
         feature_extractor = feature_extractor.__class__(
-            feature_size=tiny_config.input_feat_per_channel, num_mel_bins=tiny_config.input_feat_per_channel
+            feature_size=tiny_config.input_feat_per_channel,
+            num_mel_bins=tiny_config.input_feat_per_channel,
         )
     return feature_extractor
 
@@ -139,7 +157,13 @@ class ANY:
 
 class PipelineTestCaseMeta(type):
     def __new__(mcs, name, bases, dct):
-        def gen_test(ModelClass, checkpoint, tiny_config, tokenizer_class, feature_extractor_class):
+        def gen_test(
+            ModelClass,
+            checkpoint,
+            tiny_config,
+            tokenizer_class,
+            feature_extractor_class,
+        ):
             @skipIf(tiny_config is None, "TinyConfig does not exist")
             @skipIf(checkpoint is None, "checkpoint does not exist")
             def test(self):
@@ -165,17 +189,23 @@ class PipelineTestCaseMeta(type):
                         tokenizer = get_tiny_tokenizer_from_checkpoint(checkpoint)
                         # XLNet actually defines it as -1.
                         if isinstance(model.config, (RobertaConfig, IBertConfig)):
-                            tokenizer.model_max_length = model.config.max_position_embeddings - 2
+                            tokenizer.model_max_length = (
+                                model.config.max_position_embeddings - 2
+                            )
                         elif (
                             hasattr(model.config, "max_position_embeddings")
                             and model.config.max_position_embeddings > 0
                         ):
-                            tokenizer.model_max_length = model.config.max_position_embeddings
+                            tokenizer.model_max_length = (
+                                model.config.max_position_embeddings
+                            )
                     # Rust Panic exception are NOT Exception subclass
                     # Some test tokenizer contain broken vocabs or custom PreTokenizer, so we
                     # provide some default tokenizer and hope for the best.
                     except:  # noqa: E722
-                        self.skipTest(f"Ignoring {ModelClass}, cannot create a simple tokenizer")
+                        self.skipTest(
+                            f"Ignoring {ModelClass}, cannot create a simple tokenizer"
+                        )
                 else:
                     tokenizer = None
                 feature_extractor = get_tiny_feature_extractor_from_checkpoint(
@@ -186,7 +216,9 @@ class PipelineTestCaseMeta(type):
                     self.skipTest(
                         f"Ignoring {ModelClass}, cannot create a tokenizer or feature_extractor (PerceiverConfig with no FastTokenizer ?)"
                     )
-                pipeline, examples = self.get_test_pipeline(model, tokenizer, feature_extractor)
+                pipeline, examples = self.get_test_pipeline(
+                    model, tokenizer, feature_extractor
+                )
                 if pipeline is None:
                     # The test can disable itself, but it should be very marginal
                     # Concerns: Wav2Vec2ForCTC without tokenizer test (FastTokenizer don't exist)
@@ -195,7 +227,10 @@ class PipelineTestCaseMeta(type):
 
                 def run_batch_test(pipeline, examples):
                     # Need to copy because `Conversation` are stateful
-                    if pipeline.tokenizer is not None and pipeline.tokenizer.pad_token_id is None:
+                    if (
+                        pipeline.tokenizer is not None
+                        and pipeline.tokenizer.pad_token_id is None
+                    ):
                         return  # No batching for this and it's OK
 
                     # 10 examples with batch size 4 means there needs to be a unfinished batch
@@ -222,12 +257,18 @@ class PipelineTestCaseMeta(type):
                         model_architectures = (model_architectures,)
 
                     for model_architecture in model_architectures:
-                        checkpoint = get_checkpoint_from_architecture(model_architecture)
+                        checkpoint = get_checkpoint_from_architecture(
+                            model_architecture
+                        )
                         tiny_config = get_tiny_config_from_class(configuration)
                         tokenizer_classes = TOKENIZER_MAPPING.get(configuration, [])
-                        feature_extractor_class = FEATURE_EXTRACTOR_MAPPING.get(configuration, None)
+                        feature_extractor_class = FEATURE_EXTRACTOR_MAPPING.get(
+                            configuration, None
+                        )
                         feature_extractor_name = (
-                            feature_extractor_class.__name__ if feature_extractor_class else "nofeature_extractor"
+                            feature_extractor_class.__name__
+                            if feature_extractor_class
+                            else "nofeature_extractor"
                         )
                         if not tokenizer_classes:
                             # We need to test even if there are no tokenizers.
@@ -237,7 +278,9 @@ class PipelineTestCaseMeta(type):
                             # ByT5 and Perceiver are bytes-level and don't define
                             # FastTokenizer, we can just ignore those.
                             tokenizer_classes = [
-                                tokenizer_class for tokenizer_class in tokenizer_classes if tokenizer_class is not None
+                                tokenizer_class
+                                for tokenizer_class in tokenizer_classes
+                                if tokenizer_class is not None
                             ]
 
                         for tokenizer_class in tokenizer_classes:
@@ -248,7 +291,10 @@ class PipelineTestCaseMeta(type):
 
                             test_name = f"test_{prefix}_{configuration.__name__}_{model_architecture.__name__}_{tokenizer_name}_{feature_extractor_name}"
 
-                            if tokenizer_class is not None or feature_extractor_class is not None:
+                            if (
+                                tokenizer_class is not None
+                                or feature_extractor_class is not None
+                            ):
                                 dct[test_name] = gen_test(
                                     model_architecture,
                                     checkpoint,
@@ -288,7 +334,9 @@ class CommonPipelineTest(unittest.TestCase):
                 return self.data[i]
 
         text_classifier = pipeline(
-            task="text-classification", model="hf-internal-testing/tiny-random-distilbert", framework="pt"
+            task="text-classification",
+            model="hf-internal-testing/tiny-random-distilbert",
+            framework="pt",
         )
         dataset = MyDataset()
         for output in text_classifier(dataset):
@@ -306,7 +354,11 @@ class CommonPipelineTest(unittest.TestCase):
         self.assertEqual(pipe._batch_size, None)
         self.assertEqual(pipe._num_workers, None)
 
-        pipe = pipeline(model="hf-internal-testing/tiny-random-distilbert", batch_size=2, num_workers=1)
+        pipe = pipeline(
+            model="hf-internal-testing/tiny-random-distilbert",
+            batch_size=2,
+            num_workers=1,
+        )
         self.assertEqual(pipe._batch_size, 2)
         self.assertEqual(pipe._num_workers, 1)
 
@@ -315,7 +367,10 @@ class CommonPipelineTest(unittest.TestCase):
         class MyPipeline(TextClassificationPipeline):
             pass
 
-        text_classifier = pipeline(model="hf-internal-testing/tiny-random-distilbert", pipeline_class=MyPipeline)
+        text_classifier = pipeline(
+            model="hf-internal-testing/tiny-random-distilbert",
+            pipeline_class=MyPipeline,
+        )
 
         self.assertIsInstance(text_classifier, MyPipeline)
 
@@ -325,7 +380,9 @@ class CommonPipelineTest(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             # Wrong framework
-            get_task("espnet/siddhana_slurp_entity_asr_train_asr_conformer_raw_en_word_valid.acc.ave_10best")
+            get_task(
+                "espnet/siddhana_slurp_entity_asr_train_asr_conformer_raw_en_word_valid.acc.ave_10best"
+            )
 
     @require_torch
     def test_iterator_data(self):
@@ -355,7 +412,9 @@ class CommonPipelineTest(unittest.TestCase):
             for _ in range(n):
                 yield "This is a test"
 
-        pipe = pipeline(model="hf-internal-testing/tiny-random-distilbert", framework="tf")
+        pipe = pipeline(
+            model="hf-internal-testing/tiny-random-distilbert", framework="tf"
+        )
         out = pipe("This is a test")
         results = []
         for out in pipe(data(10)):
@@ -366,9 +425,13 @@ class CommonPipelineTest(unittest.TestCase):
     @require_torch
     def test_unbatch_attentions_hidden_states(self):
         model = DistilBertForSequenceClassification.from_pretrained(
-            "hf-internal-testing/tiny-random-distilbert", output_hidden_states=True, output_attentions=True
+            "hf-internal-testing/tiny-random-distilbert",
+            output_hidden_states=True,
+            output_attentions=True,
         )
-        tokenizer = AutoTokenizer.from_pretrained("hf-internal-testing/tiny-random-distilbert")
+        tokenizer = AutoTokenizer.from_pretrained(
+            "hf-internal-testing/tiny-random-distilbert"
+        )
         text_classifier = TextClassificationPipeline(model=model, tokenizer=tokenizer)
 
         # Used to throw an error because `hidden_states` are a tuple of tensors
@@ -411,7 +474,8 @@ class PipelinePadTest(unittest.TestCase):
         )
         self.assertTrue(
             torch.allclose(
-                _pad(items, "attention_mask", 0, "right"), torch.LongTensor([[0, 1, 1, 0, 0, 0], [0, 1, 1, 1, 1, 0]])
+                _pad(items, "attention_mask", 0, "right"),
+                torch.LongTensor([[0, 1, 1, 0, 0, 0], [0, 1, 1, 1, 1, 0]]),
             )
         )
 
@@ -514,7 +578,9 @@ class PipelineUtilsTest(unittest.TestCase):
         def add(number, extra=0):
             return {"id": [i + extra for i in number["id"]]}
 
-        dataset = PipelineIterator(dummy_dataset, add, {"extra": 2}, loader_batch_size=3)
+        dataset = PipelineIterator(
+            dummy_dataset, add, {"extra": 2}, loader_batch_size=3
+        )
 
         outputs = [item for item in dataset]
         self.assertEqual(outputs, [{"id": 2}, {"id": 3}, {"id": 4}, {"id": 5}])
@@ -524,16 +590,22 @@ class PipelineUtilsTest(unittest.TestCase):
 
         from transformers.pipelines.pt_utils import PipelineIterator
 
-        dummy_dataset = [{"id": torch.LongTensor([[10, 20], [0, 1], [0, 2]])}, {"id": torch.LongTensor([[3]])}]
+        dummy_dataset = [
+            {"id": torch.LongTensor([[10, 20], [0, 1], [0, 2]])},
+            {"id": torch.LongTensor([[3]])},
+        ]
 
         def add(number, extra=0):
             return {"id": number["id"] + extra}
 
-        dataset = PipelineIterator(dummy_dataset, add, {"extra": 2}, loader_batch_size=3)
+        dataset = PipelineIterator(
+            dummy_dataset, add, {"extra": 2}, loader_batch_size=3
+        )
 
         outputs = [item for item in dataset]
         self.assertEqual(
-            nested_simplify(outputs), [{"id": [[12, 22]]}, {"id": [[2, 3]]}, {"id": [[2, 4]]}, {"id": [[5]]}]
+            nested_simplify(outputs),
+            [{"id": [[12, 22]]}, {"id": [[2, 3]]}, {"id": [[2, 4]]}, {"id": [[5]]}],
         )
 
     def test_pipeline_chunk_iterator(self):
@@ -545,7 +617,9 @@ class PipelineUtilsTest(unittest.TestCase):
 
         dataset = [2, 3]
 
-        dataset = PipelineChunkIterator(dataset, preprocess_chunk, {}, loader_batch_size=3)
+        dataset = PipelineChunkIterator(
+            dataset, preprocess_chunk, {}, loader_batch_size=3
+        )
 
         outputs = [item for item in dataset]
 
@@ -586,23 +660,39 @@ class PipelineUtilsTest(unittest.TestCase):
     def test_pipeline_pack_unbatch_iterator(self):
         from transformers.pipelines.pt_utils import PipelinePackIterator
 
-        dummy_dataset = [{"id": [0, 1, 2], "is_last": [False, True, False]}, {"id": [3], "is_last": [True]}]
+        dummy_dataset = [
+            {"id": [0, 1, 2], "is_last": [False, True, False]},
+            {"id": [3], "is_last": [True]},
+        ]
 
         def add(number, extra=0):
-            return {"id": [i + extra for i in number["id"]], "is_last": number["is_last"]}
+            return {
+                "id": [i + extra for i in number["id"]],
+                "is_last": number["is_last"],
+            }
 
-        dataset = PipelinePackIterator(dummy_dataset, add, {"extra": 2}, loader_batch_size=3)
+        dataset = PipelinePackIterator(
+            dummy_dataset, add, {"extra": 2}, loader_batch_size=3
+        )
 
         outputs = [item for item in dataset]
         self.assertEqual(outputs, [[{"id": 2}, {"id": 3}], [{"id": 4}, {"id": 5}]])
 
         # is_false Across batch
-        dummy_dataset = [{"id": [0, 1, 2], "is_last": [False, False, False]}, {"id": [3], "is_last": [True]}]
+        dummy_dataset = [
+            {"id": [0, 1, 2], "is_last": [False, False, False]},
+            {"id": [3], "is_last": [True]},
+        ]
 
         def add(number, extra=0):
-            return {"id": [i + extra for i in number["id"]], "is_last": number["is_last"]}
+            return {
+                "id": [i + extra for i in number["id"]],
+                "is_last": number["is_last"],
+            }
 
-        dataset = PipelinePackIterator(dummy_dataset, add, {"extra": 2}, loader_batch_size=3)
+        dataset = PipelinePackIterator(
+            dummy_dataset, add, {"extra": 2}, loader_batch_size=3
+        )
 
         outputs = [item for item in dataset]
         self.assertEqual(outputs, [[{"id": 2}, {"id": 3}, {"id": 4}, {"id": 5}]])

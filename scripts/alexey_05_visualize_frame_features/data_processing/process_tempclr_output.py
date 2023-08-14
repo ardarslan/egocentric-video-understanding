@@ -17,8 +17,9 @@ IMGS_PER_ROW = 2
 IMGS_PER_SAMPLE = 11
 
 
-
-for root, dirs, files in os.walk("/data/data3/agavryushin/tempclr/TempCLR_release/FreiHAND_model_P01_12/summary/"):
+for root, dirs, files in os.walk(
+    "/data/data3/agavryushin/tempclr/TempCLR_release/FreiHAND_model_P01_12/summary/"
+):
     for fn in files:
         json_path = join(root, fn)
         if not json_path.endswith(".json"):
@@ -38,7 +39,11 @@ for root, dirs, files in os.walk("/data/data3/agavryushin/tempclr/TempCLR_releas
                     found_bright = False
                     for x in range(0, w, 10):
                         pixel_color = img.getpixel((x, y))
-                        if pixel_color[0] != 0 or pixel_color[1] != 0 or pixel_color[2] != 0:
+                        if (
+                            pixel_color[0] != 0
+                            or pixel_color[1] != 0
+                            or pixel_color[2] != 0
+                        ):
                             found_bright = True
                             break
                     if active and not found_bright:
@@ -71,29 +76,54 @@ for root, dirs, files in os.walk("/data/data3/agavryushin/tempclr/TempCLR_releas
 
                     orig_w = img_data["orig_bbox"][2] - img_data["orig_bbox"][0]
                     orig_h = img_data["orig_bbox"][3] - img_data["orig_bbox"][1]
-                    scale = img_data["orig_bbox_size"] / max(img_crop.width, img_crop.height)
+                    scale = img_data["orig_bbox_size"] / max(
+                        img_crop.width, img_crop.height
+                    )
 
-                    img_crop = img_crop.resize((round(img_crop.width * scale), round(img_crop.height * scale)), Image.BILINEAR)
+                    img_crop = img_crop.resize(
+                        (round(img_crop.width * scale), round(img_crop.height * scale)),
+                        Image.BILINEAR,
+                    )
 
                     # now, make sure centers align
 
-                    img_top_left_coord_x = img_data["orig_center"][0] - img_crop.width / 2
-                    img_top_left_coord_y = img_data["orig_center"][1] - img_crop.height / 2
-                    img_crop_box = (img_top_left_coord_x, img_top_left_coord_y,
-                                    img_top_left_coord_x + img_crop.width,
-                                    img_top_left_coord_y + img_crop.height)
-                    
+                    img_top_left_coord_x = (
+                        img_data["orig_center"][0] - img_crop.width / 2
+                    )
+                    img_top_left_coord_y = (
+                        img_data["orig_center"][1] - img_crop.height / 2
+                    )
+                    img_crop_box = (
+                        img_top_left_coord_x,
+                        img_top_left_coord_y,
+                        img_top_left_coord_x + img_crop.width,
+                        img_top_left_coord_y + img_crop.height,
+                    )
+
                     # paste to original image
 
                     with Image.open(img_data["image_name"]) as original_img:
                         img_crop_np = np.array(img_crop)
                         mask_np = np.any(img_crop_np != 0, axis=-1).astype(np.uint8)
                         mask_img = Image.fromarray(mask_np * 255)
-                        original_img.paste(img_crop, (round(img_top_left_coord_x), round(img_top_left_coord_y)),
-                                           mask_img)
-                        no_bg_img = Image.new("RGB", (2 * original_img.width, original_img.height), (0, 0, 0))
-                        no_bg_img.paste(img_crop, (original_img.width + round(img_top_left_coord_x), round(img_top_left_coord_y)),
-                                        mask_img)
+                        original_img.paste(
+                            img_crop,
+                            (round(img_top_left_coord_x), round(img_top_left_coord_y)),
+                            mask_img,
+                        )
+                        no_bg_img = Image.new(
+                            "RGB",
+                            (2 * original_img.width, original_img.height),
+                            (0, 0, 0),
+                        )
+                        no_bg_img.paste(
+                            img_crop,
+                            (
+                                original_img.width + round(img_top_left_coord_x),
+                                round(img_top_left_coord_y),
+                            ),
+                            mask_img,
+                        )
 
                     img_crop_out_path = f"{img_path}_{img_idx}.png"
                     original_img_out_path = f"{img_path}_{img_idx}_overlapped.jpg"
@@ -107,7 +137,9 @@ for root, dirs, files in os.walk("/data/data3/agavryushin/tempclr/TempCLR_releas
                         frame_id = video_id
                         video_id = temp
 
-                    no_bg_img_path = CHANNEL_FRAME_PATH_FUNCTS["hand_mesh_vis"](video_id, -1, frame_id, "tempclr")
+                    no_bg_img_path = CHANNEL_FRAME_PATH_FUNCTS["hand_mesh_vis"](
+                        video_id, -1, frame_id, "tempclr"
+                    )
                     if isfile(no_bg_img_path):
                         with Image.open(no_bg_img_path) as existing_img:
                             existing_img.paste(no_bg_img, (0, 0))
@@ -118,5 +150,5 @@ for root, dirs, files in os.walk("/data/data3/agavryushin/tempclr/TempCLR_releas
 
                     print(f"{img_crop_out_path=}")
                     print(f"{original_img_out_path=}")
-                    
+
 # %%

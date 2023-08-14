@@ -23,7 +23,9 @@ mask_output_dir = "/mnt/scratch/agavryushin/Thesis/data/EGO_HOS_test_vis/"
 os.makedirs(mask_output_dir, exist_ok=True)
 
 
-reader = VideoReader(get_video_path(video_id), get_extracted_frame_dir_path(video_id), assumed_fps=-1)
+reader = VideoReader(
+    get_video_path(video_id), get_extracted_frame_dir_path(video_id), assumed_fps=-1
+)
 for frame_idx in tqdm(range(len(reader))):
     if frame_idx < 500:
         continue
@@ -45,4 +47,3 @@ for frame_idx in tqdm(range(len(reader))):
             sup_img = superimpose_colored_mask(img, hand_mask, (255, 0, 0))
             sup_img = superimpose_colored_mask(sup_img, obj_mask, (0, 255, 0))
             sup_img.save(join(mask_output_dir, frame_fn))
-

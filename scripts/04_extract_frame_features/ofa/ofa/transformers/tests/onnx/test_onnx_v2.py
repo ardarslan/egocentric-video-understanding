@@ -6,7 +6,13 @@ from unittest.mock import patch
 import pytest
 
 from parameterized import parameterized
-from transformers import AutoConfig, AutoFeatureExtractor, AutoTokenizer, is_tf_available, is_torch_available
+from transformers import (
+    AutoConfig,
+    AutoFeatureExtractor,
+    AutoTokenizer,
+    is_tf_available,
+    is_torch_available,
+)
 from transformers.onnx import (
     EXTERNAL_DATA_FORMAT_SIZE_LIMIT,
     OnnxConfig,
@@ -20,8 +26,17 @@ from transformers.onnx import (
 if is_torch_available() or is_tf_available():
     from transformers.onnx.features import FeaturesManager
 
-from transformers.onnx.utils import compute_effective_axis_dimension, compute_serialized_parameters_size
-from transformers.testing_utils import require_onnx, require_tf, require_torch, require_vision, slow
+from transformers.onnx.utils import (
+    compute_effective_axis_dimension,
+    compute_serialized_parameters_size,
+)
+from transformers.testing_utils import (
+    require_onnx,
+    require_tf,
+    require_torch,
+    require_vision,
+    slow,
+)
 
 
 @require_onnx
@@ -31,8 +46,13 @@ class OnnxUtilsTestCaseV2(TestCase):
     """
 
     @require_torch
-    @patch("transformers.onnx.convert.is_torch_onnx_dict_inputs_support_available", return_value=False)
-    def test_ensure_pytorch_version_ge_1_8_0(self, mock_is_torch_onnx_dict_inputs_support_available):
+    @patch(
+        "transformers.onnx.convert.is_torch_onnx_dict_inputs_support_available",
+        return_value=False,
+    )
+    def test_ensure_pytorch_version_ge_1_8_0(
+        self, mock_is_torch_onnx_dict_inputs_support_available
+    ):
         """
         Ensure we raise an Exception if the pytorch version is unsupported (< 1.8.0)
         """
@@ -49,25 +69,46 @@ class OnnxUtilsTestCaseV2(TestCase):
         """
 
         # Dynamic axis (batch, no token added by the tokenizer)
-        self.assertEqual(compute_effective_axis_dimension(-1, fixed_dimension=2, num_token_to_add=0), 2)
+        self.assertEqual(
+            compute_effective_axis_dimension(-1, fixed_dimension=2, num_token_to_add=0),
+            2,
+        )
 
         # Static axis (batch, no token added by the tokenizer)
-        self.assertEqual(compute_effective_axis_dimension(0, fixed_dimension=2, num_token_to_add=0), 2)
+        self.assertEqual(
+            compute_effective_axis_dimension(0, fixed_dimension=2, num_token_to_add=0),
+            2,
+        )
 
         # Dynamic axis (sequence, token added by the tokenizer 2 (no pair))
-        self.assertEqual(compute_effective_axis_dimension(0, fixed_dimension=8, num_token_to_add=2), 6)
-        self.assertEqual(compute_effective_axis_dimension(0, fixed_dimension=8, num_token_to_add=2), 6)
+        self.assertEqual(
+            compute_effective_axis_dimension(0, fixed_dimension=8, num_token_to_add=2),
+            6,
+        )
+        self.assertEqual(
+            compute_effective_axis_dimension(0, fixed_dimension=8, num_token_to_add=2),
+            6,
+        )
 
         # Dynamic axis (sequence, token added by the tokenizer 3 (pair))
-        self.assertEqual(compute_effective_axis_dimension(0, fixed_dimension=8, num_token_to_add=3), 5)
-        self.assertEqual(compute_effective_axis_dimension(0, fixed_dimension=8, num_token_to_add=3), 5)
+        self.assertEqual(
+            compute_effective_axis_dimension(0, fixed_dimension=8, num_token_to_add=3),
+            5,
+        )
+        self.assertEqual(
+            compute_effective_axis_dimension(0, fixed_dimension=8, num_token_to_add=3),
+            5,
+        )
 
     def test_compute_parameters_serialized_size(self):
         """
         This test ensures we compute a "correct" approximation of the underlying storage requirement (size) for all the
         parameters for the specified parameter's dtype.
         """
-        self.assertEqual(compute_serialized_parameters_size(2, ParameterFormat.Float), 2 * ParameterFormat.Float.size)
+        self.assertEqual(
+            compute_serialized_parameters_size(2, ParameterFormat.Float),
+            2 * ParameterFormat.Float.size,
+        )
 
     def test_flatten_output_collection_property(self):
         """
@@ -107,13 +148,21 @@ class OnnxConfigTestCaseV2(TestCase):
         self.assertFalse(OnnxConfig.use_external_data_format(1))
 
         # Almost 2Gb parameters
-        self.assertFalse(OnnxConfig.use_external_data_format((TWO_GB_LIMIT - 1) // ParameterFormat.Float.size))
+        self.assertFalse(
+            OnnxConfig.use_external_data_format(
+                (TWO_GB_LIMIT - 1) // ParameterFormat.Float.size
+            )
+        )
 
         # Exactly 2Gb parameters
         self.assertTrue(OnnxConfig.use_external_data_format(TWO_GB_LIMIT))
 
         # More than 2Gb parameters
-        self.assertTrue(OnnxConfig.use_external_data_format((TWO_GB_LIMIT + 1) // ParameterFormat.Float.size))
+        self.assertTrue(
+            OnnxConfig.use_external_data_format(
+                (TWO_GB_LIMIT + 1) // ParameterFormat.Float.size
+            )
+        )
 
 
 class OnnxConfigWithPastTestCaseV2(TestCase):
@@ -152,21 +201,36 @@ class OnnxConfigWithPastTestCaseV2(TestCase):
         """
         for name, config in OnnxConfigWithPastTestCaseV2.SUPPORTED_WITH_PAST_CONFIGS:
             with self.subTest(name):
-
                 # without past
                 onnx_config_default = OnnxConfigWithPast.from_model_config(config())
-                self.assertIsNotNone(onnx_config_default.values_override, "values_override should not be None")
-                self.assertIn("use_cache", onnx_config_default.values_override, "use_cache should be present")
+                self.assertIsNotNone(
+                    onnx_config_default.values_override,
+                    "values_override should not be None",
+                )
+                self.assertIn(
+                    "use_cache",
+                    onnx_config_default.values_override,
+                    "use_cache should be present",
+                )
                 self.assertFalse(
-                    onnx_config_default.values_override["use_cache"], "use_cache should be False if not using past"
+                    onnx_config_default.values_override["use_cache"],
+                    "use_cache should be False if not using past",
                 )
 
                 # with past
                 onnx_config_default = OnnxConfigWithPast.with_past(config())
-                self.assertIsNotNone(onnx_config_default.values_override, "values_override should not be None")
-                self.assertIn("use_cache", onnx_config_default.values_override, "use_cache should be present")
+                self.assertIsNotNone(
+                    onnx_config_default.values_override,
+                    "values_override should not be None",
+                )
+                self.assertIn(
+                    "use_cache",
+                    onnx_config_default.values_override,
+                    "use_cache should be present",
+                )
                 self.assertTrue(
-                    onnx_config_default.values_override["use_cache"], "use_cache should be False if not using past"
+                    onnx_config_default.values_override["use_cache"],
+                    "use_cache should be False if not using past",
                 )
 
 
@@ -215,11 +279,20 @@ TENSORFLOW_EXPORT_SEQ2SEQ_WITH_PAST_MODELS = {}
 def _get_models_to_test(export_models_list):
     models_to_test = []
     if is_torch_available() or is_tf_available():
-        for (name, model) in export_models_list:
-            for feature, onnx_config_class_constructor in FeaturesManager.get_supported_features_for_model_type(
-                name
-            ).items():
-                models_to_test.append((f"{name}_{feature}", name, model, feature, onnx_config_class_constructor))
+        for name, model in export_models_list:
+            for (
+                feature,
+                onnx_config_class_constructor,
+            ) in FeaturesManager.get_supported_features_for_model_type(name).items():
+                models_to_test.append(
+                    (
+                        f"{name}_{feature}",
+                        name,
+                        model,
+                        feature,
+                        onnx_config_class_constructor,
+                    )
+                )
         return sorted(models_to_test)
     else:
         # Returning some dummy test that should not be ever called because of the @require_torch / @require_tf
@@ -233,7 +306,9 @@ class OnnxExportTestCaseV2(TestCase):
     Integration tests ensuring supported models are correctly exported
     """
 
-    def _onnx_export(self, test_name, name, model_name, feature, onnx_config_class_constructor):
+    def _onnx_export(
+        self, test_name, name, model_name, feature, onnx_config_class_constructor
+    ):
         from transformers.onnx import export
 
         model_class = FeaturesManager.get_model_class_for_feature(feature)
@@ -263,7 +338,11 @@ class OnnxExportTestCaseV2(TestCase):
         with NamedTemporaryFile("w") as output:
             try:
                 onnx_inputs, onnx_outputs = export(
-                    preprocessor, model, onnx_config, onnx_config.default_onnx_opset, Path(output.name)
+                    preprocessor,
+                    model,
+                    onnx_config,
+                    onnx_config.default_onnx_opset,
+                    Path(output.name),
                 )
                 validate_model_outputs(
                     onnx_config,
@@ -280,14 +359,22 @@ class OnnxExportTestCaseV2(TestCase):
     @slow
     @require_torch
     @require_vision
-    def test_pytorch_export(self, test_name, name, model_name, feature, onnx_config_class_constructor):
-        self._onnx_export(test_name, name, model_name, feature, onnx_config_class_constructor)
+    def test_pytorch_export(
+        self, test_name, name, model_name, feature, onnx_config_class_constructor
+    ):
+        self._onnx_export(
+            test_name, name, model_name, feature, onnx_config_class_constructor
+        )
 
     @parameterized.expand(_get_models_to_test(PYTORCH_EXPORT_WITH_PAST_MODELS))
     @slow
     @require_torch
-    def test_pytorch_export_with_past(self, test_name, name, model_name, feature, onnx_config_class_constructor):
-        self._onnx_export(test_name, name, model_name, feature, onnx_config_class_constructor)
+    def test_pytorch_export_with_past(
+        self, test_name, name, model_name, feature, onnx_config_class_constructor
+    ):
+        self._onnx_export(
+            test_name, name, model_name, feature, onnx_config_class_constructor
+        )
 
     @parameterized.expand(_get_models_to_test(PYTORCH_EXPORT_SEQ2SEQ_WITH_PAST_MODELS))
     @slow
@@ -295,25 +382,42 @@ class OnnxExportTestCaseV2(TestCase):
     def test_pytorch_export_seq2seq_with_past(
         self, test_name, name, model_name, feature, onnx_config_class_constructor
     ):
-        self._onnx_export(test_name, name, model_name, feature, onnx_config_class_constructor)
+        self._onnx_export(
+            test_name, name, model_name, feature, onnx_config_class_constructor
+        )
 
     @parameterized.expand(_get_models_to_test(TENSORFLOW_EXPORT_DEFAULT_MODELS))
     @slow
     @require_tf
     @require_vision
-    def test_tensorflow_export(self, test_name, name, model_name, feature, onnx_config_class_constructor):
-        self._onnx_export(test_name, name, model_name, feature, onnx_config_class_constructor)
+    def test_tensorflow_export(
+        self, test_name, name, model_name, feature, onnx_config_class_constructor
+    ):
+        self._onnx_export(
+            test_name, name, model_name, feature, onnx_config_class_constructor
+        )
 
-    @parameterized.expand(_get_models_to_test(TENSORFLOW_EXPORT_WITH_PAST_MODELS), skip_on_empty=True)
+    @parameterized.expand(
+        _get_models_to_test(TENSORFLOW_EXPORT_WITH_PAST_MODELS), skip_on_empty=True
+    )
     @slow
     @require_tf
-    def test_tensorflow_export_with_past(self, test_name, name, model_name, feature, onnx_config_class_constructor):
-        self._onnx_export(test_name, name, model_name, feature, onnx_config_class_constructor)
+    def test_tensorflow_export_with_past(
+        self, test_name, name, model_name, feature, onnx_config_class_constructor
+    ):
+        self._onnx_export(
+            test_name, name, model_name, feature, onnx_config_class_constructor
+        )
 
-    @parameterized.expand(_get_models_to_test(TENSORFLOW_EXPORT_SEQ2SEQ_WITH_PAST_MODELS), skip_on_empty=True)
+    @parameterized.expand(
+        _get_models_to_test(TENSORFLOW_EXPORT_SEQ2SEQ_WITH_PAST_MODELS),
+        skip_on_empty=True,
+    )
     @slow
     @require_tf
     def test_tensorflow_export_seq2seq_with_past(
         self, test_name, name, model_name, feature, onnx_config_class_constructor
     ):
-        self._onnx_export(test_name, name, model_name, feature, onnx_config_class_constructor)
+        self._onnx_export(
+            test_name, name, model_name, feature, onnx_config_class_constructor
+        )

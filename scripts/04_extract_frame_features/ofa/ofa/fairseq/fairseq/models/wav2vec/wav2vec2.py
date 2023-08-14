@@ -415,7 +415,6 @@ class Wav2Vec2Model(BaseFairseqModel):
         return x, mask_indices
 
     def sample_negatives(self, y, num, padding_count=None):
-
         if self.n_negatives == 0 and self.cross_sample_negatives == 0:
             return y.new(0)
 
@@ -474,7 +473,6 @@ class Wav2Vec2Model(BaseFairseqModel):
         return negs, neg_idxs
 
     def compute_preds(self, x, y, negatives):
-
         neg_is_pos = (y == negatives).all(-1)
         y = y.unsqueeze(0)
         targets = torch.cat([y, negatives], dim=0)
@@ -484,7 +482,7 @@ class Wav2Vec2Model(BaseFairseqModel):
         logits = logits / self.logit_temp
 
         if is_xla_tensor(logits) or neg_is_pos.any():
-            fillval = -float(2 ** 30)
+            fillval = -float(2**30)
             if not hasattr(self, "_inftensor"):
                 self._inftensor = (
                     torch.tensor(fillval).to(x.device)
@@ -523,7 +521,6 @@ class Wav2Vec2Model(BaseFairseqModel):
         mask_channel_indices=None,
         padding_count=None,
     ):
-
         if self.feature_grad_mult > 0:
             features = self.feature_extractor(source)
             if self.feature_grad_mult != 1.0:
@@ -804,7 +801,6 @@ class ConvFeatureExtractionModel(nn.Module):
             in_d = dim
 
     def forward(self, x):
-
         # BxT -> BxCxT
         x = x.unsqueeze(1)
 
@@ -867,7 +863,6 @@ class TransformerEncoder(nn.Module):
         return x, layer_results
 
     def extract_features(self, x, padding_mask=None, tgt_layer=None):
-
         if padding_mask is not None:
             x = index_put(x, padding_mask, 0)
 
@@ -929,7 +924,6 @@ class TransformerSentenceEncoderLayer(nn.Module):
         activation_fn: str = "relu",
         layer_norm_first: bool = False,
     ) -> None:
-
         super().__init__()
         # Initialize parameters
         self.embedding_dim = embedding_dim

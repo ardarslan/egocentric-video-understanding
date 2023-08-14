@@ -54,8 +54,14 @@ def format_for_slack(total_results, results, scheduled: bool, title: str):
         total = {
             "type": "section",
             "fields": [
-                {"type": "mrkdwn", "text": f"*Failures:*\n❌ {total_results['failed']} failures."},
-                {"type": "mrkdwn", "text": f"*Passed:*\n✅ {total_results['success']} tests passed."},
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Failures:*\n❌ {total_results['failed']} failures.",
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Passed:*\n✅ {total_results['success']} tests passed.",
+                },
             ],
         }
     else:
@@ -71,7 +77,12 @@ def format_for_slack(total_results, results, scheduled: bool, title: str):
     if total_results["failed"] > 0:
         for key, result in results.items():
             print(key, result)
-            blocks.append({"type": "header", "text": {"type": "plain_text", "text": key, "emoji": True}})
+            blocks.append(
+                {
+                    "type": "header",
+                    "text": {"type": "plain_text", "text": key, "emoji": True},
+                }
+            )
             blocks.append(
                 {
                     "type": "section",
@@ -80,14 +91,22 @@ def format_for_slack(total_results, results, scheduled: bool, title: str):
                             "type": "mrkdwn",
                             "text": f"*Results:*\n{result['failed']} failed, {result['success']} passed.",
                         },
-                        {"type": "mrkdwn", "text": f"*Time spent:*\n{result['time_spent']}"},
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*Time spent:*\n{result['time_spent']}",
+                        },
                     ],
                 }
             )
     elif not scheduled:
         for key, result in results.items():
             blocks.append(
-                {"type": "section", "fields": [{"type": "mrkdwn", "text": f"*{key}*\n{result['time_spent']}."}]}
+                {
+                    "type": "section",
+                    "fields": [
+                        {"type": "mrkdwn", "text": f"*{key}*\n{result['time_spent']}."}
+                    ],
+                }
             )
 
     footer = {
@@ -134,7 +153,9 @@ if __name__ == "__main__":
                 "common": "run_all_tests_torch_multi_gpu_test_reports/[].txt",
                 "pipeline": "run_all_tests_torch_multi_gpu_test_reports/[].txt",
             },
-            "Torch Cuda Extensions Single GPU": {"common": "run_tests_torch_cuda_extensions_gpu_test_reports/[].txt"},
+            "Torch Cuda Extensions Single GPU": {
+                "common": "run_tests_torch_cuda_extensions_gpu_test_reports/[].txt"
+            },
             "Torch Cuda Extensions Multi GPU": {
                 "common": "run_tests_torch_cuda_extensions_multi_gpu_test_reports/[].txt"
             },
@@ -142,10 +163,18 @@ if __name__ == "__main__":
     else:
         file_paths = {
             "TF Single GPU": {"common": "run_all_tests_tf_gpu_test_reports/[].txt"},
-            "Torch Single GPU": {"common": "run_all_tests_torch_gpu_test_reports/[].txt"},
-            "TF Multi GPU": {"common": "run_all_tests_tf_multi_gpu_test_reports/[].txt"},
-            "Torch Multi GPU": {"common": "run_all_tests_torch_multi_gpu_test_reports/[].txt"},
-            "Torch Cuda Extensions Single GPU": {"common": "run_tests_torch_cuda_extensions_gpu_test_reports/[].txt"},
+            "Torch Single GPU": {
+                "common": "run_all_tests_torch_gpu_test_reports/[].txt"
+            },
+            "TF Multi GPU": {
+                "common": "run_all_tests_tf_multi_gpu_test_reports/[].txt"
+            },
+            "Torch Multi GPU": {
+                "common": "run_all_tests_torch_multi_gpu_test_reports/[].txt"
+            },
+            "Torch Cuda Extensions Single GPU": {
+                "common": "run_tests_torch_cuda_extensions_gpu_test_reports/[].txt"
+            },
             "Torch Cuda Extensions Multi GPU": {
                 "common": "run_tests_torch_cuda_extensions_multi_gpu_test_reports/[].txt"
             },
@@ -171,7 +200,6 @@ if __name__ == "__main__":
     try:
         results = {}
         for job, file_dict in file_paths.items():
-
             # Single return value for failed/success across steps of a same job
             results[job] = {"failed": 0, "success": 0, "time_spent": "", "failures": ""}
 
@@ -209,7 +237,9 @@ if __name__ == "__main__":
         for job, job_result in results.items():
             if len(job_result["failures"]):
                 client.chat_postMessage(
-                    channel=channel_id, text=f"{job}\n{job_result['failures']}", thread_ts=result["ts"]
+                    channel=channel_id,
+                    text=f"{job}\n{job_result['failures']}",
+                    thread_ts=result["ts"],
                 )
 
     except Exception as e:

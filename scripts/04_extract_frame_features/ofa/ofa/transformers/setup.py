@@ -167,7 +167,9 @@ _deps = [
 # packaging: "packaging"
 #
 # some of the values are versioned whereas others aren't.
-deps = {b: a for a, b in (re.findall(r"^(([^!=<>~]+)(?:[!=<>~].*)?$)", x)[0] for x in _deps)}
+deps = {
+    b: a for a, b in (re.findall(r"^(([^!=<>~]+)(?:[!=<>~].*)?$)", x)[0] for x in _deps)
+}
 
 # since we save this data in src/transformers/dependency_versions_table.py it can be easily accessed from
 # anywhere. If you need to quickly access the data from this table in a shell, you can do so easily with:
@@ -199,7 +201,11 @@ class DepsTableUpdateCommand(Command):
     description = "build runtime dependency table"
     user_options = [
         # format: (long option, short option, description).
-        ("dep-table-update", None, "updates src/transformers/dependency_versions_table.py"),
+        (
+            "dep-table-update",
+            None,
+            "updates src/transformers/dependency_versions_table.py",
+        ),
     ]
 
     def initialize_options(self):
@@ -310,8 +316,8 @@ extras["docs_specific"] = []
 extras["docs"] = extras["all"] + extras["docs_specific"]
 
 extras["dev-torch"] = (
-    extras['testing']
-    + extras['torch']
+    extras["testing"]
+    + extras["torch"]
     + extras["sentencepiece"]
     + extras["tokenizers"]
     + extras["torch-speech"]
@@ -327,17 +333,17 @@ extras["dev-torch"] = (
     + extras["onnxruntime"]
 )
 extras["dev-tensorflow"] = (
-        extras['testing']
-        + extras['tf']
-        + extras["sentencepiece"]
-        + extras["tokenizers"]
-        + extras["vision"]
-        + extras["quality"]
-        + extras["docs_specific"]
-        + extras["sklearn"]
-        + extras["modelcreation"]
-        + extras["onnx"]
-        + extras["tf-speech"]
+    extras["testing"]
+    + extras["tf"]
+    + extras["sentencepiece"]
+    + extras["tokenizers"]
+    + extras["vision"]
+    + extras["quality"]
+    + extras["docs_specific"]
+    + extras["sklearn"]
+    + extras["modelcreation"]
+    + extras["onnx"]
+    + extras["tf-speech"]
 )
 extras["dev"] = (
     extras["all"]
@@ -367,8 +373,10 @@ extras["torchhub"] = deps_list(
 
 # when modifying the following list, make sure to update src/transformers/dependency_versions_check.py
 install_requires = [
-    deps["dataclasses"] + ";python_version<'3.7'",  # dataclasses for Python versions that don't have it
-    deps["importlib_metadata"] + ";python_version<'3.8'",  # importlib_metadata for Python versions that don't have it
+    deps["dataclasses"]
+    + ";python_version<'3.7'",  # dataclasses for Python versions that don't have it
+    deps["importlib_metadata"]
+    + ";python_version<'3.8'",  # importlib_metadata for Python versions that don't have it
     deps["filelock"],  # filesystem locks, e.g., to prevent parallel downloads
     deps["huggingface-hub"],
     deps["numpy"],
@@ -397,7 +405,11 @@ setup(
     package_data={"transformers": ["py.typed"]},
     zip_safe=False,
     extras_require=extras,
-    entry_points={"console_scripts": ["transformers-cli=transformers.commands.transformers_cli:main"]},
+    entry_points={
+        "console_scripts": [
+            "transformers-cli=transformers.commands.transformers_cli:main"
+        ]
+    },
     python_requires=">=3.6.0",
     install_requires=install_requires,
     classifiers=[

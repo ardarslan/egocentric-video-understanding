@@ -25,14 +25,18 @@ class UnifiedRCNN(GeneralizedRCNN):
         self.num_datasets = len(self.datasets)
         self.dataset_name_to_id = {k: i for i, k in enumerate(self.datasets)}
         self.eval_dataset = -1
-        self.cpu_post_process = cfg.CPU_POST_PROCESS # due to memory issue on mask
+        self.cpu_post_process = cfg.CPU_POST_PROCESS  # due to memory issue on mask
 
-        label_map = json.load(
-            open(cfg.MULTI_DATASET.UNIFIED_LABEL_FILE, 'r'))['label_map']
+        label_map = json.load(open(cfg.MULTI_DATASET.UNIFIED_LABEL_FILE, "r"))[
+            "label_map"
+        ]
         self.label_map = {
-            self.datasets.index(d): torch.tensor(x).long().to(
-            torch.device(cfg.MODEL.DEVICE)) \
-            for d, x in label_map.items() if d in self.datasets}
+            self.datasets.index(d): torch.tensor(x)
+            .long()
+            .to(torch.device(cfg.MODEL.DEVICE))
+            for d, x in label_map.items()
+            if d in self.datasets
+        }
 
     def forward(self, batched_inputs):
         if not self.training:
@@ -41,29 +45,29 @@ class UnifiedRCNN(GeneralizedRCNN):
         gt_instances = [x["instances"].to(self.device) for x in batched_inputs]
 
         for i in range(len(gt_instances)):
-            dataset_source = batched_inputs[i]['dataset_source']
+            dataset_source = batched_inputs[i]["dataset_source"]
             gt_instances[i]._dataset_source = dataset_source
-            gt_instances[i].gt_classes = \
-                self.label_map[dataset_source][gt_instances[i].gt_classes]
-        
-        features = self.backbone(images.tensor) # #lvl
+            gt_instances[i].gt_classes = self.label_map[dataset_source][
+                gt_instances[i].gt_classes
+            ]
+
+        features = self.backbone(images.tensor)  # #lvl
         proposals, proposal_losses = self.proposal_generator(
-            images, features, gt_instances)
-        
-        _, detector_losses = self.roi_heads(
-            images, features, proposals, gt_instances)
+            images, features, gt_instances
+        )
+
+        _, detector_losses = self.roi_heads(images, features, proposals, gt_instances)
         if self.vis_period > 0:
             storage = get_event_storage()
             if storage.iter % self.vis_period == 0:
                 self.visualize_training(batched_inputs, proposals)
-        
+
         losses = {}
         losses.update(proposal_losses)
         losses.update(detector_losses)
         return losses
 
-    def inference(self, batched_inputs, detected_instances=None, 
-        do_postprocess=True):
+    def inference(self, batched_inputs, detected_instances=None, do_postprocess=True):
         # support eval_dataset and cpu post process
         assert not self.training
         assert detected_instances is None
@@ -71,22 +75,22 @@ class UnifiedRCNN(GeneralizedRCNN):
         features = self.backbone(images.tensor)
         proposals, _ = self.proposal_generator(images, features, None)
         results, _ = self.roi_heads(
-            images, features, proposals, None, eval_dataset=self.eval_dataset)
-        
+            images, features, proposals, None, eval_dataset=self.eval_dataset
+        )
+
         if do_postprocess:
             if self.cpu_post_process:
                 for r in results:
-                    r = r.to('cpu')
+                    r = r.to("cpu")
             return GeneralizedRCNN._postprocess(
-                results, batched_inputs, images.image_sizes)
+                results, batched_inputs, images.image_sizes
+            )
         else:
             return results
 
     def set_eval_dataset(self, dataset_name):
-        meta_datase_name = dataset_name[:dataset_name.find('_')]
+        meta_datase_name = dataset_name[: dataset_name.find("_")]
         if self.unified_eval:
             self.eval_dataset = -1
         else:
-            self.eval_dataset = \
-                self.dataset_name_to_id[meta_datase_name]
-
+            self.eval_dataset = self.dataset_name_to_id[meta_datase_name]

@@ -32,7 +32,9 @@ sys.path.append(str(Path(__file__).parent.parent.parent / "utils"))
 from test_module.custom_configuration import CustomConfig  # noqa E402
 
 
-SAMPLE_ROBERTA_CONFIG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../fixtures/dummy-config.json")
+SAMPLE_ROBERTA_CONFIG = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "../fixtures/dummy-config.json"
+)
 
 
 class AutoConfigTest(unittest.TestCase):
@@ -89,13 +91,15 @@ class AutoConfigTest(unittest.TestCase):
 
     def test_repo_not_found(self):
         with self.assertRaisesRegex(
-            EnvironmentError, "bert-base is not a local folder and is not a valid model identifier"
+            EnvironmentError,
+            "bert-base is not a local folder and is not a valid model identifier",
         ):
             _ = AutoConfig.from_pretrained("bert-base")
 
     def test_revision_not_found(self):
         with self.assertRaisesRegex(
-            EnvironmentError, r"aaaaaa is not a valid git identifier \(branch name, tag name or commit id\)"
+            EnvironmentError,
+            r"aaaaaa is not a valid git identifier \(branch name, tag name or commit id\)",
         ):
             _ = AutoConfig.from_pretrained(DUMMY_UNKNOWN_IDENTIFIER, revision="aaaaaa")
 
@@ -107,5 +111,7 @@ class AutoConfigTest(unittest.TestCase):
             _ = AutoConfig.from_pretrained("hf-internal-testing/no-config-test-repo")
 
     def test_from_pretrained_dynamic_config(self):
-        config = AutoConfig.from_pretrained("hf-internal-testing/test_dynamic_model", trust_remote_code=True)
+        config = AutoConfig.from_pretrained(
+            "hf-internal-testing/test_dynamic_model", trust_remote_code=True
+        )
         self.assertEqual(config.__class__.__name__, "NewModelConfig")

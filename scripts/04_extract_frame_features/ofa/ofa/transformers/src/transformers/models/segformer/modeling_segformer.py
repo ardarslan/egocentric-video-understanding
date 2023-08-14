@@ -31,8 +31,16 @@ from ...file_utils import (
     add_start_docstrings_to_model_forward,
     replace_return_docstrings,
 )
-from ...modeling_outputs import BaseModelOutput, SemanticSegmentationModelOutput, SequenceClassifierOutput
-from ...modeling_utils import PreTrainedModel, find_pruneable_heads_and_indices, prune_linear_layer
+from ...modeling_outputs import (
+    BaseModelOutput,
+    SemanticSegmentationModelOutput,
+    SequenceClassifierOutput,
+)
+from ...modeling_utils import (
+    PreTrainedModel,
+    find_pruneable_heads_and_indices,
+    prune_linear_layer,
+)
 from ...utils import logging
 from .configuration_segformer import SegformerConfig
 
@@ -80,7 +88,9 @@ def drop_path(x, drop_prob: float = 0.0, training: bool = False):
     if drop_prob == 0.0 or not training:
         return x
     keep_prob = 1 - drop_prob
-    shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
+    shape = (x.shape[0],) + (1,) * (
+        x.ndim - 1
+    )  # work with diff dim tensors, not just 2D ConvNets
     random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
     random_tensor.floor_()  # binarize
     output = x.div(keep_prob) * random_tensor
@@ -105,7 +115,10 @@ class SegformerOverlapPatchEmbeddings(nn.Module):
         super().__init__()
         image_size = to_2tuple(image_size)
         patch_size = to_2tuple(patch_size)
-        self.height, self.width = image_size[0] // patch_size[0], image_size[1] // patch_size[1]
+        self.height, self.width = (
+            image_size[0] // patch_size[0],
+            image_size[1] // patch_size[1],
+        )
         self.num_patches = self.height * self.width
         self.proj = nn.Conv2d(
             num_channels,
@@ -148,11 +161,16 @@ class SegformerEfficientSelfAttention(nn.Module):
 
         self.sr_ratio = sr_ratio
         if sr_ratio > 1:
-            self.sr = nn.Conv2d(hidden_size, hidden_size, kernel_size=sr_ratio, stride=sr_ratio)
+            self.sr = nn.Conv2d(
+                hidden_size, hidden_size, kernel_size=sr_ratio, stride=sr_ratio
+            )
             self.layer_norm = nn.LayerNorm(hidden_size)
 
     def transpose_for_scores(self, x):
-        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+        new_x_shape = x.size()[:-1] + (
+            self.num_attention_heads,
+            self.attention_head_size,
+        )
         x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
 
@@ -167,9 +185,13 @@ class SegformerEfficientSelfAttention(nn.Module):
 
         if self.sr_ratio > 1:
             batch_size, seq_len, num_channels = hidden_states.shape
-            hidden_states = hidden_states.permute(0, 2, 1).reshape(batch_size, num_channels, height, width)
+            hidden_states = hidden_states.permute(0, 2, 1).reshape(
+                batch_size, num_channels, height, width
+            )
             hidden_states = self.sr(hidden_states)
-            hidden_states = hidden_states.reshape(batch_size, num_channels, -1).permute(0, 2, 1)
+            hidden_states = hidden_states.reshape(batch_size, num_channels, -1).permute(
+                0, 2, 1
+            )
             hidden_states = self.layer_norm(hidden_states)
 
         key_layer = self.transpose_for_scores(self.key(hidden_states))
@@ -193,7 +215,9 @@ class SegformerEfficientSelfAttention(nn.Module):
         new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
         context_layer = context_layer.view(*new_context_layer_shape)
 
-        outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
+        outputs = (
+            (context_layer, attention_probs) if output_attentions else (context_layer,)
+        )
 
         return outputs
 
@@ -214,7 +238,10 @@ class SegformerAttention(nn.Module):
     def __init__(self, config, hidden_size, num_attention_heads, sr_ratio):
         super().__init__()
         self.self = SegformerEfficientSelfAttention(
-            config=config, hidden_size=hidden_size, num_attention_heads=num_attention_heads, sr_ratio=sr_ratio
+            config=config,
+            hidden_size=hidden_size,
+            num_attention_heads=num_attention_heads,
+            sr_ratio=sr_ratio,
         )
         self.output = SegformerSelfOutput(config, hidden_size=hidden_size)
         self.pruned_heads = set()
@@ -223,7 +250,10 @@ class SegformerAttention(nn.Module):
         if len(heads) == 0:
             return
         heads, index = find_pruneable_heads_and_indices(
-            heads, self.self.num_attention_heads, self.self.attention_head_size, self.pruned_heads
+            heads,
+            self.self.num_attention_heads,
+            self.self.attention_head_size,
+            self.pruned_heads,
         )
 
         # Prune linear layers
@@ -234,14 +264,18 @@ class SegformerAttention(nn.Module):
 
         # Update hyper params and store pruned heads
         self.self.num_attention_heads = self.self.num_attention_heads - len(heads)
-        self.self.all_head_size = self.self.attention_head_size * self.self.num_attention_heads
+        self.self.all_head_size = (
+            self.self.attention_head_size * self.self.num_attention_heads
+        )
         self.pruned_heads = self.pruned_heads.union(heads)
 
     def forward(self, hidden_states, height, width, output_attentions=False):
         self_outputs = self.self(hidden_states, height, width, output_attentions)
 
         attention_output = self.output(self_outputs[0], hidden_states)
-        outputs = (attention_output,) + self_outputs[1:]  # add attentions if we output them
+        outputs = (attention_output,) + self_outputs[
+            1:
+        ]  # add attentions if we output them
         return outputs
 
 
@@ -252,7 +286,9 @@ class SegformerDWConv(nn.Module):
 
     def forward(self, hidden_states, height, width):
         batch_size, seq_len, num_channels = hidden_states.shape
-        hidden_states = hidden_states.transpose(1, 2).view(batch_size, num_channels, height, width)
+        hidden_states = hidden_states.transpose(1, 2).view(
+            batch_size, num_channels, height, width
+        )
         hidden_states = self.dwconv(hidden_states)
         hidden_states = hidden_states.flatten(2).transpose(1, 2)
 
@@ -285,27 +321,38 @@ class SegformerMixFFN(nn.Module):
 class SegformerLayer(nn.Module):
     """This corresponds to the Block class in the original implementation."""
 
-    def __init__(self, config, hidden_size, num_attention_heads, drop_path, sr_ratio, mlp_ratio):
+    def __init__(
+        self, config, hidden_size, num_attention_heads, drop_path, sr_ratio, mlp_ratio
+    ):
         super().__init__()
         self.layer_norm_1 = nn.LayerNorm(hidden_size)
         self.attention = SegformerAttention(
-            config, hidden_size=hidden_size, num_attention_heads=num_attention_heads, sr_ratio=sr_ratio
+            config,
+            hidden_size=hidden_size,
+            num_attention_heads=num_attention_heads,
+            sr_ratio=sr_ratio,
         )
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.layer_norm_2 = nn.LayerNorm(hidden_size)
         mlp_hidden_size = int(hidden_size * mlp_ratio)
-        self.mlp = SegformerMixFFN(config, in_features=hidden_size, hidden_features=mlp_hidden_size)
+        self.mlp = SegformerMixFFN(
+            config, in_features=hidden_size, hidden_features=mlp_hidden_size
+        )
 
     def forward(self, hidden_states, height, width, output_attentions=False):
         self_attention_outputs = self.attention(
-            self.layer_norm_1(hidden_states),  # in Segformer, layernorm is applied before self-attention
+            self.layer_norm_1(
+                hidden_states
+            ),  # in Segformer, layernorm is applied before self-attention
             height,
             width,
             output_attentions=output_attentions,
         )
 
         attention_output = self_attention_outputs[0]
-        outputs = self_attention_outputs[1:]  # add self attentions if we output attention weights
+        outputs = self_attention_outputs[
+            1:
+        ]  # add self attentions if we output attention weights
 
         # first residual connection (with stochastic depth)
         attention_output = self.drop_path(attention_output)
@@ -328,7 +375,10 @@ class SegformerEncoder(nn.Module):
         self.config = config
 
         # stochastic depth decay rule
-        dpr = [x.item() for x in torch.linspace(0, config.drop_path_rate, sum(config.depths))]
+        dpr = [
+            x.item()
+            for x in torch.linspace(0, config.drop_path_rate, sum(config.depths))
+        ]
 
         # patch embeddings
         embeddings = []
@@ -338,7 +388,9 @@ class SegformerEncoder(nn.Module):
                     image_size=config.image_size // config.downsampling_rates[i],
                     patch_size=config.patch_sizes[i],
                     stride=config.strides[i],
-                    num_channels=config.num_channels if i == 0 else config.hidden_sizes[i - 1],
+                    num_channels=config.num_channels
+                    if i == 0
+                    else config.hidden_sizes[i - 1],
                     hidden_size=config.hidden_sizes[i],
                 )
             )
@@ -369,7 +421,10 @@ class SegformerEncoder(nn.Module):
 
         # Layer norms
         self.layer_norm = nn.ModuleList(
-            [nn.LayerNorm(config.hidden_sizes[i]) for i in range(config.num_encoder_blocks)]
+            [
+                nn.LayerNorm(config.hidden_sizes[i])
+                for i in range(config.num_encoder_blocks)
+            ]
         )
 
     def forward(
@@ -385,7 +440,9 @@ class SegformerEncoder(nn.Module):
         batch_size = pixel_values.shape[0]
 
         hidden_states = pixel_values
-        for idx, x in enumerate(zip(self.patch_embeddings, self.block, self.layer_norm)):
+        for idx, x in enumerate(
+            zip(self.patch_embeddings, self.block, self.layer_norm)
+        ):
             embedding_layer, block_layer, norm_layer = x
             # first, obtain patch embeddings
             hidden_states, height, width = embedding_layer(hidden_states)
@@ -401,12 +458,20 @@ class SegformerEncoder(nn.Module):
             if idx != len(self.patch_embeddings) - 1 or (
                 idx == len(self.patch_embeddings) - 1 and self.config.reshape_last_stage
             ):
-                hidden_states = hidden_states.reshape(batch_size, height, width, -1).permute(0, 3, 1, 2).contiguous()
+                hidden_states = (
+                    hidden_states.reshape(batch_size, height, width, -1)
+                    .permute(0, 3, 1, 2)
+                    .contiguous()
+                )
             if output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
         if not return_dict:
-            return tuple(v for v in [hidden_states, all_hidden_states, all_self_attentions] if v is not None)
+            return tuple(
+                v
+                for v in [hidden_states, all_hidden_states, all_self_attentions]
+                if v is not None
+            )
         return BaseModelOutput(
             last_hidden_state=hidden_states,
             hidden_states=all_hidden_states,
@@ -493,7 +558,9 @@ class SegformerModel(SegformerPreTrainedModel):
         for layer, heads in heads_to_prune.items():
             self.encoder.layer[layer].attention.prune_heads(heads)
 
-    @add_start_docstrings_to_model_forward(SEGFORMER_INPUTS_DOCSTRING.format("(batch_size, sequence_length)"))
+    @add_start_docstrings_to_model_forward(
+        SEGFORMER_INPUTS_DOCSTRING.format("(batch_size, sequence_length)")
+    )
     @add_code_sample_docstrings(
         processor_class=_FEAT_EXTRACTOR_FOR_DOC,
         checkpoint=_CHECKPOINT_FOR_DOC,
@@ -509,11 +576,19 @@ class SegformerModel(SegformerPreTrainedModel):
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, BaseModelOutput]:
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         encoder_outputs = self.encoder(
             pixel_values,
@@ -553,7 +628,9 @@ class SegformerForImageClassification(SegformerPreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    @add_start_docstrings_to_model_forward(SEGFORMER_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    @add_start_docstrings_to_model_forward(
+        SEGFORMER_INPUTS_DOCSTRING.format("batch_size, sequence_length")
+    )
     @add_code_sample_docstrings(
         processor_class=_FEAT_EXTRACTOR_FOR_DOC,
         checkpoint=_IMAGE_CLASS_CHECKPOINT,
@@ -575,7 +652,9 @@ class SegformerForImageClassification(SegformerPreTrainedModel):
             config.num_labels - 1]`. If `config.num_labels == 1` a regression loss is computed (Mean-Square loss), If
             `config.num_labels > 1` a classification loss is computed (Cross-Entropy).
         """
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         outputs = self.segformer(
             pixel_values,
@@ -591,7 +670,9 @@ class SegformerForImageClassification(SegformerPreTrainedModel):
         if self.config.reshape_last_stage:
             # (batch_size, num_channels, height, width) -> (batch_size, height, width, num_channels)
             sequence_output = sequence_output.permute(0, 2, 3, 1)
-        sequence_output = sequence_output.reshape(batch_size, -1, self.config.hidden_sizes[-1])
+        sequence_output = sequence_output.reshape(
+            batch_size, -1, self.config.hidden_sizes[-1]
+        )
 
         # global average pooling
         sequence_output = sequence_output.mean(dim=1)
@@ -603,7 +684,9 @@ class SegformerForImageClassification(SegformerPreTrainedModel):
             if self.config.problem_type is None:
                 if self.num_labels == 1:
                     self.config.problem_type = "regression"
-                elif self.num_labels > 1 and (labels.dtype == torch.long or labels.dtype == torch.int):
+                elif self.num_labels > 1 and (
+                    labels.dtype == torch.long or labels.dtype == torch.int
+                ):
                     self.config.problem_type = "single_label_classification"
                 else:
                     self.config.problem_type = "multi_label_classification"
@@ -668,7 +751,9 @@ class SegformerDecodeHead(SegformerPreTrainedModel):
         self.activation = nn.ReLU()
 
         self.dropout = nn.Dropout(config.classifier_dropout_prob)
-        self.classifier = nn.Conv2d(config.decoder_hidden_size, config.num_labels, kernel_size=1)
+        self.classifier = nn.Conv2d(
+            config.decoder_hidden_size, config.num_labels, kernel_size=1
+        )
 
         self.config = config
 
@@ -677,20 +762,30 @@ class SegformerDecodeHead(SegformerPreTrainedModel):
 
         all_hidden_states = ()
         for encoder_hidden_state, mlp in zip(encoder_hidden_states, self.linear_c):
-            if self.config.reshape_last_stage is False and encoder_hidden_state.ndim == 3:
+            if (
+                self.config.reshape_last_stage is False
+                and encoder_hidden_state.ndim == 3
+            ):
                 height = width = int(math.sqrt(encoder_hidden_state.shape[-1]))
                 encoder_hidden_state = (
-                    encoder_hidden_state.reshape(batch_size, height, width, -1).permute(0, 3, 1, 2).contiguous()
+                    encoder_hidden_state.reshape(batch_size, height, width, -1)
+                    .permute(0, 3, 1, 2)
+                    .contiguous()
                 )
 
             # unify channel dimension
             height, width = encoder_hidden_state.shape[2], encoder_hidden_state.shape[3]
             encoder_hidden_state = mlp(encoder_hidden_state)
             encoder_hidden_state = encoder_hidden_state.permute(0, 2, 1)
-            encoder_hidden_state = encoder_hidden_state.reshape(batch_size, -1, height, width)
+            encoder_hidden_state = encoder_hidden_state.reshape(
+                batch_size, -1, height, width
+            )
             # upsample
             encoder_hidden_state = nn.functional.interpolate(
-                encoder_hidden_state, size=encoder_hidden_states[0].size()[2:], mode="bilinear", align_corners=False
+                encoder_hidden_state,
+                size=encoder_hidden_states[0].size()[2:],
+                mode="bilinear",
+                align_corners=False,
             )
             all_hidden_states += (encoder_hidden_state,)
 
@@ -718,8 +813,12 @@ class SegformerForSemanticSegmentation(SegformerPreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    @add_start_docstrings_to_model_forward(SEGFORMER_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
-    @replace_return_docstrings(output_type=SemanticSegmentationModelOutput, config_class=_CONFIG_FOR_DOC)
+    @add_start_docstrings_to_model_forward(
+        SEGFORMER_INPUTS_DOCSTRING.format("batch_size, sequence_length")
+    )
+    @replace_return_docstrings(
+        output_type=SemanticSegmentationModelOutput, config_class=_CONFIG_FOR_DOC
+    )
     def forward(
         self,
         pixel_values: torch.FloatTensor,
@@ -752,9 +851,13 @@ class SegformerForSemanticSegmentation(SegformerPreTrainedModel):
         >>> outputs = model(**inputs)
         >>> logits = outputs.logits  # shape (batch_size, num_labels, height, width)
         ```"""
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
         output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
         )
 
         outputs = self.segformer(
@@ -777,7 +880,9 @@ class SegformerForSemanticSegmentation(SegformerPreTrainedModel):
                 upsampled_logits = nn.functional.interpolate(
                     logits, size=labels.shape[-2:], mode="bilinear", align_corners=False
                 )
-                loss_fct = CrossEntropyLoss(ignore_index=self.config.semantic_loss_ignore_index)
+                loss_fct = CrossEntropyLoss(
+                    ignore_index=self.config.semantic_loss_ignore_index
+                )
                 loss = loss_fct(upsampled_logits, labels)
 
         if not return_dict:

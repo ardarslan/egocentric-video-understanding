@@ -22,7 +22,6 @@ DEFAULT_MAX_TARGET_POSITIONS = 1024
 
 @register_model("model_parallel_transformer_lm")
 class ModelParallelTransformerLanguageModel(TransformerLanguageModel):
-
     @staticmethod
     def add_args(parser):
         TransformerLanguageModel.add_args(parser)
@@ -79,7 +78,7 @@ class ModelParallelTransformerLanguageModel(TransformerLanguageModel):
     @classmethod
     def build_embedding(cls, args, dictionary, embed_dim, path=None):
         def _vocab_init(tensor, **kwargs):
-            nn.init.normal_(tensor, mean=0, std=embed_dim ** -0.5)
+            nn.init.normal_(tensor, mean=0, std=embed_dim**-0.5)
             nn.init.constant_(tensor[1], 0)
 
         embed_tokens = VocabParallelEmbedding(

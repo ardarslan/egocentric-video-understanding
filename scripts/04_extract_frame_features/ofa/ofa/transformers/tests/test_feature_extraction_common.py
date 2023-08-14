@@ -41,15 +41,21 @@ if is_vision_available():
     from PIL import Image
 
 
-SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures")
+SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "fixtures"
+)
 
 
-def prepare_image_inputs(feature_extract_tester, equal_resolution=False, numpify=False, torchify=False):
+def prepare_image_inputs(
+    feature_extract_tester, equal_resolution=False, numpify=False, torchify=False
+):
     """This function prepares a list of PIL images, or a list of numpy arrays if one specifies numpify=True,
     or a list of PyTorch tensors if one specifies torchify=True.
     """
 
-    assert not (numpify and torchify), "You cannot specify both numpy and PyTorch tensors at the same time"
+    assert not (
+        numpify and torchify
+    ), "You cannot specify both numpy and PyTorch tensors at the same time"
 
     if equal_resolution:
         image_inputs = []
@@ -69,10 +75,18 @@ def prepare_image_inputs(feature_extract_tester, equal_resolution=False, numpify
         image_inputs = []
         for i in range(feature_extract_tester.batch_size):
             width, height = np.random.choice(
-                np.arange(feature_extract_tester.min_resolution, feature_extract_tester.max_resolution), 2
+                np.arange(
+                    feature_extract_tester.min_resolution,
+                    feature_extract_tester.max_resolution,
+                ),
+                2,
             )
             image_inputs.append(
-                np.random.randint(255, size=(feature_extract_tester.num_channels, width, height), dtype=np.uint8)
+                np.random.randint(
+                    255,
+                    size=(feature_extract_tester.num_channels, width, height),
+                    dtype=np.uint8,
+                )
             )
 
     if not numpify and not torchify:
@@ -98,7 +112,9 @@ class FeatureExtractionSavingTestMixin:
         with tempfile.TemporaryDirectory() as tmpdirname:
             json_file_path = os.path.join(tmpdirname, "feat_extract.json")
             feat_extract_first.to_json_file(json_file_path)
-            feat_extract_second = self.feature_extraction_class.from_json_file(json_file_path)
+            feat_extract_second = self.feature_extraction_class.from_json_file(
+                json_file_path
+            )
 
         self.assertEqual(feat_extract_second.to_dict(), feat_extract_first.to_dict())
 
@@ -107,7 +123,9 @@ class FeatureExtractionSavingTestMixin:
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             feat_extract_first.save_pretrained(tmpdirname)
-            feat_extract_second = self.feature_extraction_class.from_pretrained(tmpdirname)
+            feat_extract_second = self.feature_extraction_class.from_pretrained(
+                tmpdirname
+            )
 
         self.assertEqual(feat_extract_second.to_dict(), feat_extract_first.to_dict())
 
@@ -130,7 +148,11 @@ class FeatureExtractorPushToHubTester(unittest.TestCase):
             pass
 
         try:
-            delete_repo(token=cls._token, name="test-feature-extractor-org", organization="valid_org")
+            delete_repo(
+                token=cls._token,
+                name="test-feature-extractor-org",
+                organization="valid_org",
+            )
         except HTTPError:
             pass
 
@@ -140,18 +162,26 @@ class FeatureExtractorPushToHubTester(unittest.TestCase):
             pass
 
     def test_push_to_hub(self):
-        feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR)
+        feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(
+            SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR
+        )
         with tempfile.TemporaryDirectory() as tmp_dir:
             feature_extractor.save_pretrained(
-                os.path.join(tmp_dir, "test-feature-extractor"), push_to_hub=True, use_auth_token=self._token
+                os.path.join(tmp_dir, "test-feature-extractor"),
+                push_to_hub=True,
+                use_auth_token=self._token,
             )
 
-            new_feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(f"{USER}/test-feature-extractor")
+            new_feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(
+                f"{USER}/test-feature-extractor"
+            )
             for k, v in feature_extractor.__dict__.items():
                 self.assertEqual(v, getattr(new_feature_extractor, k))
 
     def test_push_to_hub_in_organization(self):
-        feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR)
+        feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(
+            SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR
+        )
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             feature_extractor.save_pretrained(
@@ -161,25 +191,37 @@ class FeatureExtractorPushToHubTester(unittest.TestCase):
                 organization="valid_org",
             )
 
-            new_feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained("valid_org/test-feature-extractor-org")
+            new_feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(
+                "valid_org/test-feature-extractor-org"
+            )
             for k, v in feature_extractor.__dict__.items():
                 self.assertEqual(v, getattr(new_feature_extractor, k))
 
     def test_push_to_hub_dynamic_feature_extractor(self):
         CustomFeatureExtractor.register_for_auto_class()
-        feature_extractor = CustomFeatureExtractor.from_pretrained(SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR)
+        feature_extractor = CustomFeatureExtractor.from_pretrained(
+            SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR
+        )
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            repo = Repository(tmp_dir, clone_from=f"{USER}/test-dynamic-feature-extractor", use_auth_token=self._token)
+            repo = Repository(
+                tmp_dir,
+                clone_from=f"{USER}/test-dynamic-feature-extractor",
+                use_auth_token=self._token,
+            )
             feature_extractor.save_pretrained(tmp_dir)
 
             # This has added the proper auto_map field to the config
             self.assertDictEqual(
                 feature_extractor.auto_map,
-                {"AutoFeatureExtractor": "custom_feature_extraction.CustomFeatureExtractor"},
+                {
+                    "AutoFeatureExtractor": "custom_feature_extraction.CustomFeatureExtractor"
+                },
             )
             # The code has been copied from fixtures
-            self.assertTrue(os.path.isfile(os.path.join(tmp_dir, "custom_feature_extraction.py")))
+            self.assertTrue(
+                os.path.isfile(os.path.join(tmp_dir, "custom_feature_extraction.py"))
+            )
 
             repo.push_to_hub()
 
@@ -187,4 +229,6 @@ class FeatureExtractorPushToHubTester(unittest.TestCase):
             f"{USER}/test-dynamic-feature-extractor", trust_remote_code=True
         )
         # Can't make an isinstance check because the new_feature_extractor is from the CustomFeatureExtractor class of a dynamic module
-        self.assertEqual(new_feature_extractor.__class__.__name__, "CustomFeatureExtractor")
+        self.assertEqual(
+            new_feature_extractor.__class__.__name__, "CustomFeatureExtractor"
+        )

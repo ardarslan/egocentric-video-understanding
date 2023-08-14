@@ -42,10 +42,7 @@ def setup_model_loss_criterion(cfg, args, rank, is_cuda):
         loss_fn = loss_fn.cuda()
 
     optimizer = optim.sgd.SGD(args, model.parameters())
-    optimizer = optim.FairseqBMUF(
-        cfg=cfg.bmuf,
-        optimizer=optimizer
-    )
+    optimizer = optim.FairseqBMUF(cfg=cfg.bmuf, optimizer=optimizer)
 
     return model, loss_fn, optimizer
 
@@ -60,7 +57,6 @@ def train_step(input, target, model, loss_fn, optimizer, **unused):
 
 
 def single_gpu_training(cfg, args, rank, iterations, shared_results):
-
     is_cuda = torch.cuda.is_available()
     if is_cuda:
         torch.cuda.set_device(rank)

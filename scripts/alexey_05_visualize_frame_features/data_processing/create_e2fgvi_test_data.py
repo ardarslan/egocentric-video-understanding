@@ -26,7 +26,9 @@ os.makedirs(video_output_dir, exist_ok=True)
 os.makedirs(mask_output_dir, exist_ok=True)
 
 
-reader = VideoReader(get_video_path(video_id), get_extracted_frame_dir_path(video_id), assumed_fps=-1)
+reader = VideoReader(
+    get_video_path(video_id), get_extracted_frame_dir_path(video_id), assumed_fps=-1
+)
 for frame_idx in tqdm(range(len(reader))):
     if frame_idx < 500:
         continue
@@ -45,25 +47,42 @@ for frame_idx in tqdm(range(len(reader))):
     img.save(join(video_output_dir, frame_fn))
 
     universal_mask = np.zeros((img.height, img.width)).astype(bool)
-    mask_path = CHANNEL_FRAME_PATH_FUNCTS["hos_hands"](video_id, frame_idx, frame_id, hos_version)
+    mask_path = CHANNEL_FRAME_PATH_FUNCTS["hos_hands"](
+        video_id, frame_idx, frame_id, hos_version
+    )
     pkl = read_pkl(mask_path)
 
     if hos_version == "egohos":
         mask = np.logical_or(pkl == 1, pkl == 2).astype(np.uint8)
         if mask.shape[0] != img.height or mask.shape[1] != img.width:
-            mask = np.array(Image.fromarray(mask * 255).resize((img.width, img.height), Image.NEAREST))
+            mask = np.array(
+                Image.fromarray(mask * 255).resize(
+                    (img.width, img.height), Image.NEAREST
+                )
+            )
 
         universal_mask |= mask.astype(bool)
     else:
-        for cls, handside, mask, box in zip(pkl["instances"].pred_classes, pkl["instances"].pred_handsides, pkl["instances"].pred_masks, pkl["instances"].pred_boxes):
+        for cls, handside, mask, box in zip(
+            pkl["instances"].pred_classes,
+            pkl["instances"].pred_handsides,
+            pkl["instances"].pred_masks,
+            pkl["instances"].pred_boxes,
+        ):
             if cls == 0:  # 0: hand
                 # 0: left; 1: right
                 handside = handside.argmax().item()
                 mask = mask.cpu().numpy()
                 if mask.shape[0] != img.height or mask.shape[1] != img.width:
-                    mask = np.array(Image.fromarray(mask.astype(np.uint8) * 255).resize((img.width, img.height), Image.NEAREST))
-                
-                universal_mask |= (mask > 0)
-    
+                    mask = np.array(
+                        Image.fromarray(mask.astype(np.uint8) * 255).resize(
+                            (img.width, img.height), Image.NEAREST
+                        )
+                    )
+
+                universal_mask |= mask > 0
+
     universal_mask = binary_dilation(universal_mask, iterations=10)
-    Image.fromarray(universal_mask.astype(np.uint8) * 255).save(join(mask_output_dir, frame_fn))
+    Image.fromarray(universal_mask.astype(np.uint8) * 255).save(
+        join(mask_output_dir, frame_fn)
+    )

@@ -24,18 +24,35 @@ from importlib import import_module
 import requests
 from transformers import CLIPConfig, CLIPTextConfig, CLIPVisionConfig
 from transformers.file_utils import is_tf_available, is_vision_available
-from transformers.testing_utils import is_pt_tf_cross_test, require_tf, require_vision, slow
+from transformers.testing_utils import (
+    is_pt_tf_cross_test,
+    require_tf,
+    require_vision,
+    slow,
+)
 
 from ..test_configuration_common import ConfigTester
-from ..test_modeling_tf_common import TFModelTesterMixin, floats_tensor, ids_tensor, random_attention_mask
+from ..test_modeling_tf_common import (
+    TFModelTesterMixin,
+    floats_tensor,
+    ids_tensor,
+    random_attention_mask,
+)
 
 
 if is_tf_available():
     import numpy as np
     import tensorflow as tf
 
-    from transformers import TFCLIPModel, TFCLIPTextModel, TFCLIPVisionModel, TFSharedEmbeddings
-    from transformers.models.clip.modeling_tf_clip import TF_CLIP_PRETRAINED_MODEL_ARCHIVE_LIST
+    from transformers import (
+        TFCLIPModel,
+        TFCLIPTextModel,
+        TFCLIPVisionModel,
+        TFSharedEmbeddings,
+    )
+    from transformers.models.clip.modeling_tf_clip import (
+        TF_CLIP_PRETRAINED_MODEL_ARCHIVE_LIST,
+    )
 
 
 if is_vision_available():
@@ -78,7 +95,9 @@ class TFCLIPVisionModelTester:
         self.scope = scope
 
     def prepare_config_and_inputs(self):
-        pixel_values = floats_tensor([self.batch_size, self.num_channels, self.image_size, self.image_size])
+        pixel_values = floats_tensor(
+            [self.batch_size, self.num_channels, self.image_size, self.image_size]
+        )
         config = self.get_config()
 
         return config, pixel_values
@@ -103,9 +122,16 @@ class TFCLIPVisionModelTester:
         # expected sequence length = num_patches + 1 (we add 1 for the [CLS] token)
         image_size = (self.image_size, self.image_size)
         patch_size = (self.patch_size, self.patch_size)
-        num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, num_patches + 1, self.hidden_size))
-        self.parent.assertEqual(result.pooler_output.shape, (self.batch_size, self.hidden_size))
+        num_patches = (image_size[1] // patch_size[1]) * (
+            image_size[0] // patch_size[0]
+        )
+        self.parent.assertEqual(
+            result.last_hidden_state.shape,
+            (self.batch_size, num_patches + 1, self.hidden_size),
+        )
+        self.parent.assertEqual(
+            result.pooler_output.shape, (self.batch_size, self.hidden_size)
+        )
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -130,7 +156,9 @@ class TFCLIPVisionModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def setUp(self):
         self.model_tester = TFCLIPVisionModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=CLIPVisionConfig, has_text_modality=False, hidden_size=37)
+        self.config_tester = ConfigTester(
+            self, config_class=CLIPVisionConfig, has_text_modality=False, hidden_size=37
+        )
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -175,7 +203,9 @@ class TFCLIPVisionModelTest(TFModelTesterMixin, unittest.TestCase):
         # in CLIP, the seq_len equals the number of patches + 1 (we add 1 for the [CLS] token)
         image_size = (self.model_tester.image_size, self.model_tester.image_size)
         patch_size = (self.model_tester.patch_size, self.model_tester.patch_size)
-        num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
+        num_patches = (image_size[1] // patch_size[1]) * (
+            image_size[0] // patch_size[0]
+        )
         seq_len = num_patches + 1
 
         for model_class in self.all_model_classes:
@@ -183,7 +213,9 @@ class TFCLIPVisionModelTest(TFModelTesterMixin, unittest.TestCase):
             inputs_dict["output_hidden_states"] = False
             config.return_dict = True
             model = model_class(config)
-            outputs = model(**self._prepare_for_class(inputs_dict, model_class), training=False)
+            outputs = model(
+                **self._prepare_for_class(inputs_dict, model_class), training=False
+            )
             attentions = outputs.attentions
             self.assertEqual(len(attentions), self.model_tester.num_hidden_layers)
 
@@ -191,7 +223,9 @@ class TFCLIPVisionModelTest(TFModelTesterMixin, unittest.TestCase):
             del inputs_dict["output_attentions"]
             config.output_attentions = True
             model = model_class(config)
-            outputs = model(**self._prepare_for_class(inputs_dict, model_class), training=False)
+            outputs = model(
+                **self._prepare_for_class(inputs_dict, model_class), training=False
+            )
             attentions = outputs.attentions
             self.assertEqual(len(attentions), self.model_tester.num_hidden_layers)
 
@@ -201,7 +235,9 @@ class TFCLIPVisionModelTest(TFModelTesterMixin, unittest.TestCase):
             inputs_dict["output_attentions"] = True
             inputs_dict["output_hidden_states"] = True
             model = model_class(config)
-            outputs = model(**self._prepare_for_class(inputs_dict, model_class), training=False)
+            outputs = model(
+                **self._prepare_for_class(inputs_dict, model_class), training=False
+            )
 
             added_hidden_states = 1
             self.assertEqual(out_len + added_hidden_states, len(outputs))
@@ -219,19 +255,29 @@ class TFCLIPVisionModelTest(TFModelTesterMixin, unittest.TestCase):
         def check_hidden_states_output(inputs_dict, config, model_class):
             model = model_class(config)
 
-            outputs = model(**self._prepare_for_class(inputs_dict, model_class), training=False)
+            outputs = model(
+                **self._prepare_for_class(inputs_dict, model_class), training=False
+            )
 
-            hidden_states = outputs.encoder_hidden_states if config.is_encoder_decoder else outputs.hidden_states
+            hidden_states = (
+                outputs.encoder_hidden_states
+                if config.is_encoder_decoder
+                else outputs.hidden_states
+            )
 
             expected_num_layers = getattr(
-                self.model_tester, "expected_num_hidden_layers", self.model_tester.num_hidden_layers + 1
+                self.model_tester,
+                "expected_num_hidden_layers",
+                self.model_tester.num_hidden_layers + 1,
             )
             self.assertEqual(len(hidden_states), expected_num_layers)
 
             # CLIP has a different seq_length
             image_size = (self.model_tester.image_size, self.model_tester.image_size)
             patch_size = (self.model_tester.patch_size, self.model_tester.patch_size)
-            num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
+            num_patches = (image_size[1] // patch_size[1]) * (
+                image_size[0] // patch_size[0]
+            )
             seq_length = num_patches + 1
 
             self.assertListEqual(
@@ -323,8 +369,13 @@ class TFCLIPTextModelTester:
         model = TFCLIPTextModel(config=config)
         result = model(input_ids, attention_mask=input_mask, training=False)
         result = model(input_ids, training=False)
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, self.seq_length, self.hidden_size))
-        self.parent.assertEqual(result.pooler_output.shape, (self.batch_size, self.hidden_size))
+        self.parent.assertEqual(
+            result.last_hidden_state.shape,
+            (self.batch_size, self.seq_length, self.hidden_size),
+        )
+        self.parent.assertEqual(
+            result.pooler_output.shape, (self.batch_size, self.hidden_size)
+        )
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -335,7 +386,6 @@ class TFCLIPTextModelTester:
 
 @require_tf
 class TFCLIPTextModelTest(TFModelTesterMixin, unittest.TestCase):
-
     all_model_classes = (TFCLIPTextModel,) if is_tf_available() else ()
     test_pruning = False
     test_head_masking = False
@@ -343,7 +393,9 @@ class TFCLIPTextModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def setUp(self):
         self.model_tester = TFCLIPTextModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=CLIPTextConfig, hidden_size=37)
+        self.config_tester = ConfigTester(
+            self, config_class=CLIPTextConfig, hidden_size=37
+        )
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -371,8 +423,15 @@ class TFCLIPModelTester:
         self.is_training = is_training
 
     def prepare_config_and_inputs(self):
-        text_config, input_ids, attention_mask = self.text_model_tester.prepare_config_and_inputs()
-        vision_config, pixel_values = self.vision_model_tester.prepare_config_and_inputs()
+        (
+            text_config,
+            input_ids,
+            attention_mask,
+        ) = self.text_model_tester.prepare_config_and_inputs()
+        (
+            vision_config,
+            pixel_values,
+        ) = self.vision_model_tester.prepare_config_and_inputs()
 
         config = self.get_config()
 
@@ -380,17 +439,21 @@ class TFCLIPModelTester:
 
     def get_config(self):
         return CLIPConfig.from_text_vision_configs(
-            self.text_model_tester.get_config(), self.vision_model_tester.get_config(), projection_dim=64
+            self.text_model_tester.get_config(),
+            self.vision_model_tester.get_config(),
+            projection_dim=64,
         )
 
     def create_and_check_model(self, config, input_ids, attention_mask, pixel_values):
         model = TFCLIPModel(config)
         result = model(input_ids, pixel_values, attention_mask, training=False)
         self.parent.assertEqual(
-            result.logits_per_image.shape, (self.vision_model_tester.batch_size, self.text_model_tester.batch_size)
+            result.logits_per_image.shape,
+            (self.vision_model_tester.batch_size, self.text_model_tester.batch_size),
         )
         self.parent.assertEqual(
-            result.logits_per_text.shape, (self.text_model_tester.batch_size, self.vision_model_tester.batch_size)
+            result.logits_per_text.shape,
+            (self.text_model_tester.batch_size, self.vision_model_tester.batch_size),
         )
 
     def prepare_config_and_inputs_for_common(self):
@@ -449,7 +512,8 @@ class TFCLIPModelTest(TFModelTesterMixin, unittest.TestCase):
             for module_member_name in dir(module)
             if module_member_name.endswith("MainLayer")
             # This condition is required, since `modeling_tf_clip.py` has 3 classes whose names end with `MainLayer`.
-            and module_member_name[: -len("MainLayer")] == model_class.__name__[: -len("Model")]
+            and module_member_name[: -len("MainLayer")]
+            == model_class.__name__[: -len("Model")]
             for module_member in (getattr(module, module_member_name),)
             if isinstance(module_member, type)
             and tf.keras.layers.Layer in module_member.__bases__
@@ -466,7 +530,8 @@ class TFCLIPModelTest(TFModelTesterMixin, unittest.TestCase):
                 main_layer = main_layer_class(config)
 
             symbolic_inputs = {
-                name: tf.keras.Input(tensor.shape[1:], dtype=tensor.dtype) for name, tensor in inputs_dict.items()
+                name: tf.keras.Input(tensor.shape[1:], dtype=tensor.dtype)
+                for name, tensor in inputs_dict.items()
             }
 
             model = tf.keras.Model(symbolic_inputs, outputs=main_layer(symbolic_inputs))
@@ -485,7 +550,8 @@ class TFCLIPModelTest(TFModelTesterMixin, unittest.TestCase):
                     )
                 else:
                     model = tf.keras.models.load_model(
-                        filepath, custom_objects={main_layer_class.__name__: main_layer_class}
+                        filepath,
+                        custom_objects={main_layer_class.__name__: main_layer_class},
                     )
                 assert isinstance(model, tf.keras.Model)
                 after_outputs = model(inputs_dict)
@@ -501,7 +567,9 @@ class TFCLIPModelTest(TFModelTesterMixin, unittest.TestCase):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
 
         for model_class in self.all_model_classes:
-            pt_model_class_name = model_class.__name__[2:]  # Skip the "TF" at the beginning
+            pt_model_class_name = model_class.__name__[
+                2:
+            ]  # Skip the "TF" at the beginning
             pt_model_class = getattr(transformers, pt_model_class_name)
 
             config.output_hidden_states = True
@@ -512,7 +580,9 @@ class TFCLIPModelTest(TFModelTesterMixin, unittest.TestCase):
             # Check we can load pt model in tf and vice-versa with model => model functions
 
             tf_model = transformers.load_pytorch_model_in_tf2_model(
-                tf_model, pt_model, tf_inputs=self._prepare_for_class(inputs_dict, model_class)
+                tf_model,
+                pt_model,
+                tf_inputs=self._prepare_for_class(inputs_dict, model_class),
             )
             pt_model = transformers.load_tf2_model_in_pytorch_model(pt_model, tf_model)
 
@@ -523,9 +593,13 @@ class TFCLIPModelTest(TFModelTesterMixin, unittest.TestCase):
                 if type(key) == bool:
                     pt_inputs_dict[name] = key
                 elif name == "input_values":
-                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(torch.float32)
+                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(
+                        torch.float32
+                    )
                 elif name == "pixel_values":
-                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(torch.float32)
+                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(
+                        torch.float32
+                    )
                 else:
                     pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(torch.long)
 
@@ -535,21 +609,30 @@ class TFCLIPModelTest(TFModelTesterMixin, unittest.TestCase):
 
             with torch.no_grad():
                 pto = pt_model(**pt_inputs_dict)
-            tfo = tf_model(self._prepare_for_class(inputs_dict, model_class), training=False)
+            tfo = tf_model(
+                self._prepare_for_class(inputs_dict, model_class), training=False
+            )
 
-            self.assertEqual(len(tfo), len(pto), "Output lengths differ between TF and PyTorch")
+            self.assertEqual(
+                len(tfo), len(pto), "Output lengths differ between TF and PyTorch"
+            )
             for tf_output, pt_output in zip(tfo.to_tuple(), pto.to_tuple()):
-
-                if not (isinstance(tf_output, tf.Tensor) and isinstance(pt_output, torch.Tensor)):
+                if not (
+                    isinstance(tf_output, tf.Tensor)
+                    and isinstance(pt_output, torch.Tensor)
+                ):
                     continue
 
                 tf_out = tf_output.numpy()
                 pt_out = pt_output.numpy()
 
-                self.assertEqual(tf_out.shape, pt_out.shape, "Output component shapes differ between TF and PyTorch")
+                self.assertEqual(
+                    tf_out.shape,
+                    pt_out.shape,
+                    "Output component shapes differ between TF and PyTorch",
+                )
 
                 if len(tf_out.shape) > 0:
-
                     tf_nans = np.copy(np.isnan(tf_out))
                     pt_nans = np.copy(np.isnan(pt_out))
 
@@ -565,11 +648,15 @@ class TFCLIPModelTest(TFModelTesterMixin, unittest.TestCase):
             with tempfile.TemporaryDirectory() as tmpdirname:
                 pt_checkpoint_path = os.path.join(tmpdirname, "pt_model.bin")
                 torch.save(pt_model.state_dict(), pt_checkpoint_path)
-                tf_model = transformers.load_pytorch_checkpoint_in_tf2_model(tf_model, pt_checkpoint_path)
+                tf_model = transformers.load_pytorch_checkpoint_in_tf2_model(
+                    tf_model, pt_checkpoint_path
+                )
 
                 tf_checkpoint_path = os.path.join(tmpdirname, "tf_model.h5")
                 tf_model.save_weights(tf_checkpoint_path)
-                pt_model = transformers.load_tf2_checkpoint_in_pytorch_model(pt_model, tf_checkpoint_path)
+                pt_model = transformers.load_tf2_checkpoint_in_pytorch_model(
+                    pt_model, tf_checkpoint_path
+                )
 
             # Check predictions on first output (logits/hidden-states) are close enought given low-level computational differences
             pt_model.eval()
@@ -579,9 +666,13 @@ class TFCLIPModelTest(TFModelTesterMixin, unittest.TestCase):
                     key = np.array(key, dtype=bool)
                     pt_inputs_dict[name] = torch.from_numpy(key).to(torch.long)
                 elif name == "input_values":
-                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(torch.float32)
+                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(
+                        torch.float32
+                    )
                 elif name == "pixel_values":
-                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(torch.float32)
+                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(
+                        torch.float32
+                    )
                 else:
                     pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(torch.long)
             # need to rename encoder-decoder "inputs" for PyTorch
@@ -592,16 +683,24 @@ class TFCLIPModelTest(TFModelTesterMixin, unittest.TestCase):
                 pto = pt_model(**pt_inputs_dict)
             tfo = tf_model(self._prepare_for_class(inputs_dict, model_class))
 
-            self.assertEqual(len(tfo), len(pto), "Output lengths differ between TF and PyTorch")
+            self.assertEqual(
+                len(tfo), len(pto), "Output lengths differ between TF and PyTorch"
+            )
             for tf_output, pt_output in zip(tfo.to_tuple(), pto.to_tuple()):
-
-                if not (isinstance(tf_output, tf.Tensor) and isinstance(pt_output, torch.Tensor)):
+                if not (
+                    isinstance(tf_output, tf.Tensor)
+                    and isinstance(pt_output, torch.Tensor)
+                ):
                     continue
 
                 tf_out = tf_output.numpy()
                 pt_out = pt_output.numpy()
 
-                self.assertEqual(tf_out.shape, pt_out.shape, "Output component shapes differ between TF and PyTorch")
+                self.assertEqual(
+                    tf_out.shape,
+                    pt_out.shape,
+                    "Output component shapes differ between TF and PyTorch",
+                )
 
                 if len(tf_out.shape) > 0:
                     tf_nans = np.copy(np.isnan(tf_out))
@@ -640,7 +739,10 @@ class TFCLIPModelIntegrationTest(unittest.TestCase):
 
         image = prepare_img()
         inputs = processor(
-            text=["a photo of a cat", "a photo of a dog"], images=image, padding=True, return_tensors="tf"
+            text=["a photo of a cat", "a photo of a dog"],
+            images=image,
+            padding=True,
+            return_tensors="tf",
         )
 
         outputs = model(**inputs, training=False)

@@ -29,7 +29,11 @@ from ...file_utils import (
 
 
 _import_structure = {
-    "configuration_t5": ["T5_PRETRAINED_CONFIG_ARCHIVE_MAP", "T5Config", "T5OnnxConfig"],
+    "configuration_t5": [
+        "T5_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "T5Config",
+        "T5OnnxConfig",
+    ],
 }
 
 if is_sentencepiece_available():
@@ -66,7 +70,11 @@ if is_flax_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_t5 import T5_PRETRAINED_CONFIG_ARCHIVE_MAP, T5Config, T5OnnxConfig
+    from .configuration_t5 import (
+        T5_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        T5Config,
+        T5OnnxConfig,
+    )
 
     if is_sentencepiece_available():
         from .tokenization_t5 import T5Tokenizer
@@ -94,10 +102,16 @@ if TYPE_CHECKING:
         )
 
     if is_flax_available():
-        from .modeling_flax_t5 import FlaxT5ForConditionalGeneration, FlaxT5Model, FlaxT5PreTrainedModel
+        from .modeling_flax_t5 import (
+            FlaxT5ForConditionalGeneration,
+            FlaxT5Model,
+            FlaxT5PreTrainedModel,
+        )
 
 
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

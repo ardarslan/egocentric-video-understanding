@@ -65,17 +65,14 @@ def _get_default_logging_level():
 
 
 def _get_library_name() -> str:
-
     return __name__.split(".")[0]
 
 
 def _get_library_root_logger() -> logging.Logger:
-
     return logging.getLogger(_get_library_name())
 
 
 def _configure_library_root_logger() -> None:
-
     global _default_handler
 
     with _lock:
@@ -93,7 +90,6 @@ def _configure_library_root_logger() -> None:
 
 
 def _reset_library_root_logger() -> None:
-
     global _default_handler
 
     with _lock:
@@ -252,7 +248,9 @@ def enable_explicit_format() -> None:
     handlers = _get_library_root_logger().handlers
 
     for handler in handlers:
-        formatter = logging.Formatter("[%(levelname)s|%(filename)s:%(lineno)s] %(asctime)s >> %(message)s")
+        formatter = logging.Formatter(
+            "[%(levelname)s|%(filename)s:%(lineno)s] %(asctime)s >> %(message)s"
+        )
         handler.setFormatter(formatter)
 
 

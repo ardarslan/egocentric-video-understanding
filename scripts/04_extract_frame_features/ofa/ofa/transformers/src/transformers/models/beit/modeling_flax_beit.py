@@ -125,13 +125,17 @@ def relative_position_index_init(window_size: Tuple[int, int]) -> jnp.ndarray:
     coords_w = np.arange(window_size[1])
     coords = np.stack(np.meshgrid(coords_h, coords_w, indexing="ij"))  # 2, Wh, Ww
     coords_flatten = np.reshape(coords, (2, -1))
-    relative_coords = coords_flatten[:, :, None] - coords_flatten[:, None, :]  # 2, Wh*Ww, Wh*Ww
+    relative_coords = (
+        coords_flatten[:, :, None] - coords_flatten[:, None, :]
+    )  # 2, Wh*Ww, Wh*Ww
     relative_coords = np.transpose(relative_coords, (1, 2, 0))  # Wh*Ww, Wh*Ww, 2
     relative_coords[:, :, 0] += window_size[0] - 1  # shift to start from 0
     relative_coords[:, :, 1] += window_size[1] - 1
     relative_coords[:, :, 0] *= 2 * window_size[1] - 1
 
-    relative_position_index = np.zeros(shape=(window_size[0] * window_size[1] + 1,) * 2, dtype=relative_coords.dtype)
+    relative_position_index = np.zeros(
+        shape=(window_size[0] * window_size[1] + 1,) * 2, dtype=relative_coords.dtype
+    )
     relative_position_index[1:, 1:] = relative_coords.sum(-1)  # Wh*Ww, Wh*Ww
     relative_position_index[0, 0:] = num_relative_distance - 3
     relative_position_index[0:, 0] = num_relative_distance - 2
@@ -156,16 +160,19 @@ class FlaxBeitDropPath(nn.Module):
         if deterministic:
             return inputs
         else:
-            shape = (inputs.shape[0],) + (1,) * (inputs.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
+            shape = (inputs.shape[0],) + (1,) * (
+                inputs.ndim - 1
+            )  # work with diff dim tensors, not just 2D ConvNets
             rng = self.make_rng("droppath")
-            random_tensor = keep_prob + jax.random.uniform(rng, shape=shape, dtype=inputs.dtype)
+            random_tensor = keep_prob + jax.random.uniform(
+                rng, shape=shape, dtype=inputs.dtype
+            )
             binary_tensor = jnp.floor(random_tensor)
             output = inputs / keep_prob * binary_tensor
             return output
 
 
 class FlaxBeitPatchEmbeddings(nn.Module):
-
     config: BeitConfig
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
 
@@ -198,27 +205,36 @@ class FlaxBeitEmbeddings(nn.Module):
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
 
     def setup(self):
-        self.cls_token = self.param("cls_token", nn.initializers.zeros, (1, 1, self.config.hidden_size))
+        self.cls_token = self.param(
+            "cls_token", nn.initializers.zeros, (1, 1, self.config.hidden_size)
+        )
         if self.config.use_mask_token:
-            self.mask_token = self.param("mask_token", nn.initializers.zeros, (1, 1, self.config.hidden_size))
+            self.mask_token = self.param(
+                "mask_token", nn.initializers.zeros, (1, 1, self.config.hidden_size)
+            )
         self.patch_embeddings = FlaxBeitPatchEmbeddings(self.config, dtype=self.dtype)
         num_patches = self.patch_embeddings.num_patches
         if self.config.use_absolute_position_embeddings:
             self.position_embeddings = self.param(
-                "position_embeddings", nn.initializers.zeros, (1, num_patches + 1, self.config.hidden_size)
+                "position_embeddings",
+                nn.initializers.zeros,
+                (1, num_patches + 1, self.config.hidden_size),
             )
         self.dropout = nn.Dropout(rate=self.config.hidden_dropout_prob)
 
     def __call__(self, pixel_values, bool_masked_pos=None, deterministic=True):
-
         embeddings = self.patch_embeddings(pixel_values)
         batch_size, seq_len, _ = embeddings.shape
 
-        cls_tokens = jnp.broadcast_to(self.cls_token, (batch_size, 1, self.config.hidden_size))
+        cls_tokens = jnp.broadcast_to(
+            self.cls_token, (batch_size, 1, self.config.hidden_size)
+        )
         cls_tokens = cls_tokens.astype(embeddings.dtype)
 
         if bool_masked_pos is not None:
-            mask_tokens = jnp.broadcast_to(self.mask_token, (batch_size, seq_len, self.config.hidden_size))
+            mask_tokens = jnp.broadcast_to(
+                self.mask_token, (batch_size, seq_len, self.config.hidden_size)
+            )
             mask_tokens = mask_tokens.astype(embeddings.dtype)
             # replace the masked visual tokens by mask_tokens
             w = jnp.expand_dims(bool_masked_pos, axis=-1)
@@ -239,7 +255,9 @@ class FlaxBeitRelativePositionBias(nn.Module):
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
 
     def setup(self):
-        num_relative_distance = (2 * self.window_size[0] - 1) * (2 * self.window_size[1] - 1) + 3
+        num_relative_distance = (2 * self.window_size[0] - 1) * (
+            2 * self.window_size[1] - 1
+        ) + 3
         self.relative_position_bias_table = self.param(
             "relative_position_bias_table",
             nn.initializers.zeros,
@@ -251,8 +269,14 @@ class FlaxBeitRelativePositionBias(nn.Module):
 
     def __call__(self):
         index = self.relative_position_index.reshape(-1)
-        shape = (self.window_size[0] * self.window_size[1] + 1, self.window_size[0] * self.window_size[1] + 1, -1)
-        relative_position_bias = self.relative_position_bias_table[index].reshape(shape)  # Wh*Ww,Wh*Ww,nH
+        shape = (
+            self.window_size[0] * self.window_size[1] + 1,
+            self.window_size[0] * self.window_size[1] + 1,
+            -1,
+        )
+        relative_position_bias = self.relative_position_bias_table[index].reshape(
+            shape
+        )  # Wh*Ww,Wh*Ww,nH
         return jnp.transpose(relative_position_bias, (2, 0, 1))
 
 
@@ -262,8 +286,9 @@ class FlaxBeitSelfAttention(nn.Module):
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
 
     def setup(self):
-        if self.config.hidden_size % self.config.num_attention_heads != 0 and not hasattr(
-            self.config, "embedding_size"
+        if (
+            self.config.hidden_size % self.config.num_attention_heads != 0
+            and not hasattr(self.config, "embedding_size")
         ):
             raise ValueError(
                 f"The hidden size {self.config.hidden_size,} is not a multiple of the number of attention "
@@ -288,13 +313,19 @@ class FlaxBeitSelfAttention(nn.Module):
         )
 
         self.relative_position_bias = (
-            FlaxBeitRelativePositionBias(self.config, window_size=self.window_size, dtype=self.dtype)
+            FlaxBeitRelativePositionBias(
+                self.config, window_size=self.window_size, dtype=self.dtype
+            )
             if self.window_size
             else None
         )
 
     def __call__(
-        self, hidden_states, relative_position_bias=None, deterministic: bool = True, output_attentions: bool = False
+        self,
+        hidden_states,
+        relative_position_bias=None,
+        deterministic: bool = True,
+        output_attentions: bool = False,
     ):
         head_dim = self.config.hidden_size // self.config.num_attention_heads
 
@@ -320,7 +351,9 @@ class FlaxBeitSelfAttention(nn.Module):
 
         # Add shared relative position bias if provided.
         if relative_position_bias is not None:
-            attention_bias = attention_bias + relative_position_bias.astype(attention_bias.dtype)
+            attention_bias = attention_bias + relative_position_bias.astype(
+                attention_bias.dtype
+            )
 
         attn_weights = dot_product_attention_weights(
             query_states,
@@ -365,14 +398,23 @@ class FlaxBeitAttention(nn.Module):
     dtype: jnp.dtype = jnp.float32
 
     def setup(self):
-        self.attention = FlaxBeitSelfAttention(self.config, self.window_size, dtype=self.dtype)
+        self.attention = FlaxBeitSelfAttention(
+            self.config, self.window_size, dtype=self.dtype
+        )
         self.output = FlaxBeitSelfOutput(self.config, dtype=self.dtype)
 
     def __call__(
-        self, hidden_states, relative_position_bias=None, deterministic=True, output_attentions: bool = False
+        self,
+        hidden_states,
+        relative_position_bias=None,
+        deterministic=True,
+        output_attentions: bool = False,
     ):
         attn_outputs = self.attention(
-            hidden_states, relative_position_bias, deterministic=deterministic, output_attentions=output_attentions
+            hidden_states,
+            relative_position_bias,
+            deterministic=deterministic,
+            output_attentions=output_attentions,
         )
         attn_output = attn_outputs[0]
         attn_output = self.output(attn_output, deterministic=deterministic)
@@ -430,26 +472,42 @@ class FlaxBeitLayer(nn.Module):
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
 
     def setup(self):
-        self.attention = FlaxBeitAttention(self.config, self.window_size, dtype=self.dtype)
+        self.attention = FlaxBeitAttention(
+            self.config, self.window_size, dtype=self.dtype
+        )
         self.intermediate = FlaxBeitIntermediate(self.config, dtype=self.dtype)
         self.output = FlaxBeitOutput(self.config, dtype=self.dtype)
-        self.layernorm_before = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
+        self.layernorm_before = nn.LayerNorm(
+            epsilon=self.config.layer_norm_eps, dtype=self.dtype
+        )
         self.drop_path = FlaxBeitDropPath(rate=self.drop_path_rate)
-        self.layernorm_after = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
+        self.layernorm_after = nn.LayerNorm(
+            epsilon=self.config.layer_norm_eps, dtype=self.dtype
+        )
 
         self.init_values = self.config.layer_scale_init_value
         if self.init_values > 0:
-            self.lambda_1 = self.param("lambda_1", ones_with_scale, (self.config.hidden_size), self.init_values)
-            self.lambda_2 = self.param("lambda_2", ones_with_scale, (self.config.hidden_size), self.init_values)
+            self.lambda_1 = self.param(
+                "lambda_1", ones_with_scale, (self.config.hidden_size), self.init_values
+            )
+            self.lambda_2 = self.param(
+                "lambda_2", ones_with_scale, (self.config.hidden_size), self.init_values
+            )
         else:
             self.lambda_1 = None
             self.lambda_2 = None
 
     def __call__(
-        self, hidden_states, relative_position_bias=None, deterministic: bool = True, output_attentions: bool = False
+        self,
+        hidden_states,
+        relative_position_bias=None,
+        deterministic: bool = True,
+        output_attentions: bool = False,
     ):
         self_attention_outputs = self.attention(
-            self.layernorm_before(hidden_states),  # in BEiT, layernorm is applied before self-attention
+            self.layernorm_before(
+                hidden_states
+            ),  # in BEiT, layernorm is applied before self-attention
             relative_position_bias,
             deterministic=deterministic,
             output_attentions=output_attentions,
@@ -458,10 +516,15 @@ class FlaxBeitLayer(nn.Module):
 
         # apply lambda_1 if present
         if self.lambda_1 is not None:
-            attention_output = self.lambda_1.astype(attention_output.dtype) * attention_output
+            attention_output = (
+                self.lambda_1.astype(attention_output.dtype) * attention_output
+            )
 
         # first residual connection
-        hidden_states = self.drop_path(attention_output, deterministic=deterministic) + hidden_states
+        hidden_states = (
+            self.drop_path(attention_output, deterministic=deterministic)
+            + hidden_states
+        )
 
         # in BEiT, layernorm is also applied after self-attention
         layer_output = self.layernorm_after(hidden_states)
@@ -474,7 +537,9 @@ class FlaxBeitLayer(nn.Module):
             layer_output = self.lambda_2.astype(layer_output.dtype) * layer_output
 
         # second residual connection
-        layer_output = self.drop_path(layer_output, deterministic=deterministic) + hidden_states
+        layer_output = (
+            self.drop_path(layer_output, deterministic=deterministic) + hidden_states
+        )
 
         outputs = (layer_output,)
 
@@ -495,7 +560,9 @@ class FlaxBeitLayerCollection(nn.Module):
         self.layers = [
             FlaxBeitLayer(
                 self.config,
-                window_size=self.window_size if self.config.use_relative_position_bias else None,
+                window_size=self.window_size
+                if self.config.use_relative_position_bias
+                else None,
                 drop_path_rate=self.drop_path_rates[i],
                 name=str(i),
                 dtype=self.dtype,
@@ -511,16 +578,22 @@ class FlaxBeitLayerCollection(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-
         all_attentions = () if output_attentions else None
         all_hidden_states = () if output_hidden_states else None
 
         for i, layer in enumerate(self.layers):
             if output_hidden_states:
                 all_hidden_states += (hidden_states,)
-            relative_position_bias = self.relative_position_bias() if self.relative_position_bias is not None else None
+            relative_position_bias = (
+                self.relative_position_bias()
+                if self.relative_position_bias is not None
+                else None
+            )
             layer_outputs = layer(
-                hidden_states, relative_position_bias, deterministic=deterministic, output_attentions=output_attentions
+                hidden_states,
+                relative_position_bias,
+                deterministic=deterministic,
+                output_attentions=output_attentions,
             )
 
             hidden_states = layer_outputs[0]
@@ -536,7 +609,9 @@ class FlaxBeitLayerCollection(nn.Module):
             return tuple(v for v in outputs if v is not None)
 
         return FlaxBaseModelOutput(
-            last_hidden_state=hidden_states, hidden_states=all_hidden_states, attentions=all_attentions
+            last_hidden_state=hidden_states,
+            hidden_states=all_hidden_states,
+            attentions=all_attentions,
         )
 
 
@@ -552,7 +627,12 @@ class FlaxBeitEncoder(nn.Module):
             )
 
         # stochastic depth decay rule
-        drop_path_rates = [x for x in np.linspace(0, self.config.drop_path_rate, self.config.num_hidden_layers)]
+        drop_path_rates = [
+            x
+            for x in np.linspace(
+                0, self.config.drop_path_rate, self.config.num_hidden_layers
+            )
+        ]
         self.layer = FlaxBeitLayerCollection(
             self.config,
             window_size=self.window_size,
@@ -591,11 +671,20 @@ class FlaxBeitPreTrainedModel(FlaxPreTrainedModel):
     main_input_name = "pixel_values"
     module_class: nn.Module = None
 
-    def __init__(self, config: BeitConfig, input_shape=None, seed: int = 0, dtype: jnp.dtype = jnp.float32, **kwargs):
+    def __init__(
+        self,
+        config: BeitConfig,
+        input_shape=None,
+        seed: int = 0,
+        dtype: jnp.dtype = jnp.float32,
+        **kwargs,
+    ):
         module = self.module_class(config=config, dtype=dtype, **kwargs)
         if input_shape is None:
             input_shape = (1, config.image_size, config.image_size, 3)
-        super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+        super().__init__(
+            config, module, input_shape=input_shape, seed=seed, dtype=dtype
+        )
 
     def init_weights(self, rng: jax.random.PRNGKey, input_shape: Tuple) -> FrozenDict:
         # init input tensors
@@ -607,7 +696,9 @@ class FlaxBeitPreTrainedModel(FlaxPreTrainedModel):
 
         return self.module.init(rngs, pixel_values, return_dict=False)["params"]
 
-    @add_start_docstrings_to_model_forward(BEIT_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    @add_start_docstrings_to_model_forward(
+        BEIT_INPUTS_DOCSTRING.format("batch_size, sequence_length")
+    )
     def __call__(
         self,
         pixel_values,
@@ -619,11 +710,19 @@ class FlaxBeitPreTrainedModel(FlaxPreTrainedModel):
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
     ):
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
-        return_dict = return_dict if return_dict is not None else self.config.return_dict
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
+        return_dict = (
+            return_dict if return_dict is not None else self.config.return_dict
+        )
 
         pixel_values = jnp.transpose(pixel_values, (0, 2, 3, 1))
         # Handle any PRNG if needed
@@ -651,7 +750,9 @@ class FlaxBeitPooler(nn.Module):
 
     def setup(self):
         if self.config.use_mean_pooling:
-            self.layernorm = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
+            self.layernorm = nn.LayerNorm(
+                epsilon=self.config.layer_norm_eps, dtype=self.dtype
+            )
 
     def __call__(self, hidden_states):
         if self.config.use_mean_pooling:
@@ -673,11 +774,19 @@ class FlaxBeitModule(nn.Module):
     def setup(self):
         self.embeddings = FlaxBeitEmbeddings(self.config, dtype=self.dtype)
         self.encoder = FlaxBeitEncoder(
-            self.config, window_size=self.embeddings.patch_embeddings.patch_shape, dtype=self.dtype
+            self.config,
+            window_size=self.embeddings.patch_embeddings.patch_shape,
+            dtype=self.dtype,
         )
         if not self.config.use_mean_pooling:
-            self.layernorm = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
-        self.pooler = FlaxBeitPooler(self.config, dtype=self.dtype) if self.add_pooling_layer else None
+            self.layernorm = nn.LayerNorm(
+                epsilon=self.config.layer_norm_eps, dtype=self.dtype
+            )
+        self.pooler = (
+            FlaxBeitPooler(self.config, dtype=self.dtype)
+            if self.add_pooling_layer
+            else None
+        )
 
     def __call__(
         self,
@@ -688,8 +797,9 @@ class FlaxBeitModule(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-
-        hidden_states = self.embeddings(pixel_values, bool_masked_pos, deterministic=deterministic)
+        hidden_states = self.embeddings(
+            pixel_values, bool_masked_pos, deterministic=deterministic
+        )
 
         outputs = self.encoder(
             hidden_states,
@@ -748,7 +858,9 @@ FLAX_BEIT_MODEL_DOCSTRING = """
 """
 
 overwrite_call_docstring(FlaxBeitModel, FLAX_BEIT_MODEL_DOCSTRING)
-append_replace_return_docstrings(FlaxBeitModel, output_type=FlaxBeitModelOutputWithPooling, config_class=BeitConfig)
+append_replace_return_docstrings(
+    FlaxBeitModel, output_type=FlaxBeitModelOutputWithPooling, config_class=BeitConfig
+)
 
 
 class FlaxBeitForMaskedImageModelingModule(nn.Module):
@@ -756,10 +868,14 @@ class FlaxBeitForMaskedImageModelingModule(nn.Module):
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
 
     def setup(self):
-        self.beit = FlaxBeitModule(self.config, add_pooling_layer=False, dtype=self.dtype)
+        self.beit = FlaxBeitModule(
+            self.config, add_pooling_layer=False, dtype=self.dtype
+        )
 
         # Classifier head
-        self.layernorm = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
+        self.layernorm = nn.LayerNorm(
+            epsilon=self.config.layer_norm_eps, dtype=self.dtype
+        )
         self.lm_head = nn.Dense(
             self.config.vocab_size,
             kernel_init=jax.nn.initializers.normal(self.config.initializer_range),
@@ -775,7 +891,9 @@ class FlaxBeitForMaskedImageModelingModule(nn.Module):
         output_hidden_states=None,
         return_dict=None,
     ):
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         outputs = self.beit(
             pixel_values,
@@ -836,7 +954,9 @@ FLAX_BEIT_MLM_DOCSTRING = """
 
 overwrite_call_docstring(FlaxBeitForMaskedImageModeling, FLAX_BEIT_MLM_DOCSTRING)
 append_replace_return_docstrings(
-    FlaxBeitForMaskedImageModeling, output_type=FlaxMaskedLMOutput, config_class=BeitConfig
+    FlaxBeitForMaskedImageModeling,
+    output_type=FlaxMaskedLMOutput,
+    config_class=BeitConfig,
 )
 
 
@@ -845,7 +965,9 @@ class FlaxBeitForImageClassificationModule(nn.Module):
     dtype: jnp.dtype = jnp.float32
 
     def setup(self):
-        self.beit = FlaxBeitModule(config=self.config, dtype=self.dtype, add_pooling_layer=True)
+        self.beit = FlaxBeitModule(
+            config=self.config, dtype=self.dtype, add_pooling_layer=True
+        )
         self.classifier = nn.Dense(
             self.config.num_labels,
             kernel_init=jax.nn.initializers.normal(self.config.initializer_range),
@@ -861,7 +983,9 @@ class FlaxBeitForImageClassificationModule(nn.Module):
         output_hidden_states=None,
         return_dict=None,
     ):
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         outputs = self.beit(
             pixel_values,
@@ -923,5 +1047,7 @@ FLAX_BEIT_CLASSIF_DOCSTRING = """
 
 overwrite_call_docstring(FlaxBeitForImageClassification, FLAX_BEIT_CLASSIF_DOCSTRING)
 append_replace_return_docstrings(
-    FlaxBeitForImageClassification, output_type=FlaxSequenceClassifierOutput, config_class=BeitConfig
+    FlaxBeitForImageClassification,
+    output_type=FlaxSequenceClassifierOutput,
+    config_class=BeitConfig,
 )

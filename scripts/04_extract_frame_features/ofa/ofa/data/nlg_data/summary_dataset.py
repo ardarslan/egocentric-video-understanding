@@ -27,7 +27,9 @@ def collate(samples, pad_idx, eos_idx):
         )
 
     src_tokens = merge("source")
-    src_lengths = torch.LongTensor([s["source"].ne(pad_idx).long().sum() for s in samples])
+    src_lengths = torch.LongTensor(
+        [s["source"].ne(pad_idx).long().sum() for s in samples]
+    )
 
     prev_output_tokens = None
     target = None
@@ -51,10 +53,10 @@ def collate(samples, pad_idx, eos_idx):
         "net_input": {
             "src_tokens": src_tokens,
             "src_lengths": src_lengths,
-            "prev_output_tokens": prev_output_tokens
+            "prev_output_tokens": prev_output_tokens,
         },
         "target": target,
-        "target_strs": target_strs
+        "target_strs": target_strs,
     }
 
     return batch
@@ -72,7 +74,7 @@ class SummaryDataset(OFADataset):
         num_bins=1000,
         max_src_length=512,
         max_tgt_length=128,
-        noise_ratio=0.0
+        noise_ratio=0.0,
     ):
         super().__init__(split, dataset, bpe, src_dict, tgt_dict)
         self.max_src_length = max_src_length
@@ -87,14 +89,14 @@ class SummaryDataset(OFADataset):
 
         source = self.pre_caption(source, max_words=self.max_src_length)
         target = self.pre_caption(target, max_words=self.max_tgt_length)
-        source = source.replace('<unk>', 'unk')
-        target = target.replace('<unk>', 'unk')
+        source = source.replace("<unk>", "unk")
+        target = target.replace("<unk>", "unk")
 
         src_item = self.encode_text(
             ' what is the summary of article " {} "?'.format(source),
-            length=self.max_src_length
+            length=self.max_src_length,
         )
-        tgt_item = self.encode_text(' {}'.format(target))
+        tgt_item = self.encode_text(" {}".format(target))
         noise_tgt_item = self.add_noise_to_tgt(tgt_item.clone(), self.noise_ratio)
 
         src_item = torch.cat([self.bos_item, src_item, self.eos_item])
@@ -105,14 +107,16 @@ class SummaryDataset(OFADataset):
             "source": src_item,
             "target": target_item,
             "prev_output_tokens": prev_output_item,
-            "target_str": target_str
+            "target_str": target_str,
         }
         return example
 
     def add_noise_to_tgt(self, target, p):
         noise_indices = torch.FloatTensor(target.size(0)).uniform_() < p
         target[noise_indices] = torch.randint(
-            4, len(self.src_dict) - self.code_dict_size - self.num_bins, size=(noise_indices.sum(),)
+            4,
+            len(self.src_dict) - self.code_dict_size - self.num_bins,
+            size=(noise_indices.sum(),),
         )
         return target
 

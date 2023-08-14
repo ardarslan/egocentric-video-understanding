@@ -120,7 +120,6 @@ class ScheduleInitTest(unittest.TestCase):
             self.assertAlmostEqual(a, b, delta=tol, msg=msg)
 
     def test_schedulers(self):
-
         common_kwargs = {"num_warmup_steps": 2, "num_training_steps": 10}
         # schedulers doct format
         # function: (sched_args_dict, expected_learning_rates)
@@ -163,4 +162,6 @@ class ScheduleInitTest(unittest.TestCase):
 
             scheduler = scheduler_func(self.optimizer, **kwargs)
             lrs_2 = unwrap_and_save_reload_schedule(scheduler, self.num_steps)
-            self.assertListEqual(lrs_1, lrs_2, msg=f"failed for {scheduler_func} in save and reload")
+            self.assertListEqual(
+                lrs_1, lrs_2, msg=f"failed for {scheduler_func} in save and reload"
+            )

@@ -3,17 +3,11 @@ import requests
 from tqdm import tqdm
 import importlib
 
-URL_MAP = {
-    "vgg_lpips": "https://heibox.uni-heidelberg.de/f/607503859c864bc1b30b/?dl=1"
-}
+URL_MAP = {"vgg_lpips": "https://heibox.uni-heidelberg.de/f/607503859c864bc1b30b/?dl=1"}
 
-CKPT_MAP = {
-    "vgg_lpips": "vgg.pth"
-}
+CKPT_MAP = {"vgg_lpips": "vgg.pth"}
 
-MD5_MAP = {
-    "vgg_lpips": "d507d7349b931f0638a25a48a722f98a"
-}
+MD5_MAP = {"vgg_lpips": "d507d7349b931f0638a25a48a722f98a"}
 
 
 def get_obj_from_str(string, reload=False):
@@ -75,7 +69,7 @@ class KeyNotFoundError(Exception):
 
 
 def retrieve(
-        list_or_dict, key, splitval="/", default=None, expand=True, pass_success=False
+    list_or_dict, key, splitval="/", default=None, expand=True, pass_success=False
 ):
     """Given a nested list or dict return the desired value at key expanding
     callable nodes if necessary and :attr:`expand` is ``True``. The expansion
@@ -158,13 +152,14 @@ def retrieve(
 
 
 if __name__ == "__main__":
-    config = {"keya": "a",
-              "keyb": "b",
-              "keyc":
-                  {"cc1": 1,
-                   "cc2": 2,
-                   }
-              }
+    config = {
+        "keya": "a",
+        "keyb": "b",
+        "keyc": {
+            "cc1": 1,
+            "cc2": 2,
+        },
+    }
     from omegaconf import OmegaConf
 
     config = OmegaConf.create(config)

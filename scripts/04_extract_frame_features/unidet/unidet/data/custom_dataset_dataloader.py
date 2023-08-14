@@ -31,7 +31,9 @@ def build_custom_train_loader(cfg, mapper=None):
         min_keypoints=cfg.MODEL.ROI_KEYPOINT_HEAD.MIN_KEYPOINTS_PER_IMAGE
         if cfg.MODEL.KEYPOINT_ON
         else 0,
-        proposal_files=cfg.DATASETS.PROPOSAL_FILES_TRAIN if cfg.MODEL.LOAD_PROPOSALS else None,
+        proposal_files=cfg.DATASETS.PROPOSAL_FILES_TRAIN
+        if cfg.MODEL.LOAD_PROPOSALS
+        else None,
     )
     dataset = DatasetFromList(dataset_dicts, copy=False)
 
@@ -46,8 +48,10 @@ def build_custom_train_loader(cfg, mapper=None):
     if sampler_name == "TrainingSampler":
         sampler = TrainingSampler(len(dataset))
     elif sampler_name == "RepeatFactorTrainingSampler":
-        repeat_factors = RepeatFactorTrainingSampler.repeat_factors_from_category_frequency(
-            dataset_dicts, cfg.DATALOADER.REPEAT_THRESHOLD
+        repeat_factors = (
+            RepeatFactorTrainingSampler.repeat_factors_from_category_frequency(
+                dataset_dicts, cfg.DATALOADER.REPEAT_THRESHOLD
+            )
         )
         sampler = RepeatFactorTrainingSampler(repeat_factors)
     elif sampler_name == "ClassAwareSampler":
@@ -66,36 +70,33 @@ def build_custom_train_loader(cfg, mapper=None):
 
 class ClassAwareSampler(Sampler):
     def __init__(self, dataset_dicts, seed: Optional[int] = None):
-        """
-        """
+        """ """
         self._size = len(dataset_dicts)
         assert self._size > 0
         if seed is None:
             seed = comm.shared_random_seed()
         self._seed = int(seed)
-        
+
         self._rank = comm.get_rank()
         self._world_size = comm.get_world_size()
         self.weights = self._get_class_balance_factor(dataset_dicts)
 
-
     def __iter__(self):
         start = self._rank
         yield from itertools.islice(
-            self._infinite_indices(), start, None, self._world_size)
-
+            self._infinite_indices(), start, None, self._world_size
+        )
 
     def _infinite_indices(self):
         g = torch.Generator()
         g.manual_seed(self._seed)
         while True:
             ids = torch.multinomial(
-                self.weights, self._size, generator=g, 
-                replacement=True)
+                self.weights, self._size, generator=g, replacement=True
+            )
             yield from ids
 
-
-    def _get_class_balance_factor(self, dataset_dicts, l=1.):
+    def _get_class_balance_factor(self, dataset_dicts, l=1.0):
         ret = []
         category_freq = defaultdict(int)
         for dataset_dict in dataset_dicts:  # For each image (without repeats)
@@ -104,6 +105,5 @@ class ClassAwareSampler(Sampler):
                 category_freq[cat_id] += 1
         for i, dataset_dict in enumerate(dataset_dicts):
             cat_ids = {ann["category_id"] for ann in dataset_dict["annotations"]}
-            ret.append(sum(
-                [1. / (category_freq[cat_id] ** l) for cat_id in cat_ids]))
+            ret.append(sum([1.0 / (category_freq[cat_id] ** l) for cat_id in cat_ids]))
         return torch.tensor(ret).float()

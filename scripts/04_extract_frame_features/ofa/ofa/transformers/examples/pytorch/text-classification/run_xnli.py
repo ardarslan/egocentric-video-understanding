@@ -49,7 +49,10 @@ from transformers.utils.versions import require_version
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.18.0.dev0")
 
-require_version("datasets>=1.8.0", "To fix: pip install -r examples/pytorch/text-classification/requirements.txt")
+require_version(
+    "datasets>=1.8.0",
+    "To fix: pip install -r examples/pytorch/text-classification/requirements.txt",
+)
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +75,8 @@ class DataTrainingArguments:
         },
     )
     overwrite_cache: bool = field(
-        default=False, metadata={"help": "Overwrite the cached preprocessed datasets or not."}
+        default=False,
+        metadata={"help": "Overwrite the cached preprocessed datasets or not."},
     )
     pad_to_max_length: bool = field(
         default=True,
@@ -102,8 +106,12 @@ class DataTrainingArguments:
             "value if set."
         },
     )
-    server_ip: Optional[str] = field(default=None, metadata={"help": "For distant debugging."})
-    server_port: Optional[str] = field(default=None, metadata={"help": "For distant debugging."})
+    server_ip: Optional[str] = field(
+        default=None, metadata={"help": "For distant debugging."}
+    )
+    server_port: Optional[str] = field(
+        default=None, metadata={"help": "For distant debugging."}
+    )
 
 
 @dataclass
@@ -113,35 +121,58 @@ class ModelArguments:
     """
 
     model_name_or_path: str = field(
-        default=None, metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+        default=None,
+        metadata={
+            "help": "Path to pretrained model or model identifier from huggingface.co/models"
+        },
     )
     language: str = field(
-        default=None, metadata={"help": "Evaluation language. Also train language if `train_language` is set to None."}
+        default=None,
+        metadata={
+            "help": "Evaluation language. Also train language if `train_language` is set to None."
+        },
     )
     train_language: Optional[str] = field(
-        default=None, metadata={"help": "Train language if it is different from the evaluation language."}
+        default=None,
+        metadata={
+            "help": "Train language if it is different from the evaluation language."
+        },
     )
     config_name: Optional[str] = field(
-        default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
+        default=None,
+        metadata={
+            "help": "Pretrained config name or path if not the same as model_name"
+        },
     )
     tokenizer_name: Optional[str] = field(
-        default=None, metadata={"help": "Pretrained tokenizer name or path if not the same as model_name"}
+        default=None,
+        metadata={
+            "help": "Pretrained tokenizer name or path if not the same as model_name"
+        },
     )
     cache_dir: Optional[str] = field(
         default=None,
-        metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
+        metadata={
+            "help": "Where do you want to store the pretrained models downloaded from huggingface.co"
+        },
     )
     do_lower_case: Optional[bool] = field(
         default=False,
-        metadata={"help": "arg to indicate if tokenizer should do lower case in AutoTokenizer.from_pretrained()"},
+        metadata={
+            "help": "arg to indicate if tokenizer should do lower case in AutoTokenizer.from_pretrained()"
+        },
     )
     use_fast_tokenizer: bool = field(
         default=True,
-        metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
+        metadata={
+            "help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."
+        },
     )
     model_revision: str = field(
         default="main",
-        metadata={"help": "The specific model version to use (can be a branch name, tag name or commit id)."},
+        metadata={
+            "help": "The specific model version to use (can be a branch name, tag name or commit id)."
+        },
     )
     use_auth_token: bool = field(
         default=False,
@@ -157,7 +188,9 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    parser = HfArgumentParser(
+        (ModelArguments, DataTrainingArguments, TrainingArguments)
+    )
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
     # Setup distant debugging if needed
@@ -166,7 +199,9 @@ def main():
         import ptvsd
 
         print("Waiting for debugger attach")
-        ptvsd.enable_attach(address=(data_args.server_ip, data_args.server_port), redirect_output=True)
+        ptvsd.enable_attach(
+            address=(data_args.server_ip, data_args.server_port), redirect_output=True
+        )
         ptvsd.wait_for_attach()
 
     # Setup logging
@@ -192,7 +227,11 @@ def main():
 
     # Detecting last checkpoint.
     last_checkpoint = None
-    if os.path.isdir(training_args.output_dir) and training_args.do_train and not training_args.overwrite_output_dir:
+    if (
+        os.path.isdir(training_args.output_dir)
+        and training_args.do_train
+        and not training_args.overwrite_output_dir
+    ):
         last_checkpoint = get_last_checkpoint(training_args.output_dir)
         if last_checkpoint is None and len(os.listdir(training_args.output_dir)) > 0:
             raise ValueError(
@@ -213,19 +252,34 @@ def main():
     # Downloading and loading xnli dataset from the hub.
     if training_args.do_train:
         if model_args.train_language is None:
-            train_dataset = load_dataset("xnli", model_args.language, split="train", cache_dir=model_args.cache_dir)
+            train_dataset = load_dataset(
+                "xnli",
+                model_args.language,
+                split="train",
+                cache_dir=model_args.cache_dir,
+            )
         else:
             train_dataset = load_dataset(
-                "xnli", model_args.train_language, split="train", cache_dir=model_args.cache_dir
+                "xnli",
+                model_args.train_language,
+                split="train",
+                cache_dir=model_args.cache_dir,
             )
         label_list = train_dataset.features["label"].names
 
     if training_args.do_eval:
-        eval_dataset = load_dataset("xnli", model_args.language, split="validation", cache_dir=model_args.cache_dir)
+        eval_dataset = load_dataset(
+            "xnli",
+            model_args.language,
+            split="validation",
+            cache_dir=model_args.cache_dir,
+        )
         label_list = eval_dataset.features["label"].names
 
     if training_args.do_predict:
-        predict_dataset = load_dataset("xnli", model_args.language, split="test", cache_dir=model_args.cache_dir)
+        predict_dataset = load_dataset(
+            "xnli", model_args.language, split="test", cache_dir=model_args.cache_dir
+        )
         label_list = predict_dataset.features["label"].names
 
     # Labels
@@ -235,7 +289,9 @@ def main():
     # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
     config = AutoConfig.from_pretrained(
-        model_args.config_name if model_args.config_name else model_args.model_name_or_path,
+        model_args.config_name
+        if model_args.config_name
+        else model_args.model_name_or_path,
         num_labels=num_labels,
         finetuning_task="xnli",
         cache_dir=model_args.cache_dir,
@@ -243,7 +299,9 @@ def main():
         use_auth_token=True if model_args.use_auth_token else None,
     )
     tokenizer = AutoTokenizer.from_pretrained(
-        model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
+        model_args.tokenizer_name
+        if model_args.tokenizer_name
+        else model_args.model_name_or_path,
         do_lower_case=model_args.do_lower_case,
         cache_dir=model_args.cache_dir,
         use_fast=model_args.use_fast_tokenizer,
@@ -294,7 +352,9 @@ def main():
     if training_args.do_eval:
         if data_args.max_eval_samples is not None:
             eval_dataset = eval_dataset.select(range(data_args.max_eval_samples))
-        with training_args.main_process_first(desc="validation dataset map pre-processing"):
+        with training_args.main_process_first(
+            desc="validation dataset map pre-processing"
+        ):
             eval_dataset = eval_dataset.map(
                 preprocess_function,
                 batched=True,
@@ -304,8 +364,12 @@ def main():
 
     if training_args.do_predict:
         if data_args.max_predict_samples is not None:
-            predict_dataset = predict_dataset.select(range(data_args.max_predict_samples))
-        with training_args.main_process_first(desc="prediction dataset map pre-processing"):
+            predict_dataset = predict_dataset.select(
+                range(data_args.max_predict_samples)
+            )
+        with training_args.main_process_first(
+            desc="prediction dataset map pre-processing"
+        ):
             predict_dataset = predict_dataset.map(
                 preprocess_function,
                 batched=True,
@@ -352,7 +416,9 @@ def main():
         train_result = trainer.train(resume_from_checkpoint=checkpoint)
         metrics = train_result.metrics
         max_train_samples = (
-            data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
+            data_args.max_train_samples
+            if data_args.max_train_samples is not None
+            else len(train_dataset)
         )
         metrics["train_samples"] = min(max_train_samples, len(train_dataset))
 
@@ -367,7 +433,11 @@ def main():
         logger.info("*** Evaluate ***")
         metrics = trainer.evaluate(eval_dataset=eval_dataset)
 
-        max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
+        max_eval_samples = (
+            data_args.max_eval_samples
+            if data_args.max_eval_samples is not None
+            else len(eval_dataset)
+        )
         metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
 
         trainer.log_metrics("eval", metrics)
@@ -376,10 +446,14 @@ def main():
     # Prediction
     if training_args.do_predict:
         logger.info("*** Predict ***")
-        predictions, labels, metrics = trainer.predict(predict_dataset, metric_key_prefix="predict")
+        predictions, labels, metrics = trainer.predict(
+            predict_dataset, metric_key_prefix="predict"
+        )
 
         max_predict_samples = (
-            data_args.max_predict_samples if data_args.max_predict_samples is not None else len(predict_dataset)
+            data_args.max_predict_samples
+            if data_args.max_predict_samples is not None
+            else len(predict_dataset)
         )
         metrics["predict_samples"] = min(max_predict_samples, len(predict_dataset))
 

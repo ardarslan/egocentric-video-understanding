@@ -16,7 +16,9 @@ def drop_path(x, drop_prob: float = 0.0, training: bool = False):
     if drop_prob == 0.0 or not training:
         return x
     keep_prob = 1 - drop_prob
-    shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
+    shape = (x.shape[0],) + (1,) * (
+        x.ndim - 1
+    )  # work with diff dim tensors, not just 2D ConvNets
     random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
     random_tensor.floor_()  # binarize
     output = x.div(keep_prob) * random_tensor
@@ -57,7 +59,15 @@ class BasicBlock(nn.Module):
     expansion = 1
 
     def __init__(
-        self, inplanes, planes, stride=1, downsample=None, groups=1, base_width=64, dilation=1, norm_layer=None
+        self,
+        inplanes,
+        planes,
+        stride=1,
+        downsample=None,
+        groups=1,
+        base_width=64,
+        dilation=1,
+        norm_layer=None,
     ):
         super(BasicBlock, self).__init__()
         if norm_layer is None:
@@ -130,7 +140,9 @@ class Bottleneck(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
-        self.drop_path = DropPath(drop_path_rate) if drop_path_rate > 0.0 else nn.Identity()
+        self.drop_path = (
+            DropPath(drop_path_rate) if drop_path_rate > 0.0 else nn.Identity()
+        )
 
     def forward(self, x):
         identity = x
@@ -184,16 +196,30 @@ class ResNet(nn.Module):
             )
         self.groups = groups
         self.base_width = width_per_group
-        self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(
+            3, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False
+        )
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(Bottleneck, 64, layers[0], drop_path_rate=drop_path_rate)
+        self.layer1 = self._make_layer(
+            Bottleneck, 64, layers[0], drop_path_rate=drop_path_rate
+        )
         self.layer2 = self._make_layer(
-            Bottleneck, 128, layers[1], stride=2, dilate=replace_stride_with_dilation[0], drop_path_rate=drop_path_rate
+            Bottleneck,
+            128,
+            layers[1],
+            stride=2,
+            dilate=replace_stride_with_dilation[0],
+            drop_path_rate=drop_path_rate,
         )
         self.layer3 = self._make_layer(
-            Bottleneck, 256, layers[2], stride=2, dilate=replace_stride_with_dilation[1], drop_path_rate=drop_path_rate
+            Bottleneck,
+            256,
+            layers[2],
+            stride=2,
+            dilate=replace_stride_with_dilation[1],
+            drop_path_rate=drop_path_rate,
         )
 
         for m in self.modules():
@@ -213,7 +239,9 @@ class ResNet(nn.Module):
                 elif isinstance(m, BasicBlock):
                     nn.init.constant_(m.bn2.weight, 0)
 
-    def _make_layer(self, block, planes, blocks, stride=1, dilate=False, drop_path_rate=0.0):
+    def _make_layer(
+        self, block, planes, blocks, stride=1, dilate=False, drop_path_rate=0.0
+    ):
         norm_layer = self._norm_layer
         downsample = None
         previous_dilation = self.dilation
@@ -229,7 +257,14 @@ class ResNet(nn.Module):
         layers = []
         layers.append(
             block(
-                self.inplanes, planes, stride, downsample, self.groups, self.base_width, previous_dilation, norm_layer
+                self.inplanes,
+                planes,
+                stride,
+                downsample,
+                self.groups,
+                self.base_width,
+                previous_dilation,
+                norm_layer,
             )
         )
         self.inplanes = planes * block.expansion

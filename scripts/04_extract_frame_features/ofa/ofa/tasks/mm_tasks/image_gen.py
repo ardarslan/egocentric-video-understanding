@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 from dataclasses import dataclass, field
@@ -34,8 +34,8 @@ logger = logging.getLogger(__name__)
 
 def custom_to_pil(x):
     x = x.detach().cpu()
-    x = torch.clamp(x, -1., 1.)
-    x = (x + 1.) / 2.
+    x = torch.clamp(x, -1.0, 1.0)
+    x = (x + 1.0) / 2.0
     x = x.permute(1, 2, 0).numpy()
     x = (255 * x).astype(np.uint8)
     x = Image.fromarray(x)
@@ -46,25 +46,23 @@ def custom_to_pil(x):
 
 EVAL_CLIP_METHOD = ChoiceEnum(["ii_sim", "ti_sim"])
 
+
 @dataclass
 class ImageGenConfig(OFAConfig):
-    sampling_times: int = field(
-        default=1, metadata={"help": "sample times"}
-    )
+    sampling_times: int = field(default=1, metadata={"help": "sample times"})
 
-    code_image_size: int = field(
-        default=256, metadata={"help": "code image size"}
-    )
+    code_image_size: int = field(default=256, metadata={"help": "code image size"})
 
     # options for reporting CLIP score during validation
     eval_clip_method: EVAL_CLIP_METHOD = field(
-        default='ti_sim',
+        default="ti_sim",
         metadata={
-            "help": "evaluation with CLIP scores. ii_sim means Similarity between generated Images and ref Images, ti_sim means Similarity between generated Images and input Text"}
+            "help": "evaluation with CLIP scores. ii_sim means Similarity between generated Images and ref Images, ti_sim means Similarity between generated Images and input Text"
+        },
     )
 
     eval_args: Optional[str] = field(
-        default='{}',
+        default="{}",
         metadata={
             "help": 'generation args for clip scoring, e.g., \'{"beam": 4, "lenpen": 0.6}\', as JSON string'
         },
@@ -74,26 +72,26 @@ class ImageGenConfig(OFAConfig):
         default=False, metadata={"help": "Self-critical sequence training"}
     )
     scst_args: str = field(
-        default='{}',
+        default="{}",
         metadata={
-            "help": 'generation args for Self-critical sequence training, as JSON string'
+            "help": "generation args for Self-critical sequence training, as JSON string"
         },
     )
 
     vqgan_model_path: Optional[str] = field(
-        default=None,
-        metadata={"help": "path of vqgan model"}
+        default=None, metadata={"help": "path of vqgan model"}
     )
     vqgan_config_path: Optional[str] = field(
-        default=None,
-        metadata={"help": "path of vqgan config"}
+        default=None, metadata={"help": "path of vqgan config"}
     )
     clip_model_path: Optional[str] = field(
-        default=None,
-        metadata={"help": "clip model path"}
+        default=None, metadata={"help": "clip model path"}
     )
     gen_images_path: str = field(
-        default='', metadata={"help": "where to store generated images during evalution. Don't dump images if None. "}
+        default="",
+        metadata={
+            "help": "where to store generated images during evalution. Don't dump images if None. "
+        },
     )
 
 
@@ -103,10 +101,10 @@ class ImageGenTask(OFATask):
         super().__init__(cfg, src_dict, tgt_dict)
 
     def load_dataset(self, split, epoch=1, combine=False, **kwargs):
-        paths = self.cfg.data.split(',')
+        paths = self.cfg.data.split(",")
         assert len(paths) > 0
 
-        if split == 'train':
+        if split == "train":
             file_path = paths[(epoch - 1) % (len(paths) - 1)]
         else:
             file_path = paths[-1]
@@ -120,7 +118,7 @@ class ImageGenTask(OFATask):
             self.tgt_dict,
             max_src_length=self.cfg.max_src_length,
             code_dict_size=self.cfg.code_dict_size,
-            code_image_size=self.cfg.code_image_size
+            code_image_size=self.cfg.code_image_size,
         )
 
     def build_model(self, cfg):
@@ -144,19 +142,20 @@ class ImageGenTask(OFATask):
         self.image_tokenizer.eval()
 
         gen_args = json.loads(self.cfg.eval_args)
-        self.sequence_generator = self.build_generator(
-            [model], Namespace(**gen_args)
-        )
+        self.sequence_generator = self.build_generator([model], Namespace(**gen_args))
         if self.cfg.scst:
             scst_args = json.loads(self.cfg.scst_args)
-            self.scst_generator = self.build_generator(
-                [model], Namespace(**scst_args)
-            )
+            self.scst_generator = self.build_generator([model], Namespace(**scst_args))
 
         return model
 
     def build_generator(
-            self, models, args, seq_gen_cls=None, extra_gen_cls_kwargs=None, prefix_allowed_tokens_fn=None,
+        self,
+        models,
+        args,
+        seq_gen_cls=None,
+        extra_gen_cls_kwargs=None,
+        prefix_allowed_tokens_fn=None,
     ):
         """
         Build a :class:`~fairseq.SequenceGenerator` instance for this
@@ -252,18 +251,23 @@ class ImageGenTask(OFATask):
         loss, sample_size, logging_output = criterion(model, sample)
 
         model.eval()
-        device = sample['target'].device
+        device = sample["target"].device
 
         hyps, ref = self.inference_image(self.sequence_generator, sample, [model])
         scores = []
 
-        tokens = sample['net_input']['src_tokens'][0].view(-1).tolist()
-        caption = self.bpe.decode(self.tgt_dict.string([token for token in tokens if token >= 4]))[
-                  38:].replace('/', '')
-        if self.cfg.eval_clip_method == 'ii_sim':
-            similarity_score, indices = self.compute_ref_image_similarity(hyps, ref, device)
-        elif self.cfg.eval_clip_method == 'ti_sim':
-            similarity_score, indices = self.compute_text_similarity(hyps, caption, device)
+        tokens = sample["net_input"]["src_tokens"][0].view(-1).tolist()
+        caption = self.bpe.decode(
+            self.tgt_dict.string([token for token in tokens if token >= 4])
+        )[38:].replace("/", "")
+        if self.cfg.eval_clip_method == "ii_sim":
+            similarity_score, indices = self.compute_ref_image_similarity(
+                hyps, ref, device
+            )
+        elif self.cfg.eval_clip_method == "ti_sim":
+            similarity_score, indices = self.compute_text_similarity(
+                hyps, caption, device
+            )
         else:
             raise ValueError("unsupported eval method.")
 
@@ -271,11 +275,21 @@ class ImageGenTask(OFATask):
         sorted_hyps = [hyps[indice] for indice in indices]
 
         if self.cfg.gen_images_path:
-            caption_tokens = sample['net_input']['src_tokens'][0].view(-1).tolist()
-            caption = self.bpe.decode(self.tgt_dict.string([token for token in caption_tokens if token >= 4]))[
-                      38:].replace('/', '')
-            self.dump_images(sorted_hyps, text=caption, path=os.path.join(self.cfg.gen_images_path, 'all_results'))
-            self.dump_images(sorted_hyps, text=caption, path=os.path.join(self.cfg.gen_images_path, 'top1'), topk=1)
+            caption_tokens = sample["net_input"]["src_tokens"][0].view(-1).tolist()
+            caption = self.bpe.decode(
+                self.tgt_dict.string([token for token in caption_tokens if token >= 4])
+            )[38:].replace("/", "")
+            self.dump_images(
+                sorted_hyps,
+                text=caption,
+                path=os.path.join(self.cfg.gen_images_path, "all_results"),
+            )
+            self.dump_images(
+                sorted_hyps,
+                text=caption,
+                path=os.path.join(self.cfg.gen_images_path, "top1"),
+                topk=1,
+            )
 
         logging_output["_score_sum"] = sum(scores)
         logging_output["_score_cnt"] = len(scores)
@@ -287,6 +301,7 @@ class ImageGenTask(OFATask):
 
         def sum_logs(key):
             import torch
+
             result = sum(log.get(key, 0) for log in logging_outputs)
             if torch.is_tensor(result):
                 result = result.cpu()
@@ -308,15 +323,27 @@ class ImageGenTask(OFATask):
             gen_out = self.inference_step(generator, models, sample)
             for i in range(len(gen_out)):
                 with torch.no_grad():
-                    tokens = torch.stack([item['tokens'][:-1] for item in gen_out[i]], dim=0)
-                    tokens += -len(self.src_dict) + self.cfg.code_dict_size + self.cfg.num_bins
+                    tokens = torch.stack(
+                        [item["tokens"][:-1] for item in gen_out[i]], dim=0
+                    )
+                    tokens += (
+                        -len(self.src_dict)
+                        + self.cfg.code_dict_size
+                        + self.cfg.num_bins
+                    )
                     images = self.image_tokenizer.decode_code(
-                        tokens.view(-1, self.cfg.code_image_size // 8, self.cfg.code_image_size // 8)
+                        tokens.view(
+                            -1,
+                            self.cfg.code_image_size // 8,
+                            self.cfg.code_image_size // 8,
+                        )
                     )
                     images = [custom_to_pil(image) for image in images]
                 hyps += images
-        if 'code_images' in sample:
-            ref = Image.open(BytesIO(base64.urlsafe_b64decode(sample['code_images'][0]))).convert('RGB')
+        if "code_images" in sample:
+            ref = Image.open(
+                BytesIO(base64.urlsafe_b64decode(sample["code_images"][0]))
+            ).convert("RGB")
 
         return hyps, ref
 
@@ -325,5 +352,5 @@ class ImageGenTask(OFATask):
         if topk:
             images = images[:topk]
         for j, image in enumerate(images):
-            save_path = os.path.join(path, f'{text}_{j}.png')
+            save_path = os.path.join(path, f"{text}_{j}.png")
             image.save(save_path)

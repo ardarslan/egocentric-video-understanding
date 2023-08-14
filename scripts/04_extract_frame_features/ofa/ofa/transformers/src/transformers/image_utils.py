@@ -31,7 +31,12 @@ IMAGENET_STANDARD_MEAN = [0.5, 0.5, 0.5]
 IMAGENET_STANDARD_STD = [0.5, 0.5, 0.5]
 
 ImageInput = Union[
-    PIL.Image.Image, np.ndarray, "torch.Tensor", List[PIL.Image.Image], List[np.ndarray], List["torch.Tensor"]  # noqa
+    PIL.Image.Image,
+    np.ndarray,
+    "torch.Tensor",
+    List[PIL.Image.Image],
+    List[np.ndarray],
+    List["torch.Tensor"],  # noqa
 ]
 
 
@@ -79,7 +84,9 @@ class ImageFeatureExtractionMixin:
     """
 
     def _ensure_format_supported(self, image):
-        if not isinstance(image, (PIL.Image.Image, np.ndarray)) and not is_torch_tensor(image):
+        if not isinstance(image, (PIL.Image.Image, np.ndarray)) and not is_torch_tensor(
+            image
+        ):
             raise ValueError(
                 f"Got type {type(image)} which is not supported, only `PIL.Image.Image`, `np.array` and "
                 "`torch.Tensor` are."
@@ -184,7 +191,14 @@ class ImageFeatureExtractionMixin:
         else:
             return (image - mean) / std
 
-    def resize(self, image, size, resample=PIL.Image.BILINEAR, default_to_square=True, max_size=None):
+    def resize(
+        self,
+        image,
+        size,
+        resample=PIL.Image.BILINEAR,
+        default_to_square=True,
+        max_size=None,
+    ):
         """
         Resizes `image`. Note that this will trigger a conversion of `image` to a PIL Image.
 
@@ -231,7 +245,9 @@ class ImageFeatureExtractionMixin:
                 if short == requested_new_short:
                     return image
 
-                new_short, new_long = requested_new_short, int(requested_new_short * long / short)
+                new_short, new_long = requested_new_short, int(
+                    requested_new_short * long / short
+                )
 
                 if max_size is not None:
                     if max_size <= requested_new_short:
@@ -240,9 +256,14 @@ class ImageFeatureExtractionMixin:
                             f"size for the smaller edge size = {size}"
                         )
                     if new_long > max_size:
-                        new_short, new_long = int(max_size * new_short / new_long), max_size
+                        new_short, new_long = (
+                            int(max_size * new_short / new_long),
+                            max_size,
+                        )
 
-                size = (new_short, new_long) if width <= height else (new_long, new_short)
+                size = (
+                    (new_short, new_long) if width <= height else (new_long, new_short)
+                )
 
         return image.resize(size, resample=resample)
 
@@ -262,22 +283,38 @@ class ImageFeatureExtractionMixin:
             size = (size, size)
 
         # PIL Image.size is (width, height) but NumPy array and torch Tensors have (height, width)
-        image_shape = (image.size[1], image.size[0]) if isinstance(image, PIL.Image.Image) else image.shape[-2:]
+        image_shape = (
+            (image.size[1], image.size[0])
+            if isinstance(image, PIL.Image.Image)
+            else image.shape[-2:]
+        )
         top = (image_shape[0] - size[0]) // 2
-        bottom = top + size[0]  # In case size is odd, (image_shape[0] + size[0]) // 2 won't give the proper result.
+        bottom = (
+            top + size[0]
+        )  # In case size is odd, (image_shape[0] + size[0]) // 2 won't give the proper result.
         left = (image_shape[1] - size[1]) // 2
-        right = left + size[1]  # In case size is odd, (image_shape[1] + size[1]) // 2 won't give the proper result.
+        right = (
+            left + size[1]
+        )  # In case size is odd, (image_shape[1] + size[1]) // 2 won't give the proper result.
 
         # For PIL Images we have a method to crop directly.
         if isinstance(image, PIL.Image.Image):
             return image.crop((left, top, right, bottom))
 
         # Check if all the dimensions are inside the image.
-        if top >= 0 and bottom <= image_shape[0] and left >= 0 and right <= image_shape[1]:
+        if (
+            top >= 0
+            and bottom <= image_shape[0]
+            and left >= 0
+            and right <= image_shape[1]
+        ):
             return image[..., top:bottom, left:right]
 
         # Otherwise, we may need to pad if the image is too small. Oh joy...
-        new_shape = image.shape[:-2] + (max(size[0], image_shape[0]), max(size[1], image_shape[1]))
+        new_shape = image.shape[:-2] + (
+            max(size[0], image_shape[0]),
+            max(size[1], image_shape[1]),
+        )
         if isinstance(image, np.ndarray):
             new_image = np.zeros_like(image, shape=new_shape)
         elif is_torch_tensor(image):
@@ -295,5 +332,7 @@ class ImageFeatureExtractionMixin:
         right += left_pad
 
         return new_image[
-            ..., max(0, top) : min(new_image.shape[-2], bottom), max(0, left) : min(new_image.shape[-1], right)
+            ...,
+            max(0, top) : min(new_image.shape[-2], bottom),
+            max(0, left) : min(new_image.shape[-1], right),
         ]

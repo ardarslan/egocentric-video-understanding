@@ -24,20 +24,22 @@ class BufferList(nn.Module):
     def __iter__(self):
         return iter(self._buffers.values())
 
-@register_generator('point')
+
+@register_generator("point")
 class PointGenerator(nn.Module):
     """
-        A generator for temporal "points"
+    A generator for temporal "points"
 
-        max_seq_len can be much larger than the actual seq length
+    max_seq_len can be much larger than the actual seq length
     """
+
     def __init__(
         self,
-        max_seq_len,        # max sequence length that the generator will buffer
-        fpn_strides,        # strides of fpn levels
-        regression_range,   # regression range (on feature grids)
-        use_offset=False,    # if to align the points at grid centers
-        use_us_fpn=False
+        max_seq_len,  # max sequence length that the generator will buffer
+        fpn_strides,  # strides of fpn levels
+        regression_range,  # regression range (on feature grids)
+        use_offset=False,  # if to align the points at grid centers
+        use_us_fpn=False,
     ):
         super().__init__()
         # sanity check, # fpn levels and length divisible
@@ -50,7 +52,7 @@ class PointGenerator(nn.Module):
         self.fpn_strides = fpn_strides
         self.regression_range = regression_range
         if use_us_fpn:
-            self.fpn_strides.append(0.5)                # can modify
+            self.fpn_strides.append(0.5)  # can modify
             self.regression_range.append(self.regression_range[0])
             self.fpn_levels += 1
         self.use_offset = use_offset
@@ -63,8 +65,7 @@ class PointGenerator(nn.Module):
 
         # loop over all points at each pyramid level
         for l, stride in enumerate(self.fpn_strides):
-            reg_range = torch.as_tensor(
-                self.regression_range[l], dtype=torch.float)
+            reg_range = torch.as_tensor(self.regression_range[l], dtype=torch.float)
             fpn_stride = torch.as_tensor(stride, dtype=torch.float)
             points = torch.arange(0, self.max_seq_len, stride)[:, None]
             # add offset if necessary (not in our current model)
@@ -82,11 +83,17 @@ class PointGenerator(nn.Module):
         # feats will be a list of torch tensors
         assert len(feats) == self.fpn_levels
         pts_list = []
-        feat_lens = [feat.shape[-1] for feat in feats]      # [192, 96, 48, 24, 12, 6] fpn len
+        feat_lens = [
+            feat.shape[-1] for feat in feats
+        ]  # [192, 96, 48, 24, 12, 6] fpn len
         for feat_len, buffer_pts in zip(feat_lens, self.buffer_points):
             if feat_len > buffer_pts.shape[0]:
-                import ipdb;ipdb.set_trace()
-            assert feat_len <= buffer_pts.shape[0], "Reached max buffer length for point generator"
-            pts = buffer_pts[:feat_len, :]          # [len, 4]
+                import ipdb
+
+                ipdb.set_trace()
+            assert (
+                feat_len <= buffer_pts.shape[0]
+            ), "Reached max buffer length for point generator"
+            pts = buffer_pts[:feat_len, :]  # [len, 4]
             pts_list.append(pts)
         return pts_list

@@ -22,7 +22,10 @@ from ...file_utils import _LazyModule, is_torch_available
 
 
 _import_structure = {
-    "configuration_prophetnet": ["PROPHETNET_PRETRAINED_CONFIG_ARCHIVE_MAP", "ProphetNetConfig"],
+    "configuration_prophetnet": [
+        "PROPHETNET_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "ProphetNetConfig",
+    ],
     "tokenization_prophetnet": ["ProphetNetTokenizer"],
 }
 
@@ -39,7 +42,10 @@ if is_torch_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_prophetnet import PROPHETNET_PRETRAINED_CONFIG_ARCHIVE_MAP, ProphetNetConfig
+    from .configuration_prophetnet import (
+        PROPHETNET_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        ProphetNetConfig,
+    )
     from .tokenization_prophetnet import ProphetNetTokenizer
 
     if is_torch_available():
@@ -56,4 +62,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

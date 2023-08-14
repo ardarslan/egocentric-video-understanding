@@ -1,5 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 import contextlib, pdb, random
+
 random.seed(0)
 import datetime
 import io
@@ -25,10 +26,17 @@ This file contains functions to parse COCO-format annotations into dicts in "Det
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["_load_coco_json", "load_sem_seg", "convert_to_coco_json", "register_epick_instances"]
+__all__ = [
+    "_load_coco_json",
+    "load_sem_seg",
+    "convert_to_coco_json",
+    "register_epick_instances",
+]
 
 
-def _load_epick_json(json_file, image_root, dataset_name=None, extra_annotation_keys=None):
+def _load_epick_json(
+    json_file, image_root, dataset_name=None, extra_annotation_keys=None
+):
     """
     Load a json file with COCO's instances annotation format.
     Currently supports instance detection, instance segmentation,
@@ -69,7 +77,9 @@ def _load_epick_json(json_file, image_root, dataset_name=None, extra_annotation_
     with contextlib.redirect_stdout(io.StringIO()):
         coco_api = COCO(json_file)
     if timer.seconds() > 1:
-        logger.info("Loading {} takes {:.2f} seconds.".format(json_file, timer.seconds()))
+        logger.info(
+            "Loading {} takes {:.2f} seconds.".format(json_file, timer.seconds())
+        )
 
     id_map = None
     if dataset_name is not None:
@@ -138,23 +148,27 @@ Category ids in annotations are not in [1, #categories]! We'll apply a mapping f
         # However the ratio of buggy annotations there is tiny and does not affect accuracy.
         # Therefore we explicitly white-list them.
         ann_ids = [ann["id"] for anns_per_image in anns for ann in anns_per_image]
-        assert len(set(ann_ids)) == len(ann_ids), "Annotation ids in '{}' are not unique!".format(
-            json_file
-        )
+        assert len(set(ann_ids)) == len(
+            ann_ids
+        ), "Annotation ids in '{}' are not unique!".format(json_file)
 
     imgs_anns = list(zip(imgs, anns))
-    logger.info("Loaded {} images in COCO format from {}".format(len(imgs_anns), json_file))
+    logger.info(
+        "Loaded {} images in COCO format from {}".format(len(imgs_anns), json_file)
+    )
 
     dataset_dicts = []
 
-    ann_keys = ["iscrowd", "bbox", "keypoints", "category_id"] + (extra_annotation_keys or [])
+    ann_keys = ["iscrowd", "bbox", "keypoints", "category_id"] + (
+        extra_annotation_keys or []
+    )
     # print(f'extra_annotation_keys = {extra_annotation_keys}')
     # extra_annotation_keys = ['handside', 'incontact', 'offset', 'object_id']
     # print(f'extra_annotation_keys = {extra_annotation_keys}')
 
     num_instances_without_valid_segmentation = 0
 
-    for (img_dict, anno_dict_list) in imgs_anns:
+    for img_dict, anno_dict_list in imgs_anns:
         record = {}
         record["file_name"] = os.path.join(image_root, img_dict["file_name"])
         record["height"] = img_dict["height"]
@@ -172,7 +186,9 @@ Category ids in annotations are not in [1, #categories]! We'll apply a mapping f
             # can trigger this assertion.
             assert anno["image_id"] == image_id
 
-            assert anno.get("ignore", 0) == 0, '"ignore" in COCO json file is not supported.'
+            assert (
+                anno.get("ignore", 0) == 0
+            ), '"ignore" in COCO json file is not supported.'
 
             obj = {key: anno[key] for key in ann_keys if key in anno}
             if "bbox" in obj and len(obj["bbox"]) == 0:
@@ -189,7 +205,9 @@ Category ids in annotations are not in [1, #categories]! We'll apply a mapping f
                         segm = mask_util.frPyObjects(segm, *segm["size"])
                 else:
                     # filter out invalid polygons (< 3 points)
-                    segm = [poly for poly in segm if len(poly) % 2 == 0 and len(poly) >= 6]
+                    segm = [
+                        poly for poly in segm if len(poly) % 2 == 0 and len(poly) >= 6
+                    ]
                     if len(segm) == 0:
                         num_instances_without_valid_segmentation += 1
                         continue  # ignore this instance
@@ -267,11 +285,19 @@ def load_sem_seg(gt_root, image_root, gt_ext="png", image_ext="jpg"):
         return image_id
 
     input_files = sorted(
-        (os.path.join(image_root, f) for f in PathManager.ls(image_root) if f.endswith(image_ext)),
+        (
+            os.path.join(image_root, f)
+            for f in PathManager.ls(image_root)
+            if f.endswith(image_ext)
+        ),
         key=lambda file_path: file2id(image_root, file_path),
     )
     gt_files = sorted(
-        (os.path.join(gt_root, f) for f in PathManager.ls(gt_root) if f.endswith(gt_ext)),
+        (
+            os.path.join(gt_root, f)
+            for f in PathManager.ls(gt_root)
+            if f.endswith(gt_ext)
+        ),
         key=lambda file_path: file2id(gt_root, file_path),
     )
 
@@ -294,11 +320,13 @@ def load_sem_seg(gt_root, image_root, gt_ext="png", image_ext="jpg"):
         gt_files = [os.path.join(gt_root, f + gt_ext) for f in intersect]
 
     logger.info(
-        "Loaded {} images with semantic segmentation from {}".format(len(input_files), image_root)
+        "Loaded {} images with semantic segmentation from {}".format(
+            len(input_files), image_root
+        )
     )
 
     dataset_dicts = []
-    for (img_path, gt_path) in zip(input_files, gt_files):
+    for img_path, gt_path in zip(input_files, gt_files):
         record = {}
         record["file_name"] = img_path
         record["sem_seg_file_name"] = gt_path
@@ -332,8 +360,12 @@ def convert_to_coco_dict(dataset_name):
 
     # unmap the category mapping ids for COCO
     if hasattr(metadata, "thing_dataset_id_to_contiguous_id"):
-        reverse_id_mapping = {v: k for k, v in metadata.thing_dataset_id_to_contiguous_id.items()}
-        reverse_id_mapper = lambda contiguous_id: reverse_id_mapping[contiguous_id]  # noqa
+        reverse_id_mapping = {
+            v: k for k, v in metadata.thing_dataset_id_to_contiguous_id.items()
+        }
+        reverse_id_mapper = lambda contiguous_id: reverse_id_mapping[
+            contiguous_id
+        ]  # noqa
     else:
         reverse_id_mapper = lambda contiguous_id: contiguous_id  # noqa
 
@@ -364,7 +396,9 @@ def convert_to_coco_dict(dataset_name):
             bbox = annotation["bbox"]
             if isinstance(bbox, np.ndarray):
                 if bbox.ndim != 1:
-                    raise ValueError(f"bbox has to be 1-dimensional. Got shape={bbox.shape}.")
+                    raise ValueError(
+                        f"bbox has to be 1-dimensional. Got shape={bbox.shape}."
+                    )
                 bbox = bbox.tolist()
             if len(bbox) not in [4, 5]:
                 raise ValueError(f"bbox has to has length 4 or 5. Got {bbox}.")
@@ -414,7 +448,9 @@ def convert_to_coco_dict(dataset_name):
             coco_annotation["bbox"] = [round(float(x), 3) for x in bbox]
             coco_annotation["area"] = float(area)
             coco_annotation["iscrowd"] = int(annotation.get("iscrowd", 0))
-            coco_annotation["category_id"] = int(reverse_id_mapper(annotation["category_id"]))
+            coco_annotation["category_id"] = int(
+                reverse_id_mapper(annotation["category_id"])
+            )
 
             # Add optional fields
             if "keypoints" in annotation:
@@ -440,7 +476,12 @@ def convert_to_coco_dict(dataset_name):
         "date_created": str(datetime.datetime.now()),
         "description": "Automatically generated COCO json file for Detectron2.",
     }
-    coco_dict = {"info": info, "images": coco_images, "categories": categories, "licenses": None}
+    coco_dict = {
+        "info": info,
+        "images": coco_images,
+        "categories": categories,
+        "licenses": None,
+    }
     if len(coco_annotations) > 0:
         coco_dict["annotations"] = coco_annotations
     return coco_dict
@@ -470,7 +511,9 @@ def convert_to_coco_json(dataset_name, output_file, allow_cached=True):
                 "You need to clear the cache file if your dataset has been modified."
             )
         else:
-            logger.info(f"Converting annotations of dataset '{dataset_name}' to COCO format ...)")
+            logger.info(
+                f"Converting annotations of dataset '{dataset_name}' to COCO format ...)"
+            )
             coco_dict = convert_to_coco_dict(dataset_name)
 
             logger.info(f"Caching COCO format annotations at '{output_file}' ...")
@@ -502,8 +545,13 @@ def register_epick_instances(name, metadata, json_file, image_root):
     assert isinstance(image_root, (str, os.PathLike)), image_root
     # 1. register a function which returns dicts
     # extra label for each object
-    extra_keys = ['handside', 'isincontact', 'offset', 'incontact_object_bbox']
-    DatasetCatalog.register(name, lambda: _load_epick_json(json_file, image_root, name, extra_annotation_keys=extra_keys))
+    extra_keys = ["handside", "isincontact", "offset", "incontact_object_bbox"]
+    DatasetCatalog.register(
+        name,
+        lambda: _load_epick_json(
+            json_file, image_root, name, extra_annotation_keys=extra_keys
+        ),
+    )
 
     # 2. Optionally, add metadata about this dataset,
     # since they might be useful in evaluation, visualization or logging
@@ -527,23 +575,29 @@ if __name__ == "__main__":
     from hos.visualization.v import Visualizer
     import sys
 
-    register_epick_instances(sys.argv[3], {'thing_classes':["hand", "object"]}, sys.argv[1], sys.argv[2])
+    register_epick_instances(
+        sys.argv[3], {"thing_classes": ["hand", "object"]}, sys.argv[1], sys.argv[2]
+    )
 
     logger = setup_logger(name=__name__)
     assert sys.argv[3] in DatasetCatalog.list()
     meta = MetadataCatalog.get(sys.argv[3])
 
-    dicts = _load_epick_json(sys.argv[1], sys.argv[2], sys.argv[3], extra_annotation_keys=['handside', 'isincontact', 'offset'])
+    dicts = _load_epick_json(
+        sys.argv[1],
+        sys.argv[2],
+        sys.argv[3],
+        extra_annotation_keys=["handside", "isincontact", "offset"],
+    )
     logger.info("Done loading {} samples.".format(len(dicts)))
-    
-    
-    # save folder 
+
+    # save folder
     dirname = f"./{sys.argv[3]}"
     os.makedirs(dirname, exist_ok=True)
-    
+
     # shuffle
     random.shuffle(dicts)
-    
+
     # vis and save
     for idx, d in enumerate(dicts):
         img = np.array(Image.open(d["file_name"]))
@@ -552,26 +606,28 @@ if __name__ == "__main__":
         vis = visualizer.draw_dataset_dict(d)
         fpath = os.path.join(dirname, os.path.basename(d["file_name"]))
         vis.save(fpath)
-        
+
     # generate a html file for vis
     import glob
-    html_path = f'{dirname}.html'
-    with open(html_path, 'w') as f_viz:
-        f_viz.write(f'<h2> thehive annotation </h2>')
-        img_list  = glob.glob(f'{dirname}/*.jpg')
+
+    html_path = f"{dirname}.html"
+    with open(html_path, "w") as f_viz:
+        f_viz.write(f"<h2> thehive annotation </h2>")
+        img_list = glob.glob(f"{dirname}/*.jpg")
         img_list.sort()
         # random.shuffle(img_list)
         f_viz.write("<table border='2'>")
-        f_viz.write('<tr>')
-        f_viz.write('<th> No. </th>')
-        f_viz.write('<th> mask </th>')
-        f_viz.write('</tr>')
+        f_viz.write("<tr>")
+        f_viz.write("<th> No. </th>")
+        f_viz.write("<th> mask </th>")
+        f_viz.write("</tr>")
         for i in range(0, len(img_list), 5):
             f_viz.write("<tr>")
-            f_viz.write(f'<td>{i}</td>')
+            f_viz.write(f"<td>{i}</td>")
             for j in range(5):
-                if i+j >= len(img_list): continue
-                img_path = img_list[i+j]
+                if i + j >= len(img_list):
+                    continue
+                img_path = img_list[i + j]
                 f_viz.write(f"<td><image src={img_path} lazy width=400></td>")
-            f_viz.write('</tr>')
-        f_viz.write('</table>') 
+            f_viz.write("</tr>")
+        f_viz.write("</table>")

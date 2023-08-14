@@ -84,15 +84,21 @@ class TFLEDModelTester:
         # because of padding `encoder_seq_length`, is different from `seq_length`. Relevant for
         # the `test_attention_outputs` and `test_hidden_states_output` tests
         self.encoder_seq_length = (
-            self.seq_length + (self.attention_window - self.seq_length % self.attention_window) % self.attention_window
+            self.seq_length
+            + (self.attention_window - self.seq_length % self.attention_window)
+            % self.attention_window
         )
 
     def prepare_config_and_inputs_for_common(self):
         input_ids = ids_tensor([self.batch_size, self.seq_length - 1], self.vocab_size)
-        eos_tensor = tf.expand_dims(tf.constant([self.eos_token_id] * self.batch_size), 1)
+        eos_tensor = tf.expand_dims(
+            tf.constant([self.eos_token_id] * self.batch_size), 1
+        )
         input_ids = tf.concat([input_ids, eos_tensor], axis=1)
 
-        decoder_input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+        decoder_input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size
+        )
 
         config = self.config_cls(
             vocab_size=self.vocab_size,
@@ -142,8 +148,14 @@ class TFLEDModelTester:
         next_input_ids = tf.concat([input_ids, next_tokens], axis=-1)
         next_attention_mask = tf.concat([attention_mask, next_attn_mask], axis=-1)
 
-        output_from_no_past = model(next_input_ids, attention_mask=next_attention_mask)[0]
-        output_from_past = model(next_tokens, attention_mask=next_attention_mask, past_key_values=past_key_values)[0]
+        output_from_no_past = model(next_input_ids, attention_mask=next_attention_mask)[
+            0
+        ]
+        output_from_past = model(
+            next_tokens,
+            attention_mask=next_attention_mask,
+            past_key_values=past_key_values,
+        )[0]
 
         self.parent.assertEqual(next_tokens.shape[1], output_from_past.shape[1])
 
@@ -153,7 +165,9 @@ class TFLEDModelTester:
         output_from_past_slice = output_from_past[:, :, random_slice_idx]
 
         # test that outputs are equal for slice
-        tf.debugging.assert_near(output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
+        tf.debugging.assert_near(
+            output_from_past_slice, output_from_no_past_slice, rtol=1e-3
+        )
 
 
 def prepare_led_inputs_dict(
@@ -166,19 +180,26 @@ def prepare_led_inputs_dict(
     decoder_head_mask=None,
 ):
     if attention_mask is None:
-        attention_mask = tf.cast(tf.math.not_equal(input_ids, config.pad_token_id), tf.int8)
+        attention_mask = tf.cast(
+            tf.math.not_equal(input_ids, config.pad_token_id), tf.int8
+        )
     if decoder_attention_mask is None:
         decoder_attention_mask = tf.concat(
             [
                 tf.ones(decoder_input_ids[:, :1].shape, dtype=tf.int8),
-                tf.cast(tf.math.not_equal(decoder_input_ids[:, 1:], config.pad_token_id), tf.int8),
+                tf.cast(
+                    tf.math.not_equal(decoder_input_ids[:, 1:], config.pad_token_id),
+                    tf.int8,
+                ),
             ],
             axis=-1,
         )
     if head_mask is None:
         head_mask = tf.ones((config.encoder_layers, config.encoder_attention_heads))
     if decoder_head_mask is None:
-        decoder_head_mask = tf.ones((config.decoder_layers, config.decoder_attention_heads))
+        decoder_head_mask = tf.ones(
+            (config.decoder_layers, config.decoder_attention_heads)
+        )
     return {
         "input_ids": input_ids,
         "attention_mask": attention_mask,
@@ -191,8 +212,12 @@ def prepare_led_inputs_dict(
 
 @require_tf
 class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
-    all_model_classes = (TFLEDForConditionalGeneration, TFLEDModel) if is_tf_available() else ()
-    all_generative_model_classes = (TFLEDForConditionalGeneration,) if is_tf_available() else ()
+    all_model_classes = (
+        (TFLEDForConditionalGeneration, TFLEDModel) if is_tf_available() else ()
+    )
+    all_generative_model_classes = (
+        (TFLEDForConditionalGeneration,) if is_tf_available() else ()
+    )
     is_encoder_decoder = True
     test_pruning = False
     test_head_masking = False
@@ -248,14 +273,22 @@ class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
             for size in [config.vocab_size - 10, config.vocab_size + 10, None]:
                 # build the embeddings
                 model = model_class(config=config)
-                old_input_embeddings = _get_word_embedding_weight(model, model.get_input_embeddings())
-                old_output_embeddings = _get_word_embedding_weight(model, model.get_output_embeddings())
+                old_input_embeddings = _get_word_embedding_weight(
+                    model, model.get_input_embeddings()
+                )
+                old_output_embeddings = _get_word_embedding_weight(
+                    model, model.get_output_embeddings()
+                )
                 old_final_logits_bias = model.get_bias()
 
                 # reshape the embeddings
                 model.resize_token_embeddings(size)
-                new_input_embeddings = _get_word_embedding_weight(model, model.get_input_embeddings())
-                new_output_embeddings = _get_word_embedding_weight(model, model.get_output_embeddings())
+                new_input_embeddings = _get_word_embedding_weight(
+                    model, model.get_input_embeddings()
+                )
+                new_output_embeddings = _get_word_embedding_weight(
+                    model, model.get_output_embeddings()
+                )
                 new_final_logits_bias = model.get_bias()
 
                 # check that the resized embeddings size matches the desired size.
@@ -265,28 +298,40 @@ class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
 
                 # check that weights remain the same after resizing
                 models_equal = True
-                for p1, p2 in zip(old_input_embeddings.value(), new_input_embeddings.value()):
+                for p1, p2 in zip(
+                    old_input_embeddings.value(), new_input_embeddings.value()
+                ):
                     if tf.math.reduce_sum(tf.math.abs(p1 - p2)) > 0:
                         models_equal = False
                 self.assertTrue(models_equal)
 
-                if old_output_embeddings is not None and new_output_embeddings is not None:
+                if (
+                    old_output_embeddings is not None
+                    and new_output_embeddings is not None
+                ):
                     self.assertEqual(new_output_embeddings.shape[0], assert_size)
 
                     models_equal = True
-                    for p1, p2 in zip(old_output_embeddings.value(), new_output_embeddings.value()):
+                    for p1, p2 in zip(
+                        old_output_embeddings.value(), new_output_embeddings.value()
+                    ):
                         if tf.math.reduce_sum(tf.math.abs(p1 - p2)) > 0:
                             models_equal = False
                     self.assertTrue(models_equal)
 
-                if old_final_logits_bias is not None and new_final_logits_bias is not None:
+                if (
+                    old_final_logits_bias is not None
+                    and new_final_logits_bias is not None
+                ):
                     old_final_logits_bias = old_final_logits_bias["final_logits_bias"]
                     new_final_logits_bias = new_final_logits_bias["final_logits_bias"]
                     self.assertEqual(new_final_logits_bias.shape[0], 1)
                     self.assertEqual(new_final_logits_bias.shape[1], assert_size)
 
                     models_equal = True
-                    for old, new in zip(old_final_logits_bias.value(), new_final_logits_bias.value()):
+                    for old, new in zip(
+                        old_final_logits_bias.value(), new_final_logits_bias.value()
+                    ):
                         for p1, p2 in zip(old, new):
                             if tf.math.reduce_sum(tf.math.abs(p1 - p2)) > 0:
                                 models_equal = False
@@ -294,7 +339,9 @@ class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def test_attention_outputs(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
-        inputs_dict["global_attention_mask"] = tf.zeros_like(inputs_dict["attention_mask"])
+        inputs_dict["global_attention_mask"] = tf.zeros_like(
+            inputs_dict["attention_mask"]
+        )
         num_global_attn_indices = 2
         inputs_dict["global_attention_mask"] = tf.where(
             tf.range(self.model_tester.seq_length)[None, :] < num_global_attn_indices,
@@ -308,7 +355,9 @@ class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
 
         def check_decoder_attentions_output(outputs):
             decoder_attentions = outputs.decoder_attentions
-            self.assertEqual(len(decoder_attentions), self.model_tester.num_hidden_layers)
+            self.assertEqual(
+                len(decoder_attentions), self.model_tester.num_hidden_layers
+            )
             self.assertListEqual(
                 list(decoder_attentions[0].shape[-3:]),
                 [self.model_tester.num_attention_heads, seq_length, seq_length],
@@ -318,14 +367,20 @@ class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
             attentions = [t.numpy() for t in outputs.encoder_attentions]
             global_attentions = [t.numpy() for t in outputs.encoder_global_attentions]
             self.assertEqual(len(attentions), self.model_tester.num_hidden_layers)
-            self.assertEqual(len(global_attentions), self.model_tester.num_hidden_layers)
+            self.assertEqual(
+                len(global_attentions), self.model_tester.num_hidden_layers
+            )
             self.assertListEqual(
                 list(attentions[0].shape[-3:]),
                 [self.model_tester.num_attention_heads, seq_length, seq_length],
             )
             self.assertListEqual(
                 list(global_attentions[0].shape[-3:]),
-                [self.model_tester.num_attention_heads, encoder_seq_length, num_global_attn_indices],
+                [
+                    self.model_tester.num_attention_heads,
+                    encoder_seq_length,
+                    num_global_attn_indices,
+                ],
             )
 
         for model_class in self.all_model_classes:
@@ -358,7 +413,9 @@ class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
             model = model_class(config)
             outputs = model(self._prepare_for_class(inputs_dict, model_class))
 
-            self.assertEqual(out_len + (2 if self.is_encoder_decoder else 1), len(outputs))
+            self.assertEqual(
+                out_len + (2 if self.is_encoder_decoder else 1), len(outputs)
+            )
             self.assertEqual(model.config.output_hidden_states, True)
             check_encoder_attentions_output(outputs)
 
@@ -371,15 +428,18 @@ class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
         import transformers
 
         def prepare_pt_inputs_from_tf_inputs(tf_inputs_dict):
-
             pt_inputs_dict = {}
             for name, key in tf_inputs_dict.items():
                 if type(key) == bool:
                     pt_inputs_dict[name] = key
                 elif name == "input_values":
-                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(torch.float32)
+                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(
+                        torch.float32
+                    )
                 elif name == "pixel_values":
-                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(torch.float32)
+                    pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(
+                        torch.float32
+                    )
                 else:
                     pt_inputs_dict[name] = torch.from_numpy(key.numpy()).to(torch.long)
 
@@ -388,7 +448,9 @@ class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
 
         for model_class in self.all_model_classes:
-            pt_model_class_name = model_class.__name__[2:]  # Skip the "TF" at the beginning
+            pt_model_class_name = model_class.__name__[
+                2:
+            ]  # Skip the "TF" at the beginning
             pt_model_class = getattr(transformers, pt_model_class_name)
 
             config.output_hidden_states = True
@@ -397,18 +459,24 @@ class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
             pt_model = pt_model_class(config)
 
             tf_inputs_dict = self._prepare_for_class(inputs_dict, model_class)
-            tf_inputs_dict_maybe_with_labels = self._prepare_for_class(inputs_dict, model_class, return_labels=True)
+            tf_inputs_dict_maybe_with_labels = self._prepare_for_class(
+                inputs_dict, model_class, return_labels=True
+            )
 
             # Check we can load pt model in tf and vice-versa with model => model functions
 
-            tf_model = transformers.load_pytorch_model_in_tf2_model(tf_model, pt_model, tf_inputs=tf_inputs_dict)
+            tf_model = transformers.load_pytorch_model_in_tf2_model(
+                tf_model, pt_model, tf_inputs=tf_inputs_dict
+            )
             pt_model = transformers.load_tf2_model_in_pytorch_model(pt_model, tf_model)
 
             # Check predictions on first output (logits/hidden-states) are close enough given low-level computational differences
             pt_model.eval()
 
             pt_inputs_dict = prepare_pt_inputs_from_tf_inputs(tf_inputs_dict)
-            pt_inputs_dict_maybe_with_labels = prepare_pt_inputs_from_tf_inputs(tf_inputs_dict_maybe_with_labels)
+            pt_inputs_dict_maybe_with_labels = prepare_pt_inputs_from_tf_inputs(
+                tf_inputs_dict_maybe_with_labels
+            )
 
             # need to rename encoder-decoder "inputs" for PyTorch
             if "inputs" in pt_inputs_dict and self.is_encoder_decoder:
@@ -433,10 +501,10 @@ class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
             self.assertLessEqual(max_diff, 1e-4)
 
             has_labels = any(
-                x in tf_inputs_dict_maybe_with_labels for x in ["labels", "next_sentence_label", "start_positions"]
+                x in tf_inputs_dict_maybe_with_labels
+                for x in ["labels", "next_sentence_label", "start_positions"]
             )
             if has_labels:
-
                 with torch.no_grad():
                     pto = pt_model(**pt_inputs_dict_maybe_with_labels)
                 tfo = tf_model(tf_inputs_dict_maybe_with_labels, training=False)
@@ -449,7 +517,6 @@ class TFLEDModelTest(TFModelTesterMixin, unittest.TestCase):
                 # `labels` and `next_sentence_label`.
                 # Moreover, some PT models return loss while the corresponding TF/Flax models don't.
                 if tf_loss is not None and pt_loss is not None:
-
                     tf_loss = tf.math.reduce_mean(tf_loss).numpy()
                     pt_loss = pt_loss.numpy()
 
@@ -522,18 +589,28 @@ TOLERANCE = 1e-4
 @require_tf
 class TFLEDModelIntegrationTest(unittest.TestCase):
     def test_inference_no_head(self):
-        model = TFLEDForConditionalGeneration.from_pretrained("allenai/led-base-16384").led
+        model = TFLEDForConditionalGeneration.from_pretrained(
+            "allenai/led-base-16384"
+        ).led
 
         # change to intended input here
         input_ids = _long_tensor([512 * [0, 31414, 232, 328, 740, 1140, 12695, 69]])
-        decoder_input_ids = _long_tensor([128 * [0, 31414, 232, 328, 740, 1140, 12695, 69]])
-        inputs_dict = prepare_led_inputs_dict(model.config, input_ids, decoder_input_ids)
+        decoder_input_ids = _long_tensor(
+            [128 * [0, 31414, 232, 328, 740, 1140, 12695, 69]]
+        )
+        inputs_dict = prepare_led_inputs_dict(
+            model.config, input_ids, decoder_input_ids
+        )
         output = model(**inputs_dict)[0]
         expected_shape = (1, 1024, 768)
         self.assertEqual(output.shape, expected_shape)
         # change to expected output here
         expected_slice = tf.convert_to_tensor(
-            [[2.3050, 2.8279, 0.6531], [-1.8457, -0.1455, -3.5661], [-1.0186, 0.4586, -2.2043]],
+            [
+                [2.3050, 2.8279, 0.6531],
+                [-1.8457, -0.1455, -3.5661],
+                [-1.0186, 0.4586, -2.2043],
+            ],
         )
         tf.debugging.assert_near(output[:, :3, :3], expected_slice, atol=TOLERANCE)
 
@@ -542,13 +619,21 @@ class TFLEDModelIntegrationTest(unittest.TestCase):
 
         # change to intended input here
         input_ids = _long_tensor([512 * [0, 31414, 232, 328, 740, 1140, 12695, 69]])
-        decoder_input_ids = _long_tensor([128 * [0, 31414, 232, 328, 740, 1140, 12695, 69]])
-        inputs_dict = prepare_led_inputs_dict(model.config, input_ids, decoder_input_ids)
+        decoder_input_ids = _long_tensor(
+            [128 * [0, 31414, 232, 328, 740, 1140, 12695, 69]]
+        )
+        inputs_dict = prepare_led_inputs_dict(
+            model.config, input_ids, decoder_input_ids
+        )
         output = model(**inputs_dict)[0]
         expected_shape = (1, 1024, model.config.vocab_size)
         self.assertEqual(output.shape, expected_shape)
         # change to expected output here
         expected_slice = tf.convert_to_tensor(
-            [[33.6507, 6.4572, 16.8089], [5.8739, -2.4238, 11.2902], [-3.2139, -4.3149, 4.2783]],
+            [
+                [33.6507, 6.4572, 16.8089],
+                [5.8739, -2.4238, 11.2902],
+                [-3.2139, -4.3149, 4.2783],
+            ],
         )
         tf.debugging.assert_near(output[:, :3, :3], expected_slice, atol=TOLERANCE)

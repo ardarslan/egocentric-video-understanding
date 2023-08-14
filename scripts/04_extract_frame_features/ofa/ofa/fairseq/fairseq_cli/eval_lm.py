@@ -197,7 +197,7 @@ def eval_lm(
 
     return {
         "loss": avg_nll_loss,
-        "perplexity": 2 ** avg_nll_loss,
+        "perplexity": 2**avg_nll_loss,
     }
 
 

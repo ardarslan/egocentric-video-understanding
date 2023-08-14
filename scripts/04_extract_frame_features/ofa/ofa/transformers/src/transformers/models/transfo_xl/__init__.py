@@ -22,7 +22,10 @@ from ...file_utils import _LazyModule, is_tf_available, is_torch_available
 
 
 _import_structure = {
-    "configuration_transfo_xl": ["TRANSFO_XL_PRETRAINED_CONFIG_ARCHIVE_MAP", "TransfoXLConfig"],
+    "configuration_transfo_xl": [
+        "TRANSFO_XL_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "TransfoXLConfig",
+    ],
     "tokenization_transfo_xl": ["TransfoXLCorpus", "TransfoXLTokenizer"],
 }
 
@@ -50,7 +53,10 @@ if is_tf_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_transfo_xl import TRANSFO_XL_PRETRAINED_CONFIG_ARCHIVE_MAP, TransfoXLConfig
+    from .configuration_transfo_xl import (
+        TRANSFO_XL_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        TransfoXLConfig,
+    )
     from .tokenization_transfo_xl import TransfoXLCorpus, TransfoXLTokenizer
 
     if is_torch_available():
@@ -78,4 +84,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

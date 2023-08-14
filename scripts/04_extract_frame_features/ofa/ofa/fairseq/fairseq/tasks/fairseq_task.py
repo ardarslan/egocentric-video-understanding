@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class StatefulContainer(object):
-
     def __init__(self):
         self._state = dict()
         self._factories = dict()
@@ -135,7 +134,7 @@ class FairseqTask(object):
         split: str,
         combine: bool = False,
         task_cfg: FairseqDataclass = None,
-        **kwargs
+        **kwargs,
     ):
         """Load a given dataset split.
 
@@ -337,7 +336,12 @@ class FairseqTask(object):
         return criterions.build_criterion(cfg, self)
 
     def build_generator(
-        self, models, args, seq_gen_cls=None, extra_gen_cls_kwargs=None, prefix_allowed_tokens_fn=None,
+        self,
+        models,
+        args,
+        seq_gen_cls=None,
+        extra_gen_cls_kwargs=None,
+        prefix_allowed_tokens_fn=None,
     ):
         """
         Build a :class:`~fairseq.SequenceGenerator` instance for this
@@ -463,7 +467,14 @@ class FairseqTask(object):
         )
 
     def train_step(
-        self, sample, model, criterion, optimizer, update_num, ignore_grad=False, **extra_kwargs
+        self,
+        sample,
+        model,
+        criterion,
+        optimizer,
+        update_num,
+        ignore_grad=False,
+        **extra_kwargs,
     ):
         """
         Do forward and backward, and return the loss as computed by *criterion*
@@ -489,7 +500,9 @@ class FairseqTask(object):
         model.set_num_updates(update_num)
         with torch.autograd.profiler.record_function("forward"):
             with torch.cuda.amp.autocast(enabled=(isinstance(optimizer, AMPOptimizer))):
-                loss, sample_size, logging_output = criterion(model, sample, update_num=update_num)
+                loss, sample_size, logging_output = criterion(
+                    model, sample, update_num=update_num
+                )
         if ignore_grad:
             loss *= 0
         with torch.autograd.profiler.record_function("backward"):

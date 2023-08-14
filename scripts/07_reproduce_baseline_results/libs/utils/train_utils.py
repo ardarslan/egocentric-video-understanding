@@ -382,7 +382,6 @@ def validate_loss(
     start = time.time()
     with torch.no_grad():
         for iter_idx, video_list in enumerate(val_loader, 0):
-
             # forward / backward the model
             losses = model(video_list)
 
@@ -457,7 +456,6 @@ def valid_one_epoch(
     for iter_idx, video_list in enumerate(val_loader, 0):
         # forward the model (wo. grad)
         with torch.no_grad():
-
             output = model(video_list, is_training=False)
             # output, video_list, points, fpn_masks, out_cls_logits, out_offsets = model(video_list, hidden_state=True)
             # upack the results into ANet format

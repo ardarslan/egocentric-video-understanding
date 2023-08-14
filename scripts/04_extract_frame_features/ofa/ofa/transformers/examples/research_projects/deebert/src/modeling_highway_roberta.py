@@ -4,14 +4,22 @@ from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
 
 from transformers import RobertaConfig
-from transformers.file_utils import add_start_docstrings, add_start_docstrings_to_model_forward
+from transformers.file_utils import (
+    add_start_docstrings,
+    add_start_docstrings_to_model_forward,
+)
 from transformers.models.roberta.modeling_roberta import (
     ROBERTA_INPUTS_DOCSTRING,
     ROBERTA_START_DOCSTRING,
     RobertaEmbeddings,
 )
 
-from .modeling_highway_bert import BertPreTrainedModel, DeeBertModel, HighwayException, entropy
+from .modeling_highway_bert import (
+    BertPreTrainedModel,
+    DeeBertModel,
+    HighwayException,
+    entropy,
+)
 
 
 @add_start_docstrings(
@@ -19,7 +27,6 @@ from .modeling_highway_bert import BertPreTrainedModel, DeeBertModel, HighwayExc
     ROBERTA_START_DOCSTRING,
 )
 class DeeRobertaModel(DeeBertModel):
-
     config_class = RobertaConfig
     base_model_prefix = "roberta"
 
@@ -36,7 +43,6 @@ class DeeRobertaModel(DeeBertModel):
     ROBERTA_START_DOCSTRING,
 )
 class DeeRobertaForSequenceClassification(BertPreTrainedModel):
-
     config_class = RobertaConfig
     base_model_prefix = "roberta"
 
@@ -106,7 +112,9 @@ class DeeRobertaForSequenceClassification(BertPreTrainedModel):
 
             pooled_output = self.dropout(pooled_output)
             logits = self.classifier(pooled_output)
-            outputs = (logits,) + outputs[2:]  # add hidden states and attention if they are here
+            outputs = (logits,) + outputs[
+                2:
+            ]  # add hidden states and attention if they are here
         except HighwayException as e:
             outputs = e.message
             exit_layer = e.exit_layer
@@ -138,7 +146,9 @@ class DeeRobertaForSequenceClassification(BertPreTrainedModel):
                     highway_loss = loss_fct(highway_logits.view(-1), labels.view(-1))
                 else:
                     loss_fct = CrossEntropyLoss()
-                    highway_loss = loss_fct(highway_logits.view(-1, self.num_labels), labels.view(-1))
+                    highway_loss = loss_fct(
+                        highway_logits.view(-1, self.num_labels), labels.view(-1)
+                    )
                 highway_losses.append(highway_loss)
 
             if train_highway:

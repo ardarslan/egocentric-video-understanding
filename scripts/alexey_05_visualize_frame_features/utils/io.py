@@ -23,6 +23,6 @@ def read_pkl(path):
     else:
         with open(path, "rb") as f:
             pkl_bytes = f.read()
-    
+
     ret = CPUUnpickler(io.BytesIO(pkl_bytes)).load()
     return ret

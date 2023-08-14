@@ -47,13 +47,24 @@ _import_structure = {
 }
 
 if is_torch_available():
-    _import_structure["modeling_mt5"] = ["MT5EncoderModel", "MT5ForConditionalGeneration", "MT5Model"]
+    _import_structure["modeling_mt5"] = [
+        "MT5EncoderModel",
+        "MT5ForConditionalGeneration",
+        "MT5Model",
+    ]
 
 if is_tf_available():
-    _import_structure["modeling_tf_mt5"] = ["TFMT5EncoderModel", "TFMT5ForConditionalGeneration", "TFMT5Model"]
+    _import_structure["modeling_tf_mt5"] = [
+        "TFMT5EncoderModel",
+        "TFMT5ForConditionalGeneration",
+        "TFMT5Model",
+    ]
 
 if is_flax_available():
-    _import_structure["modeling_flax_mt5"] = ["FlaxMT5ForConditionalGeneration", "FlaxMT5Model"]
+    _import_structure["modeling_flax_mt5"] = [
+        "FlaxMT5ForConditionalGeneration",
+        "FlaxMT5Model",
+    ]
 
 
 if TYPE_CHECKING:
@@ -63,7 +74,11 @@ if TYPE_CHECKING:
         from .modeling_mt5 import MT5EncoderModel, MT5ForConditionalGeneration, MT5Model
 
     if is_tf_available():
-        from .modeling_tf_mt5 import TFMT5EncoderModel, TFMT5ForConditionalGeneration, TFMT5Model
+        from .modeling_tf_mt5 import (
+            TFMT5EncoderModel,
+            TFMT5ForConditionalGeneration,
+            TFMT5Model,
+        )
 
     if is_flax_available():
         from .modeling_flax_mt5 import FlaxMT5ForConditionalGeneration, FlaxMT5Model
@@ -75,6 +90,9 @@ else:
         __name__,
         globals()["__file__"],
         _import_structure,
-        extra_objects={"MT5Tokenizer": MT5Tokenizer, "MT5TokenizerFast": MT5TokenizerFast},
+        extra_objects={
+            "MT5Tokenizer": MT5Tokenizer,
+            "MT5TokenizerFast": MT5TokenizerFast,
+        },
         module_spec=__spec__,
     )

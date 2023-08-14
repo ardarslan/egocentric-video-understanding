@@ -155,8 +155,8 @@ class SampledMultiEpochDataset(SampledMultiDataset):
                     ).hexdigest(),
                     16,
                 )
-                % (2 ** 32),
-                self.seed % (2 ** 32),  # global seed
+                % (2**32),
+                self.seed % (2**32),  # global seed
                 epoch,  # epoch index,
             ]
         )

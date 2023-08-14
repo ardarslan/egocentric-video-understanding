@@ -30,15 +30,24 @@ from utils.io import read_pkl
 def main(arg_dict=None):
     start_time = int(time.time())
     parser = argparse.ArgumentParser()
-    parser.add_argument('--generator_videos', action='append', type=str, default=None)
-    parser.add_argument('--input_dir', type=str, default=join(ROOT_PATH, "data", "EK_sam_mask_outputs")) 
-    parser.add_argument('--output_dir', type=str, default=join(ROOT_PATH, "data", "EK_sam_mask_vis"))
-    parser.add_argument("-f", "--f", help="Dummy argument to make ipython work", default="")
+    parser.add_argument("--generator_videos", action="append", type=str, default=None)
+    parser.add_argument(
+        "--input_dir", type=str, default=join(ROOT_PATH, "data", "EK_sam_mask_outputs")
+    )
+    parser.add_argument(
+        "--output_dir", type=str, default=join(ROOT_PATH, "data", "EK_sam_mask_vis")
+    )
+    parser.add_argument(
+        "-f", "--f", help="Dummy argument to make ipython work", default=""
+    )
     args, _ = parser.parse_known_args(arg_dict_to_list(arg_dict))
 
-    gen = get_action_recognition_frame_gen(subsets=["val"],
-                                           videos=[s.strip() for v in args.generator_videos for s in v.split(',')]
-                                                   if args.generator_videos is not None else None)
+    gen = get_action_recognition_frame_gen(
+        subsets=["val"],
+        videos=[s.strip() for v in args.generator_videos for s in v.split(",")]
+        if args.generator_videos is not None
+        else None,
+    )
 
     frame_idx = 0
     for data in tqdm(gen):
@@ -50,7 +59,7 @@ def main(arg_dict=None):
 
         if not os.path.isfile(zip_path):
             continue
-        
+
         print(f"Found: {zip_path}")
         pkl = read_pkl(zip_path)
 
@@ -61,17 +70,23 @@ def main(arg_dict=None):
             box = frame_box["box"]
             masks = frame_box["masks"]
             # crop frame to box
-            
+
             pil_img_cropped = pil_img.crop(box)
 
-            filled_mask = Image.new("RGBA",
-                                    (pil_img_cropped.width, pil_img_cropped.height),
-                                    (0, 0, 255, 128))
+            filled_mask = Image.new(
+                "RGBA",
+                (pil_img_cropped.width, pil_img_cropped.height),
+                (0, 0, 255, 128),
+            )
 
             for mask_idx, mask in enumerate(masks):
                 seg_mask = mask["segmentation"].toarray()
-                im_composite = superimpose_colored_mask(pil_img_cropped, seg_mask, color=(0, 0, 255))
-                im_composite.save(join(out_dir, f"{frame_id}_box={frame_box_idx}_mask={mask_idx}.jpg"))
+                im_composite = superimpose_colored_mask(
+                    pil_img_cropped, seg_mask, color=(0, 0, 255)
+                )
+                im_composite.save(
+                    join(out_dir, f"{frame_id}_box={frame_box_idx}_mask={mask_idx}.jpg")
+                )
 
         frame_idx += 1
 

@@ -41,7 +41,6 @@ class Trainer(object):
     """
 
     def __init__(self, cfg: FairseqConfig, task, model, criterion, quantizer=None):
-
         if isinstance(cfg, Namespace):
             logger.warning(
                 "argparse.Namespace configuration is deprecated! Automatically converting to OmegaConf"
@@ -64,6 +63,7 @@ class Trainer(object):
 
         if self.is_fsdp:
             import fairscale
+
             if self.cfg.common.bf16:
                 raise ValueError(
                     "FullyShardedDataParallel is not compatible with --bf16 or "
@@ -74,7 +74,10 @@ class Trainer(object):
                     "FullyShardedDataParallel is not compatible with --zero-sharding "
                     "option (it's already built in)"
                 )
-            if max(self.cfg.optimization.update_freq) > 1 and fairscale.__version__ < "0.4.0":
+            if (
+                max(self.cfg.optimization.update_freq) > 1
+                and fairscale.__version__ < "0.4.0"
+            ):
                 raise RuntimeError(
                     "Please update to fairscale 0.4.0 or newer when combining "
                     "--update-freq with FullyShardedDataParallel"
@@ -198,9 +201,7 @@ class Trainer(object):
     def use_distributed_wrapper(self) -> bool:
         return (
             self.data_parallel_world_size > 1 and not self.cfg.optimization.use_bmuf
-        ) or (
-            self.is_fsdp and self.cfg.distributed_training.cpu_offload
-        )
+        ) or (self.is_fsdp and self.cfg.distributed_training.cpu_offload)
 
     @property
     def should_save_checkpoint_on_current_rank(self) -> bool:
@@ -267,9 +268,7 @@ class Trainer(object):
     def _build_ema(self):
         if self.cfg.ema.store_ema:
             self._ema = build_ema(self._model, self.cfg.ema, self.device)
-            logger.info(
-                "Exponential Moving Average Shadow Model is initialized."
-            )
+            logger.info("Exponential Moving Average Shadow Model is initialized.")
 
     @property
     def optimizer(self):
@@ -320,7 +319,9 @@ class Trainer(object):
                 self._optimizer = optim.FP16Optimizer.build_optimizer(self.cfg, params)
         else:
             if self.cuda and torch.cuda.get_device_capability(0)[0] >= 7:
-                logger.info("NOTE: your device may support faster training with --fp16 or --amp")
+                logger.info(
+                    "NOTE: your device may support faster training with --fp16 or --amp"
+                )
             self._optimizer = optim.build_optimizer(self.cfg.optimizer, params)
 
         if self.is_fsdp:
@@ -579,18 +580,16 @@ class Trainer(object):
                         "EMA not found in checkpoint. But store_ema is True. "
                         "EMA is re-initialized from checkpoint."
                     )
-                    self.ema.restore(state["model"], build_fp32_params=self.cfg.ema.ema_fp32)
-                else:
-                    logger.info(
-                        "Loading EMA from checkpoint"
+                    self.ema.restore(
+                        state["model"], build_fp32_params=self.cfg.ema.ema_fp32
                     )
+                else:
+                    logger.info("Loading EMA from checkpoint")
                     self.ema.restore(extra_state["ema"], build_fp32_params=False)
 
                     if self.cfg.ema.ema_fp32:
                         if "ema_fp32_params" in extra_state:
-                            logger.info(
-                                "Loading EMA fp32 params from checkpoint"
-                            )
+                            logger.info("Loading EMA fp32 params from checkpoint")
                             self.ema.build_fp32_params(extra_state["ema_fp32_params"])
                         else:
                             logger.info(
@@ -878,7 +877,9 @@ class Trainer(object):
                         self._amp_retries = 0
                     else:
                         self._amp_retries += 1
-                        return self.train_step(samples, raise_oom)  # recursion to feed in same batch
+                        return self.train_step(
+                            samples, raise_oom
+                        )  # recursion to feed in same batch
 
         except FloatingPointError:
             # re-run the forward and backward pass with hooks attached to print
@@ -1173,14 +1174,11 @@ class Trainer(object):
             total_norm = distributed_utils.all_reduce(
                 total_norm, group=self.data_parallel_process_group
             )
-            return total_norm ** 0.5
+            return total_norm**0.5
 
-        should_agg_norm = (
-            self.is_fsdp
-            and (
-                self.data_parallel_process_group is not None
-                or torch.distributed.is_initialized()
-            )
+        should_agg_norm = self.is_fsdp and (
+            self.data_parallel_process_group is not None
+            or torch.distributed.is_initialized()
         )
         return self.optimizer.clip_grad_norm(
             clip_norm, aggregate_norm_fn=agg_norm_fn if should_agg_norm else None
@@ -1240,8 +1238,10 @@ class Trainer(object):
 
         if self.cuda:
             if self.pipeline_model_parallel:
-                if 'target' in sample:
-                    sample['target'] = utils.move_to_cuda(sample['target'], device=self.last_device)
+                if "target" in sample:
+                    sample["target"] = utils.move_to_cuda(
+                        sample["target"], device=self.last_device
+                    )
             else:
                 sample = utils.move_to_cuda(sample)
         elif self.tpu and is_dummy:
@@ -1379,10 +1379,11 @@ class Trainer(object):
             def is_consistent(tensor):
                 max_abs_diff = torch.max(torch.abs(tensor - tensor[0]))
                 return (
-                    (torch.isfinite(tensor).all()
-                     and (max_abs_diff / (tensor[0] + 1e-6) < 1e-6).all())
-                    or
-                    (self.cfg.common.amp and not torch.isfinite(tensor).all())
+                    (
+                        torch.isfinite(tensor).all()
+                        and (max_abs_diff / (tensor[0] + 1e-6) < 1e-6).all()
+                    )
+                    or (self.cfg.common.amp and not torch.isfinite(tensor).all())
                     # in case of amp non-finite grads are fine
                 )
 

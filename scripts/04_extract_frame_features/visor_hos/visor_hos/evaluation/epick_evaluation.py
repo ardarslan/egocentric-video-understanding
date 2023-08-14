@@ -11,14 +11,22 @@ from detectron2.data import MetadataCatalog
 from detectron2.evaluation import COCOEvaluator
 from detectron2.evaluation.coco_evaluation import instances_to_coco_json
 
-from visor_hos.visor_hos.evaluation.hos_postprocessing import hos_postprocessing, combineHO_postprocessing
+from visor_hos.visor_hos.evaluation.hos_postprocessing import (
+    hos_postprocessing,
+    combineHO_postprocessing,
+)
 
 
 class EPICKEvaluator(COCOEvaluator):
     def __init__(self, dataset_name, output_dir=None, eval_task=None, tasks=None):
         super().__init__(dataset_name, output_dir=output_dir)
         self.eval_task = eval_task
-        assert self.eval_task in ["hand_obj", "handside", "contact", "combineHO"], f"Error: target not in ['hand_obj', 'handside', 'contact', 'combineHO']"
+        assert self.eval_task in [
+            "hand_obj",
+            "handside",
+            "contact",
+            "combineHO",
+        ], f"Error: target not in ['hand_obj', 'handside', 'contact', 'combineHO']"
         print(f"**Evaluation target: {self.eval_task}")
         if tasks is not None:
             self._tasks = tasks
@@ -58,7 +66,9 @@ class EPICKEvaluator(COCOEvaluator):
                     # combine hand and obj mask
                     output["instances"] = combineHO_postprocessing(instances)
 
-                prediction["instances"] = instances_to_coco_json_handside_or_contact(output["instances"], input["image_id"], eval_task=self.eval_task)
+                prediction["instances"] = instances_to_coco_json_handside_or_contact(
+                    output["instances"], input["image_id"], eval_task=self.eval_task
+                )
 
             if "proposals" in output:
                 prediction["proposals"] = output["proposals"].to(self._cpu_device)
@@ -85,7 +95,12 @@ def instances_to_coco_json_handside_or_contact(instances, img_id, eval_task=None
     if num_instance == 0:
         return []
 
-    assert eval_task in ["hand_obj", "handside", "contact", "combineHO"], "Error: evaluation target should be either 'hand_obj', 'handside', 'contact', 'combineHO'"
+    assert eval_task in [
+        "hand_obj",
+        "handside",
+        "contact",
+        "combineHO",
+    ], "Error: evaluation target should be either 'hand_obj', 'handside', 'contact', 'combineHO'"
 
     boxes = instances.pred_boxes.tensor.numpy()
     boxes = BoxMode.convert(boxes, BoxMode.XYXY_ABS, BoxMode.XYWH_ABS)
@@ -105,7 +120,10 @@ def instances_to_coco_json_handside_or_contact(instances, img_id, eval_task=None
     if has_mask:
         # use RLE to encode the masks, because they are too large and takes memory
         # since this evaluator stores outputs of the entire dataset
-        rles = [mask_util.encode(np.array(mask[:, :, None], order="F", dtype="uint8"))[0] for mask in instances.pred_masks]
+        rles = [
+            mask_util.encode(np.array(mask[:, :, None], order="F", dtype="uint8"))[0]
+            for mask in instances.pred_masks
+        ]
         for rle in rles:
             # "counts" is an array encoded by mask_util as a byte-stream. Python3's
             # json writer which always produces strings cannot serialize a bytestream

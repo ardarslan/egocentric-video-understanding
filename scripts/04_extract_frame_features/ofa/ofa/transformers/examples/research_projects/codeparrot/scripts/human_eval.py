@@ -32,10 +32,19 @@ class EndOfFunctionCriteria(StoppingCriteria):
 
     def __call__(self, input_ids, scores, **kwargs):
         """Returns true if all generated sequences contain any of the end-of-function strings."""
-        decoded_generations = self.tokenizer.batch_decode(input_ids[:, self.start_length :])
+        decoded_generations = self.tokenizer.batch_decode(
+            input_ids[:, self.start_length :]
+        )
         done = []
         for decoded_generation in decoded_generations:
-            done.append(any([stop_string in decoded_generation for stop_string in self.eof_strings]))
+            done.append(
+                any(
+                    [
+                        stop_string in decoded_generation
+                        for stop_string in self.eof_strings
+                    ]
+                )
+            )
         return all(done)
 
 
@@ -48,7 +57,9 @@ def complete_code(pipe, prompt, num_completions=1, **gen_kwargs):
     """Complete prompt with text generation pipeline and return num_completions."""
     prompt = pipe.tokenizer.eos_token + prompt
     code_gens = pipe(prompt, num_return_sequences=num_completions, **gen_kwargs)
-    return [first_block(code_gen["generated_text"][len(prompt) :]) for code_gen in code_gens]
+    return [
+        first_block(code_gen["generated_text"][len(prompt) :]) for code_gen in code_gens
+    ]
 
 
 def main():
@@ -70,7 +81,9 @@ def main():
     # Load model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(args.model_ckpt)
     model = AutoModelForCausalLM.from_pretrained(args.model_ckpt)
-    pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, device=args.device_int)
+    pipe = pipeline(
+        "text-generation", model=model, tokenizer=tokenizer, device=args.device_int
+    )
 
     # Generation settings
     gen_kwargs = {
@@ -79,7 +92,9 @@ def main():
         "max_new_tokens": args.max_new_tokens,
         "top_p": args.top_p,
         "top_k": args.top_k,
-        "stopping_criteria": StoppingCriteriaList([EndOfFunctionCriteria(0, EOF_STRINGS, tokenizer)]),
+        "stopping_criteria": StoppingCriteriaList(
+            [EndOfFunctionCriteria(0, EOF_STRINGS, tokenizer)]
+        ),
     }
 
     # Load evaluation dataset and metric
@@ -101,9 +116,15 @@ def main():
     for task in tqdm(range(n_tasks)):
         task_generations = []
         prompt = human_eval["test"][task]["prompt"].strip()
-        gen_kwargs["stopping_criteria"][0].start_length = len(tokenizer(prompt)["input_ids"])
+        gen_kwargs["stopping_criteria"][0].start_length = len(
+            tokenizer(prompt)["input_ids"]
+        )
         for batch in range(args.n_samples // args.batch_size):
-            task_generations.extend(complete_code(pipe, prompt, num_completions=args.batch_size, **gen_kwargs))
+            task_generations.extend(
+                complete_code(
+                    pipe, prompt, num_completions=args.batch_size, **gen_kwargs
+                )
+            )
         generations.append([prompt + gen for gen in task_generations])
         test_func = human_eval["test"][task]["test"]
         entry_point = f"check({human_eval['test'][task]['entry_point']})"

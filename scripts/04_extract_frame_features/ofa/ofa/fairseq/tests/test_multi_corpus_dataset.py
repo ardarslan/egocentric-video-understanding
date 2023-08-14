@@ -69,8 +69,10 @@ class TestMultiCorpusDataset(unittest.TestCase):
         )
         self.assertEqual(
             len(items),
-            int(min(len(self.dataset_1), len(indices) * distribution[0])
-                + min(len(self.dataset_1), len(indices) * distribution[1]))
+            int(
+                min(len(self.dataset_1), len(indices) * distribution[0])
+                + min(len(self.dataset_1), len(indices) * distribution[1])
+            ),
         )
         print(distribution)
 

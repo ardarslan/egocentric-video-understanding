@@ -58,19 +58,18 @@ def get_path_iterator(root, tsv, nshard, rank):
         subpaths = [op.join(root, e["audio"]) for e in reader]
         start, end = get_shard_range(len(subpaths), nshard, rank)
         subpaths = subpaths[start:end]
+
         def iterate():
             for subpath in subpaths:
                 yield op.join(root, subpath), None
+
     return iterate, len(subpaths)
 
 
-def main(
-    root, tsv_path, ckpt_path, layer, nshard, rank, feat_dir, split, max_chunk
-):
+def main(root, tsv_path, ckpt_path, layer, nshard, rank, feat_dir, split, max_chunk):
     reader = HubertFeatureReaderS2T(ckpt_path, layer, max_chunk)
     generator, num = get_path_iterator(root, tsv_path, nshard, rank)
     dump_feature(reader, generator, num, split, nshard, rank, feat_dir)
-
 
 
 if __name__ == "__main__":

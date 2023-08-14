@@ -189,6 +189,7 @@ export PIP_CACHE_DIR=$SCRATCH/pip_cache
 pip install --upgrade pip
 
 (
+For CVL and Euler:
 
 mamba deactivate
 
@@ -200,7 +201,7 @@ cd $CODE/scripts/01_setup_environment
 
 chmod +x install_torch_torchvision.sh
 
-sbatch --gpus=1 install_torch_torchvision.sh
+sbatch --gpus=1 --cpus-per-task=2 --mem-per-cpu=16G --gres=gpumem:10g install_torch_torchvision.sh
 )
 
 (
@@ -269,6 +270,8 @@ rm -rf $CODE/scripts/04_extract_frame_features/gsam/VISAM
 
 rm -rf $CODE/scripts/04_extract_frame_features/gsam/grounded-sam-osx
 
+mkdir $SCRATCH/mq_libs
+
 cd $SCRATCH/mq_libs
 
 git clone https://github.com/facebookresearch/detectron2.git
@@ -279,7 +282,7 @@ sed -i 's/(point_indices \/\/ W)/torch.div(point_indices, W, rounding_mode="floo
 
 cd $CODE/scripts/01_setup_environment
 
-pip install -r requirements.txt
+pip install -r mq_data_requirements.txt
 
 pip install $CODE/scripts/04_extract_frame_features/ofa/ofa/transformers
 
@@ -309,15 +312,41 @@ mkdir $SCRATCH/pip_cache
 
 export PIP_CACHE_DIR=$SCRATCH/pip_cache
 
-pip install --upgrade pip
+mamba create -n mq_model python=3.8
+
+(
+For CVL:
 
 mamba deactivate
 
-mamba create -n mq_model python=3.8
+module load gcc/8.2.0 python_gpu/3.9.9 eth_proxy
 
 mamba activate mq_model
 
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu115
+cd $CODE/scripts/01_setup_environment
+
+chmod +x install_torch_torchvision.sh
+
+sbatch --gpus=1 install_torch_torchvision.sh
+)
+
+(
+For AIT:
+
+mamba deactivate
+
+module load cuda/11.3
+
+mamba activate mq_model
+
+cd $CODE/scripts/01_setup_environment
+
+chmod +x install_torch_torchvision.sh
+
+./install_torch_torchvision.sh
+)
+
+pip install --upgrade pip
 
 cd $CODE/scripts/01_setup_environment
 
@@ -326,6 +355,12 @@ pip install -r mq_model_requirements.txt
 cd $CODE/scripts/07_reproduce_baseline_results/libs/utils
 
 python3 setup.py install
+
+# 01_05 - Install MQ visualization packages
+
+cd $CODE/scripts/01_setup_environment
+
+pip install -r mq_visualization_requirements.txt
 
 # 02_01 - Download Ego4D dataset and pre-extracted features
 

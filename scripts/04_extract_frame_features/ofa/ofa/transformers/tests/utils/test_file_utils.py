@@ -103,41 +103,55 @@ class GetFromCacheTests(unittest.TestCase):
 
     def test_revision_not_found(self):
         # Valid file but missing revision
-        url = hf_bucket_url(MODEL_ID, filename=CONFIG_NAME, revision=REVISION_ID_INVALID)
+        url = hf_bucket_url(
+            MODEL_ID, filename=CONFIG_NAME, revision=REVISION_ID_INVALID
+        )
         with self.assertRaisesRegex(RevisionNotFoundError, "404 Client Error"):
             _ = get_from_cache(url)
 
     def test_standard_object(self):
-        url = hf_bucket_url(MODEL_ID, filename=CONFIG_NAME, revision=REVISION_ID_DEFAULT)
+        url = hf_bucket_url(
+            MODEL_ID, filename=CONFIG_NAME, revision=REVISION_ID_DEFAULT
+        )
         filepath = get_from_cache(url, force_download=True)
         metadata = filename_to_url(filepath)
         self.assertEqual(metadata, (url, f'"{PINNED_SHA1}"'))
 
     def test_standard_object_rev(self):
         # Same object, but different revision
-        url = hf_bucket_url(MODEL_ID, filename=CONFIG_NAME, revision=REVISION_ID_ONE_SPECIFIC_COMMIT)
+        url = hf_bucket_url(
+            MODEL_ID, filename=CONFIG_NAME, revision=REVISION_ID_ONE_SPECIFIC_COMMIT
+        )
         filepath = get_from_cache(url, force_download=True)
         metadata = filename_to_url(filepath)
         self.assertNotEqual(metadata[1], f'"{PINNED_SHA1}"')
         # Caution: check that the etag is *not* equal to the one from `test_standard_object`
 
     def test_lfs_object(self):
-        url = hf_bucket_url(MODEL_ID, filename=WEIGHTS_NAME, revision=REVISION_ID_DEFAULT)
+        url = hf_bucket_url(
+            MODEL_ID, filename=WEIGHTS_NAME, revision=REVISION_ID_DEFAULT
+        )
         filepath = get_from_cache(url, force_download=True)
         metadata = filename_to_url(filepath)
         self.assertEqual(metadata, (url, f'"{PINNED_SHA256}"'))
 
     def test_has_file(self):
         self.assertTrue(has_file("hf-internal-testing/tiny-bert-pt-only", WEIGHTS_NAME))
-        self.assertFalse(has_file("hf-internal-testing/tiny-bert-pt-only", TF2_WEIGHTS_NAME))
-        self.assertFalse(has_file("hf-internal-testing/tiny-bert-pt-only", FLAX_WEIGHTS_NAME))
+        self.assertFalse(
+            has_file("hf-internal-testing/tiny-bert-pt-only", TF2_WEIGHTS_NAME)
+        )
+        self.assertFalse(
+            has_file("hf-internal-testing/tiny-bert-pt-only", FLAX_WEIGHTS_NAME)
+        )
 
     def test_get_file_from_repo_distant(self):
         # `get_file_from_repo` returns None if the file does not exist
         self.assertIsNone(get_file_from_repo("bert-base-cased", "ahah.txt"))
 
         # The function raises if the repository does not exist.
-        with self.assertRaisesRegex(EnvironmentError, "is not a valid model identifier"):
+        with self.assertRaisesRegex(
+            EnvironmentError, "is not a valid model identifier"
+        ):
             get_file_from_repo("bert-base-case", "config.json")
 
         # The function raises if the revision does not exist.
@@ -171,11 +185,16 @@ class ContextManagerTests(unittest.TestCase):
         with ContextManagers([context_en()]):
             print("Transformers are awesome!")
         # The output should be wrapped with an English welcome and goodbye
-        self.assertEqual(mock_stdout.getvalue(), "Welcome!\nTransformers are awesome!\nBye!\n")
+        self.assertEqual(
+            mock_stdout.getvalue(), "Welcome!\nTransformers are awesome!\nBye!\n"
+        )
 
     @unittest.mock.patch("sys.stdout", new_callable=io.StringIO)
     def test_two_context(self, mock_stdout):
         with ContextManagers([context_fr(), context_en()]):
             print("Transformers are awesome!")
         # The output should be wrapped with an English and French welcome and goodbye
-        self.assertEqual(mock_stdout.getvalue(), "Bonjour!\nWelcome!\nTransformers are awesome!\nBye!\nAu revoir!\n")
+        self.assertEqual(
+            mock_stdout.getvalue(),
+            "Bonjour!\nWelcome!\nTransformers are awesome!\nBye!\nAu revoir!\n",
+        )

@@ -18,18 +18,24 @@ from os.path import dirname
 
 from transformers import SPIECE_UNDERLINE, ReformerTokenizer, ReformerTokenizerFast
 from transformers.file_utils import cached_property
-from transformers.testing_utils import require_sentencepiece, require_tokenizers, require_torch, slow
+from transformers.testing_utils import (
+    require_sentencepiece,
+    require_tokenizers,
+    require_torch,
+    slow,
+)
 
 from ..test_tokenization_common import TokenizerTesterMixin
 
 
-SAMPLE_VOCAB = os.path.join(dirname(dirname(os.path.abspath(__file__))), "fixtures/test_sentencepiece.model")
+SAMPLE_VOCAB = os.path.join(
+    dirname(dirname(os.path.abspath(__file__))), "fixtures/test_sentencepiece.model"
+)
 
 
 @require_sentencepiece
 @require_tokenizers
 class ReformerTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
-
     tokenizer_class = ReformerTokenizer
     rust_tokenizer_class = ReformerTokenizerFast
     test_rust_tokenizer = True
@@ -86,7 +92,9 @@ class ReformerTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
     def test_padding(self, max_length=15):
         for tokenizer, pretrained_name, kwargs in self.tokenizers_list:
             with self.subTest(f"{tokenizer.__class__.__name__} ({pretrained_name})"):
-                tokenizer_r = self.rust_tokenizer_class.from_pretrained(pretrained_name, **kwargs)
+                tokenizer_r = self.rust_tokenizer_class.from_pretrained(
+                    pretrained_name, **kwargs
+                )
 
                 # Simple input
                 s = "This is a simple input"
@@ -98,10 +106,22 @@ class ReformerTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
                 ]
 
                 # Simple input tests
-                self.assertRaises(ValueError, tokenizer_r.encode, s, max_length=max_length, padding="max_length")
+                self.assertRaises(
+                    ValueError,
+                    tokenizer_r.encode,
+                    s,
+                    max_length=max_length,
+                    padding="max_length",
+                )
 
                 # Simple input
-                self.assertRaises(ValueError, tokenizer_r.encode_plus, s, max_length=max_length, padding="max_length")
+                self.assertRaises(
+                    ValueError,
+                    tokenizer_r.encode_plus,
+                    s,
+                    max_length=max_length,
+                    padding="max_length",
+                )
 
                 # Simple input
                 self.assertRaises(
@@ -113,10 +133,22 @@ class ReformerTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
                 )
 
                 # Pair input
-                self.assertRaises(ValueError, tokenizer_r.encode, p, max_length=max_length, padding="max_length")
+                self.assertRaises(
+                    ValueError,
+                    tokenizer_r.encode,
+                    p,
+                    max_length=max_length,
+                    padding="max_length",
+                )
 
                 # Pair input
-                self.assertRaises(ValueError, tokenizer_r.encode_plus, p, max_length=max_length, padding="max_length")
+                self.assertRaises(
+                    ValueError,
+                    tokenizer_r.encode_plus,
+                    p,
+                    max_length=max_length,
+                    padding="max_length",
+                )
 
                 # Pair input
                 self.assertRaises(
@@ -172,7 +204,29 @@ class ReformerTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         ids = tokenizer.convert_tokens_to_ids(tokens)
         self.assertListEqual(
             ids,
-            [8, 21, 84, 55, 24, 19, 7, 0, 602, 347, 347, 347, 3, 12, 66, 46, 72, 80, 6, 0, 4],
+            [
+                8,
+                21,
+                84,
+                55,
+                24,
+                19,
+                7,
+                0,
+                602,
+                347,
+                347,
+                347,
+                3,
+                12,
+                66,
+                46,
+                72,
+                80,
+                6,
+                0,
+                4,
+            ],
         )
 
         back_tokens = tokenizer.convert_ids_to_tokens(ids)
@@ -212,7 +266,9 @@ class ReformerTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         symbols = "Hello World!"
         original_tokenizer_encodings = [126, 32, 262, 152, 38, 72, 287]
 
-        self.assertListEqual(original_tokenizer_encodings, self.big_tokenizer.encode(symbols))
+        self.assertListEqual(
+            original_tokenizer_encodings, self.big_tokenizer.encode(symbols)
+        )
 
     @slow
     def test_tokenization_base_hard_symbols(self):
@@ -322,7 +378,9 @@ class ReformerTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
             265,
         ]
 
-        self.assertListEqual(original_tokenizer_encodings, self.big_tokenizer.encode(symbols))
+        self.assertListEqual(
+            original_tokenizer_encodings, self.big_tokenizer.encode(symbols)
+        )
 
     @require_torch
     @slow
@@ -335,7 +393,9 @@ class ReformerTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         first_ten_tokens = list(self.big_tokenizer.get_vocab().keys())[:10]
         sequence = " ".join(first_ten_tokens)
         encoded_sequence = self.big_tokenizer.encode_plus(sequence, return_tensors="pt")
-        batch_encoded_sequence = self.big_tokenizer.batch_encode_plus([sequence, sequence], return_tensors="pt")
+        batch_encoded_sequence = self.big_tokenizer.batch_encode_plus(
+            [sequence, sequence], return_tensors="pt"
+        )
 
         config = ReformerConfig()
         # The input gets padded during training so adjust the axial position encodings from the pretrained model value of (512, 1024)
@@ -343,7 +403,10 @@ class ReformerTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         model = ReformerModel(config)
 
         # Reformer has config.vocab_size == tokenizer.vocab_size == len(tokenizer) - 1 = 320; len(tokenizer) is 321 (including a pad token with id 320)
-        assert model.get_input_embeddings().weight.shape[0] >= self.big_tokenizer.vocab_size
+        assert (
+            model.get_input_embeddings().weight.shape[0]
+            >= self.big_tokenizer.vocab_size
+        )
 
         with torch.no_grad():
             model(**encoded_sequence)

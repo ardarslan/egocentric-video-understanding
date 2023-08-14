@@ -19,20 +19,26 @@ from os.path import dirname
 
 from transformers import BigBirdTokenizer, BigBirdTokenizerFast
 from transformers.file_utils import cached_property
-from transformers.testing_utils import require_sentencepiece, require_tokenizers, require_torch, slow
+from transformers.testing_utils import (
+    require_sentencepiece,
+    require_tokenizers,
+    require_torch,
+    slow,
+)
 
 from ..test_tokenization_common import TokenizerTesterMixin
 
 
 SPIECE_UNDERLINE = "▁"
 
-SAMPLE_VOCAB = os.path.join(dirname(dirname(os.path.abspath(__file__))), "fixtures/test_sentencepiece.model")
+SAMPLE_VOCAB = os.path.join(
+    dirname(dirname(os.path.abspath(__file__))), "fixtures/test_sentencepiece.model"
+)
 
 
 @require_sentencepiece
 @require_tokenizers
 class BigBirdTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
-
     tokenizer_class = BigBirdTokenizer
     rust_tokenizer_class = BigBirdTokenizerFast
     test_rust_tokenizer = True
@@ -126,7 +132,29 @@ class BigBirdTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         ids = tokenizer.convert_tokens_to_ids(tokens)
         self.assertListEqual(
             ids,
-            [8, 21, 84, 55, 24, 19, 7, 0, 602, 347, 347, 347, 3, 12, 66, 46, 72, 80, 6, 0, 4],
+            [
+                8,
+                21,
+                84,
+                55,
+                24,
+                19,
+                7,
+                0,
+                602,
+                347,
+                347,
+                347,
+                3,
+                12,
+                66,
+                46,
+                72,
+                80,
+                6,
+                0,
+                4,
+            ],
         )
 
         back_tokens = tokenizer.convert_ids_to_tokens(ids)
@@ -166,7 +194,9 @@ class BigBirdTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         symbols = "Hello World!"
         original_tokenizer_encodings = [65, 18536, 2260, 101, 66]
 
-        self.assertListEqual(original_tokenizer_encodings, self.big_tokenizer.encode(symbols))
+        self.assertListEqual(
+            original_tokenizer_encodings, self.big_tokenizer.encode(symbols)
+        )
 
     @slow
     def test_tokenization_base_hard_symbols(self):
@@ -174,7 +204,9 @@ class BigBirdTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         # fmt: off
         original_tokenizer_encodings = [65, 871, 419, 358, 946, 991, 2521, 452, 358, 1357, 387, 7751, 3536, 112, 985, 456, 126, 865, 938, 5400, 5734, 458, 1368, 467, 786, 2462, 5246, 1159, 633, 865, 4519, 457, 582, 852, 2557, 427, 916, 508, 405, 34324, 497, 391, 408, 11342, 1244, 385, 100, 938, 985, 456, 574, 362, 12597, 3200, 3129, 1172, 66]  # noqa: E231
         # fmt: on
-        self.assertListEqual(original_tokenizer_encodings, self.big_tokenizer.encode(symbols))
+        self.assertListEqual(
+            original_tokenizer_encodings, self.big_tokenizer.encode(symbols)
+        )
 
     @require_torch
     @slow
@@ -186,15 +218,22 @@ class BigBirdTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         # Build sequence
         first_ten_tokens = list(self.big_tokenizer.get_vocab().keys())[:10]
         sequence = " ".join(first_ten_tokens)
-        encoded_sequence = self.big_tokenizer.encode_plus(sequence, return_tensors="pt", return_token_type_ids=False)
+        encoded_sequence = self.big_tokenizer.encode_plus(
+            sequence, return_tensors="pt", return_token_type_ids=False
+        )
         batch_encoded_sequence = self.big_tokenizer.batch_encode_plus(
-            [sequence + " " + sequence], return_tensors="pt", return_token_type_ids=False
+            [sequence + " " + sequence],
+            return_tensors="pt",
+            return_token_type_ids=False,
         )
 
         config = BigBirdConfig(attention_type="original_full")
         model = BigBirdModel(config)
 
-        assert model.get_input_embeddings().weight.shape[0] >= self.big_tokenizer.vocab_size
+        assert (
+            model.get_input_embeddings().weight.shape[0]
+            >= self.big_tokenizer.vocab_size
+        )
 
         with torch.no_grad():
             model(**encoded_sequence)

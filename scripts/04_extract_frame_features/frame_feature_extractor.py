@@ -12,14 +12,33 @@ class FrameFeatureExtractor(ABC):
         pass
 
     @staticmethod
-    def get_inputs(cap, batch_size: int, frame_feature_name: str, output_subfolder_path: str, num_frames_per_processing_split: int, global_frame_index):
+    def get_inputs(
+        cap,
+        batch_size: int,
+        frame_feature_name: str,
+        output_subfolder_path: str,
+        num_frames_per_processing_split: int,
+        global_frame_index,
+    ):
         if frame_feature_name == "ego_hos":
-            if not os.path.exists(os.path.join(output_subfolder_path, "unidet_features.tsv")):
-                raise Exception("To extract ego_hos features, unidet features should be extracted first.")
-            if not os.path.exists(os.path.join(output_subfolder_path, "gsam_features.tsv")):
-                raise Exception("To extract ego_hos features, gsam features should be extracted first.")
-            unidet_features = pd.read_csv(os.path.join(output_subfolder_path, "unidet_features.tsv"), sep="\t")
-            gsam_features = pd.read_csv(os.path.join(output_subfolder_path, "gsam_features.tsv"), sep="\t")
+            if not os.path.exists(
+                os.path.join(output_subfolder_path, "unidet_features.tsv")
+            ):
+                raise Exception(
+                    "To extract ego_hos features, unidet features should be extracted first."
+                )
+            if not os.path.exists(
+                os.path.join(output_subfolder_path, "gsam_features.tsv")
+            ):
+                raise Exception(
+                    "To extract ego_hos features, gsam features should be extracted first."
+                )
+            unidet_features = pd.read_csv(
+                os.path.join(output_subfolder_path, "unidet_features.tsv"), sep="\t"
+            )
+            gsam_features = pd.read_csv(
+                os.path.join(output_subfolder_path, "gsam_features.tsv"), sep="\t"
+            )
             unidet_features_batches = []
             gsam_features_batches = []
 
@@ -48,12 +67,27 @@ class FrameFeatureExtractor(ABC):
                     global_frame_index.increment_value()
                     current_processing_split_frame_index += 1
                     if frame_feature_name == "ego_hos":
-                        relevant_unidet_feature_rows = [dict(row) for index, row in unidet_features[unidet_features["frame_index"] == current_global_frame_index].iterrows()]
-                        relevant_gsam_feature_rows = [dict(row) for index, row in gsam_features[gsam_features["frame_index"] == current_global_frame_index].iterrows()]
+                        relevant_unidet_feature_rows = [
+                            dict(row)
+                            for index, row in unidet_features[
+                                unidet_features["frame_index"]
+                                == current_global_frame_index
+                            ].iterrows()
+                        ]
+                        relevant_gsam_feature_rows = [
+                            dict(row)
+                            for index, row in gsam_features[
+                                gsam_features["frame_index"]
+                                == current_global_frame_index
+                            ].iterrows()
+                        ]
                         unidet_features_batch.append(relevant_unidet_feature_rows)
                         gsam_features_batch.append(relevant_gsam_feature_rows)
 
-                    if current_processing_split_frame_index == num_frames_per_processing_split:
+                    if (
+                        current_processing_split_frame_index
+                        == num_frames_per_processing_split
+                    ):
                         cap_is_opened = False
                         break
 
@@ -65,18 +99,34 @@ class FrameFeatureExtractor(ABC):
                     gsam_features_batches.append(gsam_features_batch)
 
         if frame_feature_name == "ego_hos":
-            inputs = zip(frame_indices_batches, frames_batches, unidet_features_batches, gsam_features_batches)
+            inputs = zip(
+                frame_indices_batches,
+                frames_batches,
+                unidet_features_batches,
+                gsam_features_batches,
+            )
         else:
             inputs = zip(frame_indices_batches, frames_batches)
         return inputs
 
     @abstractmethod
-    def predictor_function(self, frame_indices_batch: List[int], frames_batch: List[np.array]):
+    def predictor_function(
+        self, frame_indices_batch: List[int], frames_batch: List[np.array]
+    ):
         pass
 
     @staticmethod
-    def save_results(input_video_file_path, results_list, output_folder_path, column_names, output_file_name):
-        results_df = pd.DataFrame(data=[item for sublist in results_list for item in sublist], columns=column_names)
+    def save_results(
+        input_video_file_path,
+        results_list,
+        output_folder_path,
+        column_names,
+        output_file_name,
+    ):
+        results_df = pd.DataFrame(
+            data=[item for sublist in results_list for item in sublist],
+            columns=column_names,
+        )
 
         input_video_file_name_wo_ext = input_video_file_path.split("/")[-1][:-4]
 
@@ -85,7 +135,9 @@ class FrameFeatureExtractor(ABC):
             exist_ok=True,
         )
         results_df.to_csv(
-            os.path.join(output_folder_path, input_video_file_name_wo_ext, output_file_name),
+            os.path.join(
+                output_folder_path, input_video_file_name_wo_ext, output_file_name
+            ),
             index=False,
             sep="\t",
         )

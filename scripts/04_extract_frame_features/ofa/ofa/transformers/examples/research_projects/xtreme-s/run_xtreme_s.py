@@ -51,7 +51,10 @@ from transformers.utils.versions import require_version
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.18.0.dev0")
 
-require_version("datasets>=1.18.0", "To fix: pip install -r examples/pytorch/speech-recognition/requirements.txt")
+require_version(
+    "datasets>=1.18.0",
+    "To fix: pip install -r examples/pytorch/speech-recognition/requirements.txt",
+)
 
 
 logger = logging.getLogger(__name__)
@@ -79,28 +82,40 @@ class ModelArguments:
     """
 
     model_name_or_path: str = field(
-        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+        metadata={
+            "help": "Path to pretrained model or model identifier from huggingface.co/models"
+        }
     )
     tokenizer_name_or_path: Optional[str] = field(
         default=None,
-        metadata={"help": "Path to pretrained tokenizer or tokenizer identifier from huggingface.co/models"},
+        metadata={
+            "help": "Path to pretrained tokenizer or tokenizer identifier from huggingface.co/models"
+        },
     )
     cache_dir: Optional[str] = field(
         default=None,
         metadata={
-            "help": "Where do you want to store the pretrained models and datasets downloaded from " "huggingface.co"
+            "help": "Where do you want to store the pretrained models and datasets downloaded from "
+            "huggingface.co"
         },
     )
     freeze_feature_encoder: bool = field(
-        default=True, metadata={"help": "Whether to freeze the feature encoder layers of the model."}
+        default=True,
+        metadata={"help": "Whether to freeze the feature encoder layers of the model."},
     )
     attention_dropout: float = field(
-        default=0.0, metadata={"help": "The dropout ratio for the attention probabilities."}
+        default=0.0,
+        metadata={"help": "The dropout ratio for the attention probabilities."},
     )
     activation_dropout: float = field(
-        default=0.0, metadata={"help": "The dropout ratio for activations inside the fully connected layer."}
+        default=0.0,
+        metadata={
+            "help": "The dropout ratio for activations inside the fully connected layer."
+        },
     )
-    feat_proj_dropout: float = field(default=0.0, metadata={"help": "The dropout ratio for the projected features."})
+    feat_proj_dropout: float = field(
+        default=0.0, metadata={"help": "The dropout ratio for the projected features."}
+    )
     hidden_dropout: float = field(
         default=0.0,
         metadata={
@@ -134,9 +149,14 @@ class ModelArguments:
         default=10,
         metadata={"help": "Length of vector span to mask along the feature axis."},
     )
-    layerdrop: float = field(default=0.0, metadata={"help": "The LayerDrop probability."})
+    layerdrop: float = field(
+        default=0.0, metadata={"help": "The LayerDrop probability."}
+    )
     ctc_loss_reduction: Optional[str] = field(
-        default="mean", metadata={"help": "The way the ctc loss should be reduced. Should be one of 'mean' or 'sum'."}
+        default="mean",
+        metadata={
+            "help": "The way the ctc loss should be reduced. Should be one of 'mean' or 'sum'."
+        },
     )
 
 
@@ -152,7 +172,9 @@ class DataTrainingArguments:
 
     dataset_name: str = field(
         default="google/xtreme_s",
-        metadata={"help": "The name of the dataset to use (via the datasets library). Defaults to 'google/xtreme_s'"},
+        metadata={
+            "help": "The name of the dataset to use (via the datasets library). Defaults to 'google/xtreme_s'"
+        },
     )
     task: str = field(
         default=None,
@@ -163,7 +185,9 @@ class DataTrainingArguments:
     )
     language: str = field(
         default="all",
-        metadata={"help": "The language id as defined in the datasets config name or `all` for all languages."},
+        metadata={
+            "help": "The language id as defined in the datasets config name or `all` for all languages."
+        },
     )
     train_split_name: str = field(
         default="train",
@@ -181,12 +205,15 @@ class DataTrainingArguments:
     predict_split_name: str = field(
         default="test",
         metadata={
-            "help": "The name of the prediction dataset split to use (via the datasets library). " "Defaults to 'test'"
+            "help": "The name of the prediction dataset split to use (via the datasets library). "
+            "Defaults to 'test'"
         },
     )
     audio_column_name: str = field(
         default="audio",
-        metadata={"help": "The name of the dataset column containing the audio data. Defaults to 'audio'"},
+        metadata={
+            "help": "The name of the dataset column containing the audio data. Defaults to 'audio'"
+        },
     )
     target_column_name: str = field(
         default=None,
@@ -196,7 +223,8 @@ class DataTrainingArguments:
         },
     )
     overwrite_cache: bool = field(
-        default=False, metadata={"help": "Overwrite the cached preprocessed datasets or not."}
+        default=False,
+        metadata={"help": "Overwrite the cached preprocessed datasets or not."},
     )
     preprocessing_num_workers: Optional[int] = field(
         default=None,
@@ -234,7 +262,10 @@ class DataTrainingArguments:
         },
     )
     min_duration_in_seconds: float = field(
-        default=0.0, metadata={"help": "Filter audio files that are shorter than `min_duration_in_seconds` seconds"}
+        default=0.0,
+        metadata={
+            "help": "Filter audio files that are shorter than `min_duration_in_seconds` seconds"
+        },
     )
     preprocessing_only: bool = field(
         default=False,
@@ -277,7 +308,6 @@ class DataTrainingArguments:
 
 @dataclass
 class SpeechDataCollatorWithPadding:
-
     processor: AutoProcessor
     decoder_start_token_id: Optional[int] = None
     padding: Union[bool, str] = "longest"
@@ -285,10 +315,14 @@ class SpeechDataCollatorWithPadding:
     pad_to_multiple_of: Optional[int] = None
     pad_to_multiple_of_labels: Optional[int] = None
 
-    def __call__(self, features: List[Dict[str, Union[List[int], torch.Tensor]]]) -> Dict[str, torch.Tensor]:
+    def __call__(
+        self, features: List[Dict[str, Union[List[int], torch.Tensor]]]
+    ) -> Dict[str, torch.Tensor]:
         # split inputs and labels since they have to be of different lenghts and need
         # different padding methods
-        input_features = [{"input_values": feature["input_values"]} for feature in features]
+        input_features = [
+            {"input_values": feature["input_values"]} for feature in features
+        ]
 
         batch = self.processor.pad(
             input_features,
@@ -308,7 +342,9 @@ class SpeechDataCollatorWithPadding:
                 )
 
             # replace padding with -100 to ignore loss correctly
-            labels = labels_batch["input_ids"].masked_fill(labels_batch.attention_mask.ne(1), -100)
+            labels = labels_batch["input_ids"].masked_fill(
+                labels_batch.attention_mask.ne(1), -100
+            )
 
             # if bos token is appended in previous tokenization step,
             # cut bos token here as it's append later anyways
@@ -374,17 +410,25 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
+    parser = HfArgumentParser(
+        (ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments)
+    )
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
-        model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+        model_args, data_args, training_args = parser.parse_json_file(
+            json_file=os.path.abspath(sys.argv[1])
+        )
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
     # Detecting last checkpoint.
     last_checkpoint = None
-    if os.path.isdir(training_args.output_dir) and training_args.do_train and not training_args.overwrite_output_dir:
+    if (
+        os.path.isdir(training_args.output_dir)
+        and training_args.do_train
+        and not training_args.overwrite_output_dir
+    ):
         last_checkpoint = get_last_checkpoint(training_args.output_dir)
         if last_checkpoint is None and len(os.listdir(training_args.output_dir)) > 0:
             raise ValueError(
@@ -403,7 +447,9 @@ def main():
         datefmt="%m/%d/%Y %H:%M:%S",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
-    logger.setLevel(logging.INFO if is_main_process(training_args.local_rank) else logging.WARN)
+    logger.setLevel(
+        logging.INFO if is_main_process(training_args.local_rank) else logging.WARN
+    )
 
     # Log on each process the small summary:
     logger.warning(
@@ -425,7 +471,8 @@ def main():
 
     if task_name is None:
         raise ValueError(
-            "Set --task should be set to '<xtreme_s_task>' " "(e.g. 'fleurs-asr', 'mls', 'covost2', 'minds14') "
+            "Set --task should be set to '<xtreme_s_task>' "
+            "(e.g. 'fleurs-asr', 'mls', 'covost2', 'minds14') "
         )
     if lang_id is None:
         raise ValueError(
@@ -468,7 +515,9 @@ def main():
             )
 
         if data_args.max_train_samples is not None:
-            raw_datasets["train"] = raw_datasets["train"].select(range(data_args.max_train_samples))
+            raw_datasets["train"] = raw_datasets["train"].select(
+                range(data_args.max_train_samples)
+            )
 
         if not is_text_target:
             label_list = raw_datasets["train"].features[target_column_name].names
@@ -484,7 +533,9 @@ def main():
         )
 
         if data_args.max_eval_samples is not None:
-            raw_datasets["eval"] = raw_datasets["eval"].select(range(data_args.max_eval_samples))
+            raw_datasets["eval"] = raw_datasets["eval"].select(
+                range(data_args.max_eval_samples)
+            )
 
     if training_args.do_predict:
         raw_datasets["predict"] = load_dataset(
@@ -496,25 +547,34 @@ def main():
         )
 
         if data_args.max_predict_samples is not None:
-            raw_datasets["predict"] = raw_datasets["predict"].select(range(data_args.max_predict_samples))
+            raw_datasets["predict"] = raw_datasets["predict"].select(
+                range(data_args.max_predict_samples)
+            )
 
     # 2. We remove some special characters from the datasets
     # that make training complicated and do not help in transcribing the speech
     # E.g. characters, such as `,` and `.` do not really have an acoustic characteristic
     # that could be easily picked up by the model
     chars_to_ignore_regex = (
-        f'[{"".join(data_args.chars_to_ignore)}]' if data_args.chars_to_ignore is not None else None
+        f'[{"".join(data_args.chars_to_ignore)}]'
+        if data_args.chars_to_ignore is not None
+        else None
     )
 
     def remove_special_characters(batch):
         if chars_to_ignore_regex is not None:
-            batch["target_text"] = re.sub(chars_to_ignore_regex, "", batch[target_column_name]).lower() + " "
+            batch["target_text"] = (
+                re.sub(chars_to_ignore_regex, "", batch[target_column_name]).lower()
+                + " "
+            )
         else:
             batch["target_text"] = batch[target_column_name].lower() + " "
         return batch
 
     if is_text_target:
-        with training_args.main_process_first(desc="dataset map special characters removal"):
+        with training_args.main_process_first(
+            desc="dataset map special characters removal"
+        ):
             raw_datasets = raw_datasets.map(
                 remove_special_characters,
                 remove_columns=[target_column_name],
@@ -529,7 +589,9 @@ def main():
     # 3. Next, let's load the config as we might need it to create
     # the tokenizer
     config = AutoConfig.from_pretrained(
-        model_args.model_name_or_path, cache_dir=model_args.cache_dir, use_auth_token=data_args.use_auth_token
+        model_args.model_name_or_path,
+        cache_dir=model_args.cache_dir,
+        use_auth_token=data_args.use_auth_token,
     )
 
     if is_text_target:
@@ -550,7 +612,9 @@ def main():
                 if training_args.overwrite_output_dir and os.path.isfile(vocab_file):
                     os.remove(vocab_file)
 
-            with training_args.main_process_first(desc="dataset map vocabulary creation"):
+            with training_args.main_process_first(
+                desc="dataset map vocabulary creation"
+            ):
                 if not os.path.isfile(vocab_file):
                     os.makedirs(tokenizer_name_or_path, exist_ok=True)
                     vocab_dict = create_vocabulary_from_data(
@@ -569,7 +633,9 @@ def main():
             if not config.is_encoder_decoder:
                 tokenizer_kwargs = {
                     "config": config if config.tokenizer_class is not None else None,
-                    "tokenizer_type": config.model_type if config.tokenizer_class is None else None,
+                    "tokenizer_type": config.model_type
+                    if config.tokenizer_class is None
+                    else None,
                     "unk_token": unk_token,
                     "pad_token": pad_token,
                     "word_delimiter_token": word_delimiter_token,
@@ -589,7 +655,9 @@ def main():
             **tokenizer_kwargs,
         )
     feature_extractor = AutoFeatureExtractor.from_pretrained(
-        model_args.model_name_or_path, cache_dir=model_args.cache_dir, use_auth_token=data_args.use_auth_token
+        model_args.model_name_or_path,
+        cache_dir=model_args.cache_dir,
+        use_auth_token=data_args.use_auth_token,
     )
 
     # adapt config
@@ -635,7 +703,9 @@ def main():
             use_auth_token=data_args.use_auth_token,
         )
         if model.config.decoder_start_token_id is None:
-            raise ValueError("Make sure that `config.decoder_start_token_id` is correctly defined")
+            raise ValueError(
+                "Make sure that `config.decoder_start_token_id` is correctly defined"
+            )
     else:
         model = AutoModelForAudioClassification.from_pretrained(
             model_args.model_name_or_path,
@@ -654,15 +724,24 @@ def main():
     # via the `feature_extractor`
 
     # make sure that dataset decodes audio with correct sampling rate
-    dataset_sampling_rate = next(iter(raw_datasets.values())).features[data_args.audio_column_name].sampling_rate
+    dataset_sampling_rate = (
+        next(iter(raw_datasets.values()))
+        .features[data_args.audio_column_name]
+        .sampling_rate
+    )
     if dataset_sampling_rate != feature_extractor.sampling_rate:
         raw_datasets = raw_datasets.cast_column(
-            data_args.audio_column_name, datasets.features.Audio(sampling_rate=feature_extractor.sampling_rate)
+            data_args.audio_column_name,
+            datasets.features.Audio(sampling_rate=feature_extractor.sampling_rate),
         )
 
     # derive max & min input length for sample rate & max duration
-    max_input_length = data_args.max_duration_in_seconds * feature_extractor.sampling_rate
-    min_input_length = data_args.min_duration_in_seconds * feature_extractor.sampling_rate
+    max_input_length = (
+        data_args.max_duration_in_seconds * feature_extractor.sampling_rate
+    )
+    min_input_length = (
+        data_args.min_duration_in_seconds * feature_extractor.sampling_rate
+    )
     audio_column_name = data_args.audio_column_name
     num_workers = data_args.preprocessing_num_workers
 
@@ -675,7 +754,9 @@ def main():
         # load audio
         sample = batch[audio_column_name]
 
-        inputs = feature_extractor(sample["array"], sampling_rate=sample["sampling_rate"])
+        inputs = feature_extractor(
+            sample["array"], sampling_rate=sample["sampling_rate"]
+        )
         batch["input_values"] = inputs.input_values[0]
         batch["length"] = len(batch["input_values"])
 
@@ -685,7 +766,9 @@ def main():
             additional_kwargs["phonemizer_lang"] = phoneme_language
 
         if is_text_target:
-            batch["labels"] = tokenizer(batch["target_text"], **additional_kwargs).input_ids
+            batch["labels"] = tokenizer(
+                batch["target_text"], **additional_kwargs
+            ).input_ids
         else:
             batch["labels"] = batch[target_column_name]
         return batch
@@ -723,7 +806,9 @@ def main():
     # In a second step ``args.preprocessing_only`` can then be set to `False` to load the
     # cached dataset
     if data_args.preprocessing_only:
-        logger.info(f"Data preprocessing finished. Files cached at {vectorized_datasets.cache_files}")
+        logger.info(
+            f"Data preprocessing finished. Files cached at {vectorized_datasets.cache_files}"
+        )
         return
 
     def compute_asr_metric(pred):
@@ -760,7 +845,9 @@ def main():
         processor = AutoFeatureExtractor.from_pretrained(training_args.output_dir)
 
     # Instantiate custom data collator
-    data_collator = SpeechDataCollatorWithPadding(processor=processor, pad_labels=is_text_target)
+    data_collator = SpeechDataCollatorWithPadding(
+        processor=processor, pad_labels=is_text_target
+    )
 
     # Initialize Trainer
     if target_column_name == "translation":
@@ -768,8 +855,12 @@ def main():
             model=model,
             data_collator=data_collator,
             args=training_args,
-            compute_metrics=compute_asr_metric if training_args.predict_with_generate else None,
-            train_dataset=vectorized_datasets["train"] if training_args.do_train else None,
+            compute_metrics=compute_asr_metric
+            if training_args.predict_with_generate
+            else None,
+            train_dataset=vectorized_datasets["train"]
+            if training_args.do_train
+            else None,
             eval_dataset=vectorized_datasets["eval"] if training_args.do_eval else None,
             tokenizer=feature_extractor,
         )
@@ -778,8 +869,12 @@ def main():
             model=model,
             data_collator=data_collator,
             args=training_args,
-            compute_metrics=compute_asr_metric if is_text_target else compute_classification_metric,
-            train_dataset=vectorized_datasets["train"] if training_args.do_train else None,
+            compute_metrics=compute_asr_metric
+            if is_text_target
+            else compute_classification_metric,
+            train_dataset=vectorized_datasets["train"]
+            if training_args.do_train
+            else None,
             eval_dataset=vectorized_datasets["eval"] if training_args.do_eval else None,
             tokenizer=feature_extractor,
         )
@@ -788,7 +883,6 @@ def main():
 
     # Training
     if training_args.do_train:
-
         # use last checkpoint if exist
         if last_checkpoint is not None:
             checkpoint = last_checkpoint
@@ -806,7 +900,9 @@ def main():
             if data_args.max_train_samples is not None
             else len(vectorized_datasets["train"])
         )
-        metrics["train_samples"] = min(max_train_samples, len(vectorized_datasets["train"]))
+        metrics["train_samples"] = min(
+            max_train_samples, len(vectorized_datasets["train"])
+        )
 
         trainer.log_metrics("train", metrics)
         trainer.save_metrics("train", metrics)
@@ -822,7 +918,9 @@ def main():
             if data_args.max_predict_samples is not None
             else len(vectorized_datasets["predict"])
         )
-        metrics["predict_samples"] = min(max_predict_samples, len(vectorized_datasets["predict"]))
+        metrics["predict_samples"] = min(
+            max_predict_samples, len(vectorized_datasets["predict"])
+        )
 
         trainer.log_metrics("predict", metrics)
         trainer.save_metrics("predict", metrics)

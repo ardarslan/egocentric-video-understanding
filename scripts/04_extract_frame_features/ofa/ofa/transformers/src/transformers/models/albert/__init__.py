@@ -29,7 +29,11 @@ from ...file_utils import (
 
 
 _import_structure = {
-    "configuration_albert": ["ALBERT_PRETRAINED_CONFIG_ARCHIVE_MAP", "AlbertConfig", "AlbertOnnxConfig"],
+    "configuration_albert": [
+        "ALBERT_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "AlbertConfig",
+        "AlbertOnnxConfig",
+    ],
 }
 
 if is_sentencepiece_available():
@@ -79,7 +83,11 @@ if is_flax_available():
     ]
 
 if TYPE_CHECKING:
-    from .configuration_albert import ALBERT_PRETRAINED_CONFIG_ARCHIVE_MAP, AlbertConfig, AlbertOnnxConfig
+    from .configuration_albert import (
+        ALBERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        AlbertConfig,
+        AlbertOnnxConfig,
+    )
 
     if is_sentencepiece_available():
         from .tokenization_albert import AlbertTokenizer
@@ -129,4 +137,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

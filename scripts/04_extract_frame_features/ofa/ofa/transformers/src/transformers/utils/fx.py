@@ -45,7 +45,11 @@ from .. import (
     XLNetForQuestionAnswering,
     logging,
 )
-from ..file_utils import TORCH_FX_REQUIRED_VERSION, importlib_metadata, is_torch_fx_available
+from ..file_utils import (
+    TORCH_FX_REQUIRED_VERSION,
+    importlib_metadata,
+    is_torch_fx_available,
+)
 from ..models.auto import get_values
 
 
@@ -56,7 +60,6 @@ def _generate_supported_model_classes(
     model_name: Type[PretrainedConfig],
     supported_tasks: Optional[Union[str, List[str]]] = None,
 ) -> List[Type[PreTrainedModel]]:
-
     model_config_class = CONFIG_MAPPING[model_name]
     task_mapping = {
         "default": MODEL_MAPPING,
@@ -116,7 +119,10 @@ _SPECIAL_SUPPORTED_MODELS = [
     # XLNetForQuestionAnswering,
 ]
 _SUPPORTED_MODELS = tuple(
-    sorted(list(set(_REGULAR_SUPPORTED_MODELS + _SPECIAL_SUPPORTED_MODELS)), key=lambda c: c.__name__)
+    sorted(
+        list(set(_REGULAR_SUPPORTED_MODELS + _SPECIAL_SUPPORTED_MODELS)),
+        key=lambda c: c.__name__,
+    )
 )
 
 
@@ -181,7 +187,9 @@ def _function_to_leaf(func: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-def _function_leaf_getter(func_name: str, mapping: Dict[str, Callable[..., Any]]) -> Callable[..., Any]:
+def _function_leaf_getter(
+    func_name: str, mapping: Dict[str, Callable[..., Any]]
+) -> Callable[..., Any]:
     @functools.wraps(mapping[func_name])
     def wrapper(*args, **kwargs):
         return mapping[func_name](*args, **kwargs)
@@ -189,7 +197,9 @@ def _function_leaf_getter(func_name: str, mapping: Dict[str, Callable[..., Any]]
     return wrapper
 
 
-def _create_recorded_proxy_method(proxy: HFProxy, method_name: str, cache_name: str, return_proxy: bool):
+def _create_recorded_proxy_method(
+    proxy: HFProxy, method_name: str, cache_name: str, return_proxy: bool
+):
     """
     Helper function that sets a recorded torch.Tensor method as a HFProxy method that will use the recorded values
     during symbolic tracing.
@@ -223,7 +233,9 @@ def _reset_tensor_methods(original_methods: Dict[str, Callable[..., Any]]):
         setattr(torch.Tensor, name, method)
 
 
-def _generate_random_int(low: int = 10, high: int = 20, forbidden_values: Optional[List[int]] = None):
+def _generate_random_int(
+    low: int = 10, high: int = 20, forbidden_values: Optional[List[int]] = None
+):
     if forbidden_values is None:
         forbidden_values = []
     value = random.randint(low, high)
@@ -246,8 +258,9 @@ class HFTracer(Tracer):
         modeling_utils.ModuleUtilsMixin: {"create_extended_attention_mask_for_decoder"},
     }
 
-    def __init__(self, autowrap_modules=(math,), autowrap_functions=(), enable_cpatching=False):
-
+    def __init__(
+        self, autowrap_modules=(math,), autowrap_functions=(), enable_cpatching=False
+    ):
         # Loading the leaf functions register
         self._leaf_functions_register = {}
         for module, names in self._FUNCTIONS_TO_AUTOWRAP.items():
@@ -260,7 +273,9 @@ class HFTracer(Tracer):
         # )
 
         super().__init__(
-            autowrap_modules=autowrap_modules, autowrap_functions=autowrap_functions, enable_cpatching=enable_cpatching
+            autowrap_modules=autowrap_modules,
+            autowrap_functions=autowrap_functions,
+            enable_cpatching=enable_cpatching,
         )
 
         if not is_torch_fx_available():
@@ -280,7 +295,9 @@ class HFTracer(Tracer):
         patched_func.__module__ = __name__
         self._leaf_functions_register[name] = (module, orig_func, patched_func)
 
-    def _patch_leaf_functions_for_root(self, root: PreTrainedModel, restore: bool = False):
+    def _patch_leaf_functions_for_root(
+        self, root: PreTrainedModel, restore: bool = False
+    ):
         """Patches leaf functions specifically for root."""
         for name in self._leaf_functions_register:
             module, orig_func, patched_func = self._leaf_functions_register[name]
@@ -289,7 +306,9 @@ class HFTracer(Tracer):
                 setattr(module, name, orig_func)
             else:
                 root.__class__.forward.__globals__[name] = patched_func
-                leaf_getter = _function_leaf_getter(name, root.__class__.forward.__globals__)
+                leaf_getter = _function_leaf_getter(
+                    name, root.__class__.forward.__globals__
+                )
                 leaf_getter.__module__ = __name__
                 setattr(module, name, leaf_getter)
 
@@ -304,13 +323,19 @@ class HFTracer(Tracer):
             if currentframe is None:
                 return False
             module = currentframe.f_locals.get("self", None)
-            if id(module) in module_ids and self.is_leaf_module(module, "Not used anyway"):
+            if id(module) in module_ids and self.is_leaf_module(
+                module, "Not used anyway"
+            ):
                 return True
             currentframe = currentframe.f_back
         return False
 
     def _wrap_method_for_model_recording(
-        self, model: PreTrainedModel, method_name: str, cache_name: str, module_ids: List[int]
+        self,
+        model: PreTrainedModel,
+        method_name: str,
+        cache_name: str,
+        module_ids: List[int],
     ):
         """Helper function that wraps a torch.Tensor method to record its outputs during forward pass."""
         method = getattr(torch.Tensor, method_name)
@@ -328,7 +353,9 @@ class HFTracer(Tracer):
 
         return wrapped
 
-    def _monkey_patch_tensor_methods_for_model_recording(self, model: PreTrainedModel, method_names: Iterable[str]):
+    def _monkey_patch_tensor_methods_for_model_recording(
+        self, model: PreTrainedModel, method_names: Iterable[str]
+    ):
         """
         Helper function that patches torch.Tensor methods (specified by the method_names list) to record model
         inference before symbolic tracing.
@@ -340,18 +367,24 @@ class HFTracer(Tracer):
             cache_name = f"cache_{method_name}"
             cache_names[method_name] = cache_name
             if not hasattr(torch.Tensor, method_name):
-                logger.info(f"torch.Tensor has no method called {method_name}, skipping patching.")
+                logger.info(
+                    f"torch.Tensor has no method called {method_name}, skipping patching."
+                )
                 continue
             original_methods[method_name] = getattr(torch.Tensor, method_name)
             setattr(
                 torch.Tensor,
                 method_name,
-                self._wrap_method_for_model_recording(model, method_name, cache_name, module_ids),
+                self._wrap_method_for_model_recording(
+                    model, method_name, cache_name, module_ids
+                ),
             )
 
             if method_name == "size":
                 original_methods["shape"] = torch.Tensor.shape
-                setattr(torch.Tensor, "shape", property(getattr(torch.Tensor, method_name)))
+                setattr(
+                    torch.Tensor, "shape", property(getattr(torch.Tensor, method_name))
+                )
 
         return cache_names, original_methods
 
@@ -366,19 +399,27 @@ class HFTracer(Tracer):
         if input_name in ["labels", "start_positions", "end_positions"]:
             batch_size = shape[0]
             if model_class in get_values(MODEL_FOR_MULTIPLE_CHOICE_MAPPING):
-                inputs_dict["labels"] = torch.zeros(batch_size, dtype=torch.long, device=device)
+                inputs_dict["labels"] = torch.zeros(
+                    batch_size, dtype=torch.long, device=device
+                )
             elif model_class in [
                 *get_values(MODEL_FOR_QUESTION_ANSWERING_MAPPING),
                 XLNetForQuestionAnswering,
             ]:
-                inputs_dict["start_positions"] = torch.zeros(batch_size, dtype=torch.long, device=device)
-                inputs_dict["end_positions"] = torch.zeros(batch_size, dtype=torch.long, device=device)
+                inputs_dict["start_positions"] = torch.zeros(
+                    batch_size, dtype=torch.long, device=device
+                )
+                inputs_dict["end_positions"] = torch.zeros(
+                    batch_size, dtype=torch.long, device=device
+                )
             elif model_class in [
                 *get_values(MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING),
                 *get_values(MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING),
                 *get_values(MODEL_FOR_IMAGE_CLASSIFICATION_MAPPING),
             ]:
-                inputs_dict["labels"] = torch.zeros(batch_size, dtype=torch.long, device=device)
+                inputs_dict["labels"] = torch.zeros(
+                    batch_size, dtype=torch.long, device=device
+                )
             elif model_class in [
                 *get_values(MODEL_FOR_PRETRAINING_MAPPING),
                 *get_values(MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING),
@@ -387,19 +428,30 @@ class HFTracer(Tracer):
                 *get_values(MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING),
                 GPT2DoubleHeadsModel,
             ]:
-                inputs_dict["labels"] = torch.zeros(shape, dtype=torch.long, device=device)
+                inputs_dict["labels"] = torch.zeros(
+                    shape, dtype=torch.long, device=device
+                )
             else:
                 raise NotImplementedError(f"{model_class} not supported yet.")
 
         elif "mask" in input_name or "ids" in input_name:
-            inputs_dict[input_name] = torch.zeros(shape, dtype=torch.long, device=device)
+            inputs_dict[input_name] = torch.zeros(
+                shape, dtype=torch.long, device=device
+            )
         else:
             shape_with_hidden_size = shape + [model.config.hidden_size]
-            inputs_dict[input_name] = torch.zeros(shape_with_hidden_size, dtype=torch.float, device=device)
+            inputs_dict[input_name] = torch.zeros(
+                shape_with_hidden_size, dtype=torch.float, device=device
+            )
 
         return inputs_dict
 
-    def record(self, model: PreTrainedModel, input_names: List[str], method_names: Optional[Iterable[str]] = None):
+    def record(
+        self,
+        model: PreTrainedModel,
+        input_names: List[str],
+        method_names: Optional[Iterable[str]] = None,
+    ):
         """
         Records torch.Tensor method outputs (specified by method_names) that will then be used during symbolic tracing.
         """
@@ -419,7 +471,10 @@ class HFTracer(Tracer):
         for input_name in input_names:
             inputs.update(self._generate_dummy_input(model, input_name, shape))
 
-        cache_names, original_methods = self._monkey_patch_tensor_methods_for_model_recording(model, method_names)
+        (
+            cache_names,
+            original_methods,
+        ) = self._monkey_patch_tensor_methods_for_model_recording(model, method_names)
         self.original_methods = original_methods
 
         model(**inputs)
@@ -427,7 +482,9 @@ class HFTracer(Tracer):
         _reset_tensor_methods(original_methods)
 
         self.recorded_methods = {
-            method_name: cache_name for method_name, cache_name in cache_names.items() if hasattr(model, cache_name)
+            method_name: cache_name
+            for method_name, cache_name in cache_names.items()
+            if hasattr(model, cache_name)
         }
 
     def _module_getattr(self, attr, attr_val, parameter_proxy_cache):
@@ -435,14 +492,18 @@ class HFTracer(Tracer):
             for n, p in self.root.named_parameters():
                 if attr_val is p:
                     if n not in parameter_proxy_cache:
-                        parameter_proxy_cache[n] = self.create_proxy("get_attr", n, (), {})
+                        parameter_proxy_cache[n] = self.create_proxy(
+                            "get_attr", n, (), {}
+                        )
                     return parameter_proxy_cache[n]
         # TODO: condition this on wether dynamic axes were requested.
         if isinstance(attr_val, torch.Tensor):
             for n, p in self.root.named_buffers():
                 if attr_val is p:
                     if n not in parameter_proxy_cache:
-                        parameter_proxy_cache[n] = self.create_proxy("get_attr", n, (), {})
+                        parameter_proxy_cache[n] = self.create_proxy(
+                            "get_attr", n, (), {}
+                        )
                     return parameter_proxy_cache[n]
         return attr_val
 
@@ -469,7 +530,9 @@ class HFTracer(Tracer):
         self.record(root, input_names, method_names=method_names)
 
         # TODO: adapt the way leaf function are wrapped with the "autowrap function" feature from Tracer.
-        autowrap_functions = [patched for (_, _, patched) in self._leaf_functions_register.values()]
+        autowrap_functions = [
+            patched for (_, _, patched) in self._leaf_functions_register.values()
+        ]
         self._autowrap_function_ids.update(set([id(f) for f in autowrap_functions]))
 
         self._patch_leaf_functions_for_root(root)
@@ -524,7 +587,9 @@ class HFTracer(Tracer):
             if path is None:
                 path = self._insert_module_as_submodule(mod)
             if path is None:
-                raise NameError(f"Module named {mod._get_name()} is not installed as a submodule")
+                raise NameError(
+                    f"Module named {mod._get_name()} is not installed as a submodule"
+                )
             self.prev_module = path
             return path
 
@@ -537,7 +602,9 @@ class HFTracer(Tracer):
                     return n
             path = self._insert_module_as_submodule(mod)
             if path is None:
-                raise NameError(f"Module {mod._get_name()} is not installed as a submodule")
+                raise NameError(
+                    f"Module {mod._get_name()} is not installed as a submodule"
+                )
             self.prev_module = path
             return path
 
@@ -555,7 +622,6 @@ def symbolic_trace(
     model: PreTrainedModel,
     input_names: Optional[List[str]] = None,
 ) -> GraphModule:
-
     """
     Performs symbolic tracing on the model.
 
@@ -580,7 +646,9 @@ def symbolic_trace(
         input_names = model.dummy_inputs.keys()
 
     sig = inspect.signature(model.forward)
-    concrete_args = {p.name: p.default for p in sig.parameters.values() if p.name not in input_names}
+    concrete_args = {
+        p.name: p.default for p in sig.parameters.values() if p.name not in input_names
+    }
 
     if not isinstance(model, _SUPPORTED_MODELS):
         supported_model_names = ", ".join((cls.__name__ for cls in _SUPPORTED_MODELS))

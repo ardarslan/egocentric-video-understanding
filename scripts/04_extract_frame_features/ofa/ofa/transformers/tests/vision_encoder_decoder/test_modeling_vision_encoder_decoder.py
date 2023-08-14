@@ -20,7 +20,11 @@ import unittest
 from datasets import load_dataset
 from packaging import version
 
-from transformers.file_utils import cached_property, is_torch_available, is_vision_available
+from transformers.file_utils import (
+    cached_property,
+    is_torch_available,
+    is_vision_available,
+)
 from transformers.testing_utils import require_torch, require_vision, slow, torch_device
 
 from ..bart.test_modeling_bart import BartModelTester
@@ -70,9 +74,19 @@ class EncoderDecoderMixin:
         pass
 
     def check_encoder_decoder_model_from_pretrained_configs(
-        self, config, decoder_config, decoder_input_ids, decoder_attention_mask, pixel_values=None, **kwargs
+        self,
+        config,
+        decoder_config,
+        decoder_input_ids,
+        decoder_attention_mask,
+        pixel_values=None,
+        **kwargs
     ):
-        encoder_decoder_config = VisionEncoderDecoderConfig.from_encoder_decoder_configs(config, decoder_config)
+        encoder_decoder_config = (
+            VisionEncoderDecoderConfig.from_encoder_decoder_configs(
+                config, decoder_config
+            )
+        )
         self.assertTrue(encoder_decoder_config.decoder.is_decoder)
 
         enc_dec_model = VisionEncoderDecoderModel(encoder_decoder_config)
@@ -88,14 +102,25 @@ class EncoderDecoderMixin:
         )
 
         self.assertEqual(
-            outputs_encoder_decoder["logits"].shape, (decoder_input_ids.shape + (decoder_config.vocab_size,))
+            outputs_encoder_decoder["logits"].shape,
+            (decoder_input_ids.shape + (decoder_config.vocab_size,)),
         )
 
     def check_encoder_decoder_model(
-        self, config, decoder_config, decoder_input_ids, decoder_attention_mask, pixel_values=None, **kwargs
+        self,
+        config,
+        decoder_config,
+        decoder_input_ids,
+        decoder_attention_mask,
+        pixel_values=None,
+        **kwargs
     ):
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = VisionEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = VisionEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         self.assertTrue(enc_dec_model.config.decoder.is_decoder)
         self.assertTrue(enc_dec_model.config.decoder.add_cross_attention)
         self.assertTrue(enc_dec_model.config.is_encoder_decoder)
@@ -107,9 +132,12 @@ class EncoderDecoderMixin:
             output_hidden_states=True,
         )
         self.assertEqual(
-            outputs_encoder_decoder["logits"].shape, (decoder_input_ids.shape + (decoder_config.vocab_size,))
+            outputs_encoder_decoder["logits"].shape,
+            (decoder_input_ids.shape + (decoder_config.vocab_size,)),
         )
-        encoder_outputs = BaseModelOutput(last_hidden_state=outputs_encoder_decoder.encoder_hidden_states[-1])
+        encoder_outputs = BaseModelOutput(
+            last_hidden_state=outputs_encoder_decoder.encoder_hidden_states[-1]
+        )
         outputs_encoder_decoder = enc_dec_model(
             encoder_outputs=encoder_outputs,
             decoder_input_ids=decoder_input_ids,
@@ -117,7 +145,8 @@ class EncoderDecoderMixin:
         )
 
         self.assertEqual(
-            outputs_encoder_decoder["logits"].shape, (decoder_input_ids.shape + (decoder_config.vocab_size,))
+            outputs_encoder_decoder["logits"].shape,
+            (decoder_input_ids.shape + (decoder_config.vocab_size,)),
         )
 
     def check_encoder_decoder_model_from_pretrained(
@@ -130,9 +159,17 @@ class EncoderDecoderMixin:
         pixel_values=None,
         **kwargs
     ):
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        kwargs = {"encoder_model": encoder_model, "decoder_model": decoder_model, "return_dict": return_dict}
-        enc_dec_model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained(**kwargs)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        kwargs = {
+            "encoder_model": encoder_model,
+            "decoder_model": decoder_model,
+            "return_dict": return_dict,
+        }
+        enc_dec_model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained(
+            **kwargs
+        )
         enc_dec_model.to(torch_device)
         outputs_encoder_decoder = enc_dec_model(
             pixel_values=pixel_values,
@@ -143,14 +180,25 @@ class EncoderDecoderMixin:
         )
 
         self.assertEqual(
-            outputs_encoder_decoder["logits"].shape, (decoder_input_ids.shape + (decoder_config.vocab_size,))
+            outputs_encoder_decoder["logits"].shape,
+            (decoder_input_ids.shape + (decoder_config.vocab_size,)),
         )
 
     def check_save_and_load(
-        self, config, decoder_config, decoder_input_ids, decoder_attention_mask, pixel_values=None, **kwargs
+        self,
+        config,
+        decoder_config,
+        decoder_input_ids,
+        decoder_attention_mask,
+        pixel_values=None,
+        **kwargs
     ):
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = VisionEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = VisionEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         enc_dec_model.to(torch_device)
         enc_dec_model.eval()
         with torch.no_grad():
@@ -178,10 +226,20 @@ class EncoderDecoderMixin:
                 self.assertLessEqual(max_diff, 1e-5)
 
     def check_save_and_load_encoder_decoder_model(
-        self, config, decoder_config, decoder_input_ids, decoder_attention_mask, pixel_values=None, **kwargs
+        self,
+        config,
+        decoder_config,
+        decoder_input_ids,
+        decoder_attention_mask,
+        pixel_values=None,
+        **kwargs
     ):
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = VisionEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = VisionEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         enc_dec_model.to(torch_device)
         enc_dec_model.eval()
         with torch.no_grad():
@@ -224,8 +282,12 @@ class EncoderDecoderMixin:
         # make the decoder inputs a different shape from the encoder inputs to harden the test
         decoder_input_ids = decoder_input_ids[:, :-1]
         decoder_attention_mask = decoder_attention_mask[:, :-1]
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = VisionEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = VisionEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         enc_dec_model.to(torch_device)
         outputs_encoder_decoder = enc_dec_model(
             pixel_values=pixel_values,
@@ -240,9 +302,14 @@ class EncoderDecoderMixin:
         # in ViT, the seq_len equals the number of patches + 1 (we add 1 for the [CLS] token)
         image_size = to_2tuple(encoder_model.config.image_size)
         patch_size = to_2tuple(encoder_model.config.patch_size)
-        num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
+        num_patches = (image_size[1] // patch_size[1]) * (
+            image_size[0] // patch_size[0]
+        )
         seq_len = num_patches + 1
-        self.assertEqual(encoder_attentions[0].shape[-3:], (config.num_attention_heads, seq_len, seq_len))
+        self.assertEqual(
+            encoder_attentions[0].shape[-3:],
+            (config.num_attention_heads, seq_len, seq_len),
+        )
 
         decoder_attentions = outputs_encoder_decoder["decoder_attentions"]
         num_decoder_layers = (
@@ -254,7 +321,11 @@ class EncoderDecoderMixin:
 
         self.assertEqual(
             decoder_attentions[0].shape[-3:],
-            (decoder_config.num_attention_heads, decoder_input_ids.shape[-1], decoder_input_ids.shape[-1]),
+            (
+                decoder_config.num_attention_heads,
+                decoder_input_ids.shape[-1],
+                decoder_input_ids.shape[-1],
+            ),
         )
 
         cross_attentions = outputs_encoder_decoder["cross_attentions"]
@@ -263,12 +334,22 @@ class EncoderDecoderMixin:
         cross_attention_input_seq_len = decoder_input_ids.shape[-1]
         self.assertEqual(
             cross_attentions[0].shape[-3:],
-            (decoder_config.num_attention_heads, cross_attention_input_seq_len, seq_len),
+            (
+                decoder_config.num_attention_heads,
+                cross_attention_input_seq_len,
+                seq_len,
+            ),
         )
 
-    def check_encoder_decoder_model_generate(self, config, decoder_config, pixel_values=None, **kwargs):
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = VisionEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+    def check_encoder_decoder_model_generate(
+        self, config, decoder_config, pixel_values=None, **kwargs
+    ):
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = VisionEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         enc_dec_model.to(torch_device)
 
         inputs = pixel_values
@@ -277,7 +358,9 @@ class EncoderDecoderMixin:
         generated_output = enc_dec_model.generate(
             inputs, decoder_start_token_id=enc_dec_model.config.decoder.pad_token_id
         )
-        self.assertEqual(generated_output.shape, (inputs.shape[0],) + (decoder_config.max_length,))
+        self.assertEqual(
+            generated_output.shape, (inputs.shape[0],) + (decoder_config.max_length,)
+        )
 
     def test_encoder_decoder_model(self):
         input_ids_dict = self.prepare_config_and_inputs()
@@ -289,11 +372,15 @@ class EncoderDecoderMixin:
 
     def test_encoder_decoder_model_from_pretrained(self):
         input_ids_dict = self.prepare_config_and_inputs()
-        self.check_encoder_decoder_model_from_pretrained(**input_ids_dict, return_dict=False)
+        self.check_encoder_decoder_model_from_pretrained(
+            **input_ids_dict, return_dict=False
+        )
 
     def test_encoder_decoder_model_from_pretrained_return_dict(self):
         input_ids_dict = self.prepare_config_and_inputs()
-        self.check_encoder_decoder_model_from_pretrained(**input_ids_dict, return_dict=True)
+        self.check_encoder_decoder_model_from_pretrained(
+            **input_ids_dict, return_dict=True
+        )
 
     def test_save_and_load_from_pretrained(self):
         input_ids_dict = self.prepare_config_and_inputs()
@@ -337,7 +424,8 @@ class EncoderDecoderMixin:
 class DeiT2RobertaModelTest(EncoderDecoderMixin, unittest.TestCase):
     def get_pretrained_model_and_inputs(self):
         model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained(
-            "hf-internal-testing/tiny-random-deit", "hf-internal-testing/tiny-random-roberta"
+            "hf-internal-testing/tiny-random-deit",
+            "hf-internal-testing/tiny-random-roberta",
         )
         batch_size = 13
         pixel_values = floats_tensor(
@@ -372,8 +460,12 @@ class DeiT2RobertaModelTest(EncoderDecoderMixin, unittest.TestCase):
         # make the decoder inputs a different shape from the encoder inputs to harden the test
         decoder_input_ids = decoder_input_ids[:, :-1]
         decoder_attention_mask = decoder_attention_mask[:, :-1]
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = VisionEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = VisionEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         enc_dec_model.to(torch_device)
         outputs_encoder_decoder = enc_dec_model(
             pixel_values=pixel_values,
@@ -388,9 +480,14 @@ class DeiT2RobertaModelTest(EncoderDecoderMixin, unittest.TestCase):
         # in DEiT, the seq_len equals the number of patches + 2 (we add 2 for the [CLS] and distillation tokens)
         image_size = to_2tuple(encoder_model.config.image_size)
         patch_size = to_2tuple(encoder_model.config.patch_size)
-        num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
+        num_patches = (image_size[1] // patch_size[1]) * (
+            image_size[0] // patch_size[0]
+        )
         seq_len = num_patches + 2
-        self.assertEqual(encoder_attentions[0].shape[-3:], (config.num_attention_heads, seq_len, seq_len))
+        self.assertEqual(
+            encoder_attentions[0].shape[-3:],
+            (config.num_attention_heads, seq_len, seq_len),
+        )
 
         decoder_attentions = outputs_encoder_decoder["decoder_attentions"]
         num_decoder_layers = (
@@ -402,7 +499,11 @@ class DeiT2RobertaModelTest(EncoderDecoderMixin, unittest.TestCase):
 
         self.assertEqual(
             decoder_attentions[0].shape[-3:],
-            (decoder_config.num_attention_heads, decoder_input_ids.shape[-1], decoder_input_ids.shape[-1]),
+            (
+                decoder_config.num_attention_heads,
+                decoder_input_ids.shape[-1],
+                decoder_input_ids.shape[-1],
+            ),
         )
 
         cross_attentions = outputs_encoder_decoder["cross_attentions"]
@@ -411,7 +512,11 @@ class DeiT2RobertaModelTest(EncoderDecoderMixin, unittest.TestCase):
         cross_attention_input_seq_len = decoder_input_ids.shape[-1]
         self.assertEqual(
             cross_attentions[0].shape[-3:],
-            (decoder_config.num_attention_heads, cross_attention_input_seq_len, seq_len),
+            (
+                decoder_config.num_attention_heads,
+                cross_attention_input_seq_len,
+                seq_len,
+            ),
         )
 
     def get_encoder_decoder_model(self, config, decoder_config):
@@ -423,7 +528,9 @@ class DeiT2RobertaModelTest(EncoderDecoderMixin, unittest.TestCase):
         bert_model_tester = BertModelTester(self)
         deit_model_tester = DeiTModelTester(self)
         encoder_config_and_inputs = deit_model_tester.prepare_config_and_inputs()
-        decoder_config_and_inputs = bert_model_tester.prepare_config_and_inputs_for_decoder()
+        decoder_config_and_inputs = (
+            bert_model_tester.prepare_config_and_inputs_for_decoder()
+        )
         config, pixel_values, _ = encoder_config_and_inputs
         (
             decoder_config,
@@ -488,7 +595,9 @@ class ViT2BertModelTest(EncoderDecoderMixin, unittest.TestCase):
         vit_model_tester = ViTModelTester(self)
         bert_model_tester = BertModelTester(self)
         encoder_config_and_inputs = vit_model_tester.prepare_config_and_inputs()
-        decoder_config_and_inputs = bert_model_tester.prepare_config_and_inputs_for_decoder()
+        decoder_config_and_inputs = (
+            bert_model_tester.prepare_config_and_inputs_for_decoder()
+        )
 
         config, pixel_values, _ = encoder_config_and_inputs
 
@@ -529,7 +638,9 @@ class Swin2BartModelTest(EncoderDecoderMixin, unittest.TestCase):
 
     def prepare_config_and_inputs(self):
         model_tester_encoder = SwinModelTester(self, batch_size=13, embed_dim=32)
-        model_tester_decoder = BartModelTester(self, batch_size=13, hidden_size=32, max_position_embeddings=512)
+        model_tester_decoder = BartModelTester(
+            self, batch_size=13, hidden_size=32, max_position_embeddings=512
+        )
         encoder_config_and_inputs = model_tester_encoder.prepare_config_and_inputs()
         decoder_config_and_inputs = model_tester_decoder.prepare_config_and_inputs()
         config, pixel_values, _ = encoder_config_and_inputs
@@ -559,8 +670,12 @@ class Swin2BartModelTest(EncoderDecoderMixin, unittest.TestCase):
         # make the decoder inputs a different shape from the encoder inputs to harden the test
         decoder_input_ids = decoder_input_ids[:, :-1]
         decoder_attention_mask = decoder_attention_mask[:, :-1]
-        encoder_model, decoder_model = self.get_encoder_decoder_model(config, decoder_config)
-        enc_dec_model = VisionEncoderDecoderModel(encoder=encoder_model, decoder=decoder_model)
+        encoder_model, decoder_model = self.get_encoder_decoder_model(
+            config, decoder_config
+        )
+        enc_dec_model = VisionEncoderDecoderModel(
+            encoder=encoder_model, decoder=decoder_model
+        )
         enc_dec_model.to(torch_device)
         outputs_encoder_decoder = enc_dec_model(
             pixel_values=pixel_values,
@@ -574,7 +689,10 @@ class Swin2BartModelTest(EncoderDecoderMixin, unittest.TestCase):
 
         # in Swin, the seq_len equals:
         seq_len = encoder_model.config.window_size**2
-        self.assertEqual(encoder_attentions[0].shape[-3:], (config.num_attention_heads[0], seq_len, seq_len))
+        self.assertEqual(
+            encoder_attentions[0].shape[-3:],
+            (config.num_attention_heads[0], seq_len, seq_len),
+        )
 
         decoder_attentions = outputs_encoder_decoder["decoder_attentions"]
         num_decoder_layers = (
@@ -586,17 +704,27 @@ class Swin2BartModelTest(EncoderDecoderMixin, unittest.TestCase):
 
         self.assertEqual(
             decoder_attentions[0].shape[-3:],
-            (decoder_config.num_attention_heads, decoder_input_ids.shape[-1], decoder_input_ids.shape[-1]),
+            (
+                decoder_config.num_attention_heads,
+                decoder_input_ids.shape[-1],
+                decoder_input_ids.shape[-1],
+            ),
         )
 
         cross_attentions = outputs_encoder_decoder["cross_attentions"]
         self.assertEqual(len(cross_attentions), num_decoder_layers)
 
-        encoder_seq_len = ((config.image_size // config.patch_size) ** 2) // (4 ** (len(config.depths) - 1))
+        encoder_seq_len = ((config.image_size // config.patch_size) ** 2) // (
+            4 ** (len(config.depths) - 1)
+        )
         cross_attention_input_seq_len = decoder_input_ids.shape[-1]
         self.assertEqual(
             cross_attentions[0].shape[-3:],
-            (decoder_config.num_attention_heads, cross_attention_input_seq_len, encoder_seq_len),
+            (
+                decoder_config.num_attention_heads,
+                cross_attention_input_seq_len,
+                encoder_seq_len,
+            ),
         )
 
     # there are no published pretrained BART-causal checkpoints for now
@@ -619,7 +747,12 @@ class ViT2TrOCR(EncoderDecoderMixin, unittest.TestCase):
         encoder_config_and_inputs = model_tester_encoder.prepare_config_and_inputs()
         decoder_config_and_inputs = model_tester_decoder.prepare_config_and_inputs()
         config, pixel_values, _ = encoder_config_and_inputs
-        (decoder_config, decoder_input_ids, decoder_attention_mask, _) = decoder_config_and_inputs
+        (
+            decoder_config,
+            decoder_input_ids,
+            decoder_attention_mask,
+            _,
+        ) = decoder_config_and_inputs
 
         # make sure that cross attention layers are added
         decoder_config.add_cross_attention = True
@@ -643,20 +776,30 @@ class ViT2TrOCR(EncoderDecoderMixin, unittest.TestCase):
 class TrOCRModelIntegrationTest(unittest.TestCase):
     @cached_property
     def default_processor(self):
-        return TrOCRProcessor.from_pretrained("microsoft/trocr-base-handwritten") if is_vision_available() else None
+        return (
+            TrOCRProcessor.from_pretrained("microsoft/trocr-base-handwritten")
+            if is_vision_available()
+            else None
+        )
 
     @slow
     def test_inference_handwritten(self):
-        model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-handwritten").to(torch_device)
+        model = VisionEncoderDecoderModel.from_pretrained(
+            "microsoft/trocr-base-handwritten"
+        ).to(torch_device)
 
         ds = load_dataset("hf-internal-testing/fixtures_ocr", split="test")
         image = Image.open(ds[0]["file"]).convert("RGB")
 
         processor = self.default_processor
-        pixel_values = processor(images=image, return_tensors="pt").pixel_values.to(torch_device)
+        pixel_values = processor(images=image, return_tensors="pt").pixel_values.to(
+            torch_device
+        )
 
         # forward pass
-        decoder_input_ids = torch.tensor([[model.config.decoder.decoder_start_token_id]]).to(torch_device)
+        decoder_input_ids = torch.tensor(
+            [[model.config.decoder.decoder_start_token_id]]
+        ).to(torch_device)
         outputs = model(pixel_values=pixel_values, decoder_input_ids=decoder_input_ids)
         logits = outputs.logits
 
@@ -665,23 +808,40 @@ class TrOCRModelIntegrationTest(unittest.TestCase):
         self.assertEqual(outputs.logits.shape, expected_shape)
 
         expected_slice = torch.tensor(
-            [-1.4502, -4.6683, -0.5347, -2.9291, 9.1435, -3.0571, 8.9764, 1.7560, 8.7358, -1.5311]
+            [
+                -1.4502,
+                -4.6683,
+                -0.5347,
+                -2.9291,
+                9.1435,
+                -3.0571,
+                8.9764,
+                1.7560,
+                8.7358,
+                -1.5311,
+            ]
         ).to(torch_device)
 
         self.assertTrue(torch.allclose(logits[0, 0, :10], expected_slice, atol=1e-4))
 
     @slow
     def test_inference_printed(self):
-        model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-printed").to(torch_device)
+        model = VisionEncoderDecoderModel.from_pretrained(
+            "microsoft/trocr-base-printed"
+        ).to(torch_device)
 
         ds = load_dataset("hf-internal-testing/fixtures_ocr", split="test")
         image = Image.open(ds[1]["file"]).convert("RGB")
 
         processor = self.default_processor
-        pixel_values = processor(images=image, return_tensors="pt").pixel_values.to(torch_device)
+        pixel_values = processor(images=image, return_tensors="pt").pixel_values.to(
+            torch_device
+        )
 
         # forward pass
-        decoder_input_ids = torch.tensor([[model.config.decoder.decoder_start_token_id]]).to(torch_device)
+        decoder_input_ids = torch.tensor(
+            [[model.config.decoder.decoder_start_token_id]]
+        ).to(torch_device)
         outputs = model(pixel_values=pixel_values, decoder_input_ids=decoder_input_ids)
         logits = outputs.logits
 
@@ -693,12 +853,34 @@ class TrOCRModelIntegrationTest(unittest.TestCase):
 
         if is_pillow_less_than_9:
             expected_slice = torch.tensor(
-                [-5.6816, -5.8388, 1.1398, -6.9034, 6.8505, -2.4393, 1.2284, -1.0232, -1.9661, -3.9210],
+                [
+                    -5.6816,
+                    -5.8388,
+                    1.1398,
+                    -6.9034,
+                    6.8505,
+                    -2.4393,
+                    1.2284,
+                    -1.0232,
+                    -1.9661,
+                    -3.9210,
+                ],
                 device=torch_device,
             )
         else:
             expected_slice = torch.tensor(
-                [-5.6844, -5.8372, 1.1518, -6.8984, 6.8587, -2.4453, 1.2347, -1.0241, -1.9649, -3.9109],
+                [
+                    -5.6844,
+                    -5.8372,
+                    1.1518,
+                    -6.8984,
+                    6.8587,
+                    -2.4453,
+                    1.2347,
+                    -1.0241,
+                    -1.9649,
+                    -3.9109,
+                ],
                 device=torch_device,
             )
 
@@ -710,7 +892,6 @@ class TrOCRModelIntegrationTest(unittest.TestCase):
 class ViT2GPT2ModelIntegrationTest(unittest.TestCase):
     @slow
     def test_inference_coco_en(self):
-
         loc = "ydshieh/vit-gpt2-coco-en"
 
         feature_extractor = ViTFeatureExtractor.from_pretrained(loc)
@@ -721,9 +902,13 @@ class ViT2GPT2ModelIntegrationTest(unittest.TestCase):
 
         # We will verify our results on an image of cute cats
         img = Image.open("./tests/fixtures/tests_samples/COCO/000000039769.png")
-        pixel_values = feature_extractor(images=img, return_tensors="pt").pixel_values.to(torch_device)
+        pixel_values = feature_extractor(
+            images=img, return_tensors="pt"
+        ).pixel_values.to(torch_device)
 
-        decoder_input_ids = torch.tensor([[model.config.decoder_start_token_id]]).to(torch_device)
+        decoder_input_ids = torch.tensor([[model.config.decoder_start_token_id]]).to(
+            torch_device
+        )
 
         with torch.no_grad():
             logits = model(pixel_values, decoder_input_ids)[0].detach().cpu().numpy()
@@ -750,9 +935,12 @@ class ViT2GPT2ModelIntegrationTest(unittest.TestCase):
         self.assertLessEqual(max_diff, 1e-4)
 
         def generate_step(pixel_values):
-
             outputs = model.generate(
-                pixel_values, max_length=16, num_beams=4, return_dict_in_generate=True, output_scores=True
+                pixel_values,
+                max_length=16,
+                num_beams=4,
+                return_dict_in_generate=True,
+                output_scores=True,
             )
             output_ids = outputs.sequences
             preds = tokenizer.batch_decode(output_ids, skip_special_tokens=True)

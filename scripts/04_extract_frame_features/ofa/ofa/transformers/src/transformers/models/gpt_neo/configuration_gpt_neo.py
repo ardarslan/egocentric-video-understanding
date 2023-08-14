@@ -95,7 +95,10 @@ class GPTNeoConfig(PretrainedConfig):
     ```"""
     model_type = "gpt_neo"
     keys_to_ignore_at_inference = ["past_key_values"]
-    attribute_map = {"num_attention_heads": "num_heads", "num_hidden_layers": "num_layers"}
+    attribute_map = {
+        "num_attention_heads": "num_heads",
+        "num_hidden_layers": "num_layers",
+    }
 
     def __init__(
         self,
@@ -121,7 +124,7 @@ class GPTNeoConfig(PretrainedConfig):
         use_cache=True,
         bos_token_id=50256,
         eos_token_id=50256,
-        **kwargs
+        **kwargs,
     ):
         self.vocab_size = vocab_size
         self.max_position_embeddings = max_position_embeddings
@@ -204,7 +207,9 @@ def custom_get_block_length_and_num_blocks(seq_length, window_size):
     divisor_indices = remainders == 0
     divisors = candidates[divisor_indices]
     largest_divisor = torch.max(divisors)
-    return largest_divisor, torch.div(seq_length, largest_divisor, rounding_mode="floor")
+    return largest_divisor, torch.div(
+        seq_length, largest_divisor, rounding_mode="floor"
+    )
 
 
 class GPTNeoOnnxConfig(OnnxConfigWithPast):
@@ -213,7 +218,10 @@ class GPTNeoOnnxConfig(OnnxConfigWithPast):
         common_inputs = OrderedDict({"input_ids": {0: "batch", 1: "sequence"}})
         if self.use_past:
             self.fill_with_past_key_values_(common_inputs, direction="inputs")
-            common_inputs["attention_mask"] = {0: "batch", 1: "past_sequence + sequence"}
+            common_inputs["attention_mask"] = {
+                0: "batch",
+                1: "past_sequence + sequence",
+            }
         else:
             common_inputs["attention_mask"] = {0: "batch", 1: "sequence"}
 
@@ -231,7 +239,6 @@ class GPTNeoOnnxConfig(OnnxConfigWithPast):
         is_pair: bool = False,
         framework: Optional[TensorType] = None,
     ) -> Mapping[str, Any]:
-
         common_inputs = super(OnnxConfigWithPast, self).generate_dummy_inputs(
             tokenizer, batch_size, seq_length, is_pair, framework
         )
@@ -242,7 +249,9 @@ class GPTNeoOnnxConfig(OnnxConfigWithPast):
         # Need to add the past_keys
         if self.use_past:
             if not is_torch_available():
-                raise ValueError("Cannot generate dummy past_keys inputs without PyTorch installed.")
+                raise ValueError(
+                    "Cannot generate dummy past_keys inputs without PyTorch installed."
+                )
             else:
                 import torch
 
@@ -256,13 +265,18 @@ class GPTNeoOnnxConfig(OnnxConfigWithPast):
                     self._config.hidden_size // self.num_attention_heads,
                 )
                 ordered_inputs["past_key_values"] = [
-                    (torch.zeros(past_shape), torch.zeros(past_shape)) for _ in range(self.num_layers)
+                    (torch.zeros(past_shape), torch.zeros(past_shape))
+                    for _ in range(self.num_layers)
                 ]
 
         ordered_inputs["attention_mask"] = common_inputs["attention_mask"]
         if self.use_past:
             ordered_inputs["attention_mask"] = torch.cat(
-                [ordered_inputs["attention_mask"], torch.ones(batch, past_key_values_length)], dim=1
+                [
+                    ordered_inputs["attention_mask"],
+                    torch.ones(batch, past_key_values_length),
+                ],
+                dim=1,
             )
 
         return ordered_inputs

@@ -19,7 +19,11 @@ import inspect
 import unittest
 
 from transformers import SwinConfig
-from transformers.file_utils import cached_property, is_torch_available, is_vision_available
+from transformers.file_utils import (
+    cached_property,
+    is_torch_available,
+    is_vision_available,
+)
 from transformers.testing_utils import require_torch, require_vision, slow, torch_device
 
 from ..test_configuration_common import ConfigTester
@@ -30,8 +34,15 @@ if is_torch_available():
     import torch
     from torch import nn
 
-    from transformers import SwinForImageClassification, SwinForMaskedImageModeling, SwinModel
-    from transformers.models.swin.modeling_swin import SWIN_PRETRAINED_MODEL_ARCHIVE_LIST, to_2tuple
+    from transformers import (
+        SwinForImageClassification,
+        SwinForMaskedImageModeling,
+        SwinModel,
+    )
+    from transformers.models.swin.modeling_swin import (
+        SWIN_PRETRAINED_MODEL_ARCHIVE_LIST,
+        to_2tuple,
+    )
 
 if is_vision_available():
     from PIL import Image
@@ -42,7 +53,12 @@ if is_vision_available():
 def _config_zero_init(config):
     configs_no_init = copy.deepcopy(config)
     for key in configs_no_init.__dict__.keys():
-        if "_range" in key or "_std" in key or "initializer_factor" in key or "layer_scale" in key:
+        if (
+            "_range" in key
+            or "_std" in key
+            or "initializer_factor" in key
+            or "layer_scale" in key
+        ):
             setattr(configs_no_init, key, 1e-10)
     return configs_no_init
 
@@ -101,7 +117,9 @@ class SwinModelTester:
         self.encoder_stride = encoder_stride
 
     def prepare_config_and_inputs(self):
-        pixel_values = floats_tensor([self.batch_size, self.num_channels, self.image_size, self.image_size])
+        pixel_values = floats_tensor(
+            [self.batch_size, self.num_channels, self.image_size, self.image_size]
+        )
 
         labels = None
         if self.use_labels:
@@ -139,10 +157,15 @@ class SwinModelTester:
         model.eval()
         result = model(pixel_values)
 
-        expected_seq_len = ((config.image_size // config.patch_size) ** 2) // (4 ** (len(config.depths) - 1))
+        expected_seq_len = ((config.image_size // config.patch_size) ** 2) // (
+            4 ** (len(config.depths) - 1)
+        )
         expected_dim = int(config.embed_dim * 2 ** (len(config.depths) - 1))
 
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, expected_seq_len, expected_dim))
+        self.parent.assertEqual(
+            result.last_hidden_state.shape,
+            (self.batch_size, expected_seq_len, expected_dim),
+        )
 
     def create_and_check_for_image_classification(self, config, pixel_values, labels):
         config.num_labels = self.type_sequence_label_size
@@ -150,7 +173,9 @@ class SwinModelTester:
         model.to(torch_device)
         model.eval()
         result = model(pixel_values, labels=labels)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.type_sequence_label_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.type_sequence_label_size)
+        )
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -165,7 +190,6 @@ class SwinModelTester:
 
 @require_torch
 class SwinModelTest(ModelTesterMixin, unittest.TestCase):
-
     all_model_classes = (
         (
             SwinModel,
@@ -257,7 +281,11 @@ class SwinModelTest(ModelTesterMixin, unittest.TestCase):
 
             self.assertListEqual(
                 list(attentions[0].shape[-3:]),
-                [self.model_tester.num_heads[0], window_size_squared, window_size_squared],
+                [
+                    self.model_tester.num_heads[0],
+                    window_size_squared,
+                    window_size_squared,
+                ],
             )
             out_len = len(outputs)
 
@@ -283,7 +311,11 @@ class SwinModelTest(ModelTesterMixin, unittest.TestCase):
 
             self.assertListEqual(
                 list(self_attentions[0].shape[-3:]),
-                [self.model_tester.num_heads[0], window_size_squared, window_size_squared],
+                [
+                    self.model_tester.num_heads[0],
+                    window_size_squared,
+                    window_size_squared,
+                ],
             )
 
     def test_hidden_states_output(self):
@@ -298,7 +330,9 @@ class SwinModelTest(ModelTesterMixin, unittest.TestCase):
             hidden_states = outputs.hidden_states
 
             expected_num_layers = getattr(
-                self.model_tester, "expected_num_hidden_layers", len(self.model_tester.depths) + 1
+                self.model_tester,
+                "expected_num_hidden_layers",
+                len(self.model_tester.depths) + 1,
             )
             self.assertEqual(len(hidden_states), expected_num_layers)
 
@@ -306,7 +340,9 @@ class SwinModelTest(ModelTesterMixin, unittest.TestCase):
             image_size = to_2tuple(self.model_tester.image_size)
             patch_size = to_2tuple(self.model_tester.patch_size)
 
-            num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
+            num_patches = (image_size[1] // patch_size[1]) * (
+                image_size[0] // patch_size[0]
+            )
 
             self.assertListEqual(
                 list(hidden_states[0].shape[-2:]),
@@ -318,7 +354,9 @@ class SwinModelTest(ModelTesterMixin, unittest.TestCase):
 
             batch_size, num_channels, height, width = reshaped_hidden_states[0].shape
             reshaped_hidden_states = (
-                reshaped_hidden_states[0].view(batch_size, num_channels, height * width).permute(0, 2, 1)
+                reshaped_hidden_states[0]
+                .view(batch_size, num_channels, height * width)
+                .permute(0, 2, 1)
             )
             self.assertListEqual(
                 list(reshaped_hidden_states.shape[-2:]),
@@ -368,14 +406,18 @@ class SwinModelIntegrationTest(unittest.TestCase):
     @cached_property
     def default_feature_extractor(self):
         return (
-            AutoFeatureExtractor.from_pretrained("microsoft/swin-tiny-patch4-window7-224")
+            AutoFeatureExtractor.from_pretrained(
+                "microsoft/swin-tiny-patch4-window7-224"
+            )
             if is_vision_available()
             else None
         )
 
     @slow
     def test_inference_image_classification_head(self):
-        model = SwinForImageClassification.from_pretrained("microsoft/swin-tiny-patch4-window7-224").to(torch_device)
+        model = SwinForImageClassification.from_pretrained(
+            "microsoft/swin-tiny-patch4-window7-224"
+        ).to(torch_device)
         feature_extractor = self.default_feature_extractor
 
         image = Image.open("./tests/fixtures/tests_samples/COCO/000000039769.png")
@@ -389,4 +431,6 @@ class SwinModelIntegrationTest(unittest.TestCase):
         expected_shape = torch.Size((1, 1000))
         self.assertEqual(outputs.logits.shape, expected_shape)
         expected_slice = torch.tensor([-0.0948, -0.6454, -0.0921]).to(torch_device)
-        self.assertTrue(torch.allclose(outputs.logits[0, :3], expected_slice, atol=1e-4))
+        self.assertTrue(
+            torch.allclose(outputs.logits[0, :3], expected_slice, atol=1e-4)
+        )

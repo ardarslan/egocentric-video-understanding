@@ -19,7 +19,13 @@ from typing import List, Optional, Union
 
 from ...file_utils import TensorType
 from ...processing_utils import ProcessorMixin
-from ...tokenization_utils_base import BatchEncoding, PaddingStrategy, PreTokenizedInput, TextInput, TruncationStrategy
+from ...tokenization_utils_base import (
+    BatchEncoding,
+    PaddingStrategy,
+    PreTokenizedInput,
+    TextInput,
+    TruncationStrategy,
+)
 
 
 class LayoutLMv2Processor(ProcessorMixin):
@@ -47,7 +53,9 @@ class LayoutLMv2Processor(ProcessorMixin):
     def __call__(
         self,
         images,
-        text: Union[TextInput, PreTokenizedInput, List[TextInput], List[PreTokenizedInput]] = None,
+        text: Union[
+            TextInput, PreTokenizedInput, List[TextInput], List[PreTokenizedInput]
+        ] = None,
         text_pair: Optional[Union[PreTokenizedInput, List[PreTokenizedInput]]] = None,
         boxes: Union[List[List[int]], List[List[List[int]]]] = None,
         word_labels: Optional[Union[List[int], List[List[int]]]] = None,
@@ -96,7 +104,9 @@ class LayoutLMv2Processor(ProcessorMixin):
         # second, apply the tokenizer
         if text is not None and self.feature_extractor.apply_ocr and text_pair is None:
             if isinstance(text, str):
-                text = [text]  # add batch dimension (as the feature extractor always adds a batch dimension)
+                text = [
+                    text
+                ]  # add batch dimension (as the feature extractor always adds a batch dimension)
             text_pair = features["words"]
 
         encoded_inputs = self.tokenizer(

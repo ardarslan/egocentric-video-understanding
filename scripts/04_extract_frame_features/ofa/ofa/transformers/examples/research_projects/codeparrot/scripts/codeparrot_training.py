@@ -14,7 +14,14 @@ import wandb
 from accelerate import Accelerator
 from arguments import TrainingArguments
 from huggingface_hub import Repository
-from transformers import AdamW, AutoModelForCausalLM, AutoTokenizer, HfArgumentParser, get_scheduler, set_seed
+from transformers import (
+    AdamW,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    HfArgumentParser,
+    get_scheduler,
+    set_seed,
+)
 
 
 class ConstantLengthDataset(IterableDataset):
@@ -30,7 +37,13 @@ class ConstantLengthDataset(IterableDataset):
     """
 
     def __init__(
-        self, tokenizer, dataset, infinite=False, seq_length=1024, num_of_sequences=1024, chars_per_token=3.6
+        self,
+        tokenizer,
+        dataset,
+        infinite=False,
+        seq_length=1024,
+        num_of_sequences=1024,
+        chars_per_token=3.6,
     ):
         self.tokenizer = tokenizer
         self.concat_token_id = tokenizer.bos_token_id
@@ -103,8 +116,12 @@ def create_dataloaders(args):
     train_data = load_dataset(args.dataset_name_train, split="train", **ds_kwargs)
     train_data = train_data.shuffle(buffer_size=args.shuffle_buffer, seed=args.seed)
     valid_data = load_dataset(args.dataset_name_valid, split="train", **ds_kwargs)
-    train_dataset = ConstantLengthDataset(tokenizer, train_data, infinite=True, seq_length=args.seq_length)
-    valid_dataset = ConstantLengthDataset(tokenizer, valid_data, infinite=False, seq_length=args.seq_length)
+    train_dataset = ConstantLengthDataset(
+        tokenizer, train_data, infinite=True, seq_length=args.seq_length
+    )
+    valid_dataset = ConstantLengthDataset(
+        tokenizer, valid_data, infinite=False, seq_length=args.seq_length
+    )
     train_dataloader = DataLoader(train_dataset, batch_size=args.train_batch_size)
     eval_dataloader = DataLoader(valid_dataset, batch_size=args.valid_batch_size)
     return train_dataloader, eval_dataloader
@@ -206,7 +223,13 @@ completed_steps = 0
 for step, batch in enumerate(train_dataloader, start=1):
     loss = model(batch, labels=batch, use_cache=False).loss
     log_metrics(
-        step, {"lr": get_lr(), "samples": step * samples_per_step, "steps": completed_steps, "loss/train": loss.item()}
+        step,
+        {
+            "lr": get_lr(),
+            "samples": step * samples_per_step,
+            "steps": completed_steps,
+            "loss/train": loss.item(),
+        },
     )
     loss = loss / args.gradient_accumulation_steps
     accelerator.backward(loss)

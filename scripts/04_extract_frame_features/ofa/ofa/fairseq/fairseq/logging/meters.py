@@ -18,7 +18,6 @@ try:
         else:
             return a
 
-
 except ImportError:
     torch = None
 

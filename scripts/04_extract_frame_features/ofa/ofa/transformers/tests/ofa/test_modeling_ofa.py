@@ -20,7 +20,13 @@ import tempfile
 import unittest
 
 from transformers import is_torch_available
-from transformers.testing_utils import require_sentencepiece, require_tokenizers, require_torch, slow, torch_device
+from transformers.testing_utils import (
+    require_sentencepiece,
+    require_tokenizers,
+    require_torch,
+    slow,
+    torch_device,
+)
 
 from PIL import Image
 
@@ -37,18 +43,20 @@ if is_torch_available():
 @require_sentencepiece
 @require_tokenizers
 class OFAModelIntegrationTests(unittest.TestCase):
-
     @slow
     def test_small_integration_test(self):
         mean, std = [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]
         resolution = 256
-        patch_resize_transform = transforms.Compose([
-            lambda image: image.convert("RGB"),
-            transforms.Resize((resolution, resolution), interpolation=Image.BICUBIC),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=mean, std=std)
-        ])
-
+        patch_resize_transform = transforms.Compose(
+            [
+                lambda image: image.convert("RGB"),
+                transforms.Resize(
+                    (resolution, resolution), interpolation=Image.BICUBIC
+                ),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=mean, std=std),
+            ]
+        )
 
         model = OFAForConditionalGeneration.from_pretrained("OFA-Sys/OFA-base")
         tokenizer = OFATokenizer.from_pretrained("OFA-Sys/OFA-base")
@@ -58,6 +66,4 @@ class OFAModelIntegrationTests(unittest.TestCase):
         patch_img = patch_resize_transform(image).unsqueeze(0)
         gen = model.generate(inputs, patch_images=patch_img, num_beams=4)
         result = tokenizer.batch_decode(gen, skip_special_tokens=True).strip()
-        self.assertTrue(result == 'the cats are laying down')
-
-
+        self.assertTrue(result == "the cats are laying down")

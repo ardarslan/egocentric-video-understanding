@@ -61,7 +61,6 @@ def main(tsv_dir, split, nshard, rank, feat_dir, sample_rate):
     dump_feature(reader, generator, num, split, nshard, rank, feat_dir)
 
 
-
 if __name__ == "__main__":
     import argparse
 

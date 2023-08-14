@@ -38,11 +38,13 @@ def main(arg_dict=None):
                 if component in video_list:
                     video_id = component
                     break
-            
+
             if video_id is None:
                 continue
 
-            reader = VideoReader(get_video_path(video_id), get_extracted_frame_dir_path(video_id))
+            reader = VideoReader(
+                get_video_path(video_id), get_extracted_frame_dir_path(video_id)
+            )
             video_width = reader.video_width
             video_height = reader.video_height
 
@@ -71,13 +73,17 @@ def main(arg_dict=None):
             pkl_data = read_pkl(path)
             first_entry = False
             if not isinstance(pkl_data, dict):
-                if isinstance(pkl_data, list) and len(pkl_data) == 1 and args.auto_first_entry_if_only:
-                    first_entry = True 
+                if (
+                    isinstance(pkl_data, list)
+                    and len(pkl_data) == 1
+                    and args.auto_first_entry_if_only
+                ):
+                    first_entry = True
                 else:
                     print(f"Not a dict: {path}")
                     continue
 
-            if first_entry: 
+            if first_entry:
                 pkl_data[0]["image_width"] = width_to_use
                 pkl_data[0]["image_height"] = height_to_use
             else:
@@ -86,12 +92,14 @@ def main(arg_dict=None):
 
             if fn_lower.endswith(".zip"):
                 # "path" already ends with ".zip":
-                with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED, False) as zip_file:
+                with zipfile.ZipFile(
+                    path, "w", zipfile.ZIP_DEFLATED, False
+                ) as zip_file:
                     zip_file.writestr(basename(path), pickle.dumps(pkl_data))
             else:
                 with open(path, "wb") as f:
                     pickle.dump(pkl_data, f)
-            
+
             num_processed += 1
             print(f"Processed {path} (#{num_processed})")
     print("Done")

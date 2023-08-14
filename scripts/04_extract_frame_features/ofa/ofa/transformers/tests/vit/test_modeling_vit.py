@@ -19,7 +19,11 @@ import inspect
 import unittest
 
 from transformers import ViTConfig
-from transformers.file_utils import cached_property, is_torch_available, is_vision_available
+from transformers.file_utils import (
+    cached_property,
+    is_torch_available,
+    is_vision_available,
+)
 from transformers.testing_utils import require_torch, require_vision, slow, torch_device
 
 from ..test_configuration_common import ConfigTester
@@ -30,8 +34,15 @@ if is_torch_available():
     import torch
     from torch import nn
 
-    from transformers import ViTForImageClassification, ViTForMaskedImageModeling, ViTModel
-    from transformers.models.vit.modeling_vit import VIT_PRETRAINED_MODEL_ARCHIVE_LIST, to_2tuple
+    from transformers import (
+        ViTForImageClassification,
+        ViTForMaskedImageModeling,
+        ViTModel,
+    )
+    from transformers.models.vit.modeling_vit import (
+        VIT_PRETRAINED_MODEL_ARCHIVE_LIST,
+        to_2tuple,
+    )
 
 
 if is_vision_available():
@@ -83,7 +94,9 @@ class ViTModelTester:
         self.encoder_stride = encoder_stride
 
     def prepare_config_and_inputs(self):
-        pixel_values = floats_tensor([self.batch_size, self.num_channels, self.image_size, self.image_size])
+        pixel_values = floats_tensor(
+            [self.batch_size, self.num_channels, self.image_size, self.image_size]
+        )
 
         labels = None
         if self.use_labels:
@@ -118,8 +131,13 @@ class ViTModelTester:
         # expected sequence length = num_patches + 1 (we add 1 for the [CLS] token)
         image_size = to_2tuple(self.image_size)
         patch_size = to_2tuple(self.patch_size)
-        num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, num_patches + 1, self.hidden_size))
+        num_patches = (image_size[1] // patch_size[1]) * (
+            image_size[0] // patch_size[0]
+        )
+        self.parent.assertEqual(
+            result.last_hidden_state.shape,
+            (self.batch_size, num_patches + 1, self.hidden_size),
+        )
 
     def create_and_check_for_image_classification(self, config, pixel_values, labels):
         config.num_labels = self.type_sequence_label_size
@@ -127,7 +145,9 @@ class ViTModelTester:
         model.to(torch_device)
         model.eval()
         result = model(pixel_values, labels=labels)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.type_sequence_label_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.type_sequence_label_size)
+        )
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -164,7 +184,9 @@ class ViTModelTest(ModelTesterMixin, unittest.TestCase):
 
     def setUp(self):
         self.model_tester = ViTModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=ViTConfig, has_text_modality=False, hidden_size=37)
+        self.config_tester = ConfigTester(
+            self, config_class=ViTConfig, has_text_modality=False, hidden_size=37
+        )
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -205,10 +227,14 @@ class ViTModelTest(ModelTesterMixin, unittest.TestCase):
         # in ViT, the seq_len equals the number of patches + 1 (we add 1 for the [CLS] token)
         image_size = to_2tuple(self.model_tester.image_size)
         patch_size = to_2tuple(self.model_tester.patch_size)
-        num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
+        num_patches = (image_size[1] // patch_size[1]) * (
+            image_size[0] // patch_size[0]
+        )
         seq_len = num_patches + 1
         encoder_seq_length = getattr(self.model_tester, "encoder_seq_length", seq_len)
-        encoder_key_length = getattr(self.model_tester, "key_length", encoder_seq_length)
+        encoder_key_length = getattr(
+            self.model_tester, "key_length", encoder_seq_length
+        )
         chunk_length = getattr(self.model_tester, "chunk_length", None)
         if chunk_length is not None and hasattr(self.model_tester, "num_hashes"):
             encoder_seq_length = encoder_seq_length * self.model_tester.num_hashes
@@ -222,7 +248,11 @@ class ViTModelTest(ModelTesterMixin, unittest.TestCase):
             model.eval()
             with torch.no_grad():
                 outputs = model(**self._prepare_for_class(inputs_dict, model_class))
-            attentions = outputs.encoder_attentions if config.is_encoder_decoder else outputs.attentions
+            attentions = (
+                outputs.encoder_attentions
+                if config.is_encoder_decoder
+                else outputs.attentions
+            )
             self.assertEqual(len(attentions), self.model_tester.num_hidden_layers)
 
             # check that output_attentions also work using config
@@ -233,18 +263,31 @@ class ViTModelTest(ModelTesterMixin, unittest.TestCase):
             model.eval()
             with torch.no_grad():
                 outputs = model(**self._prepare_for_class(inputs_dict, model_class))
-            attentions = outputs.encoder_attentions if config.is_encoder_decoder else outputs.attentions
+            attentions = (
+                outputs.encoder_attentions
+                if config.is_encoder_decoder
+                else outputs.attentions
+            )
             self.assertEqual(len(attentions), self.model_tester.num_hidden_layers)
 
             if chunk_length is not None:
                 self.assertListEqual(
                     list(attentions[0].shape[-4:]),
-                    [self.model_tester.num_attention_heads, encoder_seq_length, chunk_length, encoder_key_length],
+                    [
+                        self.model_tester.num_attention_heads,
+                        encoder_seq_length,
+                        chunk_length,
+                        encoder_key_length,
+                    ],
                 )
             else:
                 self.assertListEqual(
                     list(attentions[0].shape[-3:]),
-                    [self.model_tester.num_attention_heads, encoder_seq_length, encoder_key_length],
+                    [
+                        self.model_tester.num_attention_heads,
+                        encoder_seq_length,
+                        encoder_key_length,
+                    ],
                 )
             out_len = len(outputs)
 
@@ -265,18 +308,31 @@ class ViTModelTest(ModelTesterMixin, unittest.TestCase):
                 added_hidden_states = 1
             self.assertEqual(out_len + added_hidden_states, len(outputs))
 
-            self_attentions = outputs.encoder_attentions if config.is_encoder_decoder else outputs.attentions
+            self_attentions = (
+                outputs.encoder_attentions
+                if config.is_encoder_decoder
+                else outputs.attentions
+            )
 
             self.assertEqual(len(self_attentions), self.model_tester.num_hidden_layers)
             if chunk_length is not None:
                 self.assertListEqual(
                     list(self_attentions[0].shape[-4:]),
-                    [self.model_tester.num_attention_heads, encoder_seq_length, chunk_length, encoder_key_length],
+                    [
+                        self.model_tester.num_attention_heads,
+                        encoder_seq_length,
+                        chunk_length,
+                        encoder_key_length,
+                    ],
                 )
             else:
                 self.assertListEqual(
                     list(self_attentions[0].shape[-3:]),
-                    [self.model_tester.num_attention_heads, encoder_seq_length, encoder_key_length],
+                    [
+                        self.model_tester.num_attention_heads,
+                        encoder_seq_length,
+                        encoder_key_length,
+                    ],
                 )
 
     def test_hidden_states_output(self):
@@ -288,17 +344,25 @@ class ViTModelTest(ModelTesterMixin, unittest.TestCase):
             with torch.no_grad():
                 outputs = model(**self._prepare_for_class(inputs_dict, model_class))
 
-            hidden_states = outputs.encoder_hidden_states if config.is_encoder_decoder else outputs.hidden_states
+            hidden_states = (
+                outputs.encoder_hidden_states
+                if config.is_encoder_decoder
+                else outputs.hidden_states
+            )
 
             expected_num_layers = getattr(
-                self.model_tester, "expected_num_hidden_layers", self.model_tester.num_hidden_layers + 1
+                self.model_tester,
+                "expected_num_hidden_layers",
+                self.model_tester.num_hidden_layers + 1,
             )
             self.assertEqual(len(hidden_states), expected_num_layers)
 
             # ViT has a different seq_length
             image_size = to_2tuple(self.model_tester.image_size)
             patch_size = to_2tuple(self.model_tester.patch_size)
-            num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
+            num_patches = (image_size[1] // patch_size[1]) * (
+                image_size[0] // patch_size[0]
+            )
             seq_length = num_patches + 1
 
             self.assertListEqual(
@@ -340,11 +404,17 @@ def prepare_img():
 class ViTModelIntegrationTest(unittest.TestCase):
     @cached_property
     def default_feature_extractor(self):
-        return ViTFeatureExtractor.from_pretrained("google/vit-base-patch16-224") if is_vision_available() else None
+        return (
+            ViTFeatureExtractor.from_pretrained("google/vit-base-patch16-224")
+            if is_vision_available()
+            else None
+        )
 
     @slow
     def test_inference_image_classification_head(self):
-        model = ViTForImageClassification.from_pretrained("google/vit-base-patch16-224").to(torch_device)
+        model = ViTForImageClassification.from_pretrained(
+            "google/vit-base-patch16-224"
+        ).to(torch_device)
 
         feature_extractor = self.default_feature_extractor
         image = prepare_img()
@@ -360,4 +430,6 @@ class ViTModelIntegrationTest(unittest.TestCase):
 
         expected_slice = torch.tensor([-0.2744, 0.8215, -0.0836]).to(torch_device)
 
-        self.assertTrue(torch.allclose(outputs.logits[0, :3], expected_slice, atol=1e-4))
+        self.assertTrue(
+            torch.allclose(outputs.logits[0, :3], expected_slice, atol=1e-4)
+        )

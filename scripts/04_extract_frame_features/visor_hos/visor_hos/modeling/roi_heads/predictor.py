@@ -6,7 +6,10 @@ from torch.nn import functional as F
 
 from detectron2.config import configurable
 from detectron2.layers import ShapeSpec, batched_nms, cat, cross_entropy, nonzero_tuple
-from detectron2.modeling.box_regression import Box2BoxTransform, _dense_box_regression_loss
+from detectron2.modeling.box_regression import (
+    Box2BoxTransform,
+    _dense_box_regression_loss,
+)
 from detectron2.structures import Boxes, Instances
 from detectron2.utils.events import get_event_storage
 
@@ -49,9 +52,19 @@ def fast_rcnn_inference(
     """
     result_per_image = [
         fast_rcnn_inference_single_image(
-            boxes_per_image, scores_per_image, handsides_per_image, contacts_per_img, offsets_per_image, image_shape, score_thresh, nms_thresh, topk_per_image
+            boxes_per_image,
+            scores_per_image,
+            handsides_per_image,
+            contacts_per_img,
+            offsets_per_image,
+            image_shape,
+            score_thresh,
+            nms_thresh,
+            topk_per_image,
         )
-        for scores_per_image, boxes_per_image, handsides_per_image, contacts_per_img, offsets_per_image, image_shape in zip(scores, boxes, handsides, contacts, offsets, image_shapes)
+        for scores_per_image, boxes_per_image, handsides_per_image, contacts_per_img, offsets_per_image, image_shape in zip(
+            scores, boxes, handsides, contacts, offsets, image_shapes
+        )
     ]
     return [x[0] for x in result_per_image], [x[1] for x in result_per_image]
 
@@ -158,16 +171,17 @@ def fast_rcnn_inference_single_image(
     result.pred_contacts = contacts
     result.pred_offsets = offsets
     return result, filter_inds[:, 0]
-        
-    
+
+
 class HOSFastRCNNOutputLayers(nn.Module):
-# class FastRCNNOutputLayers(nn.Module):
+    # class FastRCNNOutputLayers(nn.Module):
     """
     Two linear layers for predicting Fast R-CNN outputs:
 
     1. proposal-to-detection box regression deltas
     2. classification scores
     """
+
     @configurable
     def __init__(
         self,
@@ -207,7 +221,9 @@ class HOSFastRCNNOutputLayers(nn.Module):
         if isinstance(input_shape, int):  # some backward compatibility
             input_shape = ShapeSpec(channels=input_shape)
         self.num_classes = num_classes
-        input_size = input_shape.channels * (input_shape.width or 1) * (input_shape.height or 1)
+        input_size = (
+            input_shape.channels * (input_shape.width or 1) * (input_shape.height or 1)
+        )
         # prediction layer for num_classes foreground classes and one background class (hence + 1)
         self.cls_score = nn.Linear(input_size, num_classes + 1)
         num_bbox_reg_classes = 1 if cls_agnostic_bbox_reg else num_classes
@@ -229,8 +245,7 @@ class HOSFastRCNNOutputLayers(nn.Module):
             loss_weight = {"loss_cls": loss_weight, "loss_box_reg": loss_weight}
         self.loss_weight = loss_weight
         self.mse_loss = nn.MSELoss()
-        
-        
+
         # add extra heads from box prediction
         # hand side
         self.handside_pred = nn.Linear(input_size, 2)
@@ -238,19 +253,20 @@ class HOSFastRCNNOutputLayers(nn.Module):
         self.contact_pred = nn.Linear(input_size, 2)
         # offset
         self.offset_pred = nn.Linear(input_size, 3)
-        
+
         nn.init.normal_(self.handside_pred.weight, std=0.01)
         nn.init.normal_(self.contact_pred.weight, std=0.01)
         nn.init.normal_(self.offset_pred.weight, std=0.01)
         for l in [self.handside_pred, self.contact_pred, self.offset_pred]:
             nn.init.constant_(l.bias, 0)
-        
 
     @classmethod
     def from_config(cls, cfg, input_shape):
         return {
             "input_shape": input_shape,
-            "box2box_transform": Box2BoxTransform(weights=cfg.MODEL.ROI_BOX_HEAD.BBOX_REG_WEIGHTS),
+            "box2box_transform": Box2BoxTransform(
+                weights=cfg.MODEL.ROI_BOX_HEAD.BBOX_REG_WEIGHTS
+            ),
             # fmt: off
             "num_classes"           : cfg.MODEL.ROI_HEADS.NUM_CLASSES,
             "cls_agnostic_bbox_reg" : cfg.MODEL.ROI_BOX_HEAD.CLS_AGNOSTIC_BBOX_REG,
@@ -280,12 +296,12 @@ class HOSFastRCNNOutputLayers(nn.Module):
             x = torch.flatten(x, start_dim=1)
         scores = self.cls_score(x)
         proposal_deltas = self.bbox_pred(x)
-        
+
         # hos added
         handsides = self.handside_pred(x)
-        contacts =self.contact_pred(x)
+        contacts = self.contact_pred(x)
         offsets = self.offset_pred(x)
-        
+
         return scores, proposal_deltas, handsides, contacts, offsets
 
     def losses(self, predictions, proposals):
@@ -303,46 +319,57 @@ class HOSFastRCNNOutputLayers(nn.Module):
 
         # parse classification outputs
         gt_classes = (
-            cat([p.gt_classes for p in proposals], dim=0) if len(proposals) else torch.empty(0)
+            cat([p.gt_classes for p in proposals], dim=0)
+            if len(proposals)
+            else torch.empty(0)
         )
         _log_classification_stats(scores, gt_classes)
 
         # parse box regression outputs
         if len(proposals):
-            proposal_boxes = cat([p.proposal_boxes.tensor for p in proposals], dim=0)  # Nx4
-            assert not proposal_boxes.requires_grad, "Proposals should not require gradients!"
+            proposal_boxes = cat(
+                [p.proposal_boxes.tensor for p in proposals], dim=0
+            )  # Nx4
+            assert (
+                not proposal_boxes.requires_grad
+            ), "Proposals should not require gradients!"
             # If "gt_boxes" does not exist, the proposals must be all negative and
             # should not be included in regression loss computation.
             # Here we just use proposal_boxes as an arbitrary placeholder because its
             # value won't be used in self.box_reg_loss().
             gt_boxes = cat(
-                [(p.gt_boxes if p.has("gt_boxes") else p.proposal_boxes).tensor for p in proposals],
+                [
+                    (p.gt_boxes if p.has("gt_boxes") else p.proposal_boxes).tensor
+                    for p in proposals
+                ],
                 dim=0,
             )
         else:
-            proposal_boxes = gt_boxes = torch.empty((0, 4), device=proposal_deltas.device)
-            
-        
+            proposal_boxes = gt_boxes = torch.empty(
+                (0, 4), device=proposal_deltas.device
+            )
+
         # parse handside classification outputs
         gt_handsides = (
-            cat([p.gt_handsides for p in proposals], dim=0) if len(proposals) else torch.empty(0)
+            cat([p.gt_handsides for p in proposals], dim=0)
+            if len(proposals)
+            else torch.empty(0)
         )
-        
-        
+
         # parse contact classification outputs
         gt_contacts = (
-            cat([p.gt_contacts for p in proposals], dim=0) if len(proposals) else torch.empty(0)
+            cat([p.gt_contacts for p in proposals], dim=0)
+            if len(proposals)
+            else torch.empty(0)
         )
-    
-        
+
         # parse offset classification outputs
         gt_offsets = (
-            cat([p.gt_offsets for p in proposals], dim=0) if len(proposals) else torch.empty(0)
+            cat([p.gt_offsets for p in proposals], dim=0)
+            if len(proposals)
+            else torch.empty(0)
         )
-        
-        
-       
-       
+
         # print(f'**gt_classes {gt_classes.shape} = {gt_classes[:10]}')
         # print(f'**gt_handsides {gt_handsides.shape} = {gt_handsides[:10]}')
         # print(f'**pred_handsides {handsides.shape} = {handsides[:10,:]}')
@@ -351,8 +378,7 @@ class HOSFastRCNNOutputLayers(nn.Module):
         # print(f"**hand mask {hand_mask.shape} = {hand_mask}")
         # masked_handsides = handsides * hand_mask
         # print(f"**pred_handsides masked {masked_handsides.shape} = {masked_handsides[:10,:]}\n\n")
-        
-        
+
         contact_mask = gt_contacts.ge(0)
         contact_mask = contact_mask[:, None]
         # print(f'**gt_contacts {gt_contacts.shape} = {gt_contacts[:10]}')
@@ -360,15 +386,12 @@ class HOSFastRCNNOutputLayers(nn.Module):
         # print(f"**contact mask {contact_mask.shape} = {contact_mask}")
         # masked_contacts = contacts * contact_mask * hand_mask
         # print(f"**pred_contacts masked {masked_contacts.shape} = {masked_contacts[:10,:]}\n\n")
-        
 
         # masked_offsets = offsets * contact_mask * hand_mask
         # print(f'**gt_offsets {gt_offsets.shape} = {gt_offsets[:10, :]}')
         # print(f'**pred_offsets {offsets.shape} = {offsets[:10, :]}')
         # print(f"**pred_offsets masked {masked_offsets.shape} = {masked_offsets[:10,:]}")
-        
-        
-        
+
         # pdb.set_trace()
 
         losses = {
@@ -378,14 +401,16 @@ class HOSFastRCNNOutputLayers(nn.Module):
             ),
             # hos loss
             "loss_handside": self.handside_clf_loss(handsides, gt_handsides, hand_mask),
-            "loss_contact": self.contact_clf_loss(contacts, gt_contacts, hand_mask * contact_mask),
-            "loss_offset": self.mse_loss(offsets * contact_mask * hand_mask, gt_offsets * contact_mask * hand_mask),
+            "loss_contact": self.contact_clf_loss(
+                contacts, gt_contacts, hand_mask * contact_mask
+            ),
+            "loss_offset": self.mse_loss(
+                offsets * contact_mask * hand_mask,
+                gt_offsets * contact_mask * hand_mask,
+            ),
         }
         return {k: v * self.loss_weight.get(k, 1.0) for k, v in losses.items()}
-    
-    
-    
-    
+
     # def handside_clf_loss(self, pred_handsides, gt_handsides, hand_mask):
     #     '''
     #     Only calculte contact loss for hands.
@@ -396,8 +421,6 @@ class HOSFastRCNNOutputLayers(nn.Module):
     #     print('hand_mask = ', hand_mask[:10, :])
     #     loss_handside = loss_handside * hand_mask
     #     return torch.sum(loss_handside)
-    
-    
 
     # def contact_clf_loss(self, pred_contacts, gt_contacts, contact_mask):
     #     '''
@@ -407,9 +430,7 @@ class HOSFastRCNNOutputLayers(nn.Module):
     #     print('contact = ', loss_contact.shape, contact_mask.shape)
     #     loss_contact = loss_contact * contact_mask
     #     return torch.sum(loss_contact)
-    
-    
-    
+
     def handside_clf_loss(self, pred_handsides, gt_handsides, hand_mask):
         loss_handside = 0
         for i in range(hand_mask.shape[0]):
@@ -418,7 +439,7 @@ class HOSFastRCNNOutputLayers(nn.Module):
                 gt = gt_handsides[i]
                 loss_handside += cross_entropy(pred, gt)
         return loss_handside / max(hand_mask.shape[0], 1.0)
-    
+
     def contact_clf_loss(self, pred_contacts, gt_contacts, contact_mask):
         loss_handside = 0
         for i in range(contact_mask.shape[0]):
@@ -427,8 +448,6 @@ class HOSFastRCNNOutputLayers(nn.Module):
                 gt = gt_contacts[i]
                 loss_handside += cross_entropy(pred, gt)
         return loss_handside / max(contact_mask.shape[0], 1.0)
-            
-        
 
     def box_reg_loss(self, proposal_boxes, gt_boxes, pred_deltas, gt_classes):
         """
@@ -471,7 +490,9 @@ class HOSFastRCNNOutputLayers(nn.Module):
         # in minibatch (2) are given equal influence.
         return loss_box_reg / max(gt_classes.numel(), 1.0)  # return 0 if empty
 
-    def inference(self, predictions: Tuple[torch.Tensor, torch.Tensor], proposals: List[Instances]):
+    def inference(
+        self, predictions: Tuple[torch.Tensor, torch.Tensor], proposals: List[Instances]
+    ):
         """
         Args:
             predictions: return values of :meth:`forward()`.
@@ -484,13 +505,15 @@ class HOSFastRCNNOutputLayers(nn.Module):
         """
         boxes = self.predict_boxes(predictions, proposals)
         scores = self.predict_probs(predictions, proposals)
-        handsides, contacts, offsets = self.predict_handsides_contacts_offsets(predictions, proposals)
+        handsides, contacts, offsets = self.predict_handsides_contacts_offsets(
+            predictions, proposals
+        )
         image_shapes = [x.image_size for x in proposals]
         return fast_rcnn_inference(
             boxes,
             scores,
-            handsides, 
-            contacts, 
+            handsides,
+            contacts,
             offsets,
             image_shapes,
             self.test_score_thresh,
@@ -513,7 +536,7 @@ class HOSFastRCNNOutputLayers(nn.Module):
         """
         if not len(proposals):
             return []
-        scores, proposal_deltas, handsides, contacts, offsets= predictions
+        scores, proposal_deltas, handsides, contacts, offsets = predictions
         proposal_boxes = cat([p.proposal_boxes.tensor for p in proposals], dim=0)
         N, B = proposal_boxes.shape
         predict_boxes = self.box2box_transform.apply_deltas(
@@ -528,7 +551,8 @@ class HOSFastRCNNOutputLayers(nn.Module):
             gt_classes = gt_classes.clamp_(0, K - 1)
 
             predict_boxes = predict_boxes.view(N, K, B)[
-                torch.arange(N, dtype=torch.long, device=predict_boxes.device), gt_classes
+                torch.arange(N, dtype=torch.long, device=predict_boxes.device),
+                gt_classes,
             ]
         num_prop_per_image = [len(p) for p in proposals]
         return predict_boxes.split(num_prop_per_image)
@@ -577,7 +601,7 @@ class HOSFastRCNNOutputLayers(nn.Module):
         num_inst_per_image = [len(p) for p in proposals]
         probs = F.softmax(scores, dim=-1)
         return probs.split(num_inst_per_image, dim=0)
-    
+
     def predict_handsides_contacts_offsets(
         self, predictions: Tuple[torch.Tensor, torch.Tensor], proposals: List[Instances]
     ):
@@ -596,10 +620,8 @@ class HOSFastRCNNOutputLayers(nn.Module):
         num_inst_per_image = [len(p) for p in proposals]
         prob_handsides = F.softmax(handsides, dim=-1)
         prob_contacts = F.softmax(contacts, dim=-1)
-        return prob_handsides.split(num_inst_per_image, dim=0), prob_contacts.split(num_inst_per_image, dim=0), offsets.split(num_inst_per_image, dim=0)
-
-    
-
-
-    
-    
+        return (
+            prob_handsides.split(num_inst_per_image, dim=0),
+            prob_contacts.split(num_inst_per_image, dim=0),
+            offsets.split(num_inst_per_image, dim=0),
+        )

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3 -u
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 import logging
@@ -41,7 +41,7 @@ def main(cfg: DictConfig, **kwargs):
     logger.info(cfg)
 
     assert (
-            cfg.dataset.max_tokens is not None or cfg.dataset.batch_size is not None
+        cfg.dataset.max_tokens is not None or cfg.dataset.batch_size is not None
     ), "Must specify batch size either with --max-tokens or --batch-size"
 
     # Fix seed for stochastic decoding
@@ -59,7 +59,9 @@ def main(cfg: DictConfig, **kwargs):
     overrides = eval(cfg.common_eval.model_overrides)
     # Deal with beam-search / all-candidate VQA eval
     if cfg.task._name == "vqa_gen":
-        overrides['val_inference_type'] = "beamsearch" if kwargs['beam_search_vqa_eval'] else "allcand"
+        overrides["val_inference_type"] = (
+            "beamsearch" if kwargs["beam_search_vqa_eval"] else "allcand"
+        )
 
     logger.info("loading model(s) from {}".format(cfg.common_eval.path))
     models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task(
@@ -75,9 +77,11 @@ def main(cfg: DictConfig, **kwargs):
 
     # Move models to GPU
     for model, ckpt_path in zip(models, utils.split_paths(cfg.common_eval.path)):
-        if kwargs['ema_eval']:
+        if kwargs["ema_eval"]:
             logger.info("loading EMA weights from {}".format(ckpt_path))
-            model.load_state_dict(checkpoint_utils.load_ema_from_checkpoint(ckpt_path)['model'])
+            model.load_state_dict(
+                checkpoint_utils.load_ema_from_checkpoint(ckpt_path)["model"]
+            )
         model.eval()
         if use_fp16:
             model.half()
@@ -118,7 +122,9 @@ def main(cfg: DictConfig, **kwargs):
         if "net_input" not in sample:
             continue
         sample = utils.move_to_cuda(sample) if use_cuda else sample
-        sample = utils.apply_to_sample(apply_half, sample) if cfg.common.fp16 else sample
+        sample = (
+            utils.apply_to_sample(apply_half, sample) if cfg.common.fp16 else sample
+        )
         with torch.no_grad():
             result, scores = eval_step(task, generator, models, sample, **kwargs)
         results += result
@@ -131,11 +137,22 @@ def main(cfg: DictConfig, **kwargs):
 
 def cli_main():
     parser = options.get_generation_parser()
-    parser.add_argument("--ema-eval", action='store_true', help="Use EMA weights to make evaluation.")
-    parser.add_argument("--beam-search-vqa-eval", action='store_true', help="Use beam search for vqa evaluation (faster inference speed but sub-optimal result), if not specified, we compute scores for each answer in the candidate set, which is slower but can obtain best result.")
+    parser.add_argument(
+        "--ema-eval", action="store_true", help="Use EMA weights to make evaluation."
+    )
+    parser.add_argument(
+        "--beam-search-vqa-eval",
+        action="store_true",
+        help="Use beam search for vqa evaluation (faster inference speed but sub-optimal result), if not specified, we compute scores for each answer in the candidate set, which is slower but can obtain best result.",
+    )
     args = options.parse_args_and_arch(parser)
     cfg = convert_namespace_to_omegaconf(args)
-    distributed_utils.call_main(cfg, main, ema_eval=args.ema_eval, beam_search_vqa_eval=args.beam_search_vqa_eval)
+    distributed_utils.call_main(
+        cfg,
+        main,
+        ema_eval=args.ema_eval,
+        beam_search_vqa_eval=args.beam_search_vqa_eval,
+    )
 
 
 if __name__ == "__main__":

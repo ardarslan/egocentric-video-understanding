@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 import math
@@ -15,6 +15,7 @@ from torch import Tensor
 from fairseq.ngram_repeat_block import NGramRepeatBlock
 
 from data import data_utils
+
 
 class SequenceGenerator(nn.Module):
     def __init__(
@@ -42,7 +43,7 @@ class SequenceGenerator(nn.Module):
         gen_code=False,
         gen_box=False,
         ignore_eos=False,
-        zero_shot=False
+        zero_shot=False,
     ):
         """Generates translations of a given source sentence.
 
@@ -131,7 +132,7 @@ class SequenceGenerator(nn.Module):
         self.constraint_start = None
         self.constraint_end = None
         if constraint_range is not None:
-            constraint_start, constraint_end = constraint_range.split(',')
+            constraint_start, constraint_end = constraint_range.split(",")
             self.constraint_start = int(constraint_start)
             self.constraint_end = int(constraint_end)
 
@@ -191,7 +192,9 @@ class SequenceGenerator(nn.Module):
                 yield id, src, ref, hypos[i]
 
     @torch.no_grad()
-    def generate(self, models, sample: Dict[str, Dict[str, Tensor]], **kwargs) -> List[List[Dict[str, Tensor]]]:
+    def generate(
+        self, models, sample: Dict[str, Dict[str, Tensor]], **kwargs
+    ) -> List[List[Dict[str, Tensor]]]:
         """Generate translations. Match the api of other fairseq generators.
 
         Args:
@@ -245,7 +248,10 @@ class SequenceGenerator(nn.Module):
                 else torch.tensor(src_tokens.size(-1)).to(src_tokens)
             )
         else:
-            raise Exception("expected src_tokens or source in net input. input keys: " + str(net_input.keys()))
+            raise Exception(
+                "expected src_tokens or source in net input. input keys: "
+                + str(net_input.keys())
+            )
 
         # bsz: total number of sentences in beam
         # Note that src_tokens may have more than 2 dimensions (i.e. audio features)
@@ -345,10 +351,10 @@ class SequenceGenerator(nn.Module):
                     )
                     original_batch_idxs = original_batch_idxs[batch_idxs]
                 model.reorder_incremental_state(incremental_states, reorder_state)
-                encoder_outs = model.reorder_encoder_out(
-                    encoder_outs, reorder_state
-                )
-            with torch.autograd.profiler.record_function("EnsembleModel: forward_decoder"):
+                encoder_outs = model.reorder_encoder_out(encoder_outs, reorder_state)
+            with torch.autograd.profiler.record_function(
+                "EnsembleModel: forward_decoder"
+            ):
                 lprobs, avg_attn_scores = model.forward_decoder(
                     tokens[:, : step + 1],
                     encoder_outs,
@@ -359,7 +365,7 @@ class SequenceGenerator(nn.Module):
                     constraint_end=self.constraint_end,
                     gen_code=self.gen_code,
                     zero_shot=self.zero_shot,
-                    prefix_tokens=prefix_tokens
+                    prefix_tokens=prefix_tokens,
                 )
 
             if self.lm_model is not None:
@@ -392,7 +398,7 @@ class SequenceGenerator(nn.Module):
             if self.gen_box:
                 lprobs[:, -1] = -math.inf
                 if (step + 1) % 5 == 0:
-                    lprobs[:, self.constraint_start:59457] = -math.inf
+                    lprobs[:, self.constraint_start : 59457] = -math.inf
                 else:
                     lprobs[:, 59457:] = -math.inf
 
@@ -791,7 +797,14 @@ class EnsembleModel(nn.Module):
         return self.has_incremental
 
     def max_decoder_positions(self):
-        return min([m.max_decoder_positions() for m in self.models if hasattr(m, "max_decoder_positions")] + [sys.maxsize])
+        return min(
+            [
+                m.max_decoder_positions()
+                for m in self.models
+                if hasattr(m, "max_decoder_positions")
+            ]
+            + [sys.maxsize]
+        )
 
     @torch.jit.export
     def forward_encoder(self, net_input: Dict[str, Tensor]):
@@ -811,12 +824,12 @@ class EnsembleModel(nn.Module):
         constraint_end=None,
         gen_code=False,
         zero_shot=False,
-        prefix_tokens=None
+        prefix_tokens=None,
     ):
         log_probs = []
         avg_attn: Optional[Tensor] = None
         encoder_out: Optional[Dict[str, List[Tensor]]] = None
-        code_mask = (tokens.new_ones(tokens.size(0))*gen_code).bool()
+        code_mask = (tokens.new_ones(tokens.size(0)) * gen_code).bool()
         for i, model in enumerate(self.models):
             if self.has_encoder():
                 encoder_out = encoder_outs[i]
@@ -830,7 +843,9 @@ class EnsembleModel(nn.Module):
                 )
             else:
                 if hasattr(model, "decoder"):
-                    decoder_out = model.decoder.forward(tokens, code_masks=code_mask, encoder_out=encoder_out)
+                    decoder_out = model.decoder.forward(
+                        tokens, code_masks=code_mask, encoder_out=encoder_out
+                    )
                 else:
                     decoder_out = model.forward(tokens)
 
@@ -853,21 +868,41 @@ class EnsembleModel(nn.Module):
                 None if decoder_len <= 1 else decoder_out[1],
             )
 
-            beam_size = decoder_out_tuple[0].size(0) // prefix_tokens.size(0) if prefix_tokens is not None else 0
+            beam_size = (
+                decoder_out_tuple[0].size(0) // prefix_tokens.size(0)
+                if prefix_tokens is not None
+                else 0
+            )
             if constraint_trie is not None and not zero_shot:
                 assert constraint_start is None and constraint_end is None
-                constraint_masks = decoder_out_tuple[0].new_zeros(decoder_out_tuple[0].size()).bool()
+                constraint_masks = (
+                    decoder_out_tuple[0].new_zeros(decoder_out_tuple[0].size()).bool()
+                )
                 constraint_prefix_tokens = tokens.tolist()
-                for token_index, constraint_prefix_token in enumerate(constraint_prefix_tokens):
-                    prefix_len = prefix_tokens[token_index // beam_size].ne(1).sum().item() if prefix_tokens is not None else 0
+                for token_index, constraint_prefix_token in enumerate(
+                    constraint_prefix_tokens
+                ):
+                    prefix_len = (
+                        prefix_tokens[token_index // beam_size].ne(1).sum().item()
+                        if prefix_tokens is not None
+                        else 0
+                    )
                     if len(constraint_prefix_token) > prefix_len:
-                        constraint_prefix_token = [0] + constraint_prefix_token[prefix_len+1:]
-                        constraint_nodes = constraint_trie.get_next_layer(constraint_prefix_token)
+                        constraint_prefix_token = [0] + constraint_prefix_token[
+                            prefix_len + 1 :
+                        ]
+                        constraint_nodes = constraint_trie.get_next_layer(
+                            constraint_prefix_token
+                        )
                         constraint_masks[token_index][:, constraint_nodes] = True
                     else:
                         constraint_masks[token_index] = True
                 decoder_out_tuple[0].masked_fill_(~constraint_masks, -math.inf)
-            if constraint_start is not None and constraint_end is not None and not zero_shot:
+            if (
+                constraint_start is not None
+                and constraint_end is not None
+                and not zero_shot
+            ):
                 assert constraint_trie is None
                 decoder_out_tuple[0][:, :, 4:constraint_start] = -math.inf
                 decoder_out_tuple[0][:, :, constraint_end:] = -math.inf
@@ -877,13 +912,23 @@ class EnsembleModel(nn.Module):
             )
             if constraint_trie is not None and zero_shot:
                 assert constraint_start is None and constraint_end is None
-                constraint_masks = decoder_out_tuple[0].new_zeros(decoder_out_tuple[0].size()).bool()
+                constraint_masks = (
+                    decoder_out_tuple[0].new_zeros(decoder_out_tuple[0].size()).bool()
+                )
                 constraint_prefix_tokens = tokens.tolist()
-                for token_index, constraint_prefix_token in enumerate(constraint_prefix_tokens):
-                    constraint_nodes = constraint_trie.get_next_layer(constraint_prefix_token)
+                for token_index, constraint_prefix_token in enumerate(
+                    constraint_prefix_tokens
+                ):
+                    constraint_nodes = constraint_trie.get_next_layer(
+                        constraint_prefix_token
+                    )
                     constraint_masks[token_index][:, constraint_nodes] = True
                 probs.masked_fill_(~constraint_masks, -math.inf)
-            if constraint_start is not None and constraint_end is not None and zero_shot:
+            if (
+                constraint_start is not None
+                and constraint_end is not None
+                and zero_shot
+            ):
                 assert constraint_trie is None
                 probs[:, :, 4:constraint_start] = -math.inf
                 probs[:, :, constraint_end:] = -math.inf

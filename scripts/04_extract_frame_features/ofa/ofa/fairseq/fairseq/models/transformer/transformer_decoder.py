@@ -29,8 +29,8 @@ from torch import Tensor
 
 # rewrite name for backward compatibility in `make_generation_fast_`
 def module_name_fordropout(module_name: str) -> str:
-    if module_name == 'TransformerDecoderBase':
-        return 'TransformerDecoder'
+    if module_name == "TransformerDecoderBase":
+        return "TransformerDecoder"
     else:
         return module_name
 
@@ -161,7 +161,7 @@ class TransformerDecoderBase(FairseqIncrementalDecoder):
                 self.output_embed_dim, len(dictionary), bias=False
             )
             nn.init.normal_(
-                self.output_projection.weight, mean=0, std=self.output_embed_dim ** -0.5
+                self.output_projection.weight, mean=0, std=self.output_embed_dim**-0.5
             )
         num_base_layers = cfg.base_layers
         for i in range(num_base_layers):

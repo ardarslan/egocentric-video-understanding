@@ -24,7 +24,10 @@ from transformers import (
     TokenClassificationPipeline,
     pipeline,
 )
-from transformers.pipelines import AggregationStrategy, TokenClassificationArgumentHandler
+from transformers.pipelines import (
+    AggregationStrategy,
+    TokenClassificationArgumentHandler,
+)
 from transformers.testing_utils import (
     is_pipeline_test,
     nested_simplify,
@@ -37,17 +40,25 @@ from transformers.testing_utils import (
 from .test_pipelines_common import ANY, PipelineTestCaseMeta
 
 
-VALID_INPUTS = ["A simple string", ["list of strings", "A simple string that is quite a bit longer"]]
+VALID_INPUTS = [
+    "A simple string",
+    ["list of strings", "A simple string that is quite a bit longer"],
+]
 
 
 @is_pipeline_test
-class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTestCaseMeta):
+class TokenClassificationPipelineTests(
+    unittest.TestCase, metaclass=PipelineTestCaseMeta
+):
     model_mapping = MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING
     tf_model_mapping = TF_MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING
 
     def get_test_pipeline(self, model, tokenizer, feature_extractor):
         token_classifier = TokenClassificationPipeline(model=model, tokenizer=tokenizer)
-        return token_classifier, ["A simple string", "A simple string that is quite a bit longer"]
+        return token_classifier, [
+            "A simple string",
+            "A simple string that is quite a bit longer",
+        ]
 
     def run_pipeline_test(self, token_classifier, _):
         model = token_classifier.model
@@ -70,7 +81,9 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
                 for i in range(n)
             ],
         )
-        outputs = token_classifier(["list of strings", "A simple string that is quite a bit longer"])
+        outputs = token_classifier(
+            ["list of strings", "A simple string that is quite a bit longer"]
+        )
         self.assertIsInstance(outputs, list)
         self.assertEqual(len(outputs), 2)
         n = len(outputs[0])
@@ -107,8 +120,13 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
         self.run_aggregation_strategy(model, tokenizer)
 
     def run_aggregation_strategy(self, model, tokenizer):
-        token_classifier = TokenClassificationPipeline(model=model, tokenizer=tokenizer, aggregation_strategy="simple")
-        self.assertEqual(token_classifier._postprocess_params["aggregation_strategy"], AggregationStrategy.SIMPLE)
+        token_classifier = TokenClassificationPipeline(
+            model=model, tokenizer=tokenizer, aggregation_strategy="simple"
+        )
+        self.assertEqual(
+            token_classifier._postprocess_params["aggregation_strategy"],
+            AggregationStrategy.SIMPLE,
+        )
         outputs = token_classifier("A simple string")
         self.assertIsInstance(outputs, list)
         n = len(outputs)
@@ -126,8 +144,13 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
             ],
         )
 
-        token_classifier = TokenClassificationPipeline(model=model, tokenizer=tokenizer, aggregation_strategy="first")
-        self.assertEqual(token_classifier._postprocess_params["aggregation_strategy"], AggregationStrategy.FIRST)
+        token_classifier = TokenClassificationPipeline(
+            model=model, tokenizer=tokenizer, aggregation_strategy="first"
+        )
+        self.assertEqual(
+            token_classifier._postprocess_params["aggregation_strategy"],
+            AggregationStrategy.FIRST,
+        )
         outputs = token_classifier("A simple string")
         self.assertIsInstance(outputs, list)
         n = len(outputs)
@@ -145,8 +168,13 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
             ],
         )
 
-        token_classifier = TokenClassificationPipeline(model=model, tokenizer=tokenizer, aggregation_strategy="max")
-        self.assertEqual(token_classifier._postprocess_params["aggregation_strategy"], AggregationStrategy.MAX)
+        token_classifier = TokenClassificationPipeline(
+            model=model, tokenizer=tokenizer, aggregation_strategy="max"
+        )
+        self.assertEqual(
+            token_classifier._postprocess_params["aggregation_strategy"],
+            AggregationStrategy.MAX,
+        )
         outputs = token_classifier("A simple string")
         self.assertIsInstance(outputs, list)
         n = len(outputs)
@@ -167,7 +195,10 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
         token_classifier = TokenClassificationPipeline(
             model=model, tokenizer=tokenizer, aggregation_strategy="average"
         )
-        self.assertEqual(token_classifier._postprocess_params["aggregation_strategy"], AggregationStrategy.AVERAGE)
+        self.assertEqual(
+            token_classifier._postprocess_params["aggregation_strategy"],
+            AggregationStrategy.AVERAGE,
+        )
         outputs = token_classifier("A simple string")
         self.assertIsInstance(outputs, list)
         n = len(outputs)
@@ -186,13 +217,25 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
         )
 
         with self.assertWarns(UserWarning):
-            token_classifier = pipeline(task="ner", model=model, tokenizer=tokenizer, grouped_entities=True)
-        self.assertEqual(token_classifier._postprocess_params["aggregation_strategy"], AggregationStrategy.SIMPLE)
+            token_classifier = pipeline(
+                task="ner", model=model, tokenizer=tokenizer, grouped_entities=True
+            )
+        self.assertEqual(
+            token_classifier._postprocess_params["aggregation_strategy"],
+            AggregationStrategy.SIMPLE,
+        )
         with self.assertWarns(UserWarning):
             token_classifier = pipeline(
-                task="ner", model=model, tokenizer=tokenizer, grouped_entities=True, ignore_subwords=True
+                task="ner",
+                model=model,
+                tokenizer=tokenizer,
+                grouped_entities=True,
+                ignore_subwords=True,
             )
-        self.assertEqual(token_classifier._postprocess_params["aggregation_strategy"], AggregationStrategy.FIRST)
+        self.assertEqual(
+            token_classifier._postprocess_params["aggregation_strategy"],
+            AggregationStrategy.FIRST,
+        )
 
     @require_torch
     @slow
@@ -208,53 +251,154 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
         self.assertEqual(
             nested_simplify(output[:3]),
             [
-                {"entity": "B-PER", "score": 0.999, "word": "Cons", "start": 0, "end": 4, "index": 1},
-                {"entity": "B-PER", "score": 0.803, "word": "##uelo", "start": 4, "end": 8, "index": 2},
-                {"entity": "I-PER", "score": 0.999, "word": "Ara", "start": 9, "end": 12, "index": 3},
+                {
+                    "entity": "B-PER",
+                    "score": 0.999,
+                    "word": "Cons",
+                    "start": 0,
+                    "end": 4,
+                    "index": 1,
+                },
+                {
+                    "entity": "B-PER",
+                    "score": 0.803,
+                    "word": "##uelo",
+                    "start": 4,
+                    "end": 8,
+                    "index": 2,
+                },
+                {
+                    "entity": "I-PER",
+                    "score": 0.999,
+                    "word": "Ara",
+                    "start": 9,
+                    "end": 12,
+                    "index": 3,
+                },
             ],
         )
 
-        token_classifier = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="simple")
+        token_classifier = pipeline(
+            "ner", model=model, tokenizer=tokenizer, aggregation_strategy="simple"
+        )
         output = token_classifier(sentence)
         self.assertEqual(
             nested_simplify(output[:3]),
             [
-                {"entity_group": "PER", "score": 0.999, "word": "Cons", "start": 0, "end": 4},
-                {"entity_group": "PER", "score": 0.966, "word": "##uelo Araújo Noguera", "start": 4, "end": 23},
-                {"entity_group": "PER", "score": 1.0, "word": "Andrés Pastrana", "start": 60, "end": 75},
+                {
+                    "entity_group": "PER",
+                    "score": 0.999,
+                    "word": "Cons",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity_group": "PER",
+                    "score": 0.966,
+                    "word": "##uelo Araújo Noguera",
+                    "start": 4,
+                    "end": 23,
+                },
+                {
+                    "entity_group": "PER",
+                    "score": 1.0,
+                    "word": "Andrés Pastrana",
+                    "start": 60,
+                    "end": 75,
+                },
             ],
         )
 
-        token_classifier = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="first")
+        token_classifier = pipeline(
+            "ner", model=model, tokenizer=tokenizer, aggregation_strategy="first"
+        )
         output = token_classifier(sentence)
         self.assertEqual(
             nested_simplify(output[:3]),
             [
-                {"entity_group": "PER", "score": 0.999, "word": "Consuelo Araújo Noguera", "start": 0, "end": 23},
-                {"entity_group": "PER", "score": 1.0, "word": "Andrés Pastrana", "start": 60, "end": 75},
-                {"entity_group": "ORG", "score": 0.999, "word": "Farc", "start": 110, "end": 114},
+                {
+                    "entity_group": "PER",
+                    "score": 0.999,
+                    "word": "Consuelo Araújo Noguera",
+                    "start": 0,
+                    "end": 23,
+                },
+                {
+                    "entity_group": "PER",
+                    "score": 1.0,
+                    "word": "Andrés Pastrana",
+                    "start": 60,
+                    "end": 75,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.999,
+                    "word": "Farc",
+                    "start": 110,
+                    "end": 114,
+                },
             ],
         )
 
-        token_classifier = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="max")
+        token_classifier = pipeline(
+            "ner", model=model, tokenizer=tokenizer, aggregation_strategy="max"
+        )
         output = token_classifier(sentence)
         self.assertEqual(
             nested_simplify(output[:3]),
             [
-                {"entity_group": "PER", "score": 0.999, "word": "Consuelo Araújo Noguera", "start": 0, "end": 23},
-                {"entity_group": "PER", "score": 1.0, "word": "Andrés Pastrana", "start": 60, "end": 75},
-                {"entity_group": "ORG", "score": 0.999, "word": "Farc", "start": 110, "end": 114},
+                {
+                    "entity_group": "PER",
+                    "score": 0.999,
+                    "word": "Consuelo Araújo Noguera",
+                    "start": 0,
+                    "end": 23,
+                },
+                {
+                    "entity_group": "PER",
+                    "score": 1.0,
+                    "word": "Andrés Pastrana",
+                    "start": 60,
+                    "end": 75,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.999,
+                    "word": "Farc",
+                    "start": 110,
+                    "end": 114,
+                },
             ],
         )
 
-        token_classifier = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="average")
+        token_classifier = pipeline(
+            "ner", model=model, tokenizer=tokenizer, aggregation_strategy="average"
+        )
         output = token_classifier(sentence)
         self.assertEqual(
             nested_simplify(output[:3]),
             [
-                {"entity_group": "PER", "score": 0.966, "word": "Consuelo Araújo Noguera", "start": 0, "end": 23},
-                {"entity_group": "PER", "score": 1.0, "word": "Andrés Pastrana", "start": 60, "end": 75},
-                {"entity_group": "ORG", "score": 0.542, "word": "Farc", "start": 110, "end": 114},
+                {
+                    "entity_group": "PER",
+                    "score": 0.966,
+                    "word": "Consuelo Araújo Noguera",
+                    "start": 0,
+                    "end": 23,
+                },
+                {
+                    "entity_group": "PER",
+                    "score": 1.0,
+                    "word": "Andrés Pastrana",
+                    "start": 60,
+                    "end": 75,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.542,
+                    "word": "Farc",
+                    "start": 110,
+                    "end": 114,
+                },
             ],
         )
 
@@ -284,49 +428,126 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
         self.assertEqual(
             nested_simplify(output),
             [
-                {"entity": "I-PER", "score": 0.997, "word": "En", "start": 0, "end": 2, "index": 1},
-                {"entity": "I-PER", "score": 0.996, "word": "##zo", "start": 2, "end": 4, "index": 2},
-                {"entity": "I-ORG", "score": 0.999, "word": "UN", "start": 22, "end": 24, "index": 7},
+                {
+                    "entity": "I-PER",
+                    "score": 0.997,
+                    "word": "En",
+                    "start": 0,
+                    "end": 2,
+                    "index": 1,
+                },
+                {
+                    "entity": "I-PER",
+                    "score": 0.996,
+                    "word": "##zo",
+                    "start": 2,
+                    "end": 4,
+                    "index": 2,
+                },
+                {
+                    "entity": "I-ORG",
+                    "score": 0.999,
+                    "word": "UN",
+                    "start": 22,
+                    "end": 24,
+                    "index": 7,
+                },
             ],
         )
 
-        token_classifier = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="simple")
+        token_classifier = pipeline(
+            "ner", model=model, tokenizer=tokenizer, aggregation_strategy="simple"
+        )
         output = token_classifier(sentence)
         self.assertEqual(
             nested_simplify(output),
             [
-                {"entity_group": "PER", "score": 0.996, "word": "Enzo", "start": 0, "end": 4},
-                {"entity_group": "ORG", "score": 0.999, "word": "UN", "start": 22, "end": 24},
+                {
+                    "entity_group": "PER",
+                    "score": 0.996,
+                    "word": "Enzo",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.999,
+                    "word": "UN",
+                    "start": 22,
+                    "end": 24,
+                },
             ],
         )
 
-        token_classifier = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="first")
+        token_classifier = pipeline(
+            "ner", model=model, tokenizer=tokenizer, aggregation_strategy="first"
+        )
         output = token_classifier(sentence)
         self.assertEqual(
             nested_simplify(output[:3]),
             [
-                {"entity_group": "PER", "score": 0.997, "word": "Enzo", "start": 0, "end": 4},
-                {"entity_group": "ORG", "score": 0.999, "word": "UN", "start": 22, "end": 24},
+                {
+                    "entity_group": "PER",
+                    "score": 0.997,
+                    "word": "Enzo",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.999,
+                    "word": "UN",
+                    "start": 22,
+                    "end": 24,
+                },
             ],
         )
 
-        token_classifier = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="max")
+        token_classifier = pipeline(
+            "ner", model=model, tokenizer=tokenizer, aggregation_strategy="max"
+        )
         output = token_classifier(sentence)
         self.assertEqual(
             nested_simplify(output[:3]),
             [
-                {"entity_group": "PER", "score": 0.997, "word": "Enzo", "start": 0, "end": 4},
-                {"entity_group": "ORG", "score": 0.999, "word": "UN", "start": 22, "end": 24},
+                {
+                    "entity_group": "PER",
+                    "score": 0.997,
+                    "word": "Enzo",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.999,
+                    "word": "UN",
+                    "start": 22,
+                    "end": 24,
+                },
             ],
         )
 
-        token_classifier = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="average")
+        token_classifier = pipeline(
+            "ner", model=model, tokenizer=tokenizer, aggregation_strategy="average"
+        )
         output = token_classifier(sentence)
         self.assertEqual(
             nested_simplify(output),
             [
-                {"entity_group": "PER", "score": 0.996, "word": "Enzo", "start": 0, "end": 4},
-                {"entity_group": "ORG", "score": 0.999, "word": "UN", "start": 22, "end": 24},
+                {
+                    "entity_group": "PER",
+                    "score": 0.996,
+                    "word": "Enzo",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.999,
+                    "word": "UN",
+                    "start": 22,
+                    "end": 24,
+                },
             ],
         )
 
@@ -334,12 +555,28 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
     @slow
     def test_aggregation_strategy_byte_level_tokenizer(self):
         sentence = "Groenlinks praat over Schiphol."
-        ner = pipeline("ner", model="xlm-roberta-large-finetuned-conll02-dutch", aggregation_strategy="max")
+        ner = pipeline(
+            "ner",
+            model="xlm-roberta-large-finetuned-conll02-dutch",
+            aggregation_strategy="max",
+        )
         self.assertEqual(
             nested_simplify(ner(sentence)),
             [
-                {"end": 10, "entity_group": "ORG", "score": 0.994, "start": 0, "word": "Groenlinks"},
-                {"entity_group": "LOC", "score": 1.0, "word": "Schiphol.", "start": 22, "end": 31},
+                {
+                    "end": 10,
+                    "entity_group": "ORG",
+                    "score": 0.994,
+                    "start": 0,
+                    "word": "Groenlinks",
+                },
+                {
+                    "entity_group": "LOC",
+                    "score": 1.0,
+                    "word": "Schiphol.",
+                    "start": 22,
+                    "end": 31,
+                },
             ],
         )
 
@@ -347,9 +584,17 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
     def test_aggregation_strategy_no_b_i_prefix(self):
         model_name = "sshleifer/tiny-dbmdz-bert-large-cased-finetuned-conll03-english"
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
-        token_classifier = pipeline(task="ner", model=model_name, tokenizer=tokenizer, framework="pt")
+        token_classifier = pipeline(
+            task="ner", model=model_name, tokenizer=tokenizer, framework="pt"
+        )
         # Just to understand scores indexes in this test
-        token_classifier.model.config.id2label = {0: "O", 1: "MISC", 2: "PER", 3: "ORG", 4: "LOC"}
+        token_classifier.model.config.id2label = {
+            0: "O",
+            1: "MISC",
+            2: "PER",
+            3: "ORG",
+            4: "LOC",
+        }
         example = [
             {
                 # fmt : off
@@ -381,18 +626,55 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
             },
         ]
         self.assertEqual(
-            nested_simplify(token_classifier.aggregate(example, AggregationStrategy.NONE)),
+            nested_simplify(
+                token_classifier.aggregate(example, AggregationStrategy.NONE)
+            ),
             [
-                {"end": 2, "entity": "LOC", "score": 0.997, "start": 0, "word": "En", "index": 1},
-                {"end": 4, "entity": "LOC", "score": 0.996, "start": 2, "word": "##zo", "index": 2},
-                {"end": 13, "entity": "ORG", "score": 0.999, "start": 11, "word": "UN", "index": 7},
+                {
+                    "end": 2,
+                    "entity": "LOC",
+                    "score": 0.997,
+                    "start": 0,
+                    "word": "En",
+                    "index": 1,
+                },
+                {
+                    "end": 4,
+                    "entity": "LOC",
+                    "score": 0.996,
+                    "start": 2,
+                    "word": "##zo",
+                    "index": 2,
+                },
+                {
+                    "end": 13,
+                    "entity": "ORG",
+                    "score": 0.999,
+                    "start": 11,
+                    "word": "UN",
+                    "index": 7,
+                },
             ],
         )
         self.assertEqual(
-            nested_simplify(token_classifier.aggregate(example, AggregationStrategy.SIMPLE)),
+            nested_simplify(
+                token_classifier.aggregate(example, AggregationStrategy.SIMPLE)
+            ),
             [
-                {"entity_group": "LOC", "score": 0.996, "word": "Enzo", "start": 0, "end": 4},
-                {"entity_group": "ORG", "score": 0.999, "word": "UN", "start": 11, "end": 13},
+                {
+                    "entity_group": "LOC",
+                    "score": 0.996,
+                    "word": "Enzo",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.999,
+                    "word": "UN",
+                    "start": 11,
+                    "end": 13,
+                },
             ],
         )
 
@@ -400,11 +682,23 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
     def test_aggregation_strategy(self):
         model_name = "sshleifer/tiny-dbmdz-bert-large-cased-finetuned-conll03-english"
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
-        token_classifier = pipeline(task="ner", model=model_name, tokenizer=tokenizer, framework="pt")
+        token_classifier = pipeline(
+            task="ner", model=model_name, tokenizer=tokenizer, framework="pt"
+        )
         # Just to understand scores indexes in this test
         self.assertEqual(
             token_classifier.model.config.id2label,
-            {0: "O", 1: "B-MISC", 2: "I-MISC", 3: "B-PER", 4: "I-PER", 5: "B-ORG", 6: "I-ORG", 7: "B-LOC", 8: "I-LOC"},
+            {
+                0: "O",
+                1: "B-MISC",
+                2: "I-MISC",
+                3: "B-PER",
+                4: "I-PER",
+                5: "B-ORG",
+                6: "I-ORG",
+                7: "B-LOC",
+                8: "I-LOC",
+            },
         )
         example = [
             {
@@ -437,39 +731,118 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
             },
         ]
         self.assertEqual(
-            nested_simplify(token_classifier.aggregate(example, AggregationStrategy.NONE)),
+            nested_simplify(
+                token_classifier.aggregate(example, AggregationStrategy.NONE)
+            ),
             [
-                {"end": 2, "entity": "I-PER", "score": 0.997, "start": 0, "word": "En", "index": 1},
-                {"end": 4, "entity": "I-PER", "score": 0.996, "start": 2, "word": "##zo", "index": 2},
-                {"end": 13, "entity": "B-ORG", "score": 0.999, "start": 11, "word": "UN", "index": 7},
+                {
+                    "end": 2,
+                    "entity": "I-PER",
+                    "score": 0.997,
+                    "start": 0,
+                    "word": "En",
+                    "index": 1,
+                },
+                {
+                    "end": 4,
+                    "entity": "I-PER",
+                    "score": 0.996,
+                    "start": 2,
+                    "word": "##zo",
+                    "index": 2,
+                },
+                {
+                    "end": 13,
+                    "entity": "B-ORG",
+                    "score": 0.999,
+                    "start": 11,
+                    "word": "UN",
+                    "index": 7,
+                },
             ],
         )
         self.assertEqual(
-            nested_simplify(token_classifier.aggregate(example, AggregationStrategy.SIMPLE)),
+            nested_simplify(
+                token_classifier.aggregate(example, AggregationStrategy.SIMPLE)
+            ),
             [
-                {"entity_group": "PER", "score": 0.996, "word": "Enzo", "start": 0, "end": 4},
-                {"entity_group": "ORG", "score": 0.999, "word": "UN", "start": 11, "end": 13},
+                {
+                    "entity_group": "PER",
+                    "score": 0.996,
+                    "word": "Enzo",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.999,
+                    "word": "UN",
+                    "start": 11,
+                    "end": 13,
+                },
             ],
         )
         self.assertEqual(
-            nested_simplify(token_classifier.aggregate(example, AggregationStrategy.FIRST)),
+            nested_simplify(
+                token_classifier.aggregate(example, AggregationStrategy.FIRST)
+            ),
             [
-                {"entity_group": "PER", "score": 0.997, "word": "Enzo", "start": 0, "end": 4},
-                {"entity_group": "ORG", "score": 0.999, "word": "UN", "start": 11, "end": 13},
+                {
+                    "entity_group": "PER",
+                    "score": 0.997,
+                    "word": "Enzo",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.999,
+                    "word": "UN",
+                    "start": 11,
+                    "end": 13,
+                },
             ],
         )
         self.assertEqual(
-            nested_simplify(token_classifier.aggregate(example, AggregationStrategy.MAX)),
+            nested_simplify(
+                token_classifier.aggregate(example, AggregationStrategy.MAX)
+            ),
             [
-                {"entity_group": "PER", "score": 0.997, "word": "Enzo", "start": 0, "end": 4},
-                {"entity_group": "ORG", "score": 0.999, "word": "UN", "start": 11, "end": 13},
+                {
+                    "entity_group": "PER",
+                    "score": 0.997,
+                    "word": "Enzo",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.999,
+                    "word": "UN",
+                    "start": 11,
+                    "end": 13,
+                },
             ],
         )
         self.assertEqual(
-            nested_simplify(token_classifier.aggregate(example, AggregationStrategy.AVERAGE)),
+            nested_simplify(
+                token_classifier.aggregate(example, AggregationStrategy.AVERAGE)
+            ),
             [
-                {"entity_group": "PER", "score": 0.996, "word": "Enzo", "start": 0, "end": 4},
-                {"entity_group": "ORG", "score": 0.999, "word": "UN", "start": 11, "end": 13},
+                {
+                    "entity_group": "PER",
+                    "score": 0.996,
+                    "word": "Enzo",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity_group": "ORG",
+                    "score": 0.999,
+                    "word": "UN",
+                    "start": 11,
+                    "end": 13,
+                },
             ],
         )
 
@@ -477,11 +850,23 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
     def test_aggregation_strategy_example2(self):
         model_name = "sshleifer/tiny-dbmdz-bert-large-cased-finetuned-conll03-english"
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
-        token_classifier = pipeline(task="ner", model=model_name, tokenizer=tokenizer, framework="pt")
+        token_classifier = pipeline(
+            task="ner", model=model_name, tokenizer=tokenizer, framework="pt"
+        )
         # Just to understand scores indexes in this test
         self.assertEqual(
             token_classifier.model.config.id2label,
-            {0: "O", 1: "B-MISC", 2: "I-MISC", 3: "B-PER", 4: "I-PER", 5: "B-ORG", 6: "I-ORG", 7: "B-LOC", 8: "I-LOC"},
+            {
+                0: "O",
+                1: "B-MISC",
+                2: "I-MISC",
+                3: "B-PER",
+                4: "I-PER",
+                5: "B-ORG",
+                6: "I-ORG",
+                7: "B-LOC",
+                8: "I-LOC",
+            },
         )
         example = [
             {
@@ -516,30 +901,79 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
         self.assertEqual(
             token_classifier.aggregate(example, AggregationStrategy.NONE),
             [
-                {"end": 2, "entity": "B-MISC", "score": 0.55, "start": 0, "word": "Ra", "index": 1},
-                {"end": 4, "entity": "B-LOC", "score": 0.8, "start": 2, "word": "##ma", "index": 2},
-                {"end": 13, "entity": "I-ORG", "score": 0.6, "start": 11, "word": "##zotti", "index": 3},
+                {
+                    "end": 2,
+                    "entity": "B-MISC",
+                    "score": 0.55,
+                    "start": 0,
+                    "word": "Ra",
+                    "index": 1,
+                },
+                {
+                    "end": 4,
+                    "entity": "B-LOC",
+                    "score": 0.8,
+                    "start": 2,
+                    "word": "##ma",
+                    "index": 2,
+                },
+                {
+                    "end": 13,
+                    "entity": "I-ORG",
+                    "score": 0.6,
+                    "start": 11,
+                    "word": "##zotti",
+                    "index": 3,
+                },
             ],
         )
 
         self.assertEqual(
             token_classifier.aggregate(example, AggregationStrategy.FIRST),
-            [{"entity_group": "MISC", "score": 0.55, "word": "Ramazotti", "start": 0, "end": 13}],
+            [
+                {
+                    "entity_group": "MISC",
+                    "score": 0.55,
+                    "word": "Ramazotti",
+                    "start": 0,
+                    "end": 13,
+                }
+            ],
         )
         self.assertEqual(
             token_classifier.aggregate(example, AggregationStrategy.MAX),
-            [{"entity_group": "LOC", "score": 0.8, "word": "Ramazotti", "start": 0, "end": 13}],
+            [
+                {
+                    "entity_group": "LOC",
+                    "score": 0.8,
+                    "word": "Ramazotti",
+                    "start": 0,
+                    "end": 13,
+                }
+            ],
         )
         self.assertEqual(
-            nested_simplify(token_classifier.aggregate(example, AggregationStrategy.AVERAGE)),
-            [{"entity_group": "PER", "score": 0.35, "word": "Ramazotti", "start": 0, "end": 13}],
+            nested_simplify(
+                token_classifier.aggregate(example, AggregationStrategy.AVERAGE)
+            ),
+            [
+                {
+                    "entity_group": "PER",
+                    "score": 0.35,
+                    "word": "Ramazotti",
+                    "start": 0,
+                    "end": 13,
+                }
+            ],
         )
 
     @require_torch
     def test_gather_pre_entities(self):
         model_name = "sshleifer/tiny-dbmdz-bert-large-cased-finetuned-conll03-english"
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
-        token_classifier = pipeline(task="ner", model=model_name, tokenizer=tokenizer, framework="pt")
+        token_classifier = pipeline(
+            task="ner", model=model_name, tokenizer=tokenizer, framework="pt"
+        )
 
         sentence = "Hello there"
 
@@ -568,7 +1002,14 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
         self.assertEqual(
             nested_simplify(pre_entities),
             [
-                {"word": "Hello", "scores": [0.1, 0.3, 0.6], "start": 0, "end": 5, "is_subword": False, "index": 1},
+                {
+                    "word": "Hello",
+                    "scores": [0.1, 0.3, 0.6],
+                    "start": 0,
+                    "end": 5,
+                    "is_subword": False,
+                    "index": 1,
+                },
                 {
                     "word": "there",
                     "scores": [0.8, 0.1, 0.1],
@@ -590,13 +1031,29 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
     @require_tf
     def test_small_model_tf(self):
         model_name = "hf-internal-testing/tiny-bert-for-token-classification"
-        token_classifier = pipeline(task="token-classification", model=model_name, framework="tf")
+        token_classifier = pipeline(
+            task="token-classification", model=model_name, framework="tf"
+        )
         outputs = token_classifier("This is a test !")
         self.assertEqual(
             nested_simplify(outputs),
             [
-                {"entity": "I-MISC", "score": 0.115, "index": 1, "word": "this", "start": 0, "end": 4},
-                {"entity": "I-MISC", "score": 0.115, "index": 2, "word": "is", "start": 5, "end": 7},
+                {
+                    "entity": "I-MISC",
+                    "score": 0.115,
+                    "index": 1,
+                    "word": "this",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity": "I-MISC",
+                    "score": 0.115,
+                    "index": 2,
+                    "word": "is",
+                    "start": 5,
+                    "end": 7,
+                },
             ],
         )
 
@@ -604,31 +1061,69 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
     def test_no_offset_tokenizer(self):
         model_name = "hf-internal-testing/tiny-bert-for-token-classification"
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
-        token_classifier = pipeline(task="token-classification", model=model_name, tokenizer=tokenizer, framework="pt")
+        token_classifier = pipeline(
+            task="token-classification",
+            model=model_name,
+            tokenizer=tokenizer,
+            framework="pt",
+        )
         outputs = token_classifier("This is a test !")
         self.assertEqual(
             nested_simplify(outputs),
             [
-                {"entity": "I-MISC", "score": 0.115, "index": 1, "word": "this", "start": None, "end": None},
-                {"entity": "I-MISC", "score": 0.115, "index": 2, "word": "is", "start": None, "end": None},
+                {
+                    "entity": "I-MISC",
+                    "score": 0.115,
+                    "index": 1,
+                    "word": "this",
+                    "start": None,
+                    "end": None,
+                },
+                {
+                    "entity": "I-MISC",
+                    "score": 0.115,
+                    "index": 2,
+                    "word": "is",
+                    "start": None,
+                    "end": None,
+                },
             ],
         )
 
     @require_torch
     def test_small_model_pt(self):
         model_name = "hf-internal-testing/tiny-bert-for-token-classification"
-        token_classifier = pipeline(task="token-classification", model=model_name, framework="pt")
+        token_classifier = pipeline(
+            task="token-classification", model=model_name, framework="pt"
+        )
         outputs = token_classifier("This is a test !")
         self.assertEqual(
             nested_simplify(outputs),
             [
-                {"entity": "I-MISC", "score": 0.115, "index": 1, "word": "this", "start": 0, "end": 4},
-                {"entity": "I-MISC", "score": 0.115, "index": 2, "word": "is", "start": 5, "end": 7},
+                {
+                    "entity": "I-MISC",
+                    "score": 0.115,
+                    "index": 1,
+                    "word": "this",
+                    "start": 0,
+                    "end": 4,
+                },
+                {
+                    "entity": "I-MISC",
+                    "score": 0.115,
+                    "index": 2,
+                    "word": "is",
+                    "start": 5,
+                    "end": 7,
+                },
             ],
         )
 
         token_classifier = pipeline(
-            task="token-classification", model=model_name, framework="pt", ignore_labels=["O", "I-MISC"]
+            task="token-classification",
+            model=model_name,
+            framework="pt",
+            ignore_labels=["O", "I-MISC"],
         )
         outputs = token_classifier("This is a test !")
         self.assertEqual(
@@ -636,16 +1131,33 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
             [],
         )
 
-        token_classifier = pipeline(task="token-classification", model=model_name, framework="pt")
+        token_classifier = pipeline(
+            task="token-classification", model=model_name, framework="pt"
+        )
         # Overload offset_mapping
         outputs = token_classifier(
-            "This is a test !", offset_mapping=[(0, 0), (0, 1), (0, 2), (0, 0), (0, 0), (0, 0), (0, 0)]
+            "This is a test !",
+            offset_mapping=[(0, 0), (0, 1), (0, 2), (0, 0), (0, 0), (0, 0), (0, 0)],
         )
         self.assertEqual(
             nested_simplify(outputs),
             [
-                {"entity": "I-MISC", "score": 0.115, "index": 1, "word": "this", "start": 0, "end": 1},
-                {"entity": "I-MISC", "score": 0.115, "index": 2, "word": "is", "start": 0, "end": 2},
+                {
+                    "entity": "I-MISC",
+                    "score": 0.115,
+                    "index": 1,
+                    "word": "this",
+                    "start": 0,
+                    "end": 1,
+                },
+                {
+                    "entity": "I-MISC",
+                    "score": 0.115,
+                    "index": 2,
+                    "word": "is",
+                    "start": 0,
+                    "end": 2,
+                },
             ],
         )
 
@@ -659,8 +1171,22 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
             nested_simplify(outputs_batched),
             [
                 [
-                    {"entity": "I-MISC", "score": 0.115, "index": 1, "word": "this", "start": 0, "end": 4},
-                    {"entity": "I-MISC", "score": 0.115, "index": 2, "word": "is", "start": 5, "end": 7},
+                    {
+                        "entity": "I-MISC",
+                        "score": 0.115,
+                        "index": 1,
+                        "word": "this",
+                        "start": 0,
+                        "end": 4,
+                    },
+                    {
+                        "entity": "I-MISC",
+                        "score": 0.115,
+                        "index": 2,
+                        "word": "is",
+                        "start": 5,
+                        "end": 7,
+                    },
                 ],
                 [],
             ],
@@ -672,18 +1198,33 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
 
         with self.assertRaises(ValueError):
-            pipeline(task="ner", model=model_name, tokenizer=tokenizer, aggregation_strategy=AggregationStrategy.FIRST)
-        with self.assertRaises(ValueError):
             pipeline(
-                task="ner", model=model_name, tokenizer=tokenizer, aggregation_strategy=AggregationStrategy.AVERAGE
+                task="ner",
+                model=model_name,
+                tokenizer=tokenizer,
+                aggregation_strategy=AggregationStrategy.FIRST,
             )
         with self.assertRaises(ValueError):
-            pipeline(task="ner", model=model_name, tokenizer=tokenizer, aggregation_strategy=AggregationStrategy.MAX)
+            pipeline(
+                task="ner",
+                model=model_name,
+                tokenizer=tokenizer,
+                aggregation_strategy=AggregationStrategy.AVERAGE,
+            )
+        with self.assertRaises(ValueError):
+            pipeline(
+                task="ner",
+                model=model_name,
+                tokenizer=tokenizer,
+                aggregation_strategy=AggregationStrategy.MAX,
+            )
 
     @slow
     @require_torch
     def test_simple(self):
-        token_classifier = pipeline(task="ner", model="dslim/bert-base-NER", grouped_entities=True)
+        token_classifier = pipeline(
+            task="ner", model="dslim/bert-base-NER", grouped_entities=True
+        )
         sentence = "Hello Sarah Jessica Parker who Jessica lives in New York"
         sentence2 = "This is a simple test"
         output = token_classifier(sentence)
@@ -700,8 +1241,20 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
                     "start": 6,
                     "end": 26,
                 },
-                {"entity_group": "PER", "score": 0.977, "word": "Jessica", "start": 31, "end": 38},
-                {"entity_group": "LOC", "score": 0.999, "word": "New York", "start": 48, "end": 56},
+                {
+                    "entity_group": "PER",
+                    "score": 0.977,
+                    "word": "Jessica",
+                    "start": 31,
+                    "end": 38,
+                },
+                {
+                    "entity_group": "LOC",
+                    "score": 0.999,
+                    "word": "New York",
+                    "start": 48,
+                    "end": 56,
+                },
             ],
         )
 
@@ -712,9 +1265,27 @@ class TokenClassificationPipelineTests(unittest.TestCase, metaclass=PipelineTest
             output_,
             [
                 [
-                    {"entity_group": "PER", "score": 0.996, "word": "Sarah Jessica Parker", "start": 6, "end": 26},
-                    {"entity_group": "PER", "score": 0.977, "word": "Jessica", "start": 31, "end": 38},
-                    {"entity_group": "LOC", "score": 0.999, "word": "New York", "start": 48, "end": 56},
+                    {
+                        "entity_group": "PER",
+                        "score": 0.996,
+                        "word": "Sarah Jessica Parker",
+                        "start": 6,
+                        "end": 26,
+                    },
+                    {
+                        "entity_group": "PER",
+                        "score": 0.977,
+                        "word": "Jessica",
+                        "start": 31,
+                        "end": 38,
+                    },
+                    {
+                        "entity_group": "LOC",
+                        "score": 0.999,
+                        "word": "New York",
+                        "start": 48,
+                        "end": 56,
+                    },
                 ],
                 [],
             ],
@@ -737,7 +1308,9 @@ class TokenClassificationArgumentHandlerTestCase(unittest.TestCase):
         self.assertEqual(inputs, [string, string])
         self.assertEqual(offset_mapping, None)
 
-        inputs, offset_mapping = self.args_parser(string, offset_mapping=[(0, 1), (1, 2)])
+        inputs, offset_mapping = self.args_parser(
+            string, offset_mapping=[(0, 1), (1, 2)]
+        )
         self.assertEqual(inputs, [string])
         self.assertEqual(offset_mapping, [[(0, 1), (1, 2)]])
 
@@ -768,7 +1341,9 @@ class TokenClassificationArgumentHandlerTestCase(unittest.TestCase):
 
         # 1 sentences, 2 offset_mapping
         with self.assertRaises(ValueError):
-            self.args_parser(string, offset_mapping=[[(0, 1), (1, 2)], [(0, 2), (2, 3)]])
+            self.args_parser(
+                string, offset_mapping=[[(0, 1), (1, 2)], [(0, 2), (2, 3)]]
+            )
 
         # 0 sentences, 1 offset_mapping
         with self.assertRaises(TypeError):

@@ -50,7 +50,12 @@ if is_tf_available():
             # Restrict TensorFlow to only allocate x GB of memory on the GPUs
             try:
                 tf.config.set_logical_device_configuration(
-                    gpu, [tf.config.LogicalDeviceConfiguration(memory_limit=_tf_gpu_memory_limit)]
+                    gpu,
+                    [
+                        tf.config.LogicalDeviceConfiguration(
+                            memory_limit=_tf_gpu_memory_limit
+                        )
+                    ],
                 )
                 logical_gpus = tf.config.list_logical_devices("GPU")
                 print("Logical GPUs", logical_gpus)
@@ -61,7 +66,6 @@ if is_tf_available():
 
 @require_tf
 class TFCoreModelTesterMixin:
-
     model_tester = None
     all_model_classes = ()
     all_generative_model_classes = ()
@@ -75,7 +79,10 @@ class TFCoreModelTesterMixin:
 
         if model_class in get_values(TF_MODEL_FOR_MULTIPLE_CHOICE_MAPPING):
             inputs_dict = {
-                k: tf.tile(tf.expand_dims(v, 1), (1, self.model_tester.num_choices) + (1,) * (v.ndim - 1))
+                k: tf.tile(
+                    tf.expand_dims(v, 1),
+                    (1, self.model_tester.num_choices) + (1,) * (v.ndim - 1),
+                )
                 if isinstance(v, tf.Tensor) and v.ndim > 0
                 else v
                 for k, v in inputs_dict.items()
@@ -83,17 +90,29 @@ class TFCoreModelTesterMixin:
 
         if return_labels:
             if model_class in get_values(TF_MODEL_FOR_MULTIPLE_CHOICE_MAPPING):
-                inputs_dict["labels"] = tf.ones(self.model_tester.batch_size, dtype=tf.int32)
+                inputs_dict["labels"] = tf.ones(
+                    self.model_tester.batch_size, dtype=tf.int32
+                )
             elif model_class in get_values(TF_MODEL_FOR_QUESTION_ANSWERING_MAPPING):
-                inputs_dict["start_positions"] = tf.zeros(self.model_tester.batch_size, dtype=tf.int32)
-                inputs_dict["end_positions"] = tf.zeros(self.model_tester.batch_size, dtype=tf.int32)
+                inputs_dict["start_positions"] = tf.zeros(
+                    self.model_tester.batch_size, dtype=tf.int32
+                )
+                inputs_dict["end_positions"] = tf.zeros(
+                    self.model_tester.batch_size, dtype=tf.int32
+                )
             elif model_class in [
                 *get_values(TF_MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING),
                 *get_values(TF_MODEL_FOR_IMAGE_CLASSIFICATION_MAPPING),
             ]:
-                inputs_dict["labels"] = tf.zeros(self.model_tester.batch_size, dtype=tf.int32)
-            elif model_class in get_values(TF_MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING):
-                inputs_dict["next_sentence_label"] = tf.zeros(self.model_tester.batch_size, dtype=tf.int32)
+                inputs_dict["labels"] = tf.zeros(
+                    self.model_tester.batch_size, dtype=tf.int32
+                )
+            elif model_class in get_values(
+                TF_MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING
+            ):
+                inputs_dict["next_sentence_label"] = tf.zeros(
+                    self.model_tester.batch_size, dtype=tf.int32
+                )
             elif model_class in [
                 *get_values(TF_MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING),
                 *get_values(TF_MODEL_FOR_CAUSAL_LM_MAPPING),
@@ -102,7 +121,8 @@ class TFCoreModelTesterMixin:
                 *get_values(TF_MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING),
             ]:
                 inputs_dict["labels"] = tf.zeros(
-                    (self.model_tester.batch_size, self.model_tester.seq_length), dtype=tf.int32
+                    (self.model_tester.batch_size, self.model_tester.seq_length),
+                    dtype=tf.int32,
                 )
         return inputs_dict
 
@@ -164,8 +184,12 @@ class TFCoreModelTesterMixin:
         if hasattr(config, "use_cache"):
             config.use_cache = True
 
-        encoder_seq_length = getattr(self.model_tester, "encoder_seq_length", self.model_tester.seq_length)
-        encoder_key_length = getattr(self.model_tester, "key_length", encoder_seq_length)
+        encoder_seq_length = getattr(
+            self.model_tester, "encoder_seq_length", self.model_tester.seq_length
+        )
+        encoder_key_length = getattr(
+            self.model_tester, "key_length", encoder_seq_length
+        )
 
         for model_class in self.all_model_classes:
             class_inputs_dict = self._prepare_for_class(inputs_dict, model_class)
@@ -188,7 +212,9 @@ class TFCoreModelTesterMixin:
                 self.assertEqual(len(outputs), num_out)
 
                 expected_num_layers = getattr(
-                    self.model_tester, "expected_num_hidden_layers", self.model_tester.num_hidden_layers + 1
+                    self.model_tester,
+                    "expected_num_hidden_layers",
+                    self.model_tester.num_hidden_layers + 1,
                 )
 
                 self.assertEqual(len(output_hidden_states), expected_num_layers)
@@ -197,10 +223,16 @@ class TFCoreModelTesterMixin:
                     [self.model_tester.seq_length, self.model_tester.hidden_size],
                 )
 
-                self.assertEqual(len(output_attentions), self.model_tester.num_hidden_layers)
+                self.assertEqual(
+                    len(output_attentions), self.model_tester.num_hidden_layers
+                )
                 self.assertListEqual(
                     list(output_attentions[0].shape[-3:]),
-                    [self.model_tester.num_attention_heads, encoder_seq_length, encoder_key_length],
+                    [
+                        self.model_tester.num_attention_heads,
+                        encoder_seq_length,
+                        encoder_key_length,
+                    ],
                 )
 
     @slow
@@ -244,14 +276,19 @@ class TFCoreModelTesterMixin:
             # T5MainLayer needs an embed_tokens parameter when called without the inputs_embeds parameter
             if "T5" in main_layer_class.__name__:
                 # Take the same values than in TFT5ModelTester for this shared layer
-                shared = TFSharedEmbeddings(self.model_tester.vocab_size, self.model_tester.hidden_size, name="shared")
+                shared = TFSharedEmbeddings(
+                    self.model_tester.vocab_size,
+                    self.model_tester.hidden_size,
+                    name="shared",
+                )
                 config.use_cache = False
                 main_layer = main_layer_class(config, embed_tokens=shared)
             else:
                 main_layer = main_layer_class(config)
 
             symbolic_inputs = {
-                name: tf.keras.Input(tensor.shape[1:], dtype=tensor.dtype) for name, tensor in inputs_dict.items()
+                name: tf.keras.Input(tensor.shape[1:], dtype=tensor.dtype)
+                for name, tensor in inputs_dict.items()
             }
 
             if hasattr(self.model_tester, "num_labels"):
@@ -260,14 +297,30 @@ class TFCoreModelTesterMixin:
                 num_labels = 2
 
             X = tf.data.Dataset.from_tensor_slices(
-                (inputs_dict, np.ones((self.model_tester.batch_size, self.model_tester.seq_length, num_labels, 1)))
+                (
+                    inputs_dict,
+                    np.ones(
+                        (
+                            self.model_tester.batch_size,
+                            self.model_tester.seq_length,
+                            num_labels,
+                            1,
+                        )
+                    ),
+                )
             ).batch(1)
 
             hidden_states = main_layer(symbolic_inputs)[0]
-            outputs = tf.keras.layers.Dense(num_labels, activation="softmax", name="outputs")(hidden_states)
+            outputs = tf.keras.layers.Dense(
+                num_labels, activation="softmax", name="outputs"
+            )(hidden_states)
             model = tf.keras.models.Model(inputs=symbolic_inputs, outputs=[outputs])
 
-            model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["binary_accuracy"])
+            model.compile(
+                loss="binary_crossentropy",
+                optimizer="adam",
+                metrics=["binary_accuracy"],
+            )
             model.fit(X, epochs=1)
 
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -283,7 +336,8 @@ class TFCoreModelTesterMixin:
                     )
                 else:
                     model = tf.keras.models.load_model(
-                        filepath, custom_objects={main_layer_class.__name__: main_layer_class}
+                        filepath,
+                        custom_objects={main_layer_class.__name__: main_layer_class},
                     )
                 assert isinstance(model, tf.keras.Model)
                 model(inputs_dict)
@@ -309,8 +363,12 @@ class TFCoreModelTesterMixin:
             if not self.is_encoder_decoder:
                 inputs["inputs_embeds"] = model.get_input_embeddings()(input_ids)
             else:
-                inputs["inputs_embeds"] = model.get_input_embeddings()(encoder_input_ids)
-                inputs["decoder_inputs_embeds"] = model.get_input_embeddings()(decoder_input_ids)
+                inputs["inputs_embeds"] = model.get_input_embeddings()(
+                    encoder_input_ids
+                )
+                inputs["decoder_inputs_embeds"] = model.get_input_embeddings()(
+                    decoder_input_ids
+                )
 
             inputs = self._prepare_for_class(inputs, model_class)
 
@@ -334,7 +392,9 @@ class TFCoreModelTesterMixin:
         # create random bad tokens that are not special tokens
         bad_tokens = []
         while len(bad_tokens) < num_bad_tokens:
-            token = tf.squeeze(ids_tensor((1, 1), self.model_tester.vocab_size), 0).numpy()[0]
+            token = tf.squeeze(
+                ids_tensor((1, 1), self.model_tester.vocab_size), 0
+            ).numpy()[0]
             if token not in special_tokens:
                 bad_tokens.append(token)
         return bad_tokens

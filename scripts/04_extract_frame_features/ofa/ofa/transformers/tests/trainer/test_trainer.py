@@ -99,7 +99,10 @@ class RegressionDataset:
         self.label_names = ["labels"] if label_names is None else label_names
         self.length = length
         self.x = np.random.normal(size=(length,)).astype(np.float32)
-        self.ys = [a * self.x + b + np.random.normal(scale=0.1, size=(length,)) for _ in self.label_names]
+        self.ys = [
+            a * self.x + b + np.random.normal(scale=0.1, size=(length,))
+            for _ in self.label_names
+        ]
         self.ys = [y.astype(np.float32) for y in self.ys]
 
     def __len__(self):
@@ -173,7 +176,9 @@ if is_torch_available():
 
     class SampleIterableDataset(IterableDataset):
         def __init__(self, a=2, b=3, length=64, seed=42, label_names=None):
-            self.dataset = RegressionDataset(a=a, b=b, length=length, seed=seed, label_names=label_names)
+            self.dataset = RegressionDataset(
+                a=a, b=b, length=length, seed=seed, label_names=label_names
+            )
 
         def __iter__(self):
             for i in range(len(self.dataset)):
@@ -271,7 +276,15 @@ if is_torch_available():
             h = nn.functional.relu(self.linear2(x))
             return self.ln2(x + h + self.bias)
 
-    def get_regression_trainer(a=0, b=0, double_output=False, train_len=64, eval_len=64, pretrained=True, **kwargs):
+    def get_regression_trainer(
+        a=0,
+        b=0,
+        double_output=False,
+        train_len=64,
+        eval_len=64,
+        pretrained=True,
+        **kwargs,
+    ):
         label_names = kwargs.get("label_names", None)
         train_dataset = RegressionDataset(length=train_len, label_names=label_names)
         eval_dataset = RegressionDataset(length=eval_len, label_names=label_names)
@@ -290,7 +303,9 @@ if is_torch_available():
         data_collator = kwargs.pop("data_collator", None)
         optimizers = kwargs.pop("optimizers", (None, None))
         output_dir = kwargs.pop("output_dir", "./regression")
-        preprocess_logits_for_metrics = kwargs.pop("preprocess_logits_for_metrics", None)
+        preprocess_logits_for_metrics = kwargs.pop(
+            "preprocess_logits_for_metrics", None
+        )
 
         args = RegressionTrainingArguments(output_dir, a=a, b=b, **kwargs)
         return Trainer(
@@ -308,7 +323,13 @@ if is_torch_available():
 
 class TrainerIntegrationCommon:
     def check_saved_checkpoints(self, output_dir, freq, total, is_pretrained=True):
-        file_list = [WEIGHTS_NAME, "training_args.bin", "optimizer.pt", "scheduler.pt", "trainer_state.json"]
+        file_list = [
+            WEIGHTS_NAME,
+            "training_args.bin",
+            "optimizer.pt",
+            "scheduler.pt",
+            "trainer_state.json",
+        ]
         if is_pretrained:
             file_list.append("config.json")
         for step in range(freq, total, freq):
@@ -318,10 +339,19 @@ class TrainerIntegrationCommon:
                 self.assertTrue(os.path.isfile(os.path.join(checkpoint, filename)))
 
     def check_best_model_has_been_loaded(
-        self, output_dir, freq, total, trainer, metric, greater_is_better=False, is_pretrained=True
+        self,
+        output_dir,
+        freq,
+        total,
+        trainer,
+        metric,
+        greater_is_better=False,
+        is_pretrained=True,
     ):
         checkpoint = os.path.join(output_dir, f"checkpoint-{(total // freq) * freq}")
-        log_history = TrainerState.load_from_json(os.path.join(checkpoint, "trainer_state.json")).log_history
+        log_history = TrainerState.load_from_json(
+            os.path.join(checkpoint, "trainer_state.json")
+        ).log_history
 
         values = [d[metric] for d in log_history]
         best_value = max(values) if greater_is_better else min(values)
@@ -349,7 +379,12 @@ class TrainerIntegrationCommon:
         log_history = state.pop("log_history", None)
         log_history1 = state1.pop("log_history", None)
         self.assertEqual(state, state1)
-        skip_log_keys = ["train_runtime", "train_samples_per_second", "train_steps_per_second", "train_loss"]
+        skip_log_keys = [
+            "train_runtime",
+            "train_samples_per_second",
+            "train_steps_per_second",
+            "train_loss",
+        ]
         for log, log1 in zip(log_history, log_history1):
             for key in skip_log_keys:
                 _ = log.pop(key, None)
@@ -383,7 +418,11 @@ class TrainerIntegrationPrerunTest(TestCasePlus, TrainerIntegrationCommon):
 
     def check_trained_model(self, model, alternate_seed=False):
         # Checks a training seeded with learning_rate = 0.1
-        (a, b) = self.alternate_trained_model if alternate_seed else self.default_trained_model
+        (a, b) = (
+            self.alternate_trained_model
+            if alternate_seed
+            else self.default_trained_model
+        )
         self.assertTrue(torch.allclose(model.a, a))
         self.assertTrue(torch.allclose(model.b, b))
 
@@ -422,7 +461,9 @@ class TrainerIntegrationPrerunTest(TestCasePlus, TrainerIntegrationCommon):
 
         # Adding one column not used by the model should have no impact
         z = np.random.normal(size=(64,)).astype(np.float32)
-        train_dataset = datasets.Dataset.from_dict({"input_x": x, "label": y, "extra": z})
+        train_dataset = datasets.Dataset.from_dict(
+            {"input_x": x, "label": y, "extra": z}
+        )
         model = RegressionModel()
         trainer = Trainer(model, args, train_dataset=train_dataset)
         trainer.train()
@@ -431,7 +472,9 @@ class TrainerIntegrationPrerunTest(TestCasePlus, TrainerIntegrationCommon):
     def test_model_init(self):
         train_dataset = RegressionDataset()
         args = TrainingArguments("./regression", learning_rate=0.1)
-        trainer = Trainer(args=args, train_dataset=train_dataset, model_init=lambda: RegressionModel())
+        trainer = Trainer(
+            args=args, train_dataset=train_dataset, model_init=lambda: RegressionModel()
+        )
         trainer.train()
         self.check_trained_model(trainer.model)
 
@@ -447,7 +490,9 @@ class TrainerIntegrationPrerunTest(TestCasePlus, TrainerIntegrationCommon):
     def test_gradient_accumulation(self):
         # Training with half the batch size but accumulation steps as 2 should give the same results.
         trainer = get_regression_trainer(
-            gradient_accumulation_steps=2, per_device_train_batch_size=4, learning_rate=0.1
+            gradient_accumulation_steps=2,
+            per_device_train_batch_size=4,
+            learning_rate=0.1,
         )
         trainer.train()
         self.check_trained_model(trainer.model)
@@ -478,8 +523,15 @@ class TrainerIntegrationPrerunTest(TestCasePlus, TrainerIntegrationCommon):
         args = TrainingArguments("./regression")
         model = RegressionModel()
         optimizer = torch.optim.SGD(model.parameters(), lr=1.0)
-        lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda x: 1.0)
-        trainer = Trainer(model, args, train_dataset=train_dataset, optimizers=(optimizer, lr_scheduler))
+        lr_scheduler = torch.optim.lr_scheduler.LambdaLR(
+            optimizer, lr_lambda=lambda x: 1.0
+        )
+        trainer = Trainer(
+            model,
+            args,
+            train_dataset=train_dataset,
+            optimizers=(optimizer, lr_scheduler),
+        )
         trainer.train()
 
         (a, b) = self.default_trained_model
@@ -495,9 +547,20 @@ class TrainerIntegrationPrerunTest(TestCasePlus, TrainerIntegrationCommon):
         train_dataset = RegressionDataset()
         args = TrainingArguments("./regression")
         model = RegressionModel()
-        optimizer = Adafactor(model.parameters(), scale_parameter=True, relative_step=True, warmup_init=True, lr=None)
+        optimizer = Adafactor(
+            model.parameters(),
+            scale_parameter=True,
+            relative_step=True,
+            warmup_init=True,
+            lr=None,
+        )
         lr_scheduler = AdafactorSchedule(optimizer)
-        trainer = Trainer(model, args, train_dataset=train_dataset, optimizers=(optimizer, lr_scheduler))
+        trainer = Trainer(
+            model,
+            args,
+            train_dataset=train_dataset,
+            optimizers=(optimizer, lr_scheduler),
+        )
         trainer.train()
 
         (a, b) = self.default_trained_model
@@ -508,7 +571,6 @@ class TrainerIntegrationPrerunTest(TestCasePlus, TrainerIntegrationCommon):
     @require_torch_gpu
     @require_torch_bf16
     def test_mixed_bf16(self):
-
         # very basic test
         trainer = get_regression_trainer(learning_rate=0.1, bf16=True)
         trainer.train()
@@ -516,14 +578,15 @@ class TrainerIntegrationPrerunTest(TestCasePlus, TrainerIntegrationCommon):
 
         # --bf16 --half_precision_backend apex can't be used together
         with self.assertRaises(ValueError):
-            trainer = get_regression_trainer(learning_rate=0.1, bf16=True, half_precision_backend="apex")
+            trainer = get_regression_trainer(
+                learning_rate=0.1, bf16=True, half_precision_backend="apex"
+            )
 
         # will add more specific tests once there are some bugs to fix
 
     @require_torch_gpu
     @require_torch_tf32
     def test_tf32(self):
-
         # very basic test
         trainer = get_regression_trainer(learning_rate=0.1, tf32=True)
         trainer.train()
@@ -547,13 +610,17 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         eval_dataset = RegressionDataset()
         model = RegressionDictModel()
         args = TrainingArguments("./regression")
-        trainer = Trainer(model, args, train_dataset=train_dataset, eval_dataset=eval_dataset)
+        trainer = Trainer(
+            model, args, train_dataset=train_dataset, eval_dataset=eval_dataset
+        )
         trainer.train()
         _ = trainer.evaluate()
         _ = trainer.predict(eval_dataset)
 
     def test_evaluation_with_keys_to_drop(self):
-        config = GPT2Config(vocab_size=100, n_positions=128, n_embd=32, n_layer=3, n_head=4)
+        config = GPT2Config(
+            vocab_size=100, n_positions=128, n_embd=32, n_layer=3, n_head=4
+        )
         tiny_gpt2 = GPT2LMHeadModel(config)
         x = torch.randint(0, 100, (128,))
         eval_dataset = RepeatDataset(x)
@@ -594,40 +661,56 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         self.assertEqual(train_output.global_step, 10)
 
     def test_logging_inf_nan_filter(self):
-        config = GPT2Config(vocab_size=100, n_positions=128, n_embd=32, n_layer=3, n_head=4)
+        config = GPT2Config(
+            vocab_size=100, n_positions=128, n_embd=32, n_layer=3, n_head=4
+        )
         tiny_gpt2 = GPT2LMHeadModel(config)
         x = torch.randint(0, 100, (128,))
         train_dataset = RepeatDataset(x)
 
         # Trainer without inf/nan filter
-        args = TrainingArguments("./test", learning_rate=1e9, logging_steps=5, logging_nan_inf_filter=False)
+        args = TrainingArguments(
+            "./test", learning_rate=1e9, logging_steps=5, logging_nan_inf_filter=False
+        )
         trainer = Trainer(tiny_gpt2, args, train_dataset=train_dataset)
         trainer.train()
         log_history_no_filter = trainer.state.log_history
 
         # Trainer with inf/nan filter
-        args = TrainingArguments("./test", learning_rate=1e9, logging_steps=5, logging_nan_inf_filter=True)
+        args = TrainingArguments(
+            "./test", learning_rate=1e9, logging_steps=5, logging_nan_inf_filter=True
+        )
         trainer = Trainer(tiny_gpt2, args, train_dataset=train_dataset)
         trainer.train()
         log_history_filter = trainer.state.log_history
 
         def is_any_loss_nan_or_inf(log_history):
             losses = [l["loss"] for l in log_history[:-1]]
-            return any(math.isnan(x) for x in losses) or any(math.isinf(x) for x in losses)
+            return any(math.isnan(x) for x in losses) or any(
+                math.isinf(x) for x in losses
+            )
 
         self.assertTrue(is_any_loss_nan_or_inf(log_history_no_filter))
         self.assertFalse(is_any_loss_nan_or_inf(log_history_filter))
 
     def test_train_and_eval_dataloaders(self):
         n_gpu = max(1, torch.cuda.device_count())
-        trainer = get_regression_trainer(learning_rate=0.1, per_device_train_batch_size=16)
+        trainer = get_regression_trainer(
+            learning_rate=0.1, per_device_train_batch_size=16
+        )
         self.assertEqual(trainer.get_train_dataloader().batch_size, 16 * n_gpu)
-        trainer = get_regression_trainer(learning_rate=0.1, per_device_eval_batch_size=16)
+        trainer = get_regression_trainer(
+            learning_rate=0.1, per_device_eval_batch_size=16
+        )
         self.assertEqual(trainer.get_eval_dataloader().batch_size, 16 * n_gpu)
 
         # Check drop_last works
         trainer = get_regression_trainer(
-            train_len=66, eval_len=74, learning_rate=0.1, per_device_train_batch_size=16, per_device_eval_batch_size=32
+            train_len=66,
+            eval_len=74,
+            learning_rate=0.1,
+            per_device_train_batch_size=16,
+            per_device_eval_batch_size=32,
         )
         self.assertEqual(len(trainer.get_train_dataloader()), 66 // (16 * n_gpu) + 1)
         self.assertEqual(len(trainer.get_eval_dataloader()), 74 // (32 * n_gpu) + 1)
@@ -645,7 +728,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
 
         # Check passing a new dataset for evaluation works
         new_eval_dataset = RegressionDataset(length=128)
-        self.assertEqual(len(trainer.get_eval_dataloader(new_eval_dataset)), 128 // (32 * n_gpu))
+        self.assertEqual(
+            len(trainer.get_eval_dataloader(new_eval_dataset)), 128 // (32 * n_gpu)
+        )
 
     def test_sampler_seed(self):
         # nb: we don't want to inherit from IterableDataset to hit the right code path
@@ -693,20 +778,37 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         # test that the seed is passed to the sampler
         # the codepath we want to hit is world_size <= 1, and both group_by_length
         for group_by_length in [True, False]:
-            sample42_1 = _get_first_data_sample(num_params=10, seed=42, data_seed=42, group_by_length=group_by_length)
-            sample42_2 = _get_first_data_sample(num_params=11, seed=42, data_seed=42, group_by_length=group_by_length)
-            self.assertTrue(torch.equal(sample42_1["input_ids"], sample42_2["input_ids"]))
+            sample42_1 = _get_first_data_sample(
+                num_params=10, seed=42, data_seed=42, group_by_length=group_by_length
+            )
+            sample42_2 = _get_first_data_sample(
+                num_params=11, seed=42, data_seed=42, group_by_length=group_by_length
+            )
+            self.assertTrue(
+                torch.equal(sample42_1["input_ids"], sample42_2["input_ids"])
+            )
 
             # should get same samples with different seed, so long as data_seed is the same
-            sample42_3 = _get_first_data_sample(num_params=11, seed=11, data_seed=42, group_by_length=group_by_length)
-            self.assertTrue(torch.equal(sample42_1["input_ids"], sample42_3["input_ids"]))
+            sample42_3 = _get_first_data_sample(
+                num_params=11, seed=11, data_seed=42, group_by_length=group_by_length
+            )
+            self.assertTrue(
+                torch.equal(sample42_1["input_ids"], sample42_3["input_ids"])
+            )
 
             # make sure we have some randomness in the samples if data_seed is different
             others = [
-                _get_first_data_sample(num_params=i, seed=42, data_seed=i, group_by_length=group_by_length)
+                _get_first_data_sample(
+                    num_params=i, seed=42, data_seed=i, group_by_length=group_by_length
+                )
                 for i in range(10)
             ]
-            self.assertTrue(any(not torch.equal(sample42_1["input_ids"], sample["input_ids"]) for sample in others))
+            self.assertTrue(
+                any(
+                    not torch.equal(sample42_1["input_ids"], sample["input_ids"])
+                    for sample in others
+                )
+            )
 
     @require_torch_multi_gpu
     def test_data_is_not_parallelized_when_model_is_parallel(self):
@@ -714,8 +816,17 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         # Make the Trainer believe it's a parallelized model
         model.is_parallelizable = True
         model.model_parallel = True
-        args = TrainingArguments("./regression", per_device_train_batch_size=16, per_device_eval_batch_size=16)
-        trainer = Trainer(model, args, train_dataset=RegressionDataset(), eval_dataset=RegressionDataset())
+        args = TrainingArguments(
+            "./regression",
+            per_device_train_batch_size=16,
+            per_device_eval_batch_size=16,
+        )
+        trainer = Trainer(
+            model,
+            args,
+            train_dataset=RegressionDataset(),
+            eval_dataset=RegressionDataset(),
+        )
         # Check the Trainer was fooled
         self.assertTrue(trainer.is_model_parallel)
         self.assertEqual(trainer.args.n_gpu, 1)
@@ -738,7 +849,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         self.assertAlmostEqual(results["eval_accuracy"], expected_acc)
 
         # With a number of elements not a round multiple of the batch size
-        trainer = get_regression_trainer(a=1.5, b=2.5, eval_len=66, compute_metrics=AlmostAccuracy())
+        trainer = get_regression_trainer(
+            a=1.5, b=2.5, eval_len=66, compute_metrics=AlmostAccuracy()
+        )
         results = trainer.evaluate()
 
         x, y = trainer.eval_dataset.x, trainer.eval_dataset.ys[0]
@@ -785,7 +898,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         self.assertTrue(np.allclose(preds[1], 1.5 * x + 2.5))
 
         # With more than one output/label of the model
-        trainer = get_regression_trainer(a=1.5, b=2.5, double_output=True, label_names=["labels", "labels_2"])
+        trainer = get_regression_trainer(
+            a=1.5, b=2.5, double_output=True, label_names=["labels", "labels_2"]
+        )
         outputs = trainer.predict(trainer.eval_dataset)
         preds = outputs.predictions
         labels = outputs.label_ids
@@ -859,13 +974,19 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         with tempfile.TemporaryDirectory() as tmpdir:
             trainer = get_regression_trainer(output_dir=tmpdir, save_steps=5)
             trainer.train()
-            self.check_saved_checkpoints(tmpdir, 5, int(self.n_epochs * 64 / self.batch_size))
+            self.check_saved_checkpoints(
+                tmpdir, 5, int(self.n_epochs * 64 / self.batch_size)
+            )
 
         # With a regular model that is not a PreTrainedModel
         with tempfile.TemporaryDirectory() as tmpdir:
-            trainer = get_regression_trainer(output_dir=tmpdir, save_steps=5, pretrained=False)
+            trainer = get_regression_trainer(
+                output_dir=tmpdir, save_steps=5, pretrained=False
+            )
             trainer.train()
-            self.check_saved_checkpoints(tmpdir, 5, int(self.n_epochs * 64 / self.batch_size), False)
+            self.check_saved_checkpoints(
+                tmpdir, 5, int(self.n_epochs * 64 / self.batch_size), False
+            )
 
     @require_torch_multi_gpu
     def test_run_seq2seq_double_train_wrap_once(self):
@@ -878,7 +999,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         model_wrapped_before = trainer.model_wrapped
         trainer.train()
         model_wrapped_after = trainer.model_wrapped
-        self.assertIs(model_wrapped_before, model_wrapped_after, "should be not wrapped twice")
+        self.assertIs(
+            model_wrapped_before, model_wrapped_after, "should be not wrapped twice"
+        )
 
     @require_torch_up_to_2_gpus
     def test_can_resume_training(self):
@@ -887,7 +1010,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         # won't be the same since the training dataloader is shuffled).
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            kwargs = dict(output_dir=tmpdir, train_len=128, save_steps=5, learning_rate=0.1)
+            kwargs = dict(
+                output_dir=tmpdir, train_len=128, save_steps=5, learning_rate=0.1
+            )
             trainer = get_regression_trainer(**kwargs)
             trainer.train()
             (a, b) = trainer.model.a.item(), trainer.model.b.item()
@@ -920,7 +1045,13 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
 
         # With a regular model that is not a PreTrainedModel
         with tempfile.TemporaryDirectory() as tmpdir:
-            kwargs = dict(output_dir=tmpdir, train_len=128, save_steps=5, learning_rate=0.1, pretrained=False)
+            kwargs = dict(
+                output_dir=tmpdir,
+                train_len=128,
+                save_steps=5,
+                learning_rate=0.1,
+                pretrained=False,
+            )
 
             trainer = get_regression_trainer(**kwargs)
             trainer.train()
@@ -965,7 +1096,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         trainer = get_regression_trainer(output_dir=output_dir2)
         with self.assertRaises(Exception) as context:
             trainer.train(resume_from_checkpoint=True)
-        self.assertTrue("No valid checkpoint found in output directory" in str(context.exception))
+        self.assertTrue(
+            "No valid checkpoint found in output directory" in str(context.exception)
+        )
 
     @require_torch_non_multi_gpu
     def test_resume_training_with_randomness(self):
@@ -982,13 +1115,17 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
 
         tmp_dir = self.get_auto_remove_tmp_dir()
         args = RegressionTrainingArguments(tmp_dir, save_steps=5, learning_rate=0.1)
-        trainer = Trainer(model, args, train_dataset=train_dataset, eval_dataset=eval_dataset)
+        trainer = Trainer(
+            model, args, train_dataset=train_dataset, eval_dataset=eval_dataset
+        )
 
         trainer.train()
         (a, b) = trainer.model.a.item(), trainer.model.b.item()
 
         model = RegressionRandomPreTrainedModel(config)
-        trainer = Trainer(model, args, train_dataset=train_dataset, eval_dataset=eval_dataset)
+        trainer = Trainer(
+            model, args, train_dataset=train_dataset, eval_dataset=eval_dataset
+        )
         trainer.train(resume_from_checkpoint=os.path.join(tmp_dir, "checkpoint-15"))
         (a1, b1) = trainer.model.a.item(), trainer.model.b.item()
 
@@ -1005,7 +1142,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
 
         tmp_dir = self.get_auto_remove_tmp_dir()
         args = RegressionTrainingArguments(tmp_dir, save_steps=5, learning_rate=0.1)
-        trainer = Trainer(model, args, train_dataset=train_dataset, eval_dataset=eval_dataset)
+        trainer = Trainer(
+            model, args, train_dataset=train_dataset, eval_dataset=eval_dataset
+        )
 
         trainer.train(resume_from_checkpoint=False)
 
@@ -1103,7 +1242,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
             self.assertFalse(trainer.args.greater_is_better)
             trainer.train()
             self.check_saved_checkpoints(tmpdir, 5, total)
-            self.check_best_model_has_been_loaded(tmpdir, 5, total, trainer, "eval_loss")
+            self.check_best_model_has_been_loaded(
+                tmpdir, 5, total, trainer, "eval_loss"
+            )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             trainer = get_regression_trainer(
@@ -1121,7 +1262,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
             self.assertTrue(trainer.args.greater_is_better)
             trainer.train()
             self.check_saved_checkpoints(tmpdir, 5, total)
-            self.check_best_model_has_been_loaded(tmpdir, 5, total, trainer, "eval_accuracy", greater_is_better=True)
+            self.check_best_model_has_been_loaded(
+                tmpdir, 5, total, trainer, "eval_accuracy", greater_is_better=True
+            )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             trainer = get_regression_trainer(
@@ -1139,7 +1282,12 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
             trainer.train()
             self.check_saved_checkpoints(tmpdir, 64 // self.batch_size, total)
             self.check_best_model_has_been_loaded(
-                tmpdir, 64 // self.batch_size, total, trainer, "eval_accuracy", greater_is_better=True
+                tmpdir,
+                64 // self.batch_size,
+                total,
+                trainer,
+                "eval_accuracy",
+                greater_is_better=True,
             )
 
         # Test this works with a non PreTrainedModel
@@ -1156,7 +1304,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
             self.assertFalse(trainer.args.greater_is_better)
             trainer.train()
             self.check_saved_checkpoints(tmpdir, 5, total, is_pretrained=False)
-            self.check_best_model_has_been_loaded(tmpdir, 5, total, trainer, "eval_loss", is_pretrained=False)
+            self.check_best_model_has_been_loaded(
+                tmpdir, 5, total, trainer, "eval_loss", is_pretrained=False
+            )
 
     @slow
     def test_trainer_eval_mrpc(self):
@@ -1164,7 +1314,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
         model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
         data_args = GlueDataTrainingArguments(
-            task_name="mrpc", data_dir=f"{get_tests_dir()}/fixtures/tests_samples/MRPC", overwrite_cache=True
+            task_name="mrpc",
+            data_dir=f"{get_tests_dir()}/fixtures/tests_samples/MRPC",
+            overwrite_cache=True,
         )
         eval_dataset = GlueDataset(data_args, tokenizer=tokenizer, mode="dev")
 
@@ -1196,7 +1348,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
 
         loader = trainer.get_train_dataloader()
         self.assertIsInstance(loader, torch.utils.data.DataLoader)
-        self.assertIsInstance(loader.sampler, torch.utils.data.dataloader._InfiniteConstantSampler)
+        self.assertIsInstance(
+            loader.sampler, torch.utils.data.dataloader._InfiniteConstantSampler
+        )
 
     def test_training_finite_iterable_dataset(self):
         config = RegressionModelConfig()
@@ -1210,7 +1364,8 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         data = FiniteIterableDataset(length=num_samples)
         train_args = TrainingArguments(
             "..",
-            max_steps=available_steps + 1,  # set a higher number than actually available
+            max_steps=available_steps
+            + 1,  # set a higher number than actually available
             per_device_train_batch_size=batch_size,
         )
         trainer = Trainer(model, train_dataset=data, args=train_args)
@@ -1224,7 +1379,12 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         eval_dataset = SampleIterableDataset()
 
         args = RegressionTrainingArguments(output_dir="./examples")
-        trainer = Trainer(model=model, args=args, eval_dataset=eval_dataset, compute_metrics=AlmostAccuracy())
+        trainer = Trainer(
+            model=model,
+            args=args,
+            eval_dataset=eval_dataset,
+            compute_metrics=AlmostAccuracy(),
+        )
         results = trainer.evaluate()
 
         x, y = trainer.eval_dataset.dataset.x, trainer.eval_dataset.dataset.ys[0]
@@ -1251,7 +1411,12 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         eval_dataset = SampleIterableDataset()
 
         args = RegressionTrainingArguments(output_dir="./examples")
-        trainer = Trainer(model=model, args=args, eval_dataset=eval_dataset, compute_metrics=AlmostAccuracy())
+        trainer = Trainer(
+            model=model,
+            args=args,
+            eval_dataset=eval_dataset,
+            compute_metrics=AlmostAccuracy(),
+        )
 
         preds = trainer.predict(trainer.eval_dataset).predictions
         x = eval_dataset.dataset.x
@@ -1267,14 +1432,19 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         # len(train_dl) < gradient_accumulation_steps shouldn't give ``ZeroDivisionError`` when ``max_steps`` is given.
         # It should give 1 update step for each epoch.
         trainer = get_regression_trainer(
-            max_steps=3, train_len=64, per_device_train_batch_size=16, gradient_accumulation_steps=5
+            max_steps=3,
+            train_len=64,
+            per_device_train_batch_size=16,
+            gradient_accumulation_steps=5,
         )
         train_output = trainer.train()
         self.assertEqual(train_output.global_step, 3)
 
         # Even ``max_steps`` is not specified, we still expect 1 update step for each epoch if
         # len(train_dl) < gradient_accumulation_steps.
-        trainer = get_regression_trainer(train_len=64, per_device_train_batch_size=16, gradient_accumulation_steps=5)
+        trainer = get_regression_trainer(
+            train_len=64, per_device_train_batch_size=16, gradient_accumulation_steps=5
+        )
         train_output = trainer.train()
         self.assertEqual(train_output.global_step, int(self.n_epochs))
 
@@ -1319,7 +1489,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
 
         def assert_flos_extraction(trainer, wrapped_model_to_check):
             self.assertEqual(trainer.model, unwrap_model(wrapped_model_to_check))
-            self.assertGreaterEqual(getattr(unwrap_model(wrapped_model_to_check).config, "total_flos", 0), 0)
+            self.assertGreaterEqual(
+                getattr(unwrap_model(wrapped_model_to_check).config, "total_flos", 0), 0
+            )
 
         # with plain model
         assert_flos_extraction(trainer, trainer.model)
@@ -1333,10 +1505,17 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
     def check_checkpoint_deletion(self, trainer, output_dir, expected):
         # Make fake checkpoints
         for n in [5, 10, 15, 20, 25]:
-            os.makedirs(os.path.join(output_dir, f"{PREFIX_CHECKPOINT_DIR}-{n}"), exist_ok=True)
+            os.makedirs(
+                os.path.join(output_dir, f"{PREFIX_CHECKPOINT_DIR}-{n}"), exist_ok=True
+            )
         trainer._rotate_checkpoints(output_dir=output_dir)
-        glob_checkpoints = [str(x) for x in Path(output_dir).glob(f"{PREFIX_CHECKPOINT_DIR}-*")]
-        values = [int(re.match(f".*{PREFIX_CHECKPOINT_DIR}-([0-9]+)", d).groups()[0]) for d in glob_checkpoints]
+        glob_checkpoints = [
+            str(x) for x in Path(output_dir).glob(f"{PREFIX_CHECKPOINT_DIR}-*")
+        ]
+        values = [
+            int(re.match(f".*{PREFIX_CHECKPOINT_DIR}-([0-9]+)", d).groups()[0])
+            for d in glob_checkpoints
+        ]
         self.assertSetEqual(set(values), set(expected))
 
     def test_checkpoint_rotation(self):
@@ -1347,7 +1526,10 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
 
             # With best model at end
             trainer = get_regression_trainer(
-                output_dir=tmp_dir, evaluation_strategy="steps", load_best_model_at_end=True, save_total_limit=2
+                output_dir=tmp_dir,
+                evaluation_strategy="steps",
+                load_best_model_at_end=True,
+                save_total_limit=2,
             )
             trainer.state.best_model_checkpoint = os.path.join(tmp_dir, "checkpoint-5")
             self.check_checkpoint_deletion(trainer, tmp_dir, [5, 25])
@@ -1355,7 +1537,10 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
             # Edge case: we don't always honor save_total_limit=1 if load_best_model_at_end=True to be able to resume
             # from checkpoint
             trainer = get_regression_trainer(
-                output_dir=tmp_dir, evaluation_strategy="steps", load_best_model_at_end=True, save_total_limit=1
+                output_dir=tmp_dir,
+                evaluation_strategy="steps",
+                load_best_model_at_end=True,
+                save_total_limit=1,
             )
             trainer.state.best_model_checkpoint = os.path.join(tmp_dir, "checkpoint-25")
             self.check_checkpoint_deletion(trainer, tmp_dir, [25])
@@ -1382,7 +1567,6 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
             check_func("test_mem_gpu_alloc_delta", metrics)
 
     def test_mem_metrics(self):
-
         # with mem metrics enabled
         trainer = get_regression_trainer(skip_memory_metrics=False)
         self.check_mem_metrics(trainer, self.assertIn)
@@ -1393,7 +1577,6 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
 
     @require_torch_gpu
     def test_fp16_full_eval(self):
-
         # this is a sensitive test so let's keep debugging printouts in place for quick diagnosis.
         # it's using pretty large safety margins, but small enough to detect broken functionality.
         debug = 0
@@ -1407,7 +1590,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         b = torch.ones(1000, bs) - 0.001
 
         # 1. with mem metrics enabled
-        trainer = get_regression_trainer(a=a, b=b, eval_len=eval_len, skip_memory_metrics=False)
+        trainer = get_regression_trainer(
+            a=a, b=b, eval_len=eval_len, skip_memory_metrics=False
+        )
         metrics = trainer.evaluate()
         del trainer
         gc.collect()
@@ -1428,7 +1613,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         self.assertLess(fp32_eval, 5_000)
 
         # 2. with mem metrics disabled
-        trainer = get_regression_trainer(a=a, b=b, eval_len=eval_len, fp16_full_eval=True, skip_memory_metrics=False)
+        trainer = get_regression_trainer(
+            a=a, b=b, eval_len=eval_len, fp16_full_eval=True, skip_memory_metrics=False
+        )
         metrics = trainer.evaluate()
         fp16_init = metrics["init_mem_gpu_alloc_delta"]
         fp16_eval = metrics["eval_mem_gpu_alloc_delta"]
@@ -1467,7 +1654,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         b = torch.ones(1000, bs) - 0.001
 
         # 1. with mem metrics enabled
-        trainer = get_regression_trainer(a=a, b=b, eval_len=eval_len, skip_memory_metrics=False)
+        trainer = get_regression_trainer(
+            a=a, b=b, eval_len=eval_len, skip_memory_metrics=False
+        )
         metrics = trainer.evaluate()
         del trainer
         gc.collect()
@@ -1488,7 +1677,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         self.assertLess(fp32_eval, 5_000)
 
         # 2. with mem metrics disabled
-        trainer = get_regression_trainer(a=a, b=b, eval_len=eval_len, bf16_full_eval=True, skip_memory_metrics=False)
+        trainer = get_regression_trainer(
+            a=a, b=b, eval_len=eval_len, bf16_full_eval=True, skip_memory_metrics=False
+        )
         metrics = trainer.evaluate()
         bf16_init = metrics["init_mem_gpu_alloc_delta"]
         bf16_eval = metrics["eval_mem_gpu_alloc_delta"]
@@ -1510,7 +1701,9 @@ class TrainerIntegrationTest(TestCasePlus, TrainerIntegrationCommon):
         self.assertAlmostEqual(bf16_eval, fp32_init / 2, delta=5_000)
 
     def test_no_wd_param_group(self):
-        model = nn.Sequential(TstLayer(128), nn.ModuleList([TstLayer(128), TstLayer(128)]))
+        model = nn.Sequential(
+            TstLayer(128), nn.ModuleList([TstLayer(128), TstLayer(128)])
+        )
         trainer = Trainer(model=model)
         trainer.create_optimizer_and_scheduler(10)
         # fmt: off
@@ -1538,7 +1731,9 @@ class TrainerIntegrationWithHubTester(unittest.TestCase):
                 pass
 
         try:
-            delete_repo(token=cls._token, name="test-trainer-org", organization="valid_org")
+            delete_repo(
+                token=cls._token, name="test-trainer-org", organization="valid_org"
+            )
         except HTTPError:
             pass
 
@@ -1580,7 +1775,9 @@ class TrainerIntegrationWithHubTester(unittest.TestCase):
             repo_name = re_search.groups()[0]
             self.assertEqual(repo_name, "valid_org/test-trainer-org")
 
-            model = RegressionPreTrainedModel.from_pretrained("valid_org/test-trainer-org")
+            model = RegressionPreTrainedModel.from_pretrained(
+                "valid_org/test-trainer-org"
+            )
             self.assertEqual(model.a.item(), trainer.model.a.item())
             self.assertEqual(model.b.item(), trainer.model.b.item())
 
@@ -1607,11 +1804,18 @@ class TrainerIntegrationWithHubTester(unittest.TestCase):
             trainer.train()
 
             # Wait for the async pushes to be finished
-            while trainer.push_in_progress is not None and not trainer.push_in_progress.is_done:
+            while (
+                trainer.push_in_progress is not None
+                and not trainer.push_in_progress.is_done
+            ):
                 time.sleep(0.5)
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            _ = Repository(tmp_dir, clone_from=f"{USER}/test-trainer-epoch", use_auth_token=self._token)
+            _ = Repository(
+                tmp_dir,
+                clone_from=f"{USER}/test-trainer-epoch",
+                use_auth_token=self._token,
+            )
             commits = self.get_commit_history(tmp_dir)
             self.assertIn("initial commit", commits)
             # We can't test that epoch 2 and 3 are in the commits without being flaky as those might be skipped if
@@ -1634,11 +1838,18 @@ class TrainerIntegrationWithHubTester(unittest.TestCase):
             trainer.train()
 
             # Wait for the async pushes to be finished
-            while trainer.push_in_progress is not None and not trainer.push_in_progress.is_done:
+            while (
+                trainer.push_in_progress is not None
+                and not trainer.push_in_progress.is_done
+            ):
                 time.sleep(0.5)
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            _ = Repository(tmp_dir, clone_from=f"{USER}/test-trainer-step", use_auth_token=self._token)
+            _ = Repository(
+                tmp_dir,
+                clone_from=f"{USER}/test-trainer-step",
+                use_auth_token=self._token,
+            )
             commits = self.get_commit_history(tmp_dir)
             self.assertIn("initial commit", commits)
             # We can't test that epoch 2 and 3 are in the commits without being flaky as those might be skipped if
@@ -1689,7 +1900,9 @@ class TrainerHyperParameterOptunaIntegrationTest(unittest.TestCase):
                 run_name="test",
                 model_init=model_init,
             )
-            trainer.hyperparameter_search(direction="minimize", hp_space=hp_space, hp_name=hp_name, n_trials=4)
+            trainer.hyperparameter_search(
+                direction="minimize", hp_space=hp_space, hp_name=hp_name, n_trials=4
+            )
 
 
 @require_torch
@@ -1741,7 +1954,11 @@ class TrainerHyperParameterRayIntegrationTest(unittest.TestCase):
                 model_init=model_init,
             )
             trainer.hyperparameter_search(
-                direction="minimize", hp_space=hp_space, hp_name=hp_name, backend="ray", n_trials=4
+                direction="minimize",
+                hp_space=hp_space,
+                hp_name=hp_name,
+                backend="ray",
+                n_trials=4,
             )
 
     def test_hyperparameter_search(self):
@@ -1803,7 +2020,11 @@ class TrainerHyperParameterSigOptIntegrationTest(unittest.TestCase):
                 model_init=model_init,
             )
             trainer.hyperparameter_search(
-                direction="minimize", hp_space=hp_space, hp_name=hp_name, backend="sigopt", n_trials=4
+                direction="minimize",
+                hp_space=hp_space,
+                hp_name=hp_name,
+                backend="sigopt",
+                n_trials=4,
             )
 
 
@@ -1855,7 +2076,9 @@ if is_torch_available():
 
 @require_torch
 class TrainerOptimizerChoiceTest(unittest.TestCase):
-    def check_optim_and_kwargs(self, optim: OptimizerNames, mandatory_kwargs, expected_cls):
+    def check_optim_and_kwargs(
+        self, optim: OptimizerNames, mandatory_kwargs, expected_cls
+    ):
         args = TrainingArguments(optim=optim, output_dir="None")
         actual_cls, optim_kwargs = Trainer.get_optimizer_cls_and_kwargs(args)
         self.assertEqual(expected_cls, actual_cls)
@@ -1864,7 +2087,10 @@ class TrainerOptimizerChoiceTest(unittest.TestCase):
         for p, v in mandatory_kwargs.items():
             self.assertTrue(p in optim_kwargs)
             actual_v = optim_kwargs[p]
-            self.assertTrue(actual_v == v, f"Failed check for {p}. Expected {v}, but got {actual_v}.")
+            self.assertTrue(
+                actual_v == v,
+                f"Failed check for {p}. Expected {v}, but got {actual_v}.",
+            )
 
     @parameterized.expand(optim_test_params, skip_on_empty=True)
     def test_optim_supported(self, name: str, expected_cls, mandatory_kwargs):
@@ -1893,7 +2119,9 @@ class TrainerOptimizerChoiceTest(unittest.TestCase):
             )
 
     def test_fused_adam_no_apex(self):
-        args = TrainingArguments(optim=OptimizerNames.ADAMW_APEX_FUSED, output_dir="None")
+        args = TrainingArguments(
+            optim=OptimizerNames.ADAMW_APEX_FUSED, output_dir="None"
+        )
 
         # Pretend that apex does not exist, even if installed. By setting apex to None, importing
         # apex will fail even if apex is installed.
@@ -1915,7 +2143,6 @@ class TrainerHyperParameterWandbIntegrationTest(unittest.TestCase):
             DEFAULTS = {"a": 0, "b": 0}
 
         def hp_space(trial):
-
             return {
                 "method": "random",
                 "metric": {},
@@ -1954,5 +2181,10 @@ class TrainerHyperParameterWandbIntegrationTest(unittest.TestCase):
                 model_init=model_init,
             )
             trainer.hyperparameter_search(
-                direction="minimize", hp_space=hp_space, hp_name=hp_name, backend="wandb", n_trials=4, anonymous="must"
+                direction="minimize",
+                hp_space=hp_space,
+                hp_name=hp_name,
+                backend="wandb",
+                n_trials=4,
+                anonymous="must",
             )

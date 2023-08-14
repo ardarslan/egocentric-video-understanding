@@ -42,7 +42,10 @@ if is_torch_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_xlm_prophetnet import XLM_PROPHETNET_PRETRAINED_CONFIG_ARCHIVE_MAP, XLMProphetNetConfig
+    from .configuration_xlm_prophetnet import (
+        XLM_PROPHETNET_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        XLMProphetNetConfig,
+    )
 
     if is_sentencepiece_available():
         from .tokenization_xlm_prophetnet import XLMProphetNetTokenizer
@@ -60,4 +63,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

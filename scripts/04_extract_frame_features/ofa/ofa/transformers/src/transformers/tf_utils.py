@@ -23,7 +23,9 @@ from .utils import logging
 logger = logging.get_logger(__name__)
 
 
-def set_tensor_by_indices_to_value(tensor: tf.Tensor, indices: tf.Tensor, value: Union[tf.Tensor, int, float]):
+def set_tensor_by_indices_to_value(
+    tensor: tf.Tensor, indices: tf.Tensor, value: Union[tf.Tensor, int, float]
+):
     # create value_tensor since tensor value assignment is not possible in TF
     return tf.where(indices, value, tensor)
 

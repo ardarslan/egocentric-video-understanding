@@ -64,13 +64,24 @@ if TYPE_CHECKING:
         from .tokenization_xglm_fast import XGLMTokenizerFast
 
     if is_torch_available():
-        from .modeling_xglm import XGLM_PRETRAINED_MODEL_ARCHIVE_LIST, XGLMForCausalLM, XGLMModel, XGLMPreTrainedModel
+        from .modeling_xglm import (
+            XGLM_PRETRAINED_MODEL_ARCHIVE_LIST,
+            XGLMForCausalLM,
+            XGLMModel,
+            XGLMPreTrainedModel,
+        )
 
     if is_flax_available():
-        from .modeling_xglm import FlaxXGLMForCausalLM, FlaxXGLMModel, FlaxXGLMPreTrainedModel
+        from .modeling_xglm import (
+            FlaxXGLMForCausalLM,
+            FlaxXGLMModel,
+            FlaxXGLMPreTrainedModel,
+        )
 
 
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure
+    )

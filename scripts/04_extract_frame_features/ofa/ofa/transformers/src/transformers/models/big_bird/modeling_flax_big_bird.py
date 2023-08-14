@@ -25,7 +25,11 @@ from flax.core.frozen_dict import FrozenDict
 from flax.linen.attention import dot_product_attention_weights
 from jax import lax
 
-from ...file_utils import ModelOutput, add_start_docstrings, add_start_docstrings_to_model_forward
+from ...file_utils import (
+    ModelOutput,
+    add_start_docstrings,
+    add_start_docstrings_to_model_forward,
+)
 from ...modeling_flax_outputs import (
     FlaxBaseModelOutput,
     FlaxBaseModelOutputWithPooling,
@@ -198,22 +202,37 @@ class FlaxBigBirdEmbeddings(nn.Module):
         self.word_embeddings = nn.Embed(
             self.config.vocab_size,
             self.config.hidden_size,
-            embedding_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            embedding_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
         self.position_embeddings = nn.Embed(
             self.config.max_position_embeddings,
             self.config.hidden_size,
-            embedding_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            embedding_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
         self.token_type_embeddings = nn.Embed(
             self.config.type_vocab_size,
             self.config.hidden_size,
-            embedding_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            embedding_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
-        self.LayerNorm = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
+        self.LayerNorm = nn.LayerNorm(
+            epsilon=self.config.layer_norm_eps, dtype=self.dtype
+        )
         self.dropout = nn.Dropout(rate=self.config.hidden_dropout_prob)
 
-    def __call__(self, input_ids, token_type_ids, position_ids, attention_mask, deterministic: bool = True):
+    def __call__(
+        self,
+        input_ids,
+        token_type_ids,
+        position_ids,
+        attention_mask,
+        deterministic: bool = True,
+    ):
         # Embed
         inputs_embeds = self.word_embeddings(input_ids.astype("i4"))
         position_embeds = self.position_embeddings(position_ids.astype("i4"))
@@ -359,13 +378,24 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
         n_heads = self.config.num_attention_heads
         head_size = self.config.hidden_size // n_heads
 
-        blocked_encoder_mask, band_mask, from_mask, to_mask = self.create_masks_for_block_sparse_attn(
+        (
+            blocked_encoder_mask,
+            band_mask,
+            from_mask,
+            to_mask,
+        ) = self.create_masks_for_block_sparse_attn(
             attention_mask, self.config.block_size
         )
 
-        query_layer = self.transpose_for_scores(self.query(hidden_states), n_heads, head_size)
-        key_layer = self.transpose_for_scores(self.key(hidden_states), n_heads, head_size)
-        value_layer = self.transpose_for_scores(self.value(hidden_states), n_heads, head_size)
+        query_layer = self.transpose_for_scores(
+            self.query(hidden_states), n_heads, head_size
+        )
+        key_layer = self.transpose_for_scores(
+            self.key(hidden_states), n_heads, head_size
+        )
+        value_layer = self.transpose_for_scores(
+            self.value(hidden_states), n_heads, head_size
+        )
 
         attn_output, attn_weights = self.bigbird_block_sparse_attention(
             query_layer,
@@ -388,7 +418,6 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
 
     @staticmethod
     def create_masks_for_block_sparse_attn(attention_mask, block_size: int):
-
         batch_size, seq_length = attention_mask.shape
         assert (
             seq_length % block_size == 0
@@ -409,14 +438,25 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
                 3*to_block_size].
             """
             exp_blocked_to_pad = jnp.concatenate(
-                [to_blocked_mask[:, 1:-3], to_blocked_mask[:, 2:-2], to_blocked_mask[:, 3:-1]], axis=2
+                [
+                    to_blocked_mask[:, 1:-3],
+                    to_blocked_mask[:, 2:-2],
+                    to_blocked_mask[:, 3:-1],
+                ],
+                axis=2,
             )
-            band_mask = jnp.einsum("blq,blk->blqk", from_blocked_mask[:, 2:-2], exp_blocked_to_pad)
+            band_mask = jnp.einsum(
+                "blq,blk->blqk", from_blocked_mask[:, 2:-2], exp_blocked_to_pad
+            )
             band_mask = jnp.expand_dims(band_mask, 1)
             return band_mask
 
-        blocked_encoder_mask = attention_mask.reshape(batch_size, seq_length // block_size, block_size)
-        band_mask = create_band_mask_from_inputs(blocked_encoder_mask, blocked_encoder_mask)
+        blocked_encoder_mask = attention_mask.reshape(
+            batch_size, seq_length // block_size, block_size
+        )
+        band_mask = create_band_mask_from_inputs(
+            blocked_encoder_mask, blocked_encoder_mask
+        )
 
         from_mask = attention_mask.reshape(batch_size, 1, seq_length, 1)
         to_mask = attention_mask.reshape(batch_size, 1, 1, seq_length)
@@ -465,8 +505,12 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
         to_seq_len = key_layer.shape[2]
         from_block_size = to_block_size = self.config.block_size
 
-        assert from_seq_len % from_block_size == 0, "Query sided sequence length must be multiple of block size"
-        assert to_seq_len % to_block_size == 0, "Key/Value sided sequence length must be multiple of block size"
+        assert (
+            from_seq_len % from_block_size == 0
+        ), "Query sided sequence length must be multiple of block size"
+        assert (
+            to_seq_len % to_block_size == 0
+        ), "Key/Value sided sequence length must be multiple of block size"
         if from_seq_len // from_block_size != to_seq_len // to_block_size:
             raise ValueError("Error the number of blocks needs to be same!")
 
@@ -479,7 +523,12 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
             max_seqlen = self.config.max_position_embeddings
             rand_attn = [
                 self._bigbird_block_rand_mask(
-                    max_seqlen, max_seqlen, from_block_size, to_block_size, n_rand_blocks, last_idx=1024
+                    max_seqlen,
+                    max_seqlen,
+                    from_block_size,
+                    to_block_size,
+                    n_rand_blocks,
+                    last_idx=1024,
                 )[: (from_seq_len // from_block_size - 2)]
                 for _ in range(n_heads)
             ]
@@ -503,30 +552,59 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
         rand_attn = jnp.broadcast_to(rand_attn, (bsz,) + rand_attn.shape)
 
         rand_mask = self._create_rand_mask_from_inputs(
-            from_blocked_mask, to_blocked_mask, rand_attn, n_heads, n_rand_blocks, bsz, from_seq_len, from_block_size
+            from_blocked_mask,
+            to_blocked_mask,
+            rand_attn,
+            n_heads,
+            n_rand_blocks,
+            bsz,
+            from_seq_len,
+            from_block_size,
         )
 
-        blocked_query_matrix = query_layer.reshape(bsz, n_heads, from_seq_len // from_block_size, from_block_size, -1)
-        blocked_key_matrix = key_layer.reshape(bsz, n_heads, to_seq_len // to_block_size, to_block_size, -1)
-        blocked_value_matrix = value_layer.reshape(bsz, n_heads, to_seq_len // to_block_size, to_block_size, -1)
+        blocked_query_matrix = query_layer.reshape(
+            bsz, n_heads, from_seq_len // from_block_size, from_block_size, -1
+        )
+        blocked_key_matrix = key_layer.reshape(
+            bsz, n_heads, to_seq_len // to_block_size, to_block_size, -1
+        )
+        blocked_value_matrix = value_layer.reshape(
+            bsz, n_heads, to_seq_len // to_block_size, to_block_size, -1
+        )
 
-        shape = (bsz, n_heads, to_seq_len // to_block_size - 2, n_rand_blocks * to_block_size, -1)
-        gathered_key = self.jax_gather(blocked_key_matrix, rand_attn, batch_dims=2).reshape(*shape)
-        gathered_value = self.jax_gather(blocked_value_matrix, rand_attn, batch_dims=2).reshape(*shape)
+        shape = (
+            bsz,
+            n_heads,
+            to_seq_len // to_block_size - 2,
+            n_rand_blocks * to_block_size,
+            -1,
+        )
+        gathered_key = self.jax_gather(
+            blocked_key_matrix, rand_attn, batch_dims=2
+        ).reshape(*shape)
+        gathered_value = self.jax_gather(
+            blocked_value_matrix, rand_attn, batch_dims=2
+        ).reshape(*shape)
 
         # 1st PART
         # 1st block (global block) attention scores
         # q[0] x (k[0], k[1], k[2], k[3], k[4] .... )
 
         # [bsz, n_heads, from_block_size, -1] x [bsz, n_heads, to_seq_len, -1] ==> [bsz, n_heads, from_block_size, to_seq_len]
-        first_product = jnp.einsum("bhqd,bhkd->bhqk", blocked_query_matrix[:, :, 0], key_layer)
+        first_product = jnp.einsum(
+            "bhqd,bhkd->bhqk", blocked_query_matrix[:, :, 0], key_layer
+        )
 
         first_product = first_product * rsqrt_d
         first_product += (1.0 - to_mask) * attn_mask_penalty
-        first_attn_weights = jax.nn.softmax(first_product, axis=-1)  # [bsz, n_heads, from_block_size, to_seq_len]
+        first_attn_weights = jax.nn.softmax(
+            first_product, axis=-1
+        )  # [bsz, n_heads, from_block_size, to_seq_len]
 
         # [bsz, n_heads, from_block_size, to_seq_len] x [bsz, n_heads, to_seq_len, -1] ==> [bsz, n_heads, from_block_size, -1]
-        first_context_layer = jnp.einsum("bhqk,bhkd->bhqd", first_attn_weights, value_layer)
+        first_context_layer = jnp.einsum(
+            "bhqk,bhkd->bhqd", first_attn_weights, value_layer
+        )
         first_context_layer = jnp.expand_dims(first_context_layer, 2)
 
         # 2nd PART
@@ -558,31 +636,42 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
 
         # [bsz, n_heads, from_block_size, -1] x [bsz, n_heads, (4+n_rand_blocks)*to_block_size, -1]
         # ==> [bsz, n_heads, from_block_size, (4+n_rand_blocks)*to_block_size]
-        second_product = jnp.einsum("bhqd,bhkd->bhqk", blocked_query_matrix[:, :, 1], second_key_mat)
+        second_product = jnp.einsum(
+            "bhqd,bhkd->bhqk", blocked_query_matrix[:, :, 1], second_key_mat
+        )
         second_seq_pad = jnp.concatenate(
             [
                 to_mask[:, :, :, : 3 * to_block_size],
                 to_mask[:, :, :, -to_block_size:],
-                jnp.ones([bsz, 1, 1, n_rand_blocks * to_block_size], dtype=to_mask.dtype),
+                jnp.ones(
+                    [bsz, 1, 1, n_rand_blocks * to_block_size], dtype=to_mask.dtype
+                ),
             ],
             axis=3,
         )
         second_rand_pad = jnp.concatenate(
             [
-                jnp.ones([bsz, n_heads, from_block_size, 4 * to_block_size], dtype=rand_mask.dtype),
+                jnp.ones(
+                    [bsz, n_heads, from_block_size, 4 * to_block_size],
+                    dtype=rand_mask.dtype,
+                ),
                 rand_mask[:, :, 0],
             ],
             axis=3,
         )
         second_product = second_product * rsqrt_d
-        second_product += (1.0 - jnp.minimum(second_seq_pad, second_rand_pad)) * attn_mask_penalty
+        second_product += (
+            1.0 - jnp.minimum(second_seq_pad, second_rand_pad)
+        ) * attn_mask_penalty
         second_attn_weights = jax.nn.softmax(
             second_product, axis=-1
         )  # [bsz, n_heads, from_block_size, (4+n_rand_blocks)*to_block_size]
 
         # [bsz, n_heads, from_block_size, (4+r)*to_block_size] x [bsz, n_heads, (4+r)*to_block_size, -1]
         #  ==> [bsz, n_heads, from_block_size, -1]
-        second_context_layer = jnp.einsum("bhqk,bhkd->bhqd", second_attn_weights, second_value_mat)
+        second_context_layer = jnp.einsum(
+            "bhqk,bhkd->bhqd", second_attn_weights, second_value_mat
+        )
         second_context_layer = jnp.expand_dims(second_context_layer, 2)
 
         # 3rd PART
@@ -593,48 +682,75 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
         # global keys -> 1st & last block
 
         exp_blocked_key_matrix = jnp.concatenate(
-            [blocked_key_matrix[:, :, 1:-3], blocked_key_matrix[:, :, 2:-2], blocked_key_matrix[:, :, 3:-1]], axis=3
+            [
+                blocked_key_matrix[:, :, 1:-3],
+                blocked_key_matrix[:, :, 2:-2],
+                blocked_key_matrix[:, :, 3:-1],
+            ],
+            axis=3,
         )  # [bsz, n_heads, from_seq_len//from_block_size-4, 3*to_block_size, -1]
         exp_blocked_value_matrix = jnp.concatenate(
-            [blocked_value_matrix[:, :, 1:-3], blocked_value_matrix[:, :, 2:-2], blocked_value_matrix[:, :, 3:-1]],
+            [
+                blocked_value_matrix[:, :, 1:-3],
+                blocked_value_matrix[:, :, 2:-2],
+                blocked_value_matrix[:, :, 3:-1],
+            ],
             axis=3,
         )  # [bsz, n_heads, from_seq_len//from_block_size-4, 3*to_block_size, -1]
         middle_query_matrix = blocked_query_matrix[:, :, 2:-2]
 
         # sliding attention scores for q[-2:2]
         # [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, -1] x [b, n_heads, from_seq_len//from_block_size-4, 3*to_block_size, -1]
-        inner_band_product = jnp.einsum("bhlqd,bhlkd->bhlqk", middle_query_matrix, exp_blocked_key_matrix)
+        inner_band_product = jnp.einsum(
+            "bhlqd,bhlkd->bhlqk", middle_query_matrix, exp_blocked_key_matrix
+        )
         #     ==> [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, 3*to_block_size]
         inner_band_product = inner_band_product * rsqrt_d
 
         # randn attention scores for q[-2:2]
         # [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, -1]
         # x [bsz, n_heads, from_seq_len//from_block_size-4, n_rand_blocks*to_block_size, -1]
-        rand_band_product = jnp.einsum("bhlqd,bhlkd->bhlqk", middle_query_matrix, gathered_key[:, :, 1:-1])
+        rand_band_product = jnp.einsum(
+            "bhlqd,bhlkd->bhlqk", middle_query_matrix, gathered_key[:, :, 1:-1]
+        )
         #     ==> [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, n_rand_blocks*to_block_size]
         rand_band_product = rand_band_product * rsqrt_d
 
         # Including 1st block (since it's global)
         # [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, -1] x [bsz, n_heads, to_block_size, -1]
         #  ==> [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, to_block_size]
-        first_band_product = jnp.einsum("bhlqd,bhkd->bhlqk", middle_query_matrix, blocked_key_matrix[:, :, 0])
+        first_band_product = jnp.einsum(
+            "bhlqd,bhkd->bhlqk", middle_query_matrix, blocked_key_matrix[:, :, 0]
+        )
         first_band_product = first_band_product * rsqrt_d
 
         # Including last block (since it's global)
         # [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, -1] x [bsz, n_heads, to_block_size, -1]
         #  ==> [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, to_block_size]
-        last_band_product = jnp.einsum("bhlqd,bhkd->bhlqk", middle_query_matrix, blocked_key_matrix[:, :, -1])
+        last_band_product = jnp.einsum(
+            "bhlqd,bhkd->bhlqk", middle_query_matrix, blocked_key_matrix[:, :, -1]
+        )
         last_band_product = last_band_product * rsqrt_d
 
         # masking padded tokens
         inner_band_product += (1.0 - band_mask) * attn_mask_penalty
-        first_band_product += (1.0 - jnp.expand_dims(to_mask[:, :, :, :to_block_size], 3)) * attn_mask_penalty
-        last_band_product += (1.0 - jnp.expand_dims(to_mask[:, :, :, -to_block_size:], 3)) * attn_mask_penalty
+        first_band_product += (
+            1.0 - jnp.expand_dims(to_mask[:, :, :, :to_block_size], 3)
+        ) * attn_mask_penalty
+        last_band_product += (
+            1.0 - jnp.expand_dims(to_mask[:, :, :, -to_block_size:], 3)
+        ) * attn_mask_penalty
         rand_band_product += (1.0 - rand_mask[:, :, 1:-1]) * attn_mask_penalty
 
         # completing attention scores matrix for all q[-2:2]
         band_product = jnp.concatenate(
-            [first_band_product, inner_band_product, rand_band_product, last_band_product], axis=-1
+            [
+                first_band_product,
+                inner_band_product,
+                rand_band_product,
+                last_band_product,
+            ],
+            axis=-1,
         )  # [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, (5+n_rand_blocks)*to_block_size]
 
         # safely doing softmax since attention matrix is completed
@@ -646,7 +762,9 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
         # [bsz, n_heads, m//from_block_size-4, from_block_size, 3*to_block_size]
         # x [bsz, n_heads, from_seq_len//from_block_size-4, 3*to_block_size, -1]
         context_layer = jnp.einsum(
-            "bhlqk,bhlkd->bhlqd", attn_weights[:, :, :, :, to_block_size : 4 * to_block_size], exp_blocked_value_matrix
+            "bhlqk,bhlkd->bhlqd",
+            attn_weights[:, :, :, :, to_block_size : 4 * to_block_size],
+            exp_blocked_value_matrix,
         )
         #     ==> [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, -1]
 
@@ -664,12 +782,16 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
         # [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, to_block_size] x [bsz, n_heads, to_block_size, -1]
         #  ==> [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, -1]
         context_layer += jnp.einsum(
-            "bhlqk,bhkd->bhlqd", attn_weights[:, :, :, :, :to_block_size], blocked_value_matrix[:, :, 0]
+            "bhlqk,bhkd->bhlqd",
+            attn_weights[:, :, :, :, :to_block_size],
+            blocked_value_matrix[:, :, 0],
         )
         # [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, to_block_size] x [bsz, n_heads, to_block_size, -1]
         # ==> [bsz, n_heads, from_seq_len//from_block_size-4, from_block_size, -1]
         context_layer += jnp.einsum(
-            "bhlqk,bhkd->bhlqd", attn_weights[:, :, :, :, -to_block_size:], blocked_value_matrix[:, :, -1]
+            "bhlqk,bhkd->bhlqd",
+            attn_weights[:, :, :, :, -to_block_size:],
+            blocked_value_matrix[:, :, -1],
         )
 
         # 4th PART
@@ -702,31 +824,42 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
 
         # [bsz, n_heads, from_block_size, -1] x [bsz, n_heads, (4+n_rand_blocks)*to_block_size, -1]
         # ==> [bsz, n_heads, from_block_size, (4+n_rand_blocks)*to_block_size]
-        second_last_product = jnp.einsum("bhqd,bhkd->bhqk", blocked_query_matrix[:, :, -2], second_last_key_mat)
+        second_last_product = jnp.einsum(
+            "bhqd,bhkd->bhqk", blocked_query_matrix[:, :, -2], second_last_key_mat
+        )
         second_last_seq_pad = jnp.concatenate(
             [
                 to_mask[:, :, :, :to_block_size],
                 to_mask[:, :, :, -3 * to_block_size :],
-                jnp.ones([bsz, 1, 1, n_rand_blocks * to_block_size], dtype=to_mask.dtype),
+                jnp.ones(
+                    [bsz, 1, 1, n_rand_blocks * to_block_size], dtype=to_mask.dtype
+                ),
             ],
             axis=3,
         )
         second_last_rand_pad = jnp.concatenate(
             [
-                jnp.ones([bsz, n_heads, from_block_size, 4 * to_block_size], dtype=rand_mask.dtype),
+                jnp.ones(
+                    [bsz, n_heads, from_block_size, 4 * to_block_size],
+                    dtype=rand_mask.dtype,
+                ),
                 rand_mask[:, :, -1],
             ],
             axis=3,
         )
         second_last_product = second_last_product * rsqrt_d
-        second_last_product += (1.0 - jnp.minimum(second_last_seq_pad, second_last_rand_pad)) * attn_mask_penalty
+        second_last_product += (
+            1.0 - jnp.minimum(second_last_seq_pad, second_last_rand_pad)
+        ) * attn_mask_penalty
         second_last_attn_weights = jax.nn.softmax(
             second_last_product, axis=-1
         )  # [bsz, n_heads, from_block_size, (4+n_rand_blocks)*to_block_size]
 
         # [bsz, n_heads, from_block_size, (4+n_rand_blocks)*to_block_size] x [bsz, n_heads, (4+n_rand_blocks)*to_block_size, -1]
         # ==> [bsz, n_heads, from_block_size, -1]
-        second_last_context_layer = jnp.einsum("bhqk,bhkd->bhqd", second_last_attn_weights, second_last_value_mat)
+        second_last_context_layer = jnp.einsum(
+            "bhqk,bhkd->bhqd", second_last_attn_weights, second_last_value_mat
+        )
         second_last_context_layer = jnp.expand_dims(second_last_context_layer, 2)
 
         # 5th PART
@@ -734,22 +867,38 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
         # q[-1] x (k[0], k[1], k[2], k[3], .... )
 
         # [bsz, n_heads, from_block_size, -1] x [bsz, n_heads, to_seq_len, -1] ==> [bsz, n_heads, from_block_size, to_seq_len]
-        last_product = jnp.einsum("bhqd,bhkd->bhqk", blocked_query_matrix[:, :, -1], key_layer)
+        last_product = jnp.einsum(
+            "bhqd,bhkd->bhqk", blocked_query_matrix[:, :, -1], key_layer
+        )
         last_product = last_product * rsqrt_d
         last_product += (1.0 - to_mask) * attn_mask_penalty
-        last_attn_weights = jax.nn.softmax(last_product, axis=-1)  # [bsz, n_heads, from_block_size, n]
+        last_attn_weights = jax.nn.softmax(
+            last_product, axis=-1
+        )  # [bsz, n_heads, from_block_size, n]
 
         # [bsz, n_heads, from_block_size, to_seq_len] x [bsz, n_heads, to_seq_len, -1] ==> [bsz, n_heads, from_block_size, -1]
-        last_context_layer = jnp.einsum("bhqk,bhkd->bhqd", last_attn_weights, value_layer)
+        last_context_layer = jnp.einsum(
+            "bhqk,bhkd->bhqd", last_attn_weights, value_layer
+        )
         last_context_layer = jnp.expand_dims(last_context_layer, 2)
 
         # combining representations of all tokens
         context_layer = jnp.concatenate(
-            [first_context_layer, second_context_layer, context_layer, second_last_context_layer, last_context_layer],
+            [
+                first_context_layer,
+                second_context_layer,
+                context_layer,
+                second_last_context_layer,
+                last_context_layer,
+            ],
             axis=2,
         )
-        context_layer = context_layer.reshape(bsz, n_heads, from_seq_len, -1) * from_mask
-        context_layer = jnp.transpose(context_layer, axes=(0, 2, 1, 3)).reshape(bsz, from_seq_len, -1)
+        context_layer = (
+            context_layer.reshape(bsz, n_heads, from_seq_len, -1) * from_mask
+        )
+        context_layer = jnp.transpose(context_layer, axes=(0, 2, 1, 3)).reshape(
+            bsz, from_seq_len, -1
+        )
 
         attention_probs = None
 
@@ -771,7 +920,9 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
         for _ in range(batch_dims):
             _jax_gather = jax.vmap(_jax_gather, in_axes=(0, 0))
 
-        return _jax_gather(params, indices)  # params.shape[:batch_dims] + indices.shape + params.shape[batch_dims+1:]
+        return _jax_gather(
+            params, indices
+        )  # params.shape[:batch_dims] + indices.shape + params.shape[batch_dims+1:]
 
     def _create_rand_mask_from_inputs(
         self,
@@ -803,9 +954,14 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
             from_block_size, num_rand_blocks*to_block_size].
         """
         num_windows = from_seq_length // from_block_size - 2
-        rand_mask = self.jax_gather(to_blocked_mask, broadcasted_rand_attn, batch_dims=1)
+        rand_mask = self.jax_gather(
+            to_blocked_mask, broadcasted_rand_attn, batch_dims=1
+        )
         rand_mask = rand_mask.reshape(
-            batch_size, num_attention_heads, num_windows, num_random_blocks * from_block_size
+            batch_size,
+            num_attention_heads,
+            num_windows,
+            num_random_blocks * from_block_size,
         )
         rand_mask = jnp.einsum("blq,bhlk->bhlqk", from_blocked_mask[:, 1:-1], rand_mask)
         return rand_mask
@@ -845,7 +1001,12 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
 
     @staticmethod
     def _bigbird_block_rand_mask(
-        from_seq_length, to_seq_length, from_block_size, to_block_size, num_rand_blocks, last_idx=-1
+        from_seq_length,
+        to_seq_length,
+        from_block_size,
+        to_block_size,
+        num_rand_blocks,
+        last_idx=-1,
     ):
         """
         Create adjacency list of random attention.
@@ -868,7 +1029,9 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
             from_seq_length // from_block_size == to_seq_length // to_block_size
         ), "Error the number of blocks needs to be same!"
 
-        rand_attn = np.zeros((from_seq_length // from_block_size - 2, num_rand_blocks), dtype=np.int32)
+        rand_attn = np.zeros(
+            (from_seq_length // from_block_size - 2, num_rand_blocks), dtype=np.int32
+        )
         middle_seq = np.arange(1, to_seq_length // to_block_size - 1, dtype=np.int32)
         last = to_seq_length // to_block_size - 1
         if last_idx > (2 * to_block_size):
@@ -944,7 +1107,9 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
             from_seq_length // from_block_size == to_seq_length // to_block_size
         ), "Error the number of blocks needs to be same!"
 
-        assert from_seq_length in plan_from_length, "Error from sequence length not in plan!"
+        assert (
+            from_seq_length in plan_from_length
+        ), "Error from sequence length not in plan!"
 
         # Total number of blocks in the mmask
         num_blocks = from_seq_length // from_block_size
@@ -954,7 +1119,10 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
         max_plan_idx = plan_from_length.index(from_seq_length)
         # Random Attention adjacency list
         rand_attn = [
-            np.zeros((num_blocks, np.sum(plan_num_rand_blocks[: max_plan_idx + 1])), dtype=np.int32)
+            np.zeros(
+                (num_blocks, np.sum(plan_num_rand_blocks[: max_plan_idx + 1])),
+                dtype=np.int32,
+            )
             for i in range(num_heads)
         ]
 
@@ -970,9 +1138,13 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
                 if plan_num_rand_blocks[plan_idx] > 0:
                     rnd_r_cnt = int(np.sum(plan_num_rand_blocks[:plan_idx]))
                     curr_r_cnt = int(np.sum(plan_num_rand_blocks[: plan_idx + 1]))
-                    for blk_rw_idx in range(global_block_top, plan_block_length[plan_idx - 1]):
+                    for blk_rw_idx in range(
+                        global_block_top, plan_block_length[plan_idx - 1]
+                    ):
                         for h in range(num_heads):
-                            rand_attn[h][blk_rw_idx, rnd_r_cnt:curr_r_cnt] = self._get_single_block_row_attention(
+                            rand_attn[h][
+                                blk_rw_idx, rnd_r_cnt:curr_r_cnt
+                            ] = self._get_single_block_row_attention(
                                 block_id=blk_rw_idx,
                                 to_start_block_id=plan_block_length[plan_idx - 1],
                                 to_end_block_id=plan_block_length[plan_idx],
@@ -986,7 +1158,9 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
                 for pl_id in range(plan_idx):
                     if plan_num_rand_blocks[pl_id] == 0:
                         continue
-                    for blk_rw_idx in range(plan_block_length[plan_idx - 1], plan_block_length[plan_idx]):
+                    for blk_rw_idx in range(
+                        plan_block_length[plan_idx - 1], plan_block_length[plan_idx]
+                    ):
                         rnd_r_cnt = 0
                         to_start_block_id = 0
                         if pl_id > 0:
@@ -994,7 +1168,9 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
                             to_start_block_id = plan_block_length[pl_id - 1]
                         curr_r_cnt = int(np.sum(plan_num_rand_blocks[: pl_id + 1]))
                         for h in range(num_heads):
-                            rand_attn[h][blk_rw_idx, rnd_r_cnt:curr_r_cnt] = self._get_single_block_row_attention(
+                            rand_attn[h][
+                                blk_rw_idx, rnd_r_cnt:curr_r_cnt
+                            ] = self._get_single_block_row_attention(
                                 block_id=blk_rw_idx,
                                 to_start_block_id=to_start_block_id,
                                 to_end_block_id=plan_block_length[pl_id],
@@ -1017,7 +1193,9 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
 
             for blk_rw_idx in range(from_start_block_id, plan_block_length[plan_idx]):
                 for h in range(num_heads):
-                    rand_attn[h][blk_rw_idx, rnd_r_cnt:curr_r_cnt] = self._get_single_block_row_attention(
+                    rand_attn[h][
+                        blk_rw_idx, rnd_r_cnt:curr_r_cnt
+                    ] = self._get_single_block_row_attention(
                         block_id=blk_rw_idx,
                         to_start_block_id=to_start_block_id,
                         to_end_block_id=plan_block_length[plan_idx],
@@ -1029,7 +1207,9 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
                     )
 
         for nh in range(num_heads):
-            rand_attn[nh] = rand_attn[nh][global_block_top : num_blocks - global_block_bottom, :]
+            rand_attn[nh] = rand_attn[nh][
+                global_block_top : num_blocks - global_block_bottom, :
+            ]
 
         return rand_attn
 
@@ -1066,11 +1246,15 @@ class FlaxBigBirdBlockSparseAttention(nn.Module):
         perm_block = np.random.permutation(to_block_list)
 
         # illegal blocks for the current block id, using window
-        illegal_blocks = list(range(block_id - window_block_left, block_id + window_block_right + 1))
+        illegal_blocks = list(
+            range(block_id - window_block_left, block_id + window_block_right + 1)
+        )
 
         # Add blocks at the start and at the end
         illegal_blocks.extend(list(range(global_block_left)))
-        illegal_blocks.extend(list(range(to_end_block_id - global_block_right, to_end_block_id)))
+        illegal_blocks.extend(
+            list(range(to_end_block_id - global_block_right, to_end_block_id))
+        )
 
         # The second from_block cannot choose random attention on second last to_block
         if block_id == 1:
@@ -1101,7 +1285,9 @@ class FlaxBigBirdSelfOutput(nn.Module):
             kernel_init=jax.nn.initializers.normal(self.config.initializer_range),
             dtype=self.dtype,
         )
-        self.LayerNorm = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
+        self.LayerNorm = nn.LayerNorm(
+            epsilon=self.config.layer_norm_eps, dtype=self.dtype
+        )
         self.dropout = nn.Dropout(rate=self.config.hidden_dropout_prob)
 
     def __call__(self, hidden_states, input_tensor, deterministic: bool = True):
@@ -1120,7 +1306,9 @@ class FlaxBigBirdAttention(nn.Module):
         if self.config.attention_type == "original_full":
             self.self = FlaxBigBirdSelfAttention(self.config, dtype=self.dtype)
         elif self.config.attention_type == "block_sparse":
-            self.self = FlaxBigBirdBlockSparseAttention(self.config, block_sparse_seed=self.layer_id, dtype=self.dtype)
+            self.self = FlaxBigBirdBlockSparseAttention(
+                self.config, block_sparse_seed=self.layer_id, dtype=self.dtype
+            )
         else:
             raise ValueError(
                 f"Your `config.attention_type` is {self.config.attention_type} but it can either be `original_full` or `block_sparse`"
@@ -1155,7 +1343,9 @@ class FlaxBigBirdAttention(nn.Module):
                 output_attentions=output_attentions,
             )
         attn_output = attn_outputs[0]
-        hidden_states = self.output(attn_output, hidden_states, deterministic=deterministic)
+        hidden_states = self.output(
+            attn_output, hidden_states, deterministic=deterministic
+        )
 
         outputs = (hidden_states,)
 
@@ -1196,7 +1386,9 @@ class FlaxBigBirdOutput(nn.Module):
             dtype=self.dtype,
         )
         self.dropout = nn.Dropout(rate=self.config.hidden_dropout_prob)
-        self.LayerNorm = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
+        self.LayerNorm = nn.LayerNorm(
+            epsilon=self.config.layer_norm_eps, dtype=self.dtype
+        )
 
     def __call__(self, hidden_states, attention_output, deterministic: bool = True):
         hidden_states = self.dense(hidden_states)
@@ -1211,7 +1403,9 @@ class FlaxBigBirdLayer(nn.Module):
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
 
     def setup(self):
-        self.attention = FlaxBigBirdAttention(self.config, layer_id=self.layer_id, dtype=self.dtype)
+        self.attention = FlaxBigBirdAttention(
+            self.config, layer_id=self.layer_id, dtype=self.dtype
+        )
         self.intermediate = FlaxBigBirdIntermediate(self.config, dtype=self.dtype)
         self.output = FlaxBigBirdOutput(self.config, dtype=self.dtype)
 
@@ -1234,7 +1428,9 @@ class FlaxBigBirdLayer(nn.Module):
         attention_output = attention_outputs[0]
 
         hidden_states = self.intermediate(attention_output)
-        hidden_states = self.output(hidden_states, attention_output, deterministic=deterministic)
+        hidden_states = self.output(
+            hidden_states, attention_output, deterministic=deterministic
+        )
 
         outputs = (hidden_states,)
 
@@ -1301,7 +1497,9 @@ class FlaxBigBirdLayerCollection(nn.Module):
             return tuple(v for v in outputs if v is not None)
 
         return FlaxBaseModelOutput(
-            last_hidden_state=hidden_states, hidden_states=all_hidden_states, attentions=all_attentions
+            last_hidden_state=hidden_states,
+            hidden_states=all_hidden_states,
+            attentions=all_attentions,
         )
 
 
@@ -1342,7 +1540,9 @@ class FlaxBigBirdPredictionHeadTransform(nn.Module):
     def setup(self):
         self.dense = nn.Dense(self.config.hidden_size, dtype=self.dtype)
         self.activation = ACT2FN[self.config.hidden_act]
-        self.LayerNorm = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
+        self.LayerNorm = nn.LayerNorm(
+            epsilon=self.config.layer_norm_eps, dtype=self.dtype
+        )
 
     def __call__(self, hidden_states):
         hidden_states = self.dense(hidden_states)
@@ -1357,15 +1557,21 @@ class FlaxBigBirdLMPredictionHead(nn.Module):
     bias_init: Callable[..., np.ndarray] = jax.nn.initializers.zeros
 
     def setup(self):
-        self.transform = FlaxBigBirdPredictionHeadTransform(self.config, dtype=self.dtype)
-        self.decoder = nn.Dense(self.config.vocab_size, dtype=self.dtype, use_bias=False)
+        self.transform = FlaxBigBirdPredictionHeadTransform(
+            self.config, dtype=self.dtype
+        )
+        self.decoder = nn.Dense(
+            self.config.vocab_size, dtype=self.dtype, use_bias=False
+        )
         self.bias = self.param("bias", self.bias_init, (self.config.vocab_size,))
 
     def __call__(self, hidden_states, shared_embedding=None):
         hidden_states = self.transform(hidden_states)
 
         if shared_embedding is not None:
-            hidden_states = self.decoder.apply({"params": {"kernel": shared_embedding.T}}, hidden_states)
+            hidden_states = self.decoder.apply(
+                {"params": {"kernel": shared_embedding.T}}, hidden_states
+            )
         else:
             hidden_states = self.decoder(hidden_states)
 
@@ -1383,7 +1589,9 @@ class FlaxBigBirdOnlyMLMHead(nn.Module):
         self.predictions = FlaxBigBirdLMPredictionHead(self.config, dtype=self.dtype)
 
     def __call__(self, hidden_states, shared_embedding=None):
-        hidden_states = self.predictions(hidden_states, shared_embedding=shared_embedding)
+        hidden_states = self.predictions(
+            hidden_states, shared_embedding=shared_embedding
+        )
         return hidden_states
 
 
@@ -1396,7 +1604,9 @@ class FlaxBigBirdPreTrainingHeads(nn.Module):
         self.seq_relationship = nn.Dense(2, dtype=self.dtype)
 
     def __call__(self, hidden_states, pooled_output, shared_embedding=None):
-        prediction_scores = self.predictions(hidden_states, shared_embedding=shared_embedding)
+        prediction_scores = self.predictions(
+            hidden_states, shared_embedding=shared_embedding
+        )
         seq_relationship_score = self.seq_relationship(pooled_output)
         return prediction_scores, seq_relationship_score
 
@@ -1417,7 +1627,7 @@ class FlaxBigBirdPreTrainedModel(FlaxPreTrainedModel):
         input_shape: Optional[tuple] = None,
         seed: int = 0,
         dtype: jnp.dtype = jnp.float32,
-        **kwargs
+        **kwargs,
     ):
         module = self.module_class(config=config, dtype=dtype, **kwargs)
         if config.attention_type == "block_sparse" and input_shape is None:
@@ -1425,24 +1635,38 @@ class FlaxBigBirdPreTrainedModel(FlaxPreTrainedModel):
         elif input_shape is None:
             input_shape = (1, 1)
 
-        super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+        super().__init__(
+            config, module, input_shape=input_shape, seed=seed, dtype=dtype
+        )
 
     def init_weights(self, rng: jax.random.PRNGKey, input_shape: Tuple) -> FrozenDict:
         # init input tensors
         input_ids = jnp.zeros(input_shape, dtype="i4")
         token_type_ids = jnp.zeros_like(input_ids)
-        position_ids = jnp.broadcast_to(jnp.arange(jnp.atleast_2d(input_ids).shape[-1]), input_shape)
+        position_ids = jnp.broadcast_to(
+            jnp.arange(jnp.atleast_2d(input_ids).shape[-1]), input_shape
+        )
         attention_mask = jnp.ones_like(input_ids)
-        head_mask = jnp.ones((self.config.num_hidden_layers, self.config.num_attention_heads))
+        head_mask = jnp.ones(
+            (self.config.num_hidden_layers, self.config.num_attention_heads)
+        )
 
         params_rng, dropout_rng = jax.random.split(rng)
         rngs = {"params": params_rng, "dropout": dropout_rng}
 
         return self.module.init(
-            rngs, input_ids, attention_mask, token_type_ids, position_ids, head_mask, return_dict=False
+            rngs,
+            input_ids,
+            attention_mask,
+            token_type_ids,
+            position_ids,
+            head_mask,
+            return_dict=False,
         )["params"]
 
-    @add_start_docstrings_to_model_forward(BIG_BIRD_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    @add_start_docstrings_to_model_forward(
+        BIG_BIRD_INPUTS_DOCSTRING.format("batch_size, sequence_length")
+    )
     def __call__(
         self,
         input_ids,
@@ -1457,24 +1681,36 @@ class FlaxBigBirdPreTrainedModel(FlaxPreTrainedModel):
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
     ):
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
-        return_dict = return_dict if return_dict is not None else self.config.return_dict
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
+        return_dict = (
+            return_dict if return_dict is not None else self.config.return_dict
+        )
 
         # init input tensors if not passed
         if token_type_ids is None:
             token_type_ids = jnp.zeros_like(input_ids)
 
         if position_ids is None:
-            position_ids = jnp.broadcast_to(jnp.arange(jnp.atleast_2d(input_ids).shape[-1]), input_ids.shape)
+            position_ids = jnp.broadcast_to(
+                jnp.arange(jnp.atleast_2d(input_ids).shape[-1]), input_ids.shape
+            )
 
         if attention_mask is None:
             attention_mask = jnp.ones_like(input_ids)
 
         if head_mask is None:
-            head_mask = jnp.ones((self.config.num_hidden_layers, self.config.num_attention_heads))
+            head_mask = jnp.ones(
+                (self.config.num_hidden_layers, self.config.num_attention_heads)
+            )
 
         # Handle any PRNG if needed
         rngs = {}
@@ -1523,7 +1759,11 @@ class FlaxBigBirdModule(nn.Module):
         return_dict: bool = True,
     ):
         hidden_states = self.embeddings(
-            input_ids, token_type_ids, position_ids, attention_mask, deterministic=deterministic
+            input_ids,
+            token_type_ids,
+            position_ids,
+            attention_mask,
+            deterministic=deterministic,
         )
         outputs = self.encoder(
             hidden_states,
@@ -1536,7 +1776,11 @@ class FlaxBigBirdModule(nn.Module):
         )
         hidden_states = outputs[0]
 
-        pooled = nn.tanh(self.pooler(hidden_states[:, 0, :])) if self.add_pooling_layer else None
+        pooled = (
+            nn.tanh(self.pooler(hidden_states[:, 0, :]))
+            if self.add_pooling_layer
+            else None
+        )
 
         if not return_dict:
             # if pooled is None, don't return it
@@ -1562,7 +1806,11 @@ class FlaxBigBirdModel(FlaxBigBirdPreTrainedModel):
 
 
 append_call_sample_docstring(
-    FlaxBigBirdModel, _TOKENIZER_FOR_DOC, _CHECKPOINT_FOR_DOC, FlaxBaseModelOutputWithPooling, _CONFIG_FOR_DOC
+    FlaxBigBirdModel,
+    _TOKENIZER_FOR_DOC,
+    _CHECKPOINT_FOR_DOC,
+    FlaxBaseModelOutputWithPooling,
+    _CONFIG_FOR_DOC,
 )
 
 
@@ -1587,7 +1835,6 @@ class FlaxBigBirdForPreTrainingModule(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-
         # Model
         outputs = self.bert(
             input_ids,
@@ -1602,7 +1849,9 @@ class FlaxBigBirdForPreTrainingModule(nn.Module):
         )
 
         if self.config.tie_word_embeddings:
-            shared_embedding = self.bert.variables["params"]["embeddings"]["word_embeddings"]["embedding"]
+            shared_embedding = self.bert.variables["params"]["embeddings"][
+                "word_embeddings"
+            ]["embedding"]
         else:
             shared_embedding = None
 
@@ -1657,10 +1906,13 @@ FLAX_BIG_BIRD_FOR_PRETRAINING_DOCSTRING = """
 
 overwrite_call_docstring(
     FlaxBigBirdForPreTraining,
-    BIG_BIRD_INPUTS_DOCSTRING.format("batch_size, sequence_length") + FLAX_BIG_BIRD_FOR_PRETRAINING_DOCSTRING,
+    BIG_BIRD_INPUTS_DOCSTRING.format("batch_size, sequence_length")
+    + FLAX_BIG_BIRD_FOR_PRETRAINING_DOCSTRING,
 )
 append_replace_return_docstrings(
-    FlaxBigBirdForPreTraining, output_type=FlaxBigBirdForPreTrainingOutput, config_class=_CONFIG_FOR_DOC
+    FlaxBigBirdForPreTraining,
+    output_type=FlaxBigBirdForPreTrainingOutput,
+    config_class=_CONFIG_FOR_DOC,
 )
 
 
@@ -1670,7 +1922,9 @@ class FlaxBigBirdForMaskedLMModule(nn.Module):
     dtype: jnp.dtype = jnp.float32
 
     def setup(self):
-        self.bert = FlaxBigBirdModule(config=self.config, add_pooling_layer=False, dtype=self.dtype)
+        self.bert = FlaxBigBirdModule(
+            config=self.config, add_pooling_layer=False, dtype=self.dtype
+        )
         self.cls = FlaxBigBirdOnlyMLMHead(config=self.config, dtype=self.dtype)
 
     def __call__(
@@ -1700,7 +1954,9 @@ class FlaxBigBirdForMaskedLMModule(nn.Module):
 
         hidden_states = outputs[0]
         if self.config.tie_word_embeddings:
-            shared_embedding = self.bert.variables["params"]["embeddings"]["word_embeddings"]["embedding"]
+            shared_embedding = self.bert.variables["params"]["embeddings"][
+                "word_embeddings"
+            ]["embedding"]
         else:
             shared_embedding = None
 
@@ -1717,14 +1973,21 @@ class FlaxBigBirdForMaskedLMModule(nn.Module):
         )
 
 
-@add_start_docstrings("""BigBird Model with a `language modeling` head on top.""", BIG_BIRD_START_DOCSTRING)
+@add_start_docstrings(
+    """BigBird Model with a `language modeling` head on top.""",
+    BIG_BIRD_START_DOCSTRING,
+)
 # Copied from transformers.models.bert.modeling_flax_bert.FlaxBertForMaskedLM with Bert->BigBird
 class FlaxBigBirdForMaskedLM(FlaxBigBirdPreTrainedModel):
     module_class = FlaxBigBirdForMaskedLMModule
 
 
 append_call_sample_docstring(
-    FlaxBigBirdForMaskedLM, _TOKENIZER_FOR_DOC, _CHECKPOINT_FOR_DOC, FlaxMaskedLMOutput, _CONFIG_FOR_DOC
+    FlaxBigBirdForMaskedLM,
+    _TOKENIZER_FOR_DOC,
+    _CHECKPOINT_FOR_DOC,
+    FlaxMaskedLMOutput,
+    _CONFIG_FOR_DOC,
 )
 
 
@@ -1844,10 +2107,26 @@ class FlaxBigBirdForMultipleChoiceModule(nn.Module):
         return_dict: bool = True,
     ):
         num_choices = input_ids.shape[1]
-        input_ids = input_ids.reshape(-1, input_ids.shape[-1]) if input_ids is not None else None
-        attention_mask = attention_mask.reshape(-1, attention_mask.shape[-1]) if attention_mask is not None else None
-        token_type_ids = token_type_ids.reshape(-1, token_type_ids.shape[-1]) if token_type_ids is not None else None
-        position_ids = position_ids.reshape(-1, position_ids.shape[-1]) if position_ids is not None else None
+        input_ids = (
+            input_ids.reshape(-1, input_ids.shape[-1])
+            if input_ids is not None
+            else None
+        )
+        attention_mask = (
+            attention_mask.reshape(-1, attention_mask.shape[-1])
+            if attention_mask is not None
+            else None
+        )
+        token_type_ids = (
+            token_type_ids.reshape(-1, token_type_ids.shape[-1])
+            if token_type_ids is not None
+            else None
+        )
+        position_ids = (
+            position_ids.reshape(-1, position_ids.shape[-1])
+            if position_ids is not None
+            else None
+        )
 
         # Model
         outputs = self.bert(
@@ -1894,7 +2173,7 @@ class FlaxBigBirdForMultipleChoice(FlaxBigBirdPreTrainedModel):
         input_shape: Optional[tuple] = None,
         seed: int = 0,
         dtype: jnp.dtype = jnp.float32,
-        **kwargs
+        **kwargs,
     ):
         if config.attention_type == "block_sparse" and input_shape is None:
             input_shape = (1, 1, 12 * config.block_size)
@@ -1904,7 +2183,8 @@ class FlaxBigBirdForMultipleChoice(FlaxBigBirdPreTrainedModel):
 
 
 overwrite_call_docstring(
-    FlaxBigBirdForMultipleChoice, BIG_BIRD_INPUTS_DOCSTRING.format("batch_size, num_choices, sequence_length")
+    FlaxBigBirdForMultipleChoice,
+    BIG_BIRD_INPUTS_DOCSTRING.format("batch_size, num_choices, sequence_length"),
 )
 append_call_sample_docstring(
     FlaxBigBirdForMultipleChoice,
@@ -1921,7 +2201,9 @@ class FlaxBigBirdForTokenClassificationModule(nn.Module):
     dtype: jnp.dtype = jnp.float32
 
     def setup(self):
-        self.bert = FlaxBigBirdModule(config=self.config, dtype=self.dtype, add_pooling_layer=False)
+        self.bert = FlaxBigBirdModule(
+            config=self.config, dtype=self.dtype, add_pooling_layer=False
+        )
         classifier_dropout = (
             self.config.classifier_dropout
             if self.config.classifier_dropout is not None
@@ -2015,8 +2297,12 @@ class FlaxBigBirdForQuestionAnsweringModule(nn.Module):
 
     def setup(self):
         self.config.num_labels = 2
-        self.bert = FlaxBigBirdModule(self.config, dtype=self.dtype, add_pooling_layer=self.add_pooling_layer)
-        self.qa_classifier = FlaxBigBirdForQuestionAnsweringHead(self.config, dtype=self.dtype)
+        self.bert = FlaxBigBirdModule(
+            self.config, dtype=self.dtype, add_pooling_layer=self.add_pooling_layer
+        )
+        self.qa_classifier = FlaxBigBirdForQuestionAnsweringHead(
+            self.config, dtype=self.dtype
+        )
 
     def __call__(
         self,
@@ -2031,7 +2317,6 @@ class FlaxBigBirdForQuestionAnsweringModule(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-
         # Model
         outputs = self.bert(
             input_ids,
@@ -2079,7 +2364,9 @@ class FlaxBigBirdForQuestionAnsweringModule(nn.Module):
 class FlaxBigBirdForQuestionAnswering(FlaxBigBirdPreTrainedModel):
     module_class = FlaxBigBirdForQuestionAnsweringModule
 
-    @add_start_docstrings_to_model_forward(BIG_BIRD_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    @add_start_docstrings_to_model_forward(
+        BIG_BIRD_INPUTS_DOCSTRING.format("batch_size, sequence_length")
+    )
     def __call__(
         self,
         input_ids,
@@ -2095,24 +2382,41 @@ class FlaxBigBirdForQuestionAnswering(FlaxBigBirdPreTrainedModel):
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
     ):
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
-        return_dict = return_dict if return_dict is not None else self.config.return_dict
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
+        return_dict = (
+            return_dict if return_dict is not None else self.config.return_dict
+        )
 
         if position_ids is None:
-            position_ids = jnp.broadcast_to(jnp.arange(jnp.atleast_2d(input_ids).shape[-1]), input_ids.shape)
+            position_ids = jnp.broadcast_to(
+                jnp.arange(jnp.atleast_2d(input_ids).shape[-1]), input_ids.shape
+            )
 
         if attention_mask is None:
             attention_mask = jnp.ones_like(input_ids)
 
         if head_mask is None:
-            head_mask = jnp.ones((self.config.num_hidden_layers, self.config.num_attention_heads))
+            head_mask = jnp.ones(
+                (self.config.num_hidden_layers, self.config.num_attention_heads)
+            )
 
         if question_lengths is None and input_ids is not None:
             # assuming input_ids format: <cls> <question> <sep> context <sep>
-            question_lengths = jnp.argmax((input_ids == self.config.sep_token_id).astype("i4"), axis=-1) + 1
+            question_lengths = (
+                jnp.argmax(
+                    (input_ids == self.config.sep_token_id).astype("i4"), axis=-1
+                )
+                + 1
+            )
             question_lengths = jnp.expand_dims(question_lengths, axis=1)
 
         seqlen = input_ids.shape[1]

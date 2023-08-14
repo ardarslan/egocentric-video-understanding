@@ -34,7 +34,12 @@ if is_pytesseract_available():
 logger = logging.get_logger(__name__)
 
 ImageInput = Union[
-    Image.Image, np.ndarray, "torch.Tensor", List[Image.Image], List[np.ndarray], List["torch.Tensor"]  # noqa
+    Image.Image,
+    np.ndarray,
+    "torch.Tensor",
+    List[Image.Image],
+    List[np.ndarray],
+    List["torch.Tensor"],  # noqa
 ]
 
 
@@ -52,7 +57,13 @@ def apply_tesseract(image: Image.Image, lang: Optional[str]):
 
     # apply OCR
     data = pytesseract.image_to_data(image, lang=lang, output_type="dict")
-    words, left, top, width, height = data["text"], data["left"], data["top"], data["width"], data["height"]
+    words, left, top, width, height = (
+        data["text"],
+        data["left"],
+        data["top"],
+        data["width"],
+        data["height"],
+    )
 
     # filter empty words and corresponding coordinates
     irrelevant_indices = [idx for idx, word in enumerate(words) if not word.strip()]
@@ -60,7 +71,9 @@ def apply_tesseract(image: Image.Image, lang: Optional[str]):
     left = [coord for idx, coord in enumerate(left) if idx not in irrelevant_indices]
     top = [coord for idx, coord in enumerate(top) if idx not in irrelevant_indices]
     width = [coord for idx, coord in enumerate(width) if idx not in irrelevant_indices]
-    height = [coord for idx, coord in enumerate(height) if idx not in irrelevant_indices]
+    height = [
+        coord for idx, coord in enumerate(height) if idx not in irrelevant_indices
+    ]
 
     # turn coordinates into (left, top, left+width, top+height) format
     actual_boxes = []
@@ -75,7 +88,9 @@ def apply_tesseract(image: Image.Image, lang: Optional[str]):
     for box in actual_boxes:
         normalized_boxes.append(normalize_box(box, image_width, image_height))
 
-    assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
+    assert len(words) == len(
+        normalized_boxes
+    ), "Not as many words as there are bounding boxes"
 
     return words, normalized_boxes
 
@@ -113,7 +128,15 @@ class LayoutLMv2FeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
 
     model_input_names = ["pixel_values"]
 
-    def __init__(self, do_resize=True, size=224, resample=Image.BILINEAR, apply_ocr=True, ocr_lang=None, **kwargs):
+    def __init__(
+        self,
+        do_resize=True,
+        size=224,
+        resample=Image.BILINEAR,
+        apply_ocr=True,
+        ocr_lang=None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.do_resize = do_resize
         self.size = size
@@ -122,7 +145,10 @@ class LayoutLMv2FeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
         self.ocr_lang = ocr_lang
 
     def __call__(
-        self, images: ImageInput, return_tensors: Optional[Union[str, TensorType]] = None, **kwargs
+        self,
+        images: ImageInput,
+        return_tensors: Optional[Union[str, TensorType]] = None,
+        **kwargs,
     ) -> BatchFeature:
         """
         Main method to prepare for the model one or several image(s).
@@ -178,7 +204,11 @@ class LayoutLMv2FeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
         if isinstance(images, (Image.Image, np.ndarray)) or is_torch_tensor(images):
             valid_images = True
         elif isinstance(images, (list, tuple)):
-            if len(images) == 0 or isinstance(images[0], (Image.Image, np.ndarray)) or is_torch_tensor(images[0]):
+            if (
+                len(images) == 0
+                or isinstance(images[0], (Image.Image, np.ndarray))
+                or is_torch_tensor(images[0])
+            ):
                 valid_images = True
 
         if not valid_images:
@@ -190,7 +220,10 @@ class LayoutLMv2FeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
 
         is_batched = bool(
             isinstance(images, (list, tuple))
-            and (isinstance(images[0], (Image.Image, np.ndarray)) or is_torch_tensor(images[0]))
+            and (
+                isinstance(images[0], (Image.Image, np.ndarray))
+                or is_torch_tensor(images[0])
+            )
         )
 
         if not is_batched:
@@ -208,7 +241,10 @@ class LayoutLMv2FeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
 
         # transformations (resizing)
         if self.do_resize and self.size is not None:
-            images = [self.resize(image=image, size=self.size, resample=self.resample) for image in images]
+            images = [
+                self.resize(image=image, size=self.size, resample=self.resample)
+                for image in images
+            ]
 
         images = [self.to_numpy_array(image, rescale=False) for image in images]
         # flip color channels from RGB to BGR (as Detectron2 requires this)

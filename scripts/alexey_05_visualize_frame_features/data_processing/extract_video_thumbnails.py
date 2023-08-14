@@ -25,14 +25,22 @@ def main(arg_dict=None):
     if args.generator_videos is None:
         args.generator_videos = get_video_list()
     else:
-        args.generator_videos = [s.strip() for v in args.generator_videos for s in v.split(",")]
+        args.generator_videos = [
+            s.strip() for v in args.generator_videos for s in v.split(",")
+        ]
 
     for video_id in tqdm(args.generator_videos):
         del current_reader
-        current_reader = VideoReader(get_video_path(video_id), get_extracted_frame_dir_path(video_id), assumed_fps=-1)
-        
+        current_reader = VideoReader(
+            get_video_path(video_id),
+            get_extracted_frame_dir_path(video_id),
+            assumed_fps=-1,
+        )
+
         video_len = len(current_reader)
-        mid_frame = current_reader.get_frame(video_len // 2)  # len(VideoReader) uses the actual number of frames
+        mid_frame = current_reader.get_frame(
+            video_len // 2
+        )  # len(VideoReader) uses the actual number of frames
 
         img = Image.fromarray(mid_frame)
         img.thumbnail((args.max_width or 1e10, args.max_height or 1e10))

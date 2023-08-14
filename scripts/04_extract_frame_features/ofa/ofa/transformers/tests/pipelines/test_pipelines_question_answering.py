@@ -22,7 +22,13 @@ from transformers import (
 )
 from transformers.data.processors.squad import SquadExample
 from transformers.pipelines import QuestionAnsweringArgumentHandler, pipeline
-from transformers.testing_utils import is_pipeline_test, nested_simplify, require_tf, require_torch, slow
+from transformers.testing_utils import (
+    is_pipeline_test,
+    nested_simplify,
+    require_tf,
+    require_torch,
+    slow,
+)
 
 from .test_pipelines_common import ANY, PipelineTestCaseMeta
 
@@ -40,37 +46,76 @@ class QAPipelineTests(unittest.TestCase, metaclass=PipelineTestCaseMeta):
         question_answerer = QuestionAnsweringPipeline(model, tokenizer)
 
         examples = [
-            {"question": "Where was HuggingFace founded ?", "context": "HuggingFace was founded in Paris."},
-            {"question": "In what field is HuggingFace ?", "context": "HuggingFace is  an AI startup."},
+            {
+                "question": "Where was HuggingFace founded ?",
+                "context": "HuggingFace was founded in Paris.",
+            },
+            {
+                "question": "In what field is HuggingFace ?",
+                "context": "HuggingFace is  an AI startup.",
+            },
         ]
         return question_answerer, examples
 
     def run_pipeline_test(self, question_answerer, _):
         outputs = question_answerer(
-            question="Where was HuggingFace founded ?", context="HuggingFace was founded in Paris."
+            question="Where was HuggingFace founded ?",
+            context="HuggingFace was founded in Paris.",
         )
-        self.assertEqual(outputs, {"answer": ANY(str), "start": ANY(int), "end": ANY(int), "score": ANY(float)})
+        self.assertEqual(
+            outputs,
+            {
+                "answer": ANY(str),
+                "start": ANY(int),
+                "end": ANY(int),
+                "score": ANY(float),
+            },
+        )
         outputs = question_answerer(
             question="Where was HuggingFace founded ?",
             context="HuggingFace was founded in Paris.",
             handle_impossible_answer=True,
         )
-        self.assertEqual(outputs, {"answer": ANY(str), "start": ANY(int), "end": ANY(int), "score": ANY(float)})
+        self.assertEqual(
+            outputs,
+            {
+                "answer": ANY(str),
+                "start": ANY(int),
+                "end": ANY(int),
+                "score": ANY(float),
+            },
+        )
 
         outputs = question_answerer(
-            question=["In what field is HuggingFace working ?", "In what field is HuggingFace working ?"],
+            question=[
+                "In what field is HuggingFace working ?",
+                "In what field is HuggingFace working ?",
+            ],
             context="HuggingFace was founded in Paris.",
         )
         self.assertEqual(
             outputs,
             [
-                {"answer": ANY(str), "start": ANY(int), "end": ANY(int), "score": ANY(float)},
-                {"answer": ANY(str), "start": ANY(int), "end": ANY(int), "score": ANY(float)},
+                {
+                    "answer": ANY(str),
+                    "start": ANY(int),
+                    "end": ANY(int),
+                    "score": ANY(float),
+                },
+                {
+                    "answer": ANY(str),
+                    "start": ANY(int),
+                    "end": ANY(int),
+                    "score": ANY(float),
+                },
             ],
         )
 
         outputs = question_answerer(
-            question=["What field is HuggingFace working ?", "In what field is HuggingFace ?"],
+            question=[
+                "What field is HuggingFace working ?",
+                "In what field is HuggingFace ?",
+            ],
             context=[
                 "HuggingFace is a startup based in New-York",
                 "HuggingFace is a startup founded in Paris",
@@ -79,54 +124,101 @@ class QAPipelineTests(unittest.TestCase, metaclass=PipelineTestCaseMeta):
         self.assertEqual(
             outputs,
             [
-                {"answer": ANY(str), "start": ANY(int), "end": ANY(int), "score": ANY(float)},
-                {"answer": ANY(str), "start": ANY(int), "end": ANY(int), "score": ANY(float)},
+                {
+                    "answer": ANY(str),
+                    "start": ANY(int),
+                    "end": ANY(int),
+                    "score": ANY(float),
+                },
+                {
+                    "answer": ANY(str),
+                    "start": ANY(int),
+                    "end": ANY(int),
+                    "score": ANY(float),
+                },
             ],
         )
 
         with self.assertRaises(ValueError):
             question_answerer(question="", context="HuggingFace was founded in Paris.")
         with self.assertRaises(ValueError):
-            question_answerer(question=None, context="HuggingFace was founded in Paris.")
+            question_answerer(
+                question=None, context="HuggingFace was founded in Paris."
+            )
         with self.assertRaises(ValueError):
-            question_answerer(question="In what field is HuggingFace working ?", context="")
+            question_answerer(
+                question="In what field is HuggingFace working ?", context=""
+            )
         with self.assertRaises(ValueError):
-            question_answerer(question="In what field is HuggingFace working ?", context=None)
+            question_answerer(
+                question="In what field is HuggingFace working ?", context=None
+            )
 
         outputs = question_answerer(
-            question="Where was HuggingFace founded ?", context="HuggingFace was founded in Paris.", topk=20
+            question="Where was HuggingFace founded ?",
+            context="HuggingFace was founded in Paris.",
+            topk=20,
         )
         self.assertEqual(
-            outputs, [{"answer": ANY(str), "start": ANY(int), "end": ANY(int), "score": ANY(float)} for i in range(20)]
+            outputs,
+            [
+                {
+                    "answer": ANY(str),
+                    "start": ANY(int),
+                    "end": ANY(int),
+                    "score": ANY(float),
+                }
+                for i in range(20)
+            ],
         )
 
         # Very long context require multiple features
         outputs = question_answerer(
-            question="Where was HuggingFace founded ?", context="HuggingFace was founded in Paris." * 20
+            question="Where was HuggingFace founded ?",
+            context="HuggingFace was founded in Paris." * 20,
         )
-        self.assertEqual(outputs, {"answer": ANY(str), "start": ANY(int), "end": ANY(int), "score": ANY(float)})
+        self.assertEqual(
+            outputs,
+            {
+                "answer": ANY(str),
+                "start": ANY(int),
+                "end": ANY(int),
+                "score": ANY(float),
+            },
+        )
 
     @require_torch
     def test_small_model_pt(self):
         question_answerer = pipeline(
-            "question-answering", model="sshleifer/tiny-distilbert-base-cased-distilled-squad"
+            "question-answering",
+            model="sshleifer/tiny-distilbert-base-cased-distilled-squad",
         )
         outputs = question_answerer(
-            question="Where was HuggingFace founded ?", context="HuggingFace was founded in Paris."
+            question="Where was HuggingFace founded ?",
+            context="HuggingFace was founded in Paris.",
         )
 
-        self.assertEqual(nested_simplify(outputs), {"score": 0.01, "start": 0, "end": 11, "answer": "HuggingFace"})
+        self.assertEqual(
+            nested_simplify(outputs),
+            {"score": 0.01, "start": 0, "end": 11, "answer": "HuggingFace"},
+        )
 
     @require_tf
     def test_small_model_tf(self):
         question_answerer = pipeline(
-            "question-answering", model="sshleifer/tiny-distilbert-base-cased-distilled-squad", framework="tf"
+            "question-answering",
+            model="sshleifer/tiny-distilbert-base-cased-distilled-squad",
+            framework="tf",
         )
         outputs = question_answerer(
-            question="Where was HuggingFace founded ?", context="HuggingFace was founded in Paris."
+            question="Where was HuggingFace founded ?",
+            context="HuggingFace was founded in Paris.",
         )
 
-        self.assertEqual(nested_simplify(outputs), {"score": 0.011, "start": 0, "end": 11, "answer": "HuggingFace"})
+        self.assertEqual(
+            nested_simplify(outputs),
+            {"score": 0.011, "start": 0, "end": 11, "answer": "HuggingFace"},
+        )
 
     @slow
     @require_torch
@@ -135,10 +227,14 @@ class QAPipelineTests(unittest.TestCase, metaclass=PipelineTestCaseMeta):
             "question-answering",
         )
         outputs = question_answerer(
-            question="Where was HuggingFace founded ?", context="HuggingFace was founded in Paris."
+            question="Where was HuggingFace founded ?",
+            context="HuggingFace was founded in Paris.",
         )
 
-        self.assertEqual(nested_simplify(outputs), {"score": 0.979, "start": 27, "end": 32, "answer": "Paris"})
+        self.assertEqual(
+            nested_simplify(outputs),
+            {"score": 0.979, "start": 27, "end": 32, "answer": "Paris"},
+        )
 
     @slow
     @require_torch
@@ -155,7 +251,12 @@ class QAPipelineTests(unittest.TestCase, metaclass=PipelineTestCaseMeta):
         )
         self.assertEqual(
             nested_simplify(outputs),
-            {"answer": "an accused in the loan fraud case", "end": 294, "score": 0.001, "start": 261},
+            {
+                "answer": "an accused in the loan fraud case",
+                "end": 294,
+                "score": 0.001,
+                "start": 261,
+            },
         )
 
     @slow
@@ -204,7 +305,12 @@ between them. It's straightforward to train your models with one before loading 
 
         self.assertEqual(
             nested_simplify(outputs),
-            {"answer": "Jax, PyTorch and TensorFlow", "end": 1919, "score": 0.971, "start": 1892},
+            {
+                "answer": "Jax, PyTorch and TensorFlow",
+                "end": 1919,
+                "score": 0.971,
+                "start": 1892,
+            },
         )
 
     @slow
@@ -212,10 +318,14 @@ between them. It's straightforward to train your models with one before loading 
     def test_large_model_tf(self):
         question_answerer = pipeline("question-answering", framework="tf")
         outputs = question_answerer(
-            question="Where was HuggingFace founded ?", context="HuggingFace was founded in Paris."
+            question="Where was HuggingFace founded ?",
+            context="HuggingFace was founded in Paris.",
         )
 
-        self.assertEqual(nested_simplify(outputs), {"score": 0.979, "start": 27, "end": 32, "answer": "Paris"})
+        self.assertEqual(
+            nested_simplify(outputs),
+            {"score": 0.979, "start": 27, "end": 32, "answer": "Paris"},
+        )
 
 
 @is_pipeline_test

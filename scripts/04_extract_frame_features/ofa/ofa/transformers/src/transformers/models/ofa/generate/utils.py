@@ -24,9 +24,8 @@ except ImportError:
     xm = None
 
 
-
-
 MANIFOLD_PATH_SEP = "|"
+
 
 def apply_to_sample(f, sample):
     if hasattr(sample, "__len__") and len(sample) == 0:
@@ -37,7 +36,9 @@ def apply_to_sample(f, sample):
             return f(x)
         elif isinstance(x, collections.OrderedDict):
             # OrderedDict has attributes that needs to be preserved
-            od = collections.OrderedDict((key, _apply(value)) for key, value in x.items())
+            od = collections.OrderedDict(
+                (key, _apply(value)) for key, value in x.items()
+            )
             od.__dict__ = x.__dict__
             return od
         elif isinstance(x, dict):
@@ -53,6 +54,7 @@ def apply_to_sample(f, sample):
 
     return _apply(sample)
 
+
 def move_to_cuda(sample, device=None):
     device = device or torch.cuda.current_device()
 
@@ -63,8 +65,10 @@ def move_to_cuda(sample, device=None):
 
     return apply_to_sample(_move_to_cuda, sample)
 
+
 def strip_pad(tensor, pad):
     return tensor[tensor.ne(pad)]
+
 
 def get_token_to_word_mapping(tokens, exclude_list):
     n = len(tokens)
@@ -97,6 +101,7 @@ def extract_hard_alignment(attn, src_sent, tgt_sent, pad, eos):
             )
     return alignment
 
+
 def softmax(x, dim: int, onnx_trace: bool = False):
     if onnx_trace:
         return F.softmax(x.float(), dim=dim)
@@ -109,6 +114,7 @@ def log_softmax(x, dim: int, onnx_trace: bool = False):
         return F.log_softmax(x.float(), dim=dim)
     else:
         return F.log_softmax(x, dim=dim, dtype=torch.float32)
+
 
 def extract_soft_alignment(attn, src_sent, tgt_sent, pad, eos):
     tgt_valid = ((tgt_sent != pad)).nonzero(as_tuple=False)

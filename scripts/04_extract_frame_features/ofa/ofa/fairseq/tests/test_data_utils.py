@@ -20,7 +20,7 @@ class TestBatchBySize(unittest.TestCase):
         max_sentences,
         bsz_mult,
     ):
-        """Simple, reliable and slow implementation of batch by size """
+        """Simple, reliable and slow implementation of batch by size"""
         batches = []
         start = 0
         while start < len(indices):

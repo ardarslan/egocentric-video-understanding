@@ -285,7 +285,10 @@ MODEL_FOR_IMAGE_CLASSIFICATION_MAPPING_NAMES = OrderedDict(
     [
         # Model for Image Classification mapping
         ("vit", "ViTForImageClassification"),
-        ("deit", ("DeiTForImageClassification", "DeiTForImageClassificationWithTeacher")),
+        (
+            "deit",
+            ("DeiTForImageClassification", "DeiTForImageClassificationWithTeacher"),
+        ),
         ("beit", "BeitForImageClassification"),
         ("segformer", "SegformerForImageClassification"),
         ("imagegpt", "ImageGPTForImageClassification"),
@@ -650,9 +653,15 @@ MODEL_FOR_AUDIO_XVECTOR_MAPPING_NAMES = OrderedDict(
 )
 
 MODEL_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_MAPPING_NAMES)
-MODEL_FOR_PRETRAINING_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_FOR_PRETRAINING_MAPPING_NAMES)
-MODEL_WITH_LM_HEAD_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_WITH_LM_HEAD_MAPPING_NAMES)
-MODEL_FOR_CAUSAL_LM_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_FOR_CAUSAL_LM_MAPPING_NAMES)
+MODEL_FOR_PRETRAINING_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, MODEL_FOR_PRETRAINING_MAPPING_NAMES
+)
+MODEL_WITH_LM_HEAD_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, MODEL_WITH_LM_HEAD_MAPPING_NAMES
+)
+MODEL_FOR_CAUSAL_LM_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
+)
 MODEL_FOR_CAUSAL_IMAGE_MODELING_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, MODEL_FOR_CAUSAL_IMAGE_MODELING_MAPPING_NAMES
 )
@@ -668,12 +677,18 @@ MODEL_FOR_SEMANTIC_SEGMENTATION_MAPPING = _LazyAutoMapping(
 MODEL_FOR_INSTANCE_SEGMENTATION_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, MODEL_FOR_INSTANCE_SEGMENTATION_MAPPING_NAMES
 )
-MODEL_FOR_VISION_2_SEQ_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_FOR_VISION_2_SEQ_MAPPING_NAMES)
-MODEL_FOR_MASKED_LM_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_FOR_MASKED_LM_MAPPING_NAMES)
+MODEL_FOR_VISION_2_SEQ_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, MODEL_FOR_VISION_2_SEQ_MAPPING_NAMES
+)
+MODEL_FOR_MASKED_LM_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, MODEL_FOR_MASKED_LM_MAPPING_NAMES
+)
 MODEL_FOR_MASKED_IMAGE_MODELING_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, MODEL_FOR_MASKED_IMAGE_MODELING_MAPPING_NAMES
 )
-MODEL_FOR_OBJECT_DETECTION_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_FOR_OBJECT_DETECTION_MAPPING_NAMES)
+MODEL_FOR_OBJECT_DETECTION_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, MODEL_FOR_OBJECT_DETECTION_MAPPING_NAMES
+)
 MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING_NAMES
 )
@@ -689,19 +704,27 @@ MODEL_FOR_TABLE_QUESTION_ANSWERING_MAPPING = _LazyAutoMapping(
 MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING_NAMES
 )
-MODEL_FOR_MULTIPLE_CHOICE_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_FOR_MULTIPLE_CHOICE_MAPPING_NAMES)
+MODEL_FOR_MULTIPLE_CHOICE_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, MODEL_FOR_MULTIPLE_CHOICE_MAPPING_NAMES
+)
 MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING_NAMES
 )
 MODEL_FOR_AUDIO_CLASSIFICATION_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, MODEL_FOR_AUDIO_CLASSIFICATION_MAPPING_NAMES
 )
-MODEL_FOR_CTC_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_FOR_CTC_MAPPING_NAMES)
-MODEL_FOR_SPEECH_SEQ_2_SEQ_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_FOR_SPEECH_SEQ_2_SEQ_MAPPING_NAMES)
+MODEL_FOR_CTC_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, MODEL_FOR_CTC_MAPPING_NAMES
+)
+MODEL_FOR_SPEECH_SEQ_2_SEQ_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, MODEL_FOR_SPEECH_SEQ_2_SEQ_MAPPING_NAMES
+)
 MODEL_FOR_AUDIO_FRAME_CLASSIFICATION_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, MODEL_FOR_AUDIO_FRAME_CLASSIFICATION_MAPPING_NAMES
 )
-MODEL_FOR_AUDIO_XVECTOR_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, MODEL_FOR_AUDIO_XVECTOR_MAPPING_NAMES)
+MODEL_FOR_AUDIO_XVECTOR_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, MODEL_FOR_AUDIO_XVECTOR_MAPPING_NAMES
+)
 
 
 class AutoModel(_BaseAutoModelClass):
@@ -715,7 +738,9 @@ class AutoModelForPreTraining(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_PRETRAINING_MAPPING
 
 
-AutoModelForPreTraining = auto_class_update(AutoModelForPreTraining, head_doc="pretraining")
+AutoModelForPreTraining = auto_class_update(
+    AutoModelForPreTraining, head_doc="pretraining"
+)
 
 
 # Private on purpose, the public class will add the deprecation warnings.
@@ -723,21 +748,27 @@ class _AutoModelWithLMHead(_BaseAutoModelClass):
     _model_mapping = MODEL_WITH_LM_HEAD_MAPPING
 
 
-_AutoModelWithLMHead = auto_class_update(_AutoModelWithLMHead, head_doc="language modeling")
+_AutoModelWithLMHead = auto_class_update(
+    _AutoModelWithLMHead, head_doc="language modeling"
+)
 
 
 class AutoModelForCausalLM(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_CAUSAL_LM_MAPPING
 
 
-AutoModelForCausalLM = auto_class_update(AutoModelForCausalLM, head_doc="causal language modeling")
+AutoModelForCausalLM = auto_class_update(
+    AutoModelForCausalLM, head_doc="causal language modeling"
+)
 
 
 class AutoModelForMaskedLM(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_MASKED_LM_MAPPING
 
 
-AutoModelForMaskedLM = auto_class_update(AutoModelForMaskedLM, head_doc="masked language modeling")
+AutoModelForMaskedLM = auto_class_update(
+    AutoModelForMaskedLM, head_doc="masked language modeling"
+)
 
 
 class AutoModelForSeq2SeqLM(_BaseAutoModelClass):
@@ -745,7 +776,9 @@ class AutoModelForSeq2SeqLM(_BaseAutoModelClass):
 
 
 AutoModelForSeq2SeqLM = auto_class_update(
-    AutoModelForSeq2SeqLM, head_doc="sequence-to-sequence language modeling", checkpoint_for_example="t5-base"
+    AutoModelForSeq2SeqLM,
+    head_doc="sequence-to-sequence language modeling",
+    checkpoint_for_example="t5-base",
 )
 
 
@@ -762,7 +795,9 @@ class AutoModelForQuestionAnswering(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_QUESTION_ANSWERING_MAPPING
 
 
-AutoModelForQuestionAnswering = auto_class_update(AutoModelForQuestionAnswering, head_doc="question answering")
+AutoModelForQuestionAnswering = auto_class_update(
+    AutoModelForQuestionAnswering, head_doc="question answering"
+)
 
 
 class AutoModelForTableQuestionAnswering(_BaseAutoModelClass):
@@ -780,14 +815,18 @@ class AutoModelForTokenClassification(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING
 
 
-AutoModelForTokenClassification = auto_class_update(AutoModelForTokenClassification, head_doc="token classification")
+AutoModelForTokenClassification = auto_class_update(
+    AutoModelForTokenClassification, head_doc="token classification"
+)
 
 
 class AutoModelForMultipleChoice(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_MULTIPLE_CHOICE_MAPPING
 
 
-AutoModelForMultipleChoice = auto_class_update(AutoModelForMultipleChoice, head_doc="multiple choice")
+AutoModelForMultipleChoice = auto_class_update(
+    AutoModelForMultipleChoice, head_doc="multiple choice"
+)
 
 
 class AutoModelForNextSentencePrediction(_BaseAutoModelClass):
@@ -803,14 +842,18 @@ class AutoModelForImageClassification(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_IMAGE_CLASSIFICATION_MAPPING
 
 
-AutoModelForImageClassification = auto_class_update(AutoModelForImageClassification, head_doc="image classification")
+AutoModelForImageClassification = auto_class_update(
+    AutoModelForImageClassification, head_doc="image classification"
+)
 
 
 class AutoModelForImageSegmentation(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_IMAGE_SEGMENTATION_MAPPING
 
 
-AutoModelForImageSegmentation = auto_class_update(AutoModelForImageSegmentation, head_doc="image segmentation")
+AutoModelForImageSegmentation = auto_class_update(
+    AutoModelForImageSegmentation, head_doc="image segmentation"
+)
 
 
 class AutoModelForSemanticSegmentation(_BaseAutoModelClass):
@@ -835,28 +878,36 @@ class AutoModelForObjectDetection(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_OBJECT_DETECTION_MAPPING
 
 
-AutoModelForObjectDetection = auto_class_update(AutoModelForObjectDetection, head_doc="object detection")
+AutoModelForObjectDetection = auto_class_update(
+    AutoModelForObjectDetection, head_doc="object detection"
+)
 
 
 class AutoModelForVision2Seq(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_VISION_2_SEQ_MAPPING
 
 
-AutoModelForVision2Seq = auto_class_update(AutoModelForVision2Seq, head_doc="vision-to-text modeling")
+AutoModelForVision2Seq = auto_class_update(
+    AutoModelForVision2Seq, head_doc="vision-to-text modeling"
+)
 
 
 class AutoModelForAudioClassification(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_AUDIO_CLASSIFICATION_MAPPING
 
 
-AutoModelForAudioClassification = auto_class_update(AutoModelForAudioClassification, head_doc="audio classification")
+AutoModelForAudioClassification = auto_class_update(
+    AutoModelForAudioClassification, head_doc="audio classification"
+)
 
 
 class AutoModelForCTC(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_CTC_MAPPING
 
 
-AutoModelForCTC = auto_class_update(AutoModelForCTC, head_doc="connectionist temporal classification")
+AutoModelForCTC = auto_class_update(
+    AutoModelForCTC, head_doc="connectionist temporal classification"
+)
 
 
 class AutoModelForSpeechSeq2Seq(_BaseAutoModelClass):
@@ -881,14 +932,18 @@ class AutoModelForAudioXVector(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_AUDIO_XVECTOR_MAPPING
 
 
-AutoModelForAudioXVector = auto_class_update(AutoModelForAudioXVector, head_doc="audio retrieval via x-vector")
+AutoModelForAudioXVector = auto_class_update(
+    AutoModelForAudioXVector, head_doc="audio retrieval via x-vector"
+)
 
 
 class AutoModelForMaskedImageModeling(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_MASKED_IMAGE_MODELING_MAPPING
 
 
-AutoModelForMaskedImageModeling = auto_class_update(AutoModelForMaskedImageModeling, head_doc="masked image modeling")
+AutoModelForMaskedImageModeling = auto_class_update(
+    AutoModelForMaskedImageModeling, head_doc="masked image modeling"
+)
 
 
 class AutoModelWithLMHead(_AutoModelWithLMHead):
@@ -910,4 +965,6 @@ class AutoModelWithLMHead(_AutoModelWithLMHead):
             "`AutoModelForSeq2SeqLM` for encoder-decoder models.",
             FutureWarning,
         )
-        return super().from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
+        return super().from_pretrained(
+            pretrained_model_name_or_path, *model_args, **kwargs
+        )

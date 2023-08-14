@@ -17,11 +17,20 @@
 # limitations under the License.
 from typing import TYPE_CHECKING
 
-from ...file_utils import _LazyModule, is_flax_available, is_tf_available, is_tokenizers_available, is_torch_available
+from ...file_utils import (
+    _LazyModule,
+    is_flax_available,
+    is_tf_available,
+    is_tokenizers_available,
+    is_torch_available,
+)
 
 
 _import_structure = {
-    "configuration_roformer": ["ROFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP", "RoFormerConfig"],
+    "configuration_roformer": [
+        "ROFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "RoFormerConfig",
+    ],
     "tokenization_roformer": ["RoFormerTokenizer"],
 }
 
@@ -73,7 +82,10 @@ if is_flax_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_roformer import ROFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP, RoFormerConfig
+    from .configuration_roformer import (
+        ROFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        RoFormerConfig,
+    )
     from .tokenization_roformer import RoFormerTokenizer
 
     if is_tokenizers_available():
@@ -124,4 +136,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

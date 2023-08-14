@@ -30,7 +30,9 @@ class ParameterFormat(Enum):
         return sizeof(self.value)
 
 
-def compute_effective_axis_dimension(dimension: int, fixed_dimension: int, num_token_to_add: int = 0) -> int:
+def compute_effective_axis_dimension(
+    dimension: int, fixed_dimension: int, num_token_to_add: int = 0
+) -> int:
     """
 
     Args:
@@ -49,7 +51,9 @@ def compute_effective_axis_dimension(dimension: int, fixed_dimension: int, num_t
     return dimension
 
 
-def compute_serialized_parameters_size(num_parameters: int, dtype: ParameterFormat) -> int:
+def compute_serialized_parameters_size(
+    num_parameters: int, dtype: ParameterFormat
+) -> int:
     """
     Compute the size taken by all the parameters in the given the storage format when serializing the model
 

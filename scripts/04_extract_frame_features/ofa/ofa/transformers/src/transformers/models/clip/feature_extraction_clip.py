@@ -78,13 +78,24 @@ class CLIPFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionMixin):
         self.do_center_crop = do_center_crop
         self.crop_size = crop_size
         self.do_normalize = do_normalize
-        self.image_mean = image_mean if image_mean is not None else [0.48145466, 0.4578275, 0.40821073]
-        self.image_std = image_std if image_std is not None else [0.26862954, 0.26130258, 0.27577711]
+        self.image_mean = (
+            image_mean
+            if image_mean is not None
+            else [0.48145466, 0.4578275, 0.40821073]
+        )
+        self.image_std = (
+            image_std if image_std is not None else [0.26862954, 0.26130258, 0.27577711]
+        )
 
     def __call__(
         self,
         images: Union[
-            Image.Image, np.ndarray, "torch.Tensor", List[Image.Image], List[np.ndarray], List["torch.Tensor"]  # noqa
+            Image.Image,
+            np.ndarray,
+            "torch.Tensor",
+            List[Image.Image],
+            List[np.ndarray],
+            List["torch.Tensor"],  # noqa
         ],
         return_tensors: Optional[Union[str, TensorType]] = None,
         **kwargs
@@ -125,7 +136,11 @@ class CLIPFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionMixin):
         if isinstance(images, (Image.Image, np.ndarray)) or is_torch_tensor(images):
             valid_images = True
         elif isinstance(images, (list, tuple)):
-            if len(images) == 0 or isinstance(images[0], (Image.Image, np.ndarray)) or is_torch_tensor(images[0]):
+            if (
+                len(images) == 0
+                or isinstance(images[0], (Image.Image, np.ndarray))
+                or is_torch_tensor(images[0])
+            ):
                 valid_images = True
 
         if not valid_images:
@@ -136,7 +151,10 @@ class CLIPFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionMixin):
 
         is_batched = bool(
             isinstance(images, (list, tuple))
-            and (isinstance(images[0], (Image.Image, np.ndarray)) or is_torch_tensor(images[0]))
+            and (
+                isinstance(images[0], (Image.Image, np.ndarray))
+                or is_torch_tensor(images[0])
+            )
         )
 
         if not is_batched:
@@ -144,11 +162,17 @@ class CLIPFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionMixin):
 
         # transformations (resizing + center cropping + normalization)
         if self.do_resize and self.size is not None and self.resample is not None:
-            images = [self.resize(image=image, size=self.size, resample=self.resample) for image in images]
+            images = [
+                self.resize(image=image, size=self.size, resample=self.resample)
+                for image in images
+            ]
         if self.do_center_crop and self.crop_size is not None:
             images = [self.center_crop(image, self.crop_size) for image in images]
         if self.do_normalize:
-            images = [self.normalize(image=image, mean=self.image_mean, std=self.image_std) for image in images]
+            images = [
+                self.normalize(image=image, mean=self.image_mean, std=self.image_std)
+                for image in images
+            ]
 
         # return as BatchFeature
         data = {"pixel_values": images}
@@ -180,7 +204,9 @@ class CLIPFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionMixin):
         crop_top = int((image_height - crop_height + 1) * 0.5)
         crop_left = int((image_width - crop_width + 1) * 0.5)
 
-        return image.crop((crop_left, crop_top, crop_left + crop_width, crop_top + crop_height))
+        return image.crop(
+            (crop_left, crop_top, crop_left + crop_width, crop_top + crop_height)
+        )
 
     def resize(self, image, size, resample=Image.BICUBIC):
         """
@@ -206,5 +232,7 @@ class CLIPFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionMixin):
             if short == size:
                 return image
             new_short, new_long = size, int(size * long / short)
-            new_w, new_h = (new_short, new_long) if width <= height else (new_long, new_short)
+            new_w, new_h = (
+                (new_short, new_long) if width <= height else (new_long, new_short)
+            )
         return image.resize((new_w, new_h), resample)

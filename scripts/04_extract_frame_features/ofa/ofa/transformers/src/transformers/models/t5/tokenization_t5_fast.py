@@ -114,14 +114,20 @@ class T5TokenizerFast(PreTrainedTokenizerFast):
         pad_token="<pad>",
         extra_ids=100,
         additional_special_tokens=None,
-        **kwargs
+        **kwargs,
     ):
         # Add extra_ids to the special token list
         if extra_ids > 0 and additional_special_tokens is None:
             additional_special_tokens = [f"<extra_id_{i}>" for i in range(extra_ids)]
         elif extra_ids > 0 and additional_special_tokens is not None:
             # Check that we have the right number of extra special tokens
-            extra_tokens = len(set(filter(lambda x: bool("extra_id_" in str(x)), additional_special_tokens)))
+            extra_tokens = len(
+                set(
+                    filter(
+                        lambda x: bool("extra_id_" in str(x)), additional_special_tokens
+                    )
+                )
+            )
             if extra_tokens != extra_ids:
                 raise ValueError(
                     f"Both extra_ids ({extra_ids}) and additional_special_tokens ({additional_special_tokens}) are provided to T5Tokenizer. "
@@ -143,7 +149,9 @@ class T5TokenizerFast(PreTrainedTokenizerFast):
         self.can_save_slow_tokenizer = False if not self.vocab_file else True
         self._extra_ids = extra_ids
 
-    def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
+    def save_vocabulary(
+        self, save_directory: str, filename_prefix: Optional[str] = None
+    ) -> Tuple[str]:
         if not self.can_save_slow_tokenizer:
             raise ValueError(
                 "Your fast tokenizer does not have the necessary information to save the vocabulary for a slow "
@@ -154,7 +162,9 @@ class T5TokenizerFast(PreTrainedTokenizerFast):
             logger.error(f"Vocabulary path ({save_directory}) should be a directory")
             return
         out_vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+            save_directory,
+            (filename_prefix + "-" if filename_prefix else "")
+            + VOCAB_FILES_NAMES["vocab_file"],
         )
 
         if os.path.abspath(self.vocab_file) != os.path.abspath(out_vocab_file):

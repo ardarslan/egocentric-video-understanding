@@ -44,8 +44,12 @@ class QuestionAnsweringSeq2SeqTrainer(Seq2SeqTrainer):
         max_length: Optional[int] = None,
         num_beams: Optional[int] = None,
     ) -> Dict[str, float]:
-        self._max_length = max_length if max_length is not None else self.args.generation_max_length
-        self._num_beams = num_beams if num_beams is not None else self.args.generation_num_beams
+        self._max_length = (
+            max_length if max_length is not None else self.args.generation_max_length
+        )
+        self._num_beams = (
+            num_beams if num_beams is not None else self.args.generation_num_beams
+        )
 
         eval_dataset = self.eval_dataset if eval_dataset is None else eval_dataset
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
@@ -54,7 +58,11 @@ class QuestionAnsweringSeq2SeqTrainer(Seq2SeqTrainer):
         # Temporarily disable metric computation, we will do it in the loop here.
         compute_metrics = self.compute_metrics
         self.compute_metrics = None
-        eval_loop = self.prediction_loop if self.args.use_legacy_prediction_loop else self.evaluation_loop
+        eval_loop = (
+            self.prediction_loop
+            if self.args.use_legacy_prediction_loop
+            else self.evaluation_loop
+        )
         try:
             output = eval_loop(
                 eval_dataloader,
@@ -84,16 +92,28 @@ class QuestionAnsweringSeq2SeqTrainer(Seq2SeqTrainer):
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
 
-        self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, metrics)
+        self.control = self.callback_handler.on_evaluate(
+            self.args, self.state, self.control, metrics
+        )
         return metrics
 
-    def predict(self, predict_dataset, predict_examples, ignore_keys=None, metric_key_prefix: str = "test"):
+    def predict(
+        self,
+        predict_dataset,
+        predict_examples,
+        ignore_keys=None,
+        metric_key_prefix: str = "test",
+    ):
         predict_dataloader = self.get_test_dataloader(predict_dataset)
 
         # Temporarily disable metric computation, we will do it in the loop here.
         compute_metrics = self.compute_metrics
         self.compute_metrics = None
-        eval_loop = self.prediction_loop if self.args.use_legacy_prediction_loop else self.evaluation_loop
+        eval_loop = (
+            self.prediction_loop
+            if self.args.use_legacy_prediction_loop
+            else self.evaluation_loop
+        )
         try:
             output = eval_loop(
                 predict_dataloader,
@@ -109,7 +129,9 @@ class QuestionAnsweringSeq2SeqTrainer(Seq2SeqTrainer):
         if self.post_process_function is None or self.compute_metrics is None:
             return output
 
-        predictions = self.post_process_function(predict_examples, predict_dataset, output.predictions, "predict")
+        predictions = self.post_process_function(
+            predict_examples, predict_dataset, output.predictions, "predict"
+        )
         metrics = self.compute_metrics(predictions)
 
         # Prefix all keys with metric_key_prefix + '_'
@@ -117,4 +139,8 @@ class QuestionAnsweringSeq2SeqTrainer(Seq2SeqTrainer):
             if not key.startswith(f"{metric_key_prefix}_"):
                 metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key)
 
-        return PredictionOutput(predictions=predictions.predictions, label_ids=predictions.label_ids, metrics=metrics)
+        return PredictionOutput(
+            predictions=predictions.predictions,
+            label_ids=predictions.label_ids,
+            metrics=metrics,
+        )

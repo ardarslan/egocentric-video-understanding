@@ -84,7 +84,7 @@ def DistributedFairseqModel(args, model, process_group, device):
     elif args.ddp_backend in {"no_c10d", "legacy_ddp"}:
         wrapped_model = LegacyDistributedDataParallel(
             module=model.to(device),
-            buffer_size=2 ** 28,
+            buffer_size=2**28,
             process_group=process_group,
         )
         # forward missing getattr and state_dict/load_state_dict to orig model

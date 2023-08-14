@@ -3,7 +3,6 @@ opencv-python-headless
 addict
 black
 cython
-django
 flake8
 ego4d
 envyaml

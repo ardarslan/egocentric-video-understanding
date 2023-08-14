@@ -26,13 +26,14 @@ from transformers.testing_utils import require_sentencepiece, require_tokenizers
 from ..test_tokenization_common import TokenizerTesterMixin
 
 
-SAMPLE_VOCAB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../fixtures/test_sentencepiece.model")
+SAMPLE_VOCAB = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "../fixtures/test_sentencepiece.model"
+)
 
 
 @require_sentencepiece
 @require_tokenizers
 class XGLMTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
-
     tokenizer_class = XGLMTokenizer
     rust_tokenizer_class = XGLMTokenizerFast
     test_rust_tokenizer = True
@@ -106,7 +107,29 @@ class XGLMTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
             ids,
             [
                 value + tokenizer.fairseq_offset
-                for value in [8, 21, 84, 55, 24, 19, 7, 2, 602, 347, 347, 347, 3, 12, 66, 46, 72, 80, 6, 2, 4]
+                for value in [
+                    8,
+                    21,
+                    84,
+                    55,
+                    24,
+                    19,
+                    7,
+                    2,
+                    602,
+                    347,
+                    347,
+                    347,
+                    3,
+                    12,
+                    66,
+                    46,
+                    72,
+                    80,
+                    6,
+                    2,
+                    4,
+                ]
             ],
         )
 
@@ -176,7 +199,9 @@ class XGLMTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         symbols = "Hello World!"
         original_tokenizer_encodings = [2, 31227, 4447, 35]
 
-        self.assertListEqual(original_tokenizer_encodings, self.big_tokenizer.encode(symbols))
+        self.assertListEqual(
+            original_tokenizer_encodings, self.big_tokenizer.encode(symbols)
+        )
 
     @slow
     def test_tokenization_base_hard_symbols(self):
@@ -185,7 +210,9 @@ class XGLMTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         original_tokenizer_encodings = [2, 1018, 67, 11, 1988, 2617, 5631, 278, 11, 3407, 48, 71630, 28085, 4, 3234, 157, 13, 6, 5, 6, 4, 3526, 768, 15, 659, 57, 298, 3983, 864, 129, 21, 6, 5, 13675, 377, 652, 7580, 10341, 155, 2817, 422, 1666, 7, 1674, 53, 113, 202277, 17892, 33, 60, 87, 4, 3234, 157, 61, 2667, 52376, 19, 88, 23, 735]
         # fmt: on
 
-        self.assertListEqual(original_tokenizer_encodings, self.big_tokenizer.encode(symbols))
+        self.assertListEqual(
+            original_tokenizer_encodings, self.big_tokenizer.encode(symbols)
+        )
 
     @slow
     def test_tokenizer_integration(self):

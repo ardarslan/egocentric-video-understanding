@@ -17,11 +17,19 @@
 # limitations under the License.
 from typing import TYPE_CHECKING
 
-from ...file_utils import _LazyModule, is_tf_available, is_tokenizers_available, is_torch_available
+from ...file_utils import (
+    _LazyModule,
+    is_tf_available,
+    is_tokenizers_available,
+    is_torch_available,
+)
 
 
 _import_structure = {
-    "configuration_convbert": ["CONVBERT_PRETRAINED_CONFIG_ARCHIVE_MAP", "ConvBertConfig"],
+    "configuration_convbert": [
+        "CONVBERT_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "ConvBertConfig",
+    ],
     "tokenization_convbert": ["ConvBertTokenizer"],
 }
 
@@ -58,7 +66,10 @@ if is_tf_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_convbert import CONVBERT_PRETRAINED_CONFIG_ARCHIVE_MAP, ConvBertConfig
+    from .configuration_convbert import (
+        CONVBERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        ConvBertConfig,
+    )
     from .tokenization_convbert import ConvBertTokenizer
 
     if is_tokenizers_available():
@@ -95,4 +106,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

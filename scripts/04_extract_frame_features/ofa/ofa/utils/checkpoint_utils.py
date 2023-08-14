@@ -97,10 +97,7 @@ def save_checkpoint(cfg: CheckpointConfig, trainer, epoch_itr, val_loss):
 
         checkpoint_conds[
             "checkpoint.best_{}_{:.3f}{}{}.pt".format(
-                cfg.best_checkpoint_metric,
-                val_loss,
-                rand_sfx,
-                suffix
+                cfg.best_checkpoint_metric, val_loss, rand_sfx, suffix
             )
         ] = worst_best is None or is_better(val_loss, worst_best)
     checkpoint_conds[
@@ -269,18 +266,20 @@ def load_checkpoint(cfg: CheckpointConfig, trainer, **passthrough_args):
             epoch=itr_state["epoch"], load_dataset=True, **passthrough_args
         )
         epoch_itr.load_state_dict(itr_state)
-        _n = itr_state['iterations_in_epoch']
+        _n = itr_state["iterations_in_epoch"]
         offset = sum(len(_) for _ in epoch_itr.batch_sampler[:_n])
         epoch_itr.dataset.dataset._seek(offset=offset)
         true_num = int(math.ceil(len(epoch_itr.dataset) / 8)) * 8
         another_offset = ((epoch_itr.epoch - 1) * true_num + offset) // 8
-        if hasattr(epoch_itr.dataset, 'pure_text_dataset'):
-            text_offset = (2 * another_offset) % len(epoch_itr.dataset.pure_text_dataset)
+        if hasattr(epoch_itr.dataset, "pure_text_dataset"):
+            text_offset = (2 * another_offset) % len(
+                epoch_itr.dataset.pure_text_dataset
+            )
             epoch_itr.dataset.pure_text_dataset._seek(offset=text_offset)
-        if hasattr(epoch_itr.dataset, 'pure_image_dataset'):
+        if hasattr(epoch_itr.dataset, "pure_image_dataset"):
             image_offset = another_offset % len(epoch_itr.dataset.pure_image_dataset)
             epoch_itr.dataset.pure_image_dataset._seek(offset=image_offset)
-        if hasattr(epoch_itr.dataset, 'detection_dataset'):
+        if hasattr(epoch_itr.dataset, "detection_dataset"):
             detection_offset = another_offset % len(epoch_itr.dataset.detection_dataset)
             epoch_itr.dataset.detection_dataset._seek(offset=detection_offset)
     else:
@@ -335,7 +334,6 @@ def load_checkpoint_to_cpu(path, arg_overrides=None, load_on_all_ranks=False):
             setattr(args, arg_name, arg_val)
 
     if "cfg" in state and state["cfg"] is not None:
-
         # hack to be able to set Namespace in dict config. this should be removed when we update to newer
         # omegaconf version that supports object flags, or when we migrate all existing models
         from omegaconf import _utils
@@ -617,13 +615,10 @@ def _upgrade_state_dict(state):
             state["args"].stop_min_lr = state["args"].min_lr
             del state["args"].min_lr
         # binary_cross_entropy / kd_binary_cross_entropy => wav2vec criterion
-        if (
-            hasattr(state["args"], "criterion")
-            and state["args"].criterion in [
-                "binary_cross_entropy",
-                "kd_binary_cross_entropy",
-            ]
-        ):
+        if hasattr(state["args"], "criterion") and state["args"].criterion in [
+            "binary_cross_entropy",
+            "kd_binary_cross_entropy",
+        ]:
             state["args"].criterion = "wav2vec"
         # remove log_keys if it's None (criteria will supply a default value of [])
         if hasattr(state["args"], "log_keys") and state["args"].log_keys is None:
@@ -670,7 +665,9 @@ def _upgrade_state_dict(state):
             ):
                 cfg.task.eval_wer_config.print_alignment = "hard"
             if "generation" in cfg and isinstance(cfg.generation.print_alignment, bool):
-                cfg.generation.print_alignment = "hard" if cfg.generation.print_alignment else None
+                cfg.generation.print_alignment = (
+                    "hard" if cfg.generation.print_alignment else None
+                )
             if (
                 "model" in cfg
                 and "w2v_args" in cfg.model
@@ -844,16 +841,16 @@ def load_ema_from_checkpoint(fpath):
     params_dict = collections.OrderedDict()
     new_state = None
 
-    with PathManager.open(fpath, 'rb') as f:
+    with PathManager.open(fpath, "rb") as f:
         new_state = torch.load(
             f,
             map_location=(
-                lambda s, _: torch.serialization.default_restore_location(s, 'cpu')
+                lambda s, _: torch.serialization.default_restore_location(s, "cpu")
             ),
         )
 
         # EMA model is stored in a separate "extra state"
-        model_params = new_state['extra_state']['ema']
+        model_params = new_state["extra_state"]["ema"]
 
         for key in list(model_params.keys()):
             p = model_params[key]
@@ -871,5 +868,5 @@ def load_ema_from_checkpoint(fpath):
                 "ema model weights, is this model trained with EMA?"
             )
 
-    new_state['model'] = params_dict
+    new_state["model"] = params_dict
     return new_state
