@@ -389,7 +389,7 @@ mamba deactivate
 
 mamba activate mq_data
 
-sbatch --nodelist=biwirender20 --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
+sbatch --nodelist=biwirender17 --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
 ```
 
 # 05 - Visualize frame features
