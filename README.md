@@ -6,6 +6,12 @@ CVL Server:
 ssh aarslan@robustus.ee.ethz.ch
 ```
 
+AIT:
+
+```
+ssh aarslan@ait-server-03
+```
+
 Euler:
 
 ```
@@ -47,6 +53,10 @@ OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900 --acce
 Euler:
 
 Go to https://jupyter.euler.hpc.ethz.ch in your browser.
+
+AIT:
+
+Use remote-ssh extension of your local VS Code.
 
 # Start a Jupyter Notebook
 
@@ -119,6 +129,16 @@ export CODE=/cluster/home/aarslan/mq
 export SCRATCH=/cluster/scratch/aarslan
 ```
 
+AIT:
+
+```
+export CODE=/local/home/aarslan/mq
+
+export SCRATCH=/data/aarslan
+
+export CUDA_HOME=/usr/local/cuda
+```
+
 # 01_02 - Install package manager
 
 cd $CODE
@@ -169,7 +189,6 @@ export PIP_CACHE_DIR=$SCRATCH/pip_cache
 pip install --upgrade pip
 
 (
-For Euler:
 
 mamba deactivate
 
@@ -183,8 +202,6 @@ chmod +x install_torch_torchvision.sh
 
 sbatch --gpus=1 install_torch_torchvision.sh
 )
-
-
 
 pip install mmcv-full==1.6.0
 
@@ -323,17 +340,27 @@ mamba deactivate
 
 mamba activate mq_data
 
-sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
+sbatch --nodelist=biwirender20 --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
 ```
 
 # 05 - Visualize frame features
 
-(NOT IMPLEMENTED YET)
+cd ~/mq/scripts/05_visualize_frame_features
+
+django-admin startproject djangoproject .
+
+python manage.py migrate
+
+python manage.py runserver 5960
+
+Go to http://bender59.ee.ethz.ch:5960/ in your browser.
+
+<!-- (NOT IMPLEMENTED YET)
 
 cd scripts/05_visualize_frame_features/ag_thesis_230716/webserver
 
 python3 manage.py migrate
-python3 manage.py runserver 5999
+python3 manage.py runserver 5999 -->
 
 # 06 - Analyze frame features
 
@@ -347,9 +374,9 @@ mamba activate mq_model
 
 cd $CODE/scripts/07_reproduce_baseline_results
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=2 --nodelist=biwirender10 train.sh
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --nodelist=biwirender07 train.sh
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=2 --nodelist=biwirender10 test.sh
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --nodelist=biwirender07 test.sh
 
 python merge_submission.py
 
