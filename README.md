@@ -201,6 +201,22 @@ chmod +x install_torch_torchvision.sh
 sbatch --gpus=1 install_torch_torchvision.sh
 )
 
+(
+For AIT:
+
+mamba deactivate
+
+module load cuda/11.3
+
+mamba activate mq_data
+
+cd $CODE/scripts/01_setup_environment
+
+chmod +x install_torch_torchvision.sh
+
+./install_torch_torchvision.sh
+)
+
 pip install mmcv-full==1.6.0
 
 cd $CODE/scripts/04_extract_frame_features/ego_hos/ego_hos/mmsegmentation
