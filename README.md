@@ -455,9 +455,9 @@ mamba activate mq_model
 
 cd $CODE/scripts/07_reproduce_baseline_results
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --nodelist=biwirender07 train.sh
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender07 train.sh
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --nodelist=biwirender07 test.sh
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender07 test.sh
 
 python merge_submission.py
 
