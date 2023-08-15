@@ -17,28 +17,39 @@ from detectron2.modeling.roi_heads.fast_rcnn import fast_rcnn_inference
 from detectron2.modeling.roi_heads.roi_heads import ROI_HEADS_REGISTRY, StandardROIHeads
 from detectron2.modeling.roi_heads.roi_heads import select_foreground_proposals
 from detectron2.modeling.roi_heads.cascade_rcnn import _ScaleGradient, CascadeROIHeads
-from detectron2.modeling.roi_heads.box_head import FastRCNNConvFCHead, ROI_BOX_HEAD_REGISTRY
-from detectron2.modeling.proposal_generator.proposal_utils import add_ground_truth_to_proposals
+from detectron2.modeling.roi_heads.box_head import (
+    FastRCNNConvFCHead,
+    ROI_BOX_HEAD_REGISTRY,
+)
+from detectron2.modeling.proposal_generator.proposal_utils import (
+    add_ground_truth_to_proposals,
+)
 from .custom_fast_rcnn import CustomFastRCNNOutputLayers
+
 
 @ROI_HEADS_REGISTRY.register()
 class CustomROIHeads(StandardROIHeads):
     @classmethod
     def _init_box_head(self, cfg, input_shape):
         ret = super()._init_box_head(cfg, input_shape)
-        del ret['box_predictor']
-        ret['box_predictor'] = CustomFastRCNNOutputLayers(cfg, ret['box_head'].output_shape)
+        del ret["box_predictor"]
+        ret["box_predictor"] = CustomFastRCNNOutputLayers(
+            cfg, ret["box_head"].output_shape
+        )
         return ret
+
 
 @ROI_HEADS_REGISTRY.register()
 class CustomCascadeROIHeads(CascadeROIHeads):
     @classmethod
     def _init_box_head(self, cfg, input_shape):
         ret = super()._init_box_head(cfg, input_shape)
-        del ret['box_predictors']
+        del ret["box_predictors"]
         cascade_bbox_reg_weights = cfg.MODEL.ROI_BOX_CASCADE_HEAD.BBOX_REG_WEIGHTS
         box_predictors = []
-        for box_head, bbox_reg_weights in zip(ret['box_heads'], cascade_bbox_reg_weights):
+        for box_head, bbox_reg_weights in zip(
+            ret["box_heads"], cascade_bbox_reg_weights
+        ):
             box_predictors.append(
                 CustomFastRCNNOutputLayers(
                     cfg,
@@ -46,6 +57,5 @@ class CustomCascadeROIHeads(CascadeROIHeads):
                     box2box_transform=Box2BoxTransform(weights=bbox_reg_weights),
                 )
             )
-        ret['box_predictors'] = box_predictors
+        ret["box_predictors"] = box_predictors
         return ret
-

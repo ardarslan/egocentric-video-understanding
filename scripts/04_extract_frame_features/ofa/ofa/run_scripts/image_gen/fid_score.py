@@ -47,21 +47,22 @@ from torch.utils import data
 
 from eval_utils.inceptionV3 import InceptionV3
 
+
 class Dataset(data.Dataset):
-    'Characterizes a dataset for PyTorch'
+    "Characterizes a dataset for PyTorch"
 
     def __init__(self, path, transform=None):
-        'Initialization'
+        "Initialization"
         self.file_names = self.get_filenames(path)
         self.transform = transform
 
     def __len__(self):
-        'Denotes the total number of samples'
+        "Denotes the total number of samples"
         return len(self.file_names)
 
     def __getitem__(self, index):
-        'Generates one sample of data'
-        img = Image.open(self.file_names[index]).convert('RGB')
+        "Generates one sample of data"
+        img = Image.open(self.file_names[index]).convert("RGB")
         # Convert image and label to torch tensors
         if self.transform is not None:
             img = self.transform(img)
@@ -71,7 +72,7 @@ class Dataset(data.Dataset):
         images = []
         for path, subdirs, files in os.walk(data_path):
             for name in files:
-                if name.rfind('jpg') != -1 or name.rfind('png') != -1:
+                if name.rfind("jpg") != -1 or name.rfind("png") != -1:
                     filename = os.path.join(path, name)
                     if os.path.isfile(filename):
                         images.append(filename)
@@ -79,16 +80,22 @@ class Dataset(data.Dataset):
 
 
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-parser.add_argument('--batch-size', type=int, default=64,
-                    help='Batch size to use')
-parser.add_argument('--dims', type=int, default=2048,
-                    choices=list(InceptionV3.BLOCK_INDEX_BY_DIM),
-                    help=('Dimensionality of Inception features to use. '
-                          'By default, uses pool3 features'))
-parser.add_argument('-c', '--gpu', default='', type=str,
-                    help='GPU to use (leave blank for CPU only)')
-parser.add_argument('--path1', type=str, help='path to images')
-parser.add_argument('--path2', type=str, help='path to images')
+parser.add_argument("--batch-size", type=int, default=64, help="Batch size to use")
+parser.add_argument(
+    "--dims",
+    type=int,
+    default=2048,
+    choices=list(InceptionV3.BLOCK_INDEX_BY_DIM),
+    help=(
+        "Dimensionality of Inception features to use. "
+        "By default, uses pool3 features"
+    ),
+)
+parser.add_argument(
+    "-c", "--gpu", default="", type=str, help="GPU to use (leave blank for CPU only)"
+)
+parser.add_argument("--path1", type=str, help="path to images")
+parser.add_argument("--path2", type=str, help="path to images")
 
 
 def get_activations(images, model, batch_size=64, dims=2048, cuda=False, verbose=True):
@@ -116,8 +123,12 @@ def get_activations(images, model, batch_size=64, dims=2048, cuda=False, verbose
 
     d0 = images.__len__() * batch_size
     if batch_size > d0:
-        print(('Warning: batch size is bigger than the data size. '
-               'Setting batch size to data size'))
+        print(
+            (
+                "Warning: batch size is bigger than the data size. "
+                "Setting batch size to data size"
+            )
+        )
         batch_size = d0
 
     n_batches = d0 // batch_size
@@ -150,7 +161,7 @@ def get_activations(images, model, batch_size=64, dims=2048, cuda=False, verbose
         pred_arr[start:end] = pred.cpu().data.numpy().reshape(batch_size, -1)
 
     if verbose:
-        print(' done')
+        print(" done")
 
     return pred_arr
 
@@ -183,18 +194,22 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     sigma1 = np.atleast_2d(sigma1)
     sigma2 = np.atleast_2d(sigma2)
 
-    assert mu1.shape == mu2.shape, \
-        'Training and test mean vectors have different lengths'
-    assert sigma1.shape == sigma2.shape, \
-        'Training and test covariances have different dimensions'
+    assert (
+        mu1.shape == mu2.shape
+    ), "Training and test mean vectors have different lengths"
+    assert (
+        sigma1.shape == sigma2.shape
+    ), "Training and test covariances have different dimensions"
 
     diff = mu1 - mu2
 
     # Product might be almost singular
     covmean, _ = linalg.sqrtm(sigma1.dot(sigma2), disp=False)
     if not np.isfinite(covmean).all():
-        msg = ('fid calculation produces singular product; '
-               'adding %s to diagonal of cov estimates') % eps
+        msg = (
+            "fid calculation produces singular product; "
+            "adding %s to diagonal of cov estimates"
+        ) % eps
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
@@ -203,17 +218,17 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     if np.iscomplexobj(covmean):
         if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
             m = np.max(np.abs(covmean.imag))
-            raise ValueError('Imaginary component {}'.format(m))
+            raise ValueError("Imaginary component {}".format(m))
         covmean = covmean.real
 
     tr_covmean = np.trace(covmean)
 
-    return (diff.dot(diff) + np.trace(sigma1) +
-            np.trace(sigma2) - 2 * tr_covmean)
+    return diff.dot(diff) + np.trace(sigma1) + np.trace(sigma2) - 2 * tr_covmean
 
 
-def calculate_activation_statistics(images, model, batch_size=64,
-                                    dims=2048, cuda=False, verbose=True):
+def calculate_activation_statistics(
+    images, model, batch_size=64, dims=2048, cuda=False, verbose=True
+):
     """Calculation of the statistics used by the FID.
     Params:
     -- images      : Numpy array of dimension (n_images, 3, hi, wi). The values
@@ -239,22 +254,34 @@ def calculate_activation_statistics(images, model, batch_size=64,
 
 
 def _compute_statistics_of_path(path, model, batch_size, dims, cuda):
-    if path.endswith('.npz'):
+    if path.endswith(".npz"):
         f = np.load(path)
-        m, s = f['mu'][:], f['sigma'][:]
+        m, s = f["mu"][:], f["sigma"][:]
         f.close()
 
     else:
-        dataset = Dataset(path, transforms.Compose([
-            transforms.Resize((299, 299)),
-            transforms.ToTensor(),
-        ]))
+        dataset = Dataset(
+            path,
+            transforms.Compose(
+                [
+                    transforms.Resize((299, 299)),
+                    transforms.ToTensor(),
+                ]
+            ),
+        )
         print(dataset.__len__())
         if dataset.__len__() < batch_size:
             batch_size = 1
-        dataloader = torch.utils.data.DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False, drop_last=True,
-                                                 num_workers=0)
-        m, s = calculate_activation_statistics(dataloader, model, batch_size, dims, cuda)
+        dataloader = torch.utils.data.DataLoader(
+            dataset=dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            drop_last=True,
+            num_workers=0,
+        )
+        m, s = calculate_activation_statistics(
+            dataloader, model, batch_size, dims, cuda
+        )
     return m, s
 
 
@@ -262,7 +289,7 @@ def calculate_fid_given_paths(paths, batch_size, cuda, dims):
     """Calculates the FID of two paths"""
     for p in paths:
         if not os.path.exists(p):
-            raise RuntimeError('Invalid path: %s' % p)
+            raise RuntimeError("Invalid path: %s" % p)
 
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
 
@@ -276,12 +303,12 @@ def calculate_fid_given_paths(paths, batch_size, cuda, dims):
     return fid_value
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parser.parse_args()
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     paths = ["", ""]
     paths[0] = args.path1
     paths[1] = args.path2
     print(paths)
     fid_value = calculate_fid_given_paths(paths, args.batch_size, args.gpu, args.dims)
-    print('FID: ', fid_value)
+    print("FID: ", fid_value)

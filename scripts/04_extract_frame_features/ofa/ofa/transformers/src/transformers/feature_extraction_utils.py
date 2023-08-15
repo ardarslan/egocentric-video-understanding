@@ -75,7 +75,11 @@ class BatchFeature(UserDict):
             initialization.
     """
 
-    def __init__(self, data: Optional[Dict[str, Any]] = None, tensor_type: Union[None, str, TensorType] = None):
+    def __init__(
+        self,
+        data: Optional[Dict[str, Any]] = None,
+        tensor_type: Union[None, str, TensorType] = None,
+    ):
         super().__init__(data)
         self.convert_to_tensors(tensor_type=tensor_type)
 
@@ -87,7 +91,9 @@ class BatchFeature(UserDict):
         if isinstance(item, str):
             return self.data[item]
         else:
-            raise KeyError("Indexing with integers is not available when using Python based feature extractors")
+            raise KeyError(
+                "Indexing with integers is not available when using Python based feature extractors"
+            )
 
     def __getattr__(self, item: str):
         try:
@@ -142,18 +148,26 @@ class BatchFeature(UserDict):
             is_tensor = tf.is_tensor
         elif tensor_type == TensorType.PYTORCH:
             if not is_torch_available():
-                raise ImportError("Unable to convert output to PyTorch tensors format, PyTorch is not installed.")
+                raise ImportError(
+                    "Unable to convert output to PyTorch tensors format, PyTorch is not installed."
+                )
             import torch
 
             def as_tensor(value):
-                if isinstance(value, (list, tuple)) and len(value) > 0 and isinstance(value[0], np.ndarray):
+                if (
+                    isinstance(value, (list, tuple))
+                    and len(value) > 0
+                    and isinstance(value[0], np.ndarray)
+                ):
                     value = np.array(value)
                 return torch.tensor(value)
 
             is_tensor = torch.is_tensor
         elif tensor_type == TensorType.JAX:
             if not is_flax_available():
-                raise ImportError("Unable to convert output to JAX tensors format, JAX is not installed.")
+                raise ImportError(
+                    "Unable to convert output to JAX tensors format, JAX is not installed."
+                )
             import jax.numpy as jnp  # noqa: F811
 
             as_tensor = jnp.array
@@ -171,7 +185,9 @@ class BatchFeature(UserDict):
                     self[key] = tensor
             except:  # noqa E722
                 if key == "overflowing_values":
-                    raise ValueError("Unable to create tensor returning overflowing values of different lengths. ")
+                    raise ValueError(
+                        "Unable to create tensor returning overflowing values of different lengths. "
+                    )
                 raise ValueError(
                     "Unable to create tensor, you should probably activate padding "
                     "with 'padding=True' to have batched tensors with the same length."
@@ -195,10 +211,16 @@ class BatchFeature(UserDict):
         # This check catches things like APEX blindly calling "to" on all inputs to a module
         # Otherwise it passes the casts down and casts the LongTensor containing the token idxs
         # into a HalfTensor
-        if isinstance(device, str) or _is_torch_device(device) or isinstance(device, int):
+        if (
+            isinstance(device, str)
+            or _is_torch_device(device)
+            or isinstance(device, int)
+        ):
             self.data = {k: v.to(device=device) for k, v in self.data.items()}
         else:
-            logger.warning(f"Attempting to cast a BatchFeature to type {str(device)}. This is not supported.")
+            logger.warning(
+                f"Attempting to cast a BatchFeature to type {str(device)}. This is not supported."
+            )
         return self
 
 
@@ -306,11 +328,18 @@ class FeatureExtractionMixin(PushToHubMixin):
         assert feature_extractor.return_attention_mask is False
         assert unused_kwargs == {"foo": False}
         ```"""
-        feature_extractor_dict, kwargs = cls.get_feature_extractor_dict(pretrained_model_name_or_path, **kwargs)
+        feature_extractor_dict, kwargs = cls.get_feature_extractor_dict(
+            pretrained_model_name_or_path, **kwargs
+        )
 
         return cls.from_dict(feature_extractor_dict, **kwargs)
 
-    def save_pretrained(self, save_directory: Union[str, os.PathLike], push_to_hub: bool = False, **kwargs):
+    def save_pretrained(
+        self,
+        save_directory: Union[str, os.PathLike],
+        push_to_hub: bool = False,
+        **kwargs,
+    ):
         """
         Save a feature_extractor object to the directory `save_directory`, so that it can be re-loaded using the
         [`~feature_extraction_utils.FeatureExtractionMixin.from_pretrained`] class method.
@@ -333,7 +362,9 @@ class FeatureExtractionMixin(PushToHubMixin):
                 Additional key word arguments passed along to the [`~file_utils.PushToHubMixin.push_to_hub`] method.
         """
         if os.path.isfile(save_directory):
-            raise AssertionError(f"Provided path ({save_directory}) should be a directory, not a file")
+            raise AssertionError(
+                f"Provided path ({save_directory}) should be a directory, not a file"
+            )
 
         if push_to_hub:
             commit_message = kwargs.pop("commit_message", None)
@@ -346,7 +377,9 @@ class FeatureExtractionMixin(PushToHubMixin):
 
         os.makedirs(save_directory, exist_ok=True)
         # If we save using the predefined names, we can load using `from_pretrained`
-        output_feature_extractor_file = os.path.join(save_directory, FEATURE_EXTRACTOR_NAME)
+        output_feature_extractor_file = os.path.join(
+            save_directory, FEATURE_EXTRACTOR_NAME
+        )
 
         self.to_json_file(output_feature_extractor_file)
         logger.info(f"Feature extractor saved in {output_feature_extractor_file}")
@@ -381,7 +414,10 @@ class FeatureExtractionMixin(PushToHubMixin):
         from_pipeline = kwargs.pop("_from_pipeline", None)
         from_auto_class = kwargs.pop("_from_auto", False)
 
-        user_agent = {"file_type": "feature extractor", "from_auto_class": from_auto_class}
+        user_agent = {
+            "file_type": "feature extractor",
+            "from_auto_class": from_auto_class,
+        }
         if from_pipeline is not None:
             user_agent["using_pipeline"] = from_pipeline
 
@@ -391,12 +427,19 @@ class FeatureExtractionMixin(PushToHubMixin):
 
         pretrained_model_name_or_path = str(pretrained_model_name_or_path)
         if os.path.isdir(pretrained_model_name_or_path):
-            feature_extractor_file = os.path.join(pretrained_model_name_or_path, FEATURE_EXTRACTOR_NAME)
-        elif os.path.isfile(pretrained_model_name_or_path) or is_remote_url(pretrained_model_name_or_path):
+            feature_extractor_file = os.path.join(
+                pretrained_model_name_or_path, FEATURE_EXTRACTOR_NAME
+            )
+        elif os.path.isfile(pretrained_model_name_or_path) or is_remote_url(
+            pretrained_model_name_or_path
+        ):
             feature_extractor_file = pretrained_model_name_or_path
         else:
             feature_extractor_file = hf_bucket_url(
-                pretrained_model_name_or_path, filename=FEATURE_EXTRACTOR_NAME, revision=revision, mirror=None
+                pretrained_model_name_or_path,
+                filename=FEATURE_EXTRACTOR_NAME,
+                revision=revision,
+                mirror=None,
             )
 
         try:
@@ -456,7 +499,9 @@ class FeatureExtractionMixin(PushToHubMixin):
             )
 
         if resolved_feature_extractor_file == feature_extractor_file:
-            logger.info(f"loading feature extractor configuration file {feature_extractor_file}")
+            logger.info(
+                f"loading feature extractor configuration file {feature_extractor_file}"
+            )
         else:
             logger.info(
                 f"loading feature extractor configuration file {feature_extractor_file} from cache at {resolved_feature_extractor_file}"
@@ -465,7 +510,9 @@ class FeatureExtractionMixin(PushToHubMixin):
         return feature_extractor_dict, kwargs
 
     @classmethod
-    def from_dict(cls, feature_extractor_dict: Dict[str, Any], **kwargs) -> PreTrainedFeatureExtractor:
+    def from_dict(
+        cls, feature_extractor_dict: Dict[str, Any], **kwargs
+    ) -> PreTrainedFeatureExtractor:
         """
         Instantiates a type of [`~feature_extraction_utils.FeatureExtractionMixin`] from a Python dictionary of
         parameters.
@@ -514,7 +561,9 @@ class FeatureExtractionMixin(PushToHubMixin):
         return output
 
     @classmethod
-    def from_json_file(cls, json_file: Union[str, os.PathLike]) -> PreTrainedFeatureExtractor:
+    def from_json_file(
+        cls, json_file: Union[str, os.PathLike]
+    ) -> PreTrainedFeatureExtractor:
         """
         Instantiates a feature extractor of type [`~feature_extraction_utils.FeatureExtractionMixin`] from the path to
         a JSON file of parameters.
@@ -595,6 +644,10 @@ class FeatureExtractionMixin(PushToHubMixin):
 
 
 FeatureExtractionMixin.push_to_hub = copy_func(FeatureExtractionMixin.push_to_hub)
-FeatureExtractionMixin.push_to_hub.__doc__ = FeatureExtractionMixin.push_to_hub.__doc__.format(
-    object="feature extractor", object_class="AutoFeatureExtractor", object_files="feature extractor file"
+FeatureExtractionMixin.push_to_hub.__doc__ = (
+    FeatureExtractionMixin.push_to_hub.__doc__.format(
+        object="feature extractor",
+        object_class="AutoFeatureExtractor",
+        object_files="feature extractor file",
+    )
 )

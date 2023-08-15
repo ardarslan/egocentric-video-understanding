@@ -1,6 +1,7 @@
 import torch
 from torch.nn import functional as F
 
+
 @torch.jit.script
 def sigmoid_focal_loss(
     inputs: torch.Tensor,
@@ -55,7 +56,7 @@ def sigmoid_focal_loss(
 def ctr_giou_loss_1d(
     input_offsets: torch.Tensor,
     target_offsets: torch.Tensor,
-    reduction: str = 'none',
+    reduction: str = "none",
     eps: float = 1e-8,
 ) -> torch.Tensor:
     """
@@ -105,11 +106,12 @@ def ctr_giou_loss_1d(
 
     return loss
 
+
 @torch.jit.script
 def ctr_diou_loss_1d(
     input_offsets: torch.Tensor,
     target_offsets: torch.Tensor,
-    reduction: str = 'none',
+    reduction: str = "none",
     eps: float = 1e-8,
 ) -> torch.Tensor:
     """
@@ -148,7 +150,7 @@ def ctr_diou_loss_1d(
     intsctk = rkis + lkis
     unionk = (lp + rp) + (lg + rg) - intsctk
     iouk = intsctk / unionk.clamp(min=eps)
-        
+
     # smallest enclosing box
     lc = torch.max(lp, lg)
     rc = torch.max(rp, rg)

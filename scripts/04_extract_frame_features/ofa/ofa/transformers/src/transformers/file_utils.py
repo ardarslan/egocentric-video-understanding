@@ -106,7 +106,9 @@ if USE_TF in ENV_VARS_TRUE_AND_AUTO_VALUES and USE_TORCH not in ENV_VARS_TRUE_VA
         _tf_available = _tf_version is not None
     if _tf_available:
         if version.parse(_tf_version) < version.parse("2"):
-            logger.info(f"TensorFlow found but with version {_tf_version}. Transformers requires version 2 minimum.")
+            logger.info(
+                f"TensorFlow found but with version {_tf_version}. Transformers requires version 2 minimum."
+            )
             _tf_available = False
         else:
             logger.info(f"TensorFlow version {_tf_version} available.")
@@ -116,12 +118,17 @@ else:
 
 
 if USE_JAX in ENV_VARS_TRUE_AND_AUTO_VALUES:
-    _flax_available = importlib.util.find_spec("jax") is not None and importlib.util.find_spec("flax") is not None
+    _flax_available = (
+        importlib.util.find_spec("jax") is not None
+        and importlib.util.find_spec("flax") is not None
+    )
     if _flax_available:
         try:
             _jax_version = importlib_metadata.version("jax")
             _flax_version = importlib_metadata.version("flax")
-            logger.info(f"JAX version {_jax_version}, Flax version {_flax_version} available.")
+            logger.info(
+                f"JAX version {_jax_version}, Flax version {_flax_version} available."
+            )
         except importlib_metadata.PackageNotFoundError:
             _flax_available = False
 else:
@@ -206,10 +213,14 @@ except importlib_metadata.PackageNotFoundError:
     _scatter_available = False
 
 
-_pytorch_quantization_available = importlib.util.find_spec("pytorch_quantization") is not None
+_pytorch_quantization_available = (
+    importlib.util.find_spec("pytorch_quantization") is not None
+)
 try:
     _pytorch_quantization_version = importlib_metadata.version("pytorch_quantization")
-    logger.debug(f"Successfully imported pytorch-quantization version {_pytorch_quantization_version}")
+    logger.debug(
+        f"Successfully imported pytorch-quantization version {_pytorch_quantization_version}"
+    )
 except importlib_metadata.PackageNotFoundError:
     _pytorch_quantization_available = False
 
@@ -222,10 +233,16 @@ except importlib_metadata.PackageNotFoundError:
     _soundfile_available = False
 
 
-_tensorflow_probability_available = importlib.util.find_spec("tensorflow_probability") is not None
+_tensorflow_probability_available = (
+    importlib.util.find_spec("tensorflow_probability") is not None
+)
 try:
-    _tensorflow_probability_version = importlib_metadata.version("tensorflow_probability")
-    logger.debug(f"Successfully imported tensorflow-probability version {_tensorflow_probability_version}")
+    _tensorflow_probability_version = importlib_metadata.version(
+        "tensorflow_probability"
+    )
+    logger.debug(
+        f"Successfully imported tensorflow-probability version {_tensorflow_probability_version}"
+    )
 except importlib_metadata.PackageNotFoundError:
     _tensorflow_probability_available = False
 
@@ -270,11 +287,15 @@ except importlib_metadata.PackageNotFoundError:
     _librosa_available = False
 
 
-torch_cache_home = os.getenv("TORCH_HOME", os.path.join(os.getenv("XDG_CACHE_HOME", "~/.cache"), "torch"))
+torch_cache_home = os.getenv(
+    "TORCH_HOME", os.path.join(os.getenv("XDG_CACHE_HOME", "~/.cache"), "torch")
+)
 old_default_cache_path = os.path.join(torch_cache_home, "transformers")
 # New default cache, shared with the Datasets library
 hf_cache_home = os.path.expanduser(
-    os.getenv("HF_HOME", os.path.join(os.getenv("XDG_CACHE_HOME", "~/.cache"), "huggingface"))
+    os.getenv(
+        "HF_HOME", os.path.join(os.getenv("XDG_CACHE_HOME", "~/.cache"), "huggingface")
+    )
 )
 default_cache_path = os.path.join(hf_cache_home, "transformers")
 
@@ -295,8 +316,12 @@ if (
     )
     shutil.move(old_default_cache_path, default_cache_path)
 
-PYTORCH_PRETRAINED_BERT_CACHE = os.getenv("PYTORCH_PRETRAINED_BERT_CACHE", default_cache_path)
-PYTORCH_TRANSFORMERS_CACHE = os.getenv("PYTORCH_TRANSFORMERS_CACHE", PYTORCH_PRETRAINED_BERT_CACHE)
+PYTORCH_PRETRAINED_BERT_CACHE = os.getenv(
+    "PYTORCH_PRETRAINED_BERT_CACHE", default_cache_path
+)
+PYTORCH_TRANSFORMERS_CACHE = os.getenv(
+    "PYTORCH_TRANSFORMERS_CACHE", PYTORCH_PRETRAINED_BERT_CACHE
+)
 TRANSFORMERS_CACHE = os.getenv("TRANSFORMERS_CACHE", PYTORCH_TRANSFORMERS_CACHE)
 HF_MODULES_CACHE = os.getenv("HF_MODULES_CACHE", os.path.join(hf_cache_home, "modules"))
 TRANSFORMERS_DYNAMIC_MODULE_NAME = "transformers_modules"
@@ -323,8 +348,12 @@ DUMMY_MASK = [[1, 1, 1, 1, 1], [1, 1, 1, 0, 0], [0, 0, 0, 1, 1]]
 S3_BUCKET_PREFIX = "https://s3.amazonaws.com/models.huggingface.co/bert"
 CLOUDFRONT_DISTRIB_PREFIX = "https://cdn.huggingface.co"
 
-_staging_mode = os.environ.get("HUGGINGFACE_CO_STAGING", "NO").upper() in ENV_VARS_TRUE_VALUES
-_default_endpoint = "https://moon-staging.huggingface.co" if _staging_mode else "https://huggingface.co"
+_staging_mode = (
+    os.environ.get("HUGGINGFACE_CO_STAGING", "NO").upper() in ENV_VARS_TRUE_VALUES
+)
+_default_endpoint = (
+    "https://moon-staging.huggingface.co" if _staging_mode else "https://huggingface.co"
+)
 
 HUGGINGFACE_CO_RESOLVE_ENDPOINT = _default_endpoint
 if os.environ.get("HUGGINGFACE_CO_RESOLVE_ENDPOINT", None) is not None:
@@ -333,15 +362,25 @@ if os.environ.get("HUGGINGFACE_CO_RESOLVE_ENDPOINT", None) is not None:
         "Transformers v5. Use `HF_ENDPOINT` instead.",
         FutureWarning,
     )
-    HUGGINGFACE_CO_RESOLVE_ENDPOINT = os.environ.get("HUGGINGFACE_CO_RESOLVE_ENDPOINT", None)
-HUGGINGFACE_CO_RESOLVE_ENDPOINT = os.environ.get("HF_ENDPOINT", HUGGINGFACE_CO_RESOLVE_ENDPOINT)
-HUGGINGFACE_CO_PREFIX = HUGGINGFACE_CO_RESOLVE_ENDPOINT + "/{model_id}/resolve/{revision}/{filename}"
+    HUGGINGFACE_CO_RESOLVE_ENDPOINT = os.environ.get(
+        "HUGGINGFACE_CO_RESOLVE_ENDPOINT", None
+    )
+HUGGINGFACE_CO_RESOLVE_ENDPOINT = os.environ.get(
+    "HF_ENDPOINT", HUGGINGFACE_CO_RESOLVE_ENDPOINT
+)
+HUGGINGFACE_CO_PREFIX = (
+    HUGGINGFACE_CO_RESOLVE_ENDPOINT + "/{model_id}/resolve/{revision}/{filename}"
+)
 
 # This is the version of torch required to run torch.fx features and torch.onnx with dictionary inputs.
 TORCH_FX_REQUIRED_VERSION = version.parse("1.10")
 TORCH_ONNX_DICT_INPUTS_MINIMUM_VERSION = version.parse("1.8")
 
-_is_offline_mode = True if os.environ.get("TRANSFORMERS_OFFLINE", "0").upper() in ENV_VARS_TRUE_VALUES else False
+_is_offline_mode = (
+    True
+    if os.environ.get("TRANSFORMERS_OFFLINE", "0").upper() in ENV_VARS_TRUE_VALUES
+    else False
+)
 
 
 def is_offline_mode():
@@ -426,7 +465,9 @@ if _torch_available:
         TORCH_FX_REQUIRED_VERSION.minor,
     )
 
-    _torch_onnx_dict_inputs_support_available = torch_version >= TORCH_ONNX_DICT_INPUTS_MINIMUM_VERSION
+    _torch_onnx_dict_inputs_support_available = (
+        torch_version >= TORCH_ONNX_DICT_INPUTS_MINIMUM_VERSION
+    )
 
 
 def is_torch_fx_available():
@@ -572,7 +613,9 @@ def is_sagemaker_dp_enabled():
     try:
         # Parse it and check the field "sagemaker_distributed_dataparallel_enabled".
         sagemaker_params = json.loads(sagemaker_params)
-        if not sagemaker_params.get("sagemaker_distributed_dataparallel_enabled", False):
+        if not sagemaker_params.get(
+            "sagemaker_distributed_dataparallel_enabled", False
+        ):
             return False
     except json.JSONDecodeError:
         return False
@@ -831,11 +874,17 @@ BACKENDS_MAPPING = OrderedDict(
         ("pyctcdecode", (is_pyctcdecode_available, PYCTCDECODE_IMPORT_ERROR)),
         ("pytesseract", (is_pytesseract_available, PYTESSERACT_IMPORT_ERROR)),
         ("scatter", (is_scatter_available, SCATTER_IMPORT_ERROR)),
-        ("pytorch_quantization", (is_pytorch_quantization_available, PYTORCH_QUANTIZATION_IMPORT_ERROR)),
+        (
+            "pytorch_quantization",
+            (is_pytorch_quantization_available, PYTORCH_QUANTIZATION_IMPORT_ERROR),
+        ),
         ("sentencepiece", (is_sentencepiece_available, SENTENCEPIECE_IMPORT_ERROR)),
         ("sklearn", (is_sklearn_available, SKLEARN_IMPORT_ERROR)),
         ("speech", (is_speech_available, SPEECH_IMPORT_ERROR)),
-        ("tensorflow_probability", (is_tensorflow_probability_available, TENSORFLOW_PROBABILITY_IMPORT_ERROR)),
+        (
+            "tensorflow_probability",
+            (is_tensorflow_probability_available, TENSORFLOW_PROBABILITY_IMPORT_ERROR),
+        ),
         ("tf", (is_tf_available, TENSORFLOW_IMPORT_ERROR)),
         ("timm", (is_timm_available, TIMM_IMPORT_ERROR)),
         ("tokenizers", (is_tokenizers_available, TOKENIZERS_IMPORT_ERROR)),
@@ -974,7 +1023,11 @@ def _prepare_output_docstrings(output_type, config_class, min_indent=None):
 
     # Add the return introduction
     full_output_type = f"{output_type.__module__}.{output_type.__name__}"
-    intro = TF_RETURN_INTRODUCTION if output_type.__name__.startswith("TF") else PT_RETURN_INTRODUCTION
+    intro = (
+        TF_RETURN_INTRODUCTION
+        if output_type.__name__.startswith("TF")
+        else PT_RETURN_INTRODUCTION
+    )
     intro = intro.format(full_output_type=full_output_type, config_class=config_class)
     result = intro + params_docstring
 
@@ -1724,7 +1777,10 @@ def add_code_sample_docstrings(
             code_sample = sample_docstrings["TokenClassification"]
         elif "MultipleChoice" in model_class:
             code_sample = sample_docstrings["MultipleChoice"]
-        elif "MaskedLM" in model_class or model_class in ["FlaubertWithLMHeadModel", "XLMWithLMHeadModel"]:
+        elif "MaskedLM" in model_class or model_class in [
+            "FlaubertWithLMHeadModel",
+            "XLMWithLMHeadModel",
+        ]:
             code_sample = sample_docstrings["MaskedLM"]
         elif "LMHead" in model_class or "CausalLM" in model_class:
             code_sample = sample_docstrings["LMHead"]
@@ -1746,7 +1802,11 @@ def add_code_sample_docstrings(
             raise ValueError(f"Docstring can't be built for model {model_class}")
 
         func_doc = (fn.__doc__ or "") + "".join(docstr)
-        output_doc = "" if output_type is None else _prepare_output_docstrings(output_type, config_class)
+        output_doc = (
+            ""
+            if output_type is None
+            else _prepare_output_docstrings(output_type, config_class)
+        )
         built_doc = code_sample.format(**doc_kwargs)
         fn.__doc__ = func_doc + output_doc + built_doc
         return fn
@@ -1763,7 +1823,9 @@ def replace_return_docstrings(output_type=None, config_class=None):
             i += 1
         if i < len(lines):
             indent = len(_get_indent(lines[i]))
-            lines[i] = _prepare_output_docstrings(output_type, config_class, min_indent=indent)
+            lines[i] = _prepare_output_docstrings(
+                output_type, config_class, min_indent=indent
+            )
             func_doc = "\n".join(lines)
         else:
             raise ValueError(
@@ -1782,7 +1844,11 @@ def is_remote_url(url_or_filename):
 
 
 def hf_bucket_url(
-    model_id: str, filename: str, subfolder: Optional[str] = None, revision: Optional[str] = None, mirror=None
+    model_id: str,
+    filename: str,
+    subfolder: Optional[str] = None,
+    revision: Optional[str] = None,
+    mirror=None,
 ) -> str:
     """
     Resolve a model identifier, a file name, and an optional revision id, to a huggingface.co-hosted url, redirecting
@@ -1805,7 +1871,9 @@ def hf_bucket_url(
 
     if mirror:
         if mirror in ["tuna", "bfsu"]:
-            raise ValueError("The Tuna and BFSU mirrors are no longer available. Try removing the mirror argument.")
+            raise ValueError(
+                "The Tuna and BFSU mirrors are no longer available. Try removing the mirror argument."
+            )
         legacy_format = "/" not in model_id
         if legacy_format:
             return f"{mirror}/{model_id}-{filename}"
@@ -1814,7 +1882,9 @@ def hf_bucket_url(
 
     if revision is None:
         revision = "main"
-    return HUGGINGFACE_CO_PREFIX.format(model_id=model_id, revision=revision, filename=filename)
+    return HUGGINGFACE_CO_PREFIX.format(
+        model_id=model_id, revision=revision, filename=filename
+    )
 
 
 def url_to_filename(url: str, etag: Optional[str] = None) -> str:
@@ -1962,7 +2032,9 @@ def cached_path(
         raise EnvironmentError(f"file {url_or_filename} not found")
     else:
         # Something unknown
-        raise ValueError(f"unable to parse {url_or_filename} as a URL or as a local path")
+        raise ValueError(
+            f"unable to parse {url_or_filename} as a URL or as a local path"
+        )
 
     if extract_compressed_file:
         if not is_zipfile(output_path) and not tarfile.is_tarfile(output_path):
@@ -1974,7 +2046,11 @@ def cached_path(
         output_extract_dir_name = output_file.replace(".", "-") + "-extracted"
         output_path_extracted = os.path.join(output_dir, output_extract_dir_name)
 
-        if os.path.isdir(output_path_extracted) and os.listdir(output_path_extracted) and not force_extract:
+        if (
+            os.path.isdir(output_path_extracted)
+            and os.listdir(output_path_extracted)
+            and not force_extract
+        ):
             return output_path_extracted
 
         # Prevent parallel extractions
@@ -1991,7 +2067,9 @@ def cached_path(
                 tar_file.extractall(output_path_extracted)
                 tar_file.close()
             else:
-                raise EnvironmentError(f"Archive format of {output_path} could not be identified")
+                raise EnvironmentError(
+                    f"Archive format of {output_path} could not be identified"
+                )
 
         return output_path_extracted
 
@@ -2008,8 +2086,16 @@ def define_sagemaker_information():
         dlc_tag = None
 
     sagemaker_params = json.loads(os.getenv("SM_FRAMEWORK_PARAMS", "{}"))
-    runs_distributed_training = True if "sagemaker_distributed_dataparallel_enabled" in sagemaker_params else False
-    account_id = os.getenv("TRAINING_JOB_ARN").split(":")[4] if "TRAINING_JOB_ARN" in os.environ else None
+    runs_distributed_training = (
+        True
+        if "sagemaker_distributed_dataparallel_enabled" in sagemaker_params
+        else False
+    )
+    account_id = (
+        os.getenv("TRAINING_JOB_ARN").split(":")[4]
+        if "TRAINING_JOB_ARN" in os.environ
+        else None
+    )
 
     sagemaker_object = {
         "sm_framework": os.getenv("SM_FRAMEWORK_MODULE", None),
@@ -2036,7 +2122,9 @@ def http_user_agent(user_agent: Union[Dict, str, None] = None) -> str:
     if DISABLE_TELEMETRY:
         return ua + "; telemetry/off"
     if is_training_run_on_sagemaker():
-        ua += "; " + "; ".join(f"{k}/{v}" for k, v in define_sagemaker_information().items())
+        ua += "; " + "; ".join(
+            f"{k}/{v}" for k, v in define_sagemaker_information().items()
+        )
     # CI will set this value to True
     if os.environ.get("TRANSFORMERS_IS_CI", "").upper() in ENV_VARS_TRUE_VALUES:
         ua += "; is_ci/true"
@@ -2069,16 +2157,28 @@ def _raise_for_status(request):
     if "X-Error-Code" in request.headers:
         error_code = request.headers["X-Error-Code"]
         if error_code == "RepoNotFound":
-            raise RepositoryNotFoundError(f"404 Client Error: Repository Not Found for url: {request.url}")
+            raise RepositoryNotFoundError(
+                f"404 Client Error: Repository Not Found for url: {request.url}"
+            )
         elif error_code == "EntryNotFound":
-            raise EntryNotFoundError(f"404 Client Error: Entry Not Found for url: {request.url}")
+            raise EntryNotFoundError(
+                f"404 Client Error: Entry Not Found for url: {request.url}"
+            )
         elif error_code == "RevisionNotFound":
-            raise RevisionNotFoundError((f"404 Client Error: Revision Not Found for url: {request.url}"))
+            raise RevisionNotFoundError(
+                (f"404 Client Error: Revision Not Found for url: {request.url}")
+            )
 
     request.raise_for_status()
 
 
-def http_get(url: str, temp_file: BinaryIO, proxies=None, resume_size=0, headers: Optional[Dict[str, str]] = None):
+def http_get(
+    url: str,
+    temp_file: BinaryIO,
+    proxies=None,
+    resume_size=0,
+    headers: Optional[Dict[str, str]] = None,
+):
     """
     Download remote file. Do not gobble up errors.
     """
@@ -2140,14 +2240,22 @@ def get_from_cache(
     elif use_auth_token:
         token = HfFolder.get_token()
         if token is None:
-            raise EnvironmentError("You specified use_auth_token=True, but a huggingface token was not found.")
+            raise EnvironmentError(
+                "You specified use_auth_token=True, but a huggingface token was not found."
+            )
         headers["authorization"] = f"Bearer {token}"
 
     url_to_download = url
     etag = None
     if not local_files_only:
         try:
-            r = requests.head(url, headers=headers, allow_redirects=False, proxies=proxies, timeout=etag_timeout)
+            r = requests.head(
+                url,
+                headers=headers,
+                allow_redirects=False,
+                proxies=proxies,
+                timeout=etag_timeout,
+            )
             _raise_for_status(r)
             etag = r.headers.get("X-Linked-Etag") or r.headers.get("ETag")
             # We favor a custom header indicating the etag of the linked resource, and
@@ -2184,7 +2292,9 @@ def get_from_cache(
         else:
             matching_files = [
                 file
-                for file in fnmatch.filter(os.listdir(cache_dir), filename.split(".")[0] + ".*")
+                for file in fnmatch.filter(
+                    os.listdir(cache_dir), filename.split(".")[0] + ".*"
+                )
                 if not file.endswith(".json") and not file.endswith(".lock")
             ]
             if len(matching_files) > 0:
@@ -2212,7 +2322,6 @@ def get_from_cache(
     # Prevent parallel downloads of the same file with a lock.
     lock_path = cache_path + ".lock"
     with FileLock(lock_path):
-
         # If the download just completed while the lock was activated.
         if os.path.exists(cache_path) and not force_download:
             # Even if returning early like here, the lock will be released.
@@ -2232,15 +2341,25 @@ def get_from_cache(
             else:
                 resume_size = 0
         else:
-            temp_file_manager = partial(tempfile.NamedTemporaryFile, mode="wb", dir=cache_dir, delete=False)
+            temp_file_manager = partial(
+                tempfile.NamedTemporaryFile, mode="wb", dir=cache_dir, delete=False
+            )
             resume_size = 0
 
         # Download to temporary file, then copy to cache dir once finished.
         # Otherwise you get corrupt cache entries if the download gets interrupted.
         with temp_file_manager() as temp_file:
-            logger.info(f"{url} not found in cache or force_download set to True, downloading to {temp_file.name}")
+            logger.info(
+                f"{url} not found in cache or force_download set to True, downloading to {temp_file.name}"
+            )
 
-            http_get(url_to_download, temp_file, proxies=proxies, resume_size=resume_size, headers=headers)
+            http_get(
+                url_to_download,
+                temp_file,
+                proxies=proxies,
+                resume_size=resume_size,
+                headers=headers,
+            )
 
         logger.info(f"storing {url} in cache at {cache_path}")
         os.replace(temp_file.name, cache_path)
@@ -2329,7 +2448,9 @@ def get_file_from_repo(
         resolved_file = os.path.join(path_or_repo, filename)
         return resolved_file if os.path.isfile(resolved_file) else None
     else:
-        resolved_file = hf_bucket_url(path_or_repo, filename=filename, revision=revision, mirror=None)
+        resolved_file = hf_bucket_url(
+            path_or_repo, filename=filename, revision=revision, mirror=None
+        )
 
     try:
         # Load from URL or cache if already cached
@@ -2384,7 +2505,9 @@ def has_file(
     if os.path.isdir(path_or_repo):
         return os.path.isfile(os.path.join(path_or_repo, filename))
 
-    url = hf_bucket_url(path_or_repo, filename=filename, revision=revision, mirror=mirror)
+    url = hf_bucket_url(
+        path_or_repo, filename=filename, revision=revision, mirror=mirror
+    )
 
     headers = {"user-agent": http_user_agent()}
     if isinstance(use_auth_token, str):
@@ -2392,16 +2515,22 @@ def has_file(
     elif use_auth_token:
         token = HfFolder.get_token()
         if token is None:
-            raise EnvironmentError("You specified use_auth_token=True, but a huggingface token was not found.")
+            raise EnvironmentError(
+                "You specified use_auth_token=True, but a huggingface token was not found."
+            )
         headers["authorization"] = f"Bearer {token}"
 
-    r = requests.head(url, headers=headers, allow_redirects=False, proxies=proxies, timeout=10)
+    r = requests.head(
+        url, headers=headers, allow_redirects=False, proxies=proxies, timeout=10
+    )
     try:
         _raise_for_status(r)
         return True
     except RepositoryNotFoundError as e:
         logger.error(e)
-        raise EnvironmentError(f"{path_or_repo} is not a local folder or a valid repository name on 'https://hf.co'.")
+        raise EnvironmentError(
+            f"{path_or_repo} is not a local folder or a valid repository name on 'https://hf.co'."
+        )
     except RevisionNotFoundError as e:
         logger.error(e)
         raise EnvironmentError(
@@ -2641,10 +2770,14 @@ class ModelOutput(OrderedDict):
         if not len(class_fields):
             raise ValueError(f"{self.__class__.__name__} has no fields.")
         if not all(field.default is None for field in class_fields[1:]):
-            raise ValueError(f"{self.__class__.__name__} should not have more than one required field.")
+            raise ValueError(
+                f"{self.__class__.__name__} should not have more than one required field."
+            )
 
         first_field = getattr(self, class_fields[0].name)
-        other_fields_are_none = all(getattr(self, field.name) is None for field in class_fields[1:])
+        other_fields_are_none = all(
+            getattr(self, field.name) is None for field in class_fields[1:]
+        )
 
         if other_fields_are_none and not is_tensor(first_field):
             if isinstance(first_field, dict):
@@ -2679,16 +2812,24 @@ class ModelOutput(OrderedDict):
                     self[field.name] = v
 
     def __delitem__(self, *args, **kwargs):
-        raise Exception(f"You cannot use ``__delitem__`` on a {self.__class__.__name__} instance.")
+        raise Exception(
+            f"You cannot use ``__delitem__`` on a {self.__class__.__name__} instance."
+        )
 
     def setdefault(self, *args, **kwargs):
-        raise Exception(f"You cannot use ``setdefault`` on a {self.__class__.__name__} instance.")
+        raise Exception(
+            f"You cannot use ``setdefault`` on a {self.__class__.__name__} instance."
+        )
 
     def pop(self, *args, **kwargs):
-        raise Exception(f"You cannot use ``pop`` on a {self.__class__.__name__} instance.")
+        raise Exception(
+            f"You cannot use ``pop`` on a {self.__class__.__name__} instance."
+        )
 
     def update(self, *args, **kwargs):
-        raise Exception(f"You cannot use ``update`` on a {self.__class__.__name__} instance.")
+        raise Exception(
+            f"You cannot use ``update`` on a {self.__class__.__name__} instance."
+        )
 
     def __getitem__(self, k):
         if isinstance(k, str):
@@ -2758,7 +2899,9 @@ class _LazyModule(ModuleType):
 
     # Very heavily inspired by optuna.integration._IntegrationModule
     # https://github.com/optuna/optuna/blob/master/optuna/integration/__init__.py
-    def __init__(self, name, module_file, import_structure, module_spec=None, extra_objects=None):
+    def __init__(
+        self, name, module_file, import_structure, module_spec=None, extra_objects=None
+    ):
         super().__init__(name)
         self._modules = set(import_structure.keys())
         self._class_to_module = {}
@@ -2766,7 +2909,9 @@ class _LazyModule(ModuleType):
             for value in values:
                 self._class_to_module[value] = key
         # Needed for autocompletion in an IDE
-        self.__all__ = list(import_structure.keys()) + list(chain(*import_structure.values()))
+        self.__all__ = list(import_structure.keys()) + list(
+            chain(*import_structure.values())
+        )
         self.__file__ = module_file
         self.__spec__ = module_spec
         self.__path__ = [os.path.dirname(module_file)]
@@ -2813,7 +2958,13 @@ class _LazyModule(ModuleType):
 def copy_func(f):
     """Returns a copy of a function f."""
     # Based on http://stackoverflow.com/a/6528148/190597 (Glenn Maynard)
-    g = types.FunctionType(f.__code__, f.__globals__, name=f.__name__, argdefs=f.__defaults__, closure=f.__closure__)
+    g = types.FunctionType(
+        f.__code__,
+        f.__globals__,
+        name=f.__name__,
+        argdefs=f.__defaults__,
+        closure=f.__closure__,
+    )
     g = functools.update_wrapper(g, f)
     g.__kwdefaults__ = f.__kwdefaults__
     return g
@@ -2857,7 +3008,7 @@ class PushToHubMixin:
         organization: Optional[str] = None,
         private: Optional[bool] = None,
         use_auth_token: Optional[Union[bool, str]] = None,
-        **model_card_kwargs
+        **model_card_kwargs,
     ) -> str:
         """
         Upload the {object_files} to the 🤗 Model Hub while synchronizing a local clone of the repo in
@@ -2919,7 +3070,10 @@ class PushToHubMixin:
                     use_auth_token = True
                 repo_name = Path(repo_path_or_name).name
                 repo_url = self._get_repo_url_from_name(
-                    repo_name, organization=organization, private=private, use_auth_token=use_auth_token
+                    repo_name,
+                    organization=organization,
+                    private=private,
+                    use_auth_token=use_auth_token,
                 )
             repo_path_or_name = tempfile.mkdtemp()
 
@@ -2990,7 +3144,9 @@ class PushToHubMixin:
         use_auth_token: Optional[Union[bool, str]] = None,
     ) -> Repository:
         if repo_path_or_name is None and repo_url is None:
-            raise ValueError("You need to specify a `repo_path_or_name` or a `repo_url`.")
+            raise ValueError(
+                "You need to specify a `repo_path_or_name` or a `repo_url`."
+            )
 
         if use_auth_token is None and repo_url is None:
             use_auth_token = True
@@ -3001,19 +3157,26 @@ class PushToHubMixin:
         if repo_url is None and not os.path.exists(repo_path_or_name):
             repo_name = Path(repo_path_or_name).name
             repo_url = cls._get_repo_url_from_name(
-                repo_name, organization=organization, private=private, use_auth_token=use_auth_token
+                repo_name,
+                organization=organization,
+                private=private,
+                use_auth_token=use_auth_token,
             )
 
         # Create a working directory if it does not exist.
         if not os.path.exists(repo_path_or_name):
             os.makedirs(repo_path_or_name)
 
-        repo = Repository(repo_path_or_name, clone_from=repo_url, use_auth_token=use_auth_token)
+        repo = Repository(
+            repo_path_or_name, clone_from=repo_url, use_auth_token=use_auth_token
+        )
         repo.git_pull()
         return repo
 
     @classmethod
-    def _push_to_hub(cls, repo: Repository, commit_message: Optional[str] = None) -> str:
+    def _push_to_hub(
+        cls, repo: Repository, commit_message: Optional[str] = None
+    ) -> str:
         if commit_message is None:
             if "Tokenizer" in cls.__name__:
                 commit_message = "add tokenizer"
@@ -3025,7 +3188,9 @@ class PushToHubMixin:
         return repo.push_to_hub(commit_message=commit_message)
 
 
-def get_full_repo_name(model_id: str, organization: Optional[str] = None, token: Optional[str] = None):
+def get_full_repo_name(
+    model_id: str, organization: Optional[str] = None, token: Optional[str] = None
+):
     if token is None:
         token = HfFolder.get_token()
     if organization is None:

@@ -21,7 +21,10 @@ from fairseq.data.audio.multi_modality_dataset import (
     LangPairMaskDataset,
     ModalityDatasetItem,
 )
-from fairseq.data.audio.speech_to_text_dataset import SpeechToTextDataset, SpeechToTextDatasetCreator
+from fairseq.data.audio.speech_to_text_dataset import (
+    SpeechToTextDataset,
+    SpeechToTextDatasetCreator,
+)
 from fairseq.data.audio.speech_to_text_joint_dataset import (
     S2TJointDataConfig,
     SpeechToTextJointDatasetCreator,
@@ -160,7 +163,9 @@ class SpeechTextJointToTextTask(SpeechToTextTask):
             assert infer_tgt_lang_id != tgt_dict.unk()
         return cls(args, src_dict, tgt_dict, infer_tgt_lang_id=infer_tgt_lang_id)
 
-    def load_langpair_dataset(self, prepend_tgt_lang_tag=False, sampling_alpha=1.0, epoch=0):
+    def load_langpair_dataset(
+        self, prepend_tgt_lang_tag=False, sampling_alpha=1.0, epoch=0
+    ):
         lang_pairs = []
         text_dataset = None
         split = "train"
@@ -200,9 +205,7 @@ class SpeechTextJointToTextTask(SpeechToTextTask):
                     alpha=sampling_alpha,
                 )
                 lang_pairs = [
-                    ResamplingDataset(
-                        d, size_ratio=r, epoch=epoch, replace=(r >= 1.0)
-                    )
+                    ResamplingDataset(d, size_ratio=r, epoch=epoch, replace=(r >= 1.0))
                     for d, r in zip(lang_pairs, size_ratios)
                 ]
             return ConcatDataset(lang_pairs)
@@ -327,7 +330,6 @@ class SpeechTextJointToTextTask(SpeechToTextTask):
         data_buffer_size=0,
         disable_iterator_cache=False,
     ):
-
         if not isinstance(dataset, MultiModalityDataset):
             return super(SpeechTextJointToTextTask, self).get_batch_iterator(
                 dataset,

@@ -65,9 +65,15 @@ class Seq2SeqTrainer(Trainer):
             A dictionary containing the evaluation loss and the potential metrics computed from the predictions. The
             dictionary also contains the epoch number which comes from the training state.
         """
-        self._max_length = max_length if max_length is not None else self.args.generation_max_length
-        self._num_beams = num_beams if num_beams is not None else self.args.generation_num_beams
-        return super().evaluate(eval_dataset, ignore_keys=ignore_keys, metric_key_prefix=metric_key_prefix)
+        self._max_length = (
+            max_length if max_length is not None else self.args.generation_max_length
+        )
+        self._num_beams = (
+            num_beams if num_beams is not None else self.args.generation_num_beams
+        )
+        return super().evaluate(
+            eval_dataset, ignore_keys=ignore_keys, metric_key_prefix=metric_key_prefix
+        )
 
     def predict(
         self,
@@ -114,9 +120,15 @@ class Seq2SeqTrainer(Trainer):
             - metrics (`Dict[str, float]`, *optional*): The potential dictionary of metrics (if the dataset contained
               labels).
         """
-        self._max_length = max_length if max_length is not None else self.args.generation_max_length
-        self._num_beams = num_beams if num_beams is not None else self.args.generation_num_beams
-        return super().predict(test_dataset, ignore_keys=ignore_keys, metric_key_prefix=metric_key_prefix)
+        self._max_length = (
+            max_length if max_length is not None else self.args.generation_max_length
+        )
+        self._num_beams = (
+            num_beams if num_beams is not None else self.args.generation_num_beams
+        )
+        return super().predict(
+            test_dataset, ignore_keys=ignore_keys, metric_key_prefix=metric_key_prefix
+        )
 
     def prediction_step(
         self,
@@ -148,7 +160,10 @@ class Seq2SeqTrainer(Trainer):
 
         if not self.args.predict_with_generate or prediction_loss_only:
             return super().prediction_step(
-                model, inputs, prediction_loss_only=prediction_loss_only, ignore_keys=ignore_keys
+                model,
+                inputs,
+                prediction_loss_only=prediction_loss_only,
+                ignore_keys=ignore_keys,
             )
 
         has_labels = "labels" in inputs
@@ -156,8 +171,12 @@ class Seq2SeqTrainer(Trainer):
 
         # XXX: adapt synced_gpus for fairscale as well
         gen_kwargs = {
-            "max_length": self._max_length if self._max_length is not None else self.model.config.max_length,
-            "num_beams": self._num_beams if self._num_beams is not None else self.model.config.num_beams,
+            "max_length": self._max_length
+            if self._max_length is not None
+            else self.model.config.max_length,
+            "num_beams": self._num_beams
+            if self._num_beams is not None
+            else self.model.config.num_beams,
             "synced_gpus": True if is_deepspeed_zero3_enabled() else False,
         }
 
@@ -167,7 +186,10 @@ class Seq2SeqTrainer(Trainer):
         # prepare generation inputs
         # some encoder-decoder models can have varying encder's and thus
         # varying model input names
-        if hasattr(self.model, "encoder") and self.model.encoder.main_input_name != self.model.main_input_name:
+        if (
+            hasattr(self.model, "encoder")
+            and self.model.encoder.main_input_name != self.model.main_input_name
+        ):
             generation_inputs = inputs[self.model.encoder.main_input_name]
         else:
             generation_inputs = inputs[self.model.main_input_name]
@@ -178,16 +200,24 @@ class Seq2SeqTrainer(Trainer):
         )
         # in case the batch is shorter than max length, the output should be padded
         if generated_tokens.shape[-1] < gen_kwargs["max_length"]:
-            generated_tokens = self._pad_tensors_to_max_len(generated_tokens, gen_kwargs["max_length"])
+            generated_tokens = self._pad_tensors_to_max_len(
+                generated_tokens, gen_kwargs["max_length"]
+            )
 
         with torch.no_grad():
             with self.autocast_smart_context_manager():
                 outputs = model(**inputs)
             if has_labels:
                 if self.label_smoother is not None:
-                    loss = self.label_smoother(outputs, inputs["labels"]).mean().detach()
+                    loss = (
+                        self.label_smoother(outputs, inputs["labels"]).mean().detach()
+                    )
                 else:
-                    loss = (outputs["loss"] if isinstance(outputs, dict) else outputs[0]).mean().detach()
+                    loss = (
+                        (outputs["loss"] if isinstance(outputs, dict) else outputs[0])
+                        .mean()
+                        .detach()
+                    )
             else:
                 loss = None
 
@@ -207,13 +237,17 @@ class Seq2SeqTrainer(Trainer):
         if self.tokenizer is not None and hasattr(self.tokenizer, "pad_token_id"):
             # If PAD token is not defined at least EOS token has to be defined
             pad_token_id = (
-                self.tokenizer.pad_token_id if self.tokenizer.pad_token_id is not None else self.tokenizer.eos_token_id
+                self.tokenizer.pad_token_id
+                if self.tokenizer.pad_token_id is not None
+                else self.tokenizer.eos_token_id
             )
         else:
             if self.model.config.pad_token_id is not None:
                 pad_token_id = self.model.config.pad_token_id
             else:
-                raise ValueError("Pad_token_id must be set in the configuration of the model, in order to pad tensors")
+                raise ValueError(
+                    "Pad_token_id must be set in the configuration of the model, in order to pad tensors"
+                )
 
         padded_tensor = pad_token_id * torch.ones(
             (tensor.shape[0], max_length), dtype=tensor.dtype, device=tensor.device

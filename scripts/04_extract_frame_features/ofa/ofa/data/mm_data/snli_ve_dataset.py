@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 from io import BytesIO
@@ -42,14 +42,16 @@ def collate(samples, pad_idx, eos_idx):
 
     id = np.array([s["id"] for s in samples])
     src_tokens = merge("source")
-    src_lengths = torch.LongTensor([s["source"].ne(pad_idx).long().sum() for s in samples])
+    src_lengths = torch.LongTensor(
+        [s["source"].ne(pad_idx).long().sum() for s in samples]
+    )
 
-    patch_images = torch.stack([sample['patch_image'] for sample in samples], dim=0)
-    patch_masks = torch.cat([sample['patch_mask'] for sample in samples])
+    patch_images = torch.stack([sample["patch_image"] for sample in samples], dim=0)
+    patch_masks = torch.cat([sample["patch_mask"] for sample in samples])
 
     ref_dict = None
     if samples[0].get("ref_dict", None) is not None:
-        ref_dict = np.array([s['ref_dict'] for s in samples])
+        ref_dict = np.array([s["ref_dict"] for s in samples])
 
     constraint_masks = None
     if samples[0].get("constraint_mask", None) is not None:
@@ -57,7 +59,7 @@ def collate(samples, pad_idx, eos_idx):
 
     decoder_prompts = None
     if samples[0].get("decoder_prompt", None) is not None:
-        decoder_prompts = np.array([s['decoder_prompt'].tolist() for s in samples])
+        decoder_prompts = np.array([s["decoder_prompt"].tolist() for s in samples])
 
     prev_output_tokens = None
     target = None
@@ -82,12 +84,12 @@ def collate(samples, pad_idx, eos_idx):
             "src_lengths": src_lengths,
             "patch_images": patch_images,
             "patch_masks": patch_masks,
-            "prev_output_tokens": prev_output_tokens
+            "prev_output_tokens": prev_output_tokens,
         },
         "ref_dict": ref_dict,
         "constraint_masks": constraint_masks,
         "decoder_prompts": decoder_prompts,
-        "target": target
+        "target": target,
     }
 
     return batch
@@ -107,7 +109,7 @@ class SnliVeDataset(OFADataset):
         add_caption=False,
         constraint_trie=None,
         imagenet_default_mean_and_std=False,
-        prompt_type="none"
+        prompt_type="none",
     ):
         super().__init__(split, dataset, bpe, src_dict, tgt_dict)
         self.max_src_length = max_src_length
@@ -125,21 +127,25 @@ class SnliVeDataset(OFADataset):
             mean = [0.5, 0.5, 0.5]
             std = [0.5, 0.5, 0.5]
 
-        self.patch_resize_transform = transforms.Compose([
-            lambda image: image.convert("RGB"),
-            transforms.Resize((patch_image_size, patch_image_size), interpolation=Image.BICUBIC),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=mean, std=std),
-        ])
+        self.patch_resize_transform = transforms.Compose(
+            [
+                lambda image: image.convert("RGB"),
+                transforms.Resize(
+                    (patch_image_size, patch_image_size), interpolation=Image.BICUBIC
+                ),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=mean, std=std),
+            ]
+        )
 
     def __getitem__(self, index):
         uniq_id, image, hypothesis, caption, label = self.dataset[index]
-        if label == 'contradiction':
-            label = 'no'
-        elif label == 'entailment':
-            label = 'yes'
-        elif label == 'neutral':
-            label = 'maybe'
+        if label == "contradiction":
+            label = "no"
+        elif label == "entailment":
+            label = "yes"
+        elif label == "neutral":
+            label = "maybe"
         else:
             raise NotImplementedError
 
@@ -148,30 +154,36 @@ class SnliVeDataset(OFADataset):
         patch_mask = torch.tensor([True])
 
         hypothesis = self.pre_caption(hypothesis, self.max_src_length)
-        src_item = self.encode_text(' does the image describe " {} "?'.format(hypothesis))
+        src_item = self.encode_text(
+            ' does the image describe " {} "?'.format(hypothesis)
+        )
         tgt_item = self.encode_text(" {}".format(label))
         ref_dict = {label: 1.0}
 
         if self.add_caption:
             caption = self.pre_caption(caption, self.max_src_length)
-            src_item = self.encode_text(' can image and text1 " {} " imply text2 " {} "?'.format(caption, hypothesis))
+            src_item = self.encode_text(
+                ' can image and text1 " {} " imply text2 " {} "?'.format(
+                    caption, hypothesis
+                )
+            )
 
         src_item = torch.cat([self.bos_item, src_item, self.eos_item])
-        if self.prompt_type == 'none':
+        if self.prompt_type == "none":
             prev_output_item = torch.cat([self.bos_item, tgt_item])
             target_item = torch.cat([prev_output_item[1:], self.eos_item])
             decoder_prompt = self.bos_item
-        elif self.prompt_type == 'src':
+        elif self.prompt_type == "src":
             prev_output_item = torch.cat([src_item, tgt_item])
             target_item = torch.cat([prev_output_item[1:], self.eos_item])
             decoder_prompt = src_item
-        elif self.prompt_type == 'prev_output':
+        elif self.prompt_type == "prev_output":
             prev_output_item = torch.cat([src_item[:-1], tgt_item])
             target_item = torch.cat([prev_output_item[1:], self.eos_item])
             decoder_prompt = src_item[:-1]
         else:
             raise NotImplementedError
-        target_item[:-len(tgt_item)-1] = self.tgt_dict.pad()
+        target_item[: -len(tgt_item) - 1] = self.tgt_dict.pad()
 
         example = {
             "id": uniq_id,
@@ -186,9 +198,13 @@ class SnliVeDataset(OFADataset):
         if self.constraint_trie is not None:
             constraint_mask = torch.zeros((len(target_item), len(self.tgt_dict))).bool()
             start_idx = len(target_item) - len(tgt_item) - 1
-            for i in range(len(target_item)-len(tgt_item)-1, len(target_item)):
-                constraint_prefix_token = [self.tgt_dict.bos()] + target_item[start_idx:i].tolist()
-                constraint_nodes = self.constraint_trie.get_next_layer(constraint_prefix_token)
+            for i in range(len(target_item) - len(tgt_item) - 1, len(target_item)):
+                constraint_prefix_token = [self.tgt_dict.bos()] + target_item[
+                    start_idx:i
+                ].tolist()
+                constraint_nodes = self.constraint_trie.get_next_layer(
+                    constraint_prefix_token
+                )
                 constraint_mask[i][constraint_nodes] = True
             example["constraint_mask"] = constraint_mask
         return example

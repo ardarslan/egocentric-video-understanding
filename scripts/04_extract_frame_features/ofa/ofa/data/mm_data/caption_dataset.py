@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 from io import BytesIO
@@ -43,16 +43,20 @@ def collate(samples, pad_idx, eos_idx):
 
     id = np.array([s["id"] for s in samples])
     src_tokens = merge("source")
-    src_lengths = torch.LongTensor([s["source"].ne(pad_idx).long().sum() for s in samples])
+    src_lengths = torch.LongTensor(
+        [s["source"].ne(pad_idx).long().sum() for s in samples]
+    )
 
-    patch_images = torch.stack([sample['patch_image'] for sample in samples], dim=0)
-    patch_masks = torch.cat([sample['patch_mask'] for sample in samples])
+    patch_images = torch.stack([sample["patch_image"] for sample in samples], dim=0)
+    patch_masks = torch.cat([sample["patch_mask"] for sample in samples])
 
     prev_output_tokens = None
     target = None
     if samples[0].get("target", None) is not None:
         target = merge("target")
-        tgt_lengths = torch.LongTensor([s["target"].ne(pad_idx).long().sum() for s in samples])
+        tgt_lengths = torch.LongTensor(
+            [s["target"].ne(pad_idx).long().sum() for s in samples]
+        )
         ntokens = tgt_lengths.sum().item()
 
         if samples[0].get("prev_output_tokens", None) is not None:
@@ -69,7 +73,7 @@ def collate(samples, pad_idx, eos_idx):
             "src_lengths": src_lengths,
             "patch_images": patch_images,
             "patch_masks": patch_masks,
-            "prev_output_tokens": prev_output_tokens
+            "prev_output_tokens": prev_output_tokens,
         },
         "target": target,
     }
@@ -89,7 +93,7 @@ class CaptionDataset(OFADataset):
         max_tgt_length=30,
         patch_image_size=224,
         imagenet_default_mean_and_std=False,
-        scst=False
+        scst=False,
     ):
         super().__init__(split, dataset, bpe, src_dict, tgt_dict)
         self.max_src_length = max_src_length
@@ -106,12 +110,16 @@ class CaptionDataset(OFADataset):
             mean = [0.5, 0.5, 0.5]
             std = [0.5, 0.5, 0.5]
 
-        self.patch_resize_transform = transforms.Compose([
-            lambda image: image.convert("RGB"),
-            transforms.Resize((patch_image_size, patch_image_size), interpolation=Image.BICUBIC),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=mean, std=std),
-        ])
+        self.patch_resize_transform = transforms.Compose(
+            [
+                lambda image: image.convert("RGB"),
+                transforms.Resize(
+                    (patch_image_size, patch_image_size), interpolation=Image.BICUBIC
+                ),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=mean, std=std),
+            ]
+        )
 
     def __getitem__(self, index):
         uniq_id, image, caption = self.dataset[index]
@@ -120,14 +128,17 @@ class CaptionDataset(OFADataset):
         patch_image = self.patch_resize_transform(image)
         patch_mask = torch.tensor([True])
 
-        if self.split == 'train' and not self.scst:
+        if self.split == "train" and not self.scst:
             caption = caption.translate(self.transtab).strip()
             caption_token_list = caption.strip().split()
-            tgt_caption = ' '.join(caption_token_list[:self.max_tgt_length])
+            tgt_caption = " ".join(caption_token_list[: self.max_tgt_length])
         else:
-            caption = ' '.join(caption.strip().split())
-            caption_list = [cap.translate(self.transtab).strip() for cap in caption.strip().split('&&')]
-            tgt_caption = '&&'.join(caption_list)
+            caption = " ".join(caption.strip().split())
+            caption_list = [
+                cap.translate(self.transtab).strip()
+                for cap in caption.strip().split("&&")
+            ]
+            tgt_caption = "&&".join(caption_list)
         src_item = self.encode_text(" what does the image describe?")
         tgt_item = self.encode_text(" {}".format(tgt_caption))
 
@@ -141,7 +152,7 @@ class CaptionDataset(OFADataset):
             "patch_image": patch_image,
             "patch_mask": patch_mask,
             "target": target_item,
-            "prev_output_tokens": prev_output_item
+            "prev_output_tokens": prev_output_item,
         }
         return example
 

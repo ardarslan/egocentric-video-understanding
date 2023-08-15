@@ -4,15 +4,13 @@
 from detectron2.config import CfgNode as CN
 
 
-
 def add_hos_config(cfg):
     """
     Add config for HOS.
     """
     # cfg.MODEL.ROI_BOX_HEAD.PREDICTOR_NAME = "HOSFastRCNNOutputLayers"
-    
-    
-    
+
+
 def add_pointrend_config(cfg):
     """
     Add config for PointRend.
@@ -34,7 +32,7 @@ def add_pointrend_config(cfg):
 
     cfg.MODEL.POINT_HEAD = CN()
     cfg.MODEL.POINT_HEAD.NAME = "StandardPointHead"
-    cfg.MODEL.POINT_HEAD.NUM_CLASSES = 3 # 2+1(background)
+    cfg.MODEL.POINT_HEAD.NUM_CLASSES = 3  # 2+1(background)
     # Names of the input feature maps to be used by a mask point head.
     cfg.MODEL.POINT_HEAD.IN_FEATURES = ("p2",)
     # Number of points sampled during training for a mask point head.

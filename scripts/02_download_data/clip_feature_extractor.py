@@ -45,11 +45,17 @@ if __name__ == "__main__":
     os.makedirs(args.slowfast_clip_features_folder_path, exist_ok=True)
     os.makedirs(args.omnivore_clip_features_folder_path, exist_ok=True)
 
-    with open(os.path.join(args.annotations_folder_path, "moments_train.json"), "r") as moments_train_json_file:
+    with open(
+        os.path.join(args.annotations_folder_path, "moments_train.json"), "r"
+    ) as moments_train_json_file:
         moments_train_json_dict = json.load(moments_train_json_file)
-    with open(os.path.join(args.annotations_folder_path, "moments_val.json"), "r") as moments_val_json_file:
+    with open(
+        os.path.join(args.annotations_folder_path, "moments_val.json"), "r"
+    ) as moments_val_json_file:
         moments_val_json_dict = json.load(moments_val_json_file)
-    with open(os.path.join(args.annotations_folder_path, "moments_test_unannotated.json"), "r") as moments_test_json_file:
+    with open(
+        os.path.join(args.annotations_folder_path, "moments_test_unannotated.json"), "r"
+    ) as moments_test_json_file:
         moments_test_json_dict = json.load(moments_test_json_file)
 
     with open(args.all_clip_names_file_path, "r") as reader:
@@ -69,18 +75,34 @@ if __name__ == "__main__":
                 if clip_uid in all_clip_names:
                     if slowfast_video_features is None:
                         try:
-                            slowfast_video_features = torch.load(os.path.join(args.slowfast_video_features_folder_path, video_uid + ".pt")).numpy()
+                            slowfast_video_features = torch.load(
+                                os.path.join(
+                                    args.slowfast_video_features_folder_path,
+                                    video_uid + ".pt",
+                                )
+                            ).numpy()
                         except Exception as e:
                             e = ""
-                            print(f"Slowfast features are not available for video with video uid: {video_uid}." + e)
+                            print(
+                                f"Slowfast features are not available for video with video uid: {video_uid}."
+                                + e
+                            )
                             continue
 
                     if omnivore_video_features is None:
                         try:
-                            omnivore_video_features = torch.load(os.path.join(args.omnivore_video_features_folder_path, video_uid + ".pt")).numpy()
+                            omnivore_video_features = torch.load(
+                                os.path.join(
+                                    args.omnivore_video_features_folder_path,
+                                    video_uid + ".pt",
+                                )
+                            ).numpy()
                         except Exception as e:
                             e = ""
-                            print(f"Omnivore features are not available for video with video uid: {video_uid}." + e)
+                            print(
+                                f"Omnivore features are not available for video with video uid: {video_uid}."
+                                + e
+                            )
                             continue
 
                     ss = max(float(clip_dict["video_start_sec"]), 0)
@@ -119,9 +141,13 @@ if __name__ == "__main__":
 
                     torch.save(
                         torch.tensor(slowfast_clip_features),
-                        os.path.join(args.slowfast_clip_features_folder_path, clip_uid + ".pt"),
+                        os.path.join(
+                            args.slowfast_clip_features_folder_path, clip_uid + ".pt"
+                        ),
                     )
                     torch.save(
                         torch.tensor(omnivore_clip_features),
-                        os.path.join(args.omnivore_clip_features_folder_path, clip_uid + ".pt"),
+                        os.path.join(
+                            args.omnivore_clip_features_folder_path, clip_uid + ".pt"
+                        ),
                     )

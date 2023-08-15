@@ -70,7 +70,9 @@ ELECTRA_TINY = "hf-internal-testing/tiny-electra"
 XLNET_TINY = "sshleifer/tiny-xlnet-base-cased"
 BERT_TINY = "hf-internal-testing/tiny-bert"
 
-FIXTURE_DIRECTORY = os.path.join(dirname(dirname(os.path.abspath(__file__))), "fixtures")
+FIXTURE_DIRECTORY = os.path.join(
+    dirname(dirname(os.path.abspath(__file__))), "fixtures"
+)
 ROOT_DIRECTORY = os.path.join(dirname(dirname(dirname(os.path.abspath(__file__)))))
 
 # TODO: to add:
@@ -270,7 +272,9 @@ class TestDeepSpeedModelZoo(TestCasePlus):
         # keep for quick debug
         # print(" ".join([f"\nPYTHONPATH={self.src_dir_str}"] +cmd)); die
         subprocess.check_call(cmd, shell=True)
-        assert os.path.exists(recovered_model_path), f"{recovered_model_path} was not found"
+        assert os.path.exists(
+            recovered_model_path
+        ), f"{recovered_model_path} was not found"
 
         # possibly could also test that the resulting saved model is usable but given that we use
         # random models we won't know if it's any good

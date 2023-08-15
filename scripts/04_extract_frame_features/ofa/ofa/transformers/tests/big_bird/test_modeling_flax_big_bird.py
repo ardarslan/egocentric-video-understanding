@@ -19,7 +19,11 @@ import numpy as np
 from transformers import BigBirdConfig, is_flax_available
 from transformers.testing_utils import require_flax, slow
 
-from ..test_modeling_flax_common import FlaxModelTesterMixin, ids_tensor, random_attention_mask
+from ..test_modeling_flax_common import (
+    FlaxModelTesterMixin,
+    ids_tensor,
+    random_attention_mask,
+)
 
 
 if is_flax_available():
@@ -100,7 +104,9 @@ class FlaxBigBirdModelTester(unittest.TestCase):
 
         token_type_ids = None
         if self.use_token_type_ids:
-            token_type_ids = ids_tensor([self.batch_size, self.seq_length], self.type_vocab_size)
+            token_type_ids = ids_tensor(
+                [self.batch_size, self.seq_length], self.type_vocab_size
+            )
 
         config = BigBirdConfig(
             vocab_size=self.vocab_size,
@@ -127,13 +133,16 @@ class FlaxBigBirdModelTester(unittest.TestCase):
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
         config, input_ids, token_type_ids, attention_mask = config_and_inputs
-        inputs_dict = {"input_ids": input_ids, "token_type_ids": token_type_ids, "attention_mask": attention_mask}
+        inputs_dict = {
+            "input_ids": input_ids,
+            "token_type_ids": token_type_ids,
+            "attention_mask": attention_mask,
+        }
         return config, inputs_dict
 
 
 @require_flax
 class FlaxBigBirdModelTest(FlaxModelTesterMixin, unittest.TestCase):
-
     all_model_classes = (
         (
             FlaxBigBirdModel,
@@ -157,7 +166,9 @@ class FlaxBigBirdModelTest(FlaxModelTesterMixin, unittest.TestCase):
     @slow
     def test_model_from_pretrained(self):
         for model_class_name in self.all_model_classes:
-            model = model_class_name.from_pretrained("google/bigbird-roberta-base", from_pt=True)
+            model = model_class_name.from_pretrained(
+                "google/bigbird-roberta-base", from_pt=True
+            )
             outputs = model(np.ones((1, 1)))
             self.assertIsNotNone(outputs)
 
@@ -177,7 +188,9 @@ class FlaxBigBirdModelTest(FlaxModelTesterMixin, unittest.TestCase):
 
                 @jax.jit
                 def model_jitted(input_ids, attention_mask=None, **kwargs):
-                    return model(input_ids=input_ids, attention_mask=attention_mask, **kwargs)
+                    return model(
+                        input_ids=input_ids, attention_mask=attention_mask, **kwargs
+                    )
 
                 with self.subTest("JIT Enabled"):
                     jitted_outputs = model_jitted(**prepared_inputs_dict).to_tuple()
@@ -188,5 +201,4 @@ class FlaxBigBirdModelTest(FlaxModelTesterMixin, unittest.TestCase):
 
                 self.assertEqual(len(outputs), len(jitted_outputs))
                 for jitted_output, output in zip(jitted_outputs, outputs):
-
                     self.assertEqual(jitted_output.shape, output.shape)

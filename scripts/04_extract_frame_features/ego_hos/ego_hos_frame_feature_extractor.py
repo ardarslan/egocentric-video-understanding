@@ -40,7 +40,18 @@ class EgoHOSFrameFeatureExtractor(FrameFeatureExtractor):
 
     @property
     def column_names(self):
-        return ["frame_index", "detection_index", "x_top_left", "y_top_left", "x_bottom_right", "y_bottom_right", "text_label", "detection_score", "object_detection_feature_name", "object_label"]
+        return [
+            "frame_index",
+            "detection_index",
+            "x_top_left",
+            "y_top_left",
+            "x_bottom_right",
+            "y_bottom_right",
+            "text_label",
+            "detection_score",
+            "object_detection_feature_name",
+            "object_label",
+        ]
 
     def inference_segmentor(model, img, previous_results):
         """Inference image(s) with the segmentor.
@@ -76,22 +87,43 @@ class EgoHOSFrameFeatureExtractor(FrameFeatureExtractor):
             data["img_metas"][0][0]["cb_dir"] = cfg["cb_dir"]
 
         with torch.no_grad():
-            result = model(return_loss=False, rescale=True, previous_results=previous_results, **data)
+            result = model(
+                return_loss=False,
+                rescale=True,
+                previous_results=previous_results,
+                **data
+            )
         return result
 
-    def predictor_function(self, frame_indices_batch: List[int], frames_batch: List[np.array], unidet_features_batch: List[List[Dict[str, Any]]], gsam_features_batch: List[List[Dict[str, Any]]]):
+    def predictor_function(
+        self,
+        frame_indices_batch: List[int],
+        frames_batch: List[np.array],
+        unidet_features_batch: List[List[Dict[str, Any]]],
+        gsam_features_batch: List[List[Dict[str, Any]]],
+    ):
         predictions = []
-        for frame_index, frame, unidet_feature_rows, gsam_feature_rows in zip(frame_indices_batch, frames_batch, unidet_features_batch, gsam_features_batch):
-            object_detection_feature_name_object_detection_feature_rows_mapping = {"unidet": unidet_feature_rows, "gsam": gsam_feature_rows}
-            seg_twohands_result = self.inference_segmentor(self.seg_twohands_model, frame, previous_results={})[0].astype(np.uint8)
+        for frame_index, frame, unidet_feature_rows, gsam_feature_rows in zip(
+            frame_indices_batch,
+            frames_batch,
+            unidet_features_batch,
+            gsam_features_batch,
+        ):
+            object_detection_feature_name_object_detection_feature_rows_mapping = {
+                "unidet": unidet_feature_rows,
+                "gsam": gsam_feature_rows,
+            }
+            seg_twohands_result = self.inference_segmentor(
+                self.seg_twohands_model, frame, previous_results={}
+            )[0].astype(np.uint8)
 
             twohands_to_cb_result = self.inference_segmentor(
                 self.twohands_to_cb_model,
                 frame,
-                previous_results={"seg_twohands_result": Image.fromarray(seg_twohands_result)},
-            )[
-                0
-            ].astype(np.uint8)
+                previous_results={
+                    "seg_twohands_result": Image.fromarray(seg_twohands_result)
+                },
+            )[0].astype(np.uint8)
 
             twohands_cb_to_obj2_result = self.inference_segmentor(
                 self.twohands_cb_to_obj2_model,
@@ -131,23 +163,55 @@ class EgoHOSFrameFeatureExtractor(FrameFeatureExtractor):
                 "both_hands_second_order": both_hands_second_order_object_pixels,
             }
 
-            for object_detection_feature_name, object_detection_feature_rows in object_detection_feature_name_object_detection_feature_rows_mapping.items():
+            for (
+                object_detection_feature_name,
+                object_detection_feature_rows,
+            ) in (
+                object_detection_feature_name_object_detection_feature_rows_mapping.items()
+            ):
                 for object_detection_feature_row in object_detection_feature_rows:
-                    x_top_left = np.round(object_detection_feature_row["x_top_left"]).astype(np.int32)
-                    y_top_left = np.round(object_detection_feature_row["y_top_left"]).astype(np.int32)
-                    x_bottom_right = np.round(object_detection_feature_row["x_bottom_right"]).astype(np.int32)
-                    y_bottom_right = np.round(object_detection_feature_row["y_bottom_right"]).astype(np.int32)
+                    x_top_left = np.round(
+                        object_detection_feature_row["x_top_left"]
+                    ).astype(np.int32)
+                    y_top_left = np.round(
+                        object_detection_feature_row["y_top_left"]
+                    ).astype(np.int32)
+                    x_bottom_right = np.round(
+                        object_detection_feature_row["x_bottom_right"]
+                    ).astype(np.int32)
+                    y_bottom_right = np.round(
+                        object_detection_feature_row["y_bottom_right"]
+                    ).astype(np.int32)
 
                     current_unidet_bounding_box_pixels = np.zeros(frame.shape)
-                    current_unidet_bounding_box_pixels[y_top_left:y_bottom_right, x_top_left:x_bottom_right] = 1
+                    current_unidet_bounding_box_pixels[
+                        y_top_left:y_bottom_right, x_top_left:x_bottom_right
+                    ] = 1
 
-                    for object_label, object_pixels in object_label_object_pixels_mapping.items():
-                        number_of_object_pixels_inside_the_bounding_box = (object_pixels * current_unidet_bounding_box_pixels).sum()
-                        if number_of_object_pixels_inside_the_bounding_box < diagonal_length:
+                    for (
+                        object_label,
+                        object_pixels,
+                    ) in object_label_object_pixels_mapping.items():
+                        number_of_object_pixels_inside_the_bounding_box = (
+                            object_pixels * current_unidet_bounding_box_pixels
+                        ).sum()
+                        if (
+                            number_of_object_pixels_inside_the_bounding_box
+                            < diagonal_length
+                        ):
                             continue
-                        number_of_object_pixels_outside_the_bounding_box = (object_pixels * (1 - current_unidet_bounding_box_pixels)).sum()
+                        number_of_object_pixels_outside_the_bounding_box = (
+                            object_pixels * (1 - current_unidet_bounding_box_pixels)
+                        ).sum()
 
-                        if number_of_object_pixels_inside_the_bounding_box / (float(number_of_object_pixels_outside_the_bounding_box) + 1e-6) >= 0.75:
+                        if (
+                            number_of_object_pixels_inside_the_bounding_box
+                            / (
+                                float(number_of_object_pixels_outside_the_bounding_box)
+                                + 1e-6
+                            )
+                            >= 0.75
+                        ):
                             predictions.append(
                                 (
                                     frame_index,

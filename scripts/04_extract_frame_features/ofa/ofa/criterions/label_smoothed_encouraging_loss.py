@@ -43,23 +43,20 @@ class AdjustLabelSmoothedEncouragingLossConfig(FairseqDataclass):
         default=0,
         metadata={"help": "steps for discarding bad samples"},
     )
-    use_rdrop: bool = field(
-        default=False, metadata={"help": "use R-Drop"}
-    )
-    reg_alpha: float = field(
-        default=1.0, metadata={"help": "weight for R-Drop"}
-    )
+    use_rdrop: bool = field(default=False, metadata={"help": "use R-Drop"})
+    reg_alpha: float = field(default=1.0, metadata={"help": "weight for R-Drop"})
     sample_patch_num: int = field(
         default=196, metadata={"help": "sample patchs for v1"}
     )
     constraint_range: Optional[str] = field(
-        default=None,
-        metadata={"help": "constraint range"}
+        default=None, metadata={"help": "constraint range"}
     )
     log_end: float = field(
         default=0.75,
-        metadata={"help": "higher log_end is for cases with higher performance,"
-                          " we recommend 0.75 or 0.5 as your first try."}
+        metadata={
+            "help": "higher log_end is for cases with higher performance,"
+            " we recommend 0.75 or 0.5 as your first try."
+        },
     )
     drop_best_ratio: float = field(
         default=0.0,
@@ -71,14 +68,13 @@ class AdjustLabelSmoothedEncouragingLossConfig(FairseqDataclass):
     )
 
 
-
 def construct_rdrop_sample(x):
     if isinstance(x, dict):
         for key in x:
             x[key] = construct_rdrop_sample(x[key])
         return x
     elif isinstance(x, torch.Tensor):
-        return x.repeat(2, *([1] * (x.dim()-1)))
+        return x.repeat(2, *([1] * (x.dim() - 1)))
     elif isinstance(x, int):
         return x * 2
     elif isinstance(x, np.ndarray):
@@ -88,23 +84,37 @@ def construct_rdrop_sample(x):
 
 
 def kl_loss(p, q):
-    p_loss = F.kl_div(p, torch.exp(q), reduction='sum')
-    q_loss = F.kl_div(q, torch.exp(p), reduction='sum')
+    p_loss = F.kl_div(p, torch.exp(q), reduction="sum")
+    q_loss = F.kl_div(q, torch.exp(p), reduction="sum")
     loss = (p_loss + q_loss) / 2
     return loss
 
 
 def label_smoothed_nll_loss(
-        lprobs, target, epsilon, update_num, reduce=True,
-        drop_worst_ratio=0.0, drop_worst_after=0, use_rdrop=False, reg_alpha=1.0,
-        constraint_masks=None, constraint_start=None, constraint_end=None,        drop_best_ratio=0.0,
-        drop_best_after=0,
+    lprobs,
+    target,
+    epsilon,
+    update_num,
+    reduce=True,
+    drop_worst_ratio=0.0,
+    drop_worst_after=0,
+    use_rdrop=False,
+    reg_alpha=1.0,
+    constraint_masks=None,
+    constraint_start=None,
+    constraint_end=None,
+    drop_best_ratio=0.0,
+    drop_best_after=0,
 ):
     if target.dim() == lprobs.dim() - 1:
         target = target.unsqueeze(-1)
     nll_loss = -lprobs.gather(dim=-1, index=target).squeeze(-1)
     if constraint_masks is not None:
-        smooth_loss = -lprobs.masked_fill(~constraint_masks, 0).sum(dim=-1, keepdim=True).squeeze(-1)
+        smooth_loss = (
+            -lprobs.masked_fill(~constraint_masks, 0)
+            .sum(dim=-1, keepdim=True)
+            .squeeze(-1)
+        )
         eps_i = epsilon / (constraint_masks.sum(1) - 1 + 1e-6)
     elif constraint_start is not None and constraint_end is not None:
         constraint_range = [0, 1, 2, 3] + list(range(constraint_start, constraint_end))
@@ -117,17 +127,27 @@ def label_smoothed_nll_loss(
     if drop_worst_ratio > 0 and update_num > drop_worst_after:
         if use_rdrop:
             true_batch_size = loss.size(0) // 2
-            _, indices = torch.topk(loss[:true_batch_size], k=int(true_batch_size * (1 - drop_worst_ratio)), largest=False)
-            loss = torch.cat([loss[indices], loss[indices+true_batch_size]])
-            nll_loss = torch.cat([nll_loss[indices], nll_loss[indices+true_batch_size]])
-            lprobs = torch.cat([lprobs[indices], lprobs[indices+true_batch_size]])
+            _, indices = torch.topk(
+                loss[:true_batch_size],
+                k=int(true_batch_size * (1 - drop_worst_ratio)),
+                largest=False,
+            )
+            loss = torch.cat([loss[indices], loss[indices + true_batch_size]])
+            nll_loss = torch.cat(
+                [nll_loss[indices], nll_loss[indices + true_batch_size]]
+            )
+            lprobs = torch.cat([lprobs[indices], lprobs[indices + true_batch_size]])
         else:
-            loss, indices = torch.topk(loss, k=int(loss.shape[0] * (1 - drop_worst_ratio)), largest=False)
+            loss, indices = torch.topk(
+                loss, k=int(loss.shape[0] * (1 - drop_worst_ratio)), largest=False
+            )
             nll_loss = nll_loss[indices]
             lprobs = lprobs[indices]
             target = target[indices]
     if update_num > drop_best_after:
-        loss, indices = torch.topk(loss, k=int(loss.shape[0] * (1 - drop_best_ratio)), largest=True)
+        loss, indices = torch.topk(
+            loss, k=int(loss.shape[0] * (1 - drop_best_ratio)), largest=True
+        )
         nll_loss = nll_loss[indices]
         lprobs = lprobs[indices]
         target = target[indices]
@@ -140,16 +160,19 @@ def label_smoothed_nll_loss(
         p = lprobs[:true_batch_size]
         q = lprobs[true_batch_size:]
         if constraint_start is not None and constraint_end is not None:
-            constraint_range = [0, 1, 2, 3] + list(range(constraint_start, constraint_end))
+            constraint_range = [0, 1, 2, 3] + list(
+                range(constraint_start, constraint_end)
+            )
             p = p[:, constraint_range]
             q = q[:, constraint_range]
         loss += kl_loss(p, q) * reg_alpha
 
-    return loss, nll_loss, ntokens,lprobs,target
+    return loss, nll_loss, ntokens, lprobs, target
 
 
 @register_criterion(
-    "adjust_label_smoothed_encouraging_loss", dataclass=AdjustLabelSmoothedEncouragingLossConfig
+    "adjust_label_smoothed_encouraging_loss",
+    dataclass=AdjustLabelSmoothedEncouragingLossConfig,
 )
 class AdjustLabelSmoothedEncouragingLossCriterion(FairseqCriterion):
     def __init__(
@@ -185,13 +208,14 @@ class AdjustLabelSmoothedEncouragingLossCriterion(FairseqCriterion):
         self.constraint_start = None
         self.constraint_end = None
         if constraint_range is not None:
-            constraint_start, constraint_end = constraint_range.split(',')
+            constraint_start, constraint_end = constraint_range.split(",")
             self.constraint_start = int(constraint_start)
             self.constraint_end = int(constraint_end)
         self.log_end = log_end
         self.drop_best_ratio = drop_best_ratio
         self.drop_best_after = drop_best_after
-        print('el, self.log_end=', self.log_end)
+        print("el, self.log_end=", self.log_end)
+
     # @staticmethod
     # def add_args(parser):
     #     """Add criterion-specific arguments to the parser."""
@@ -208,18 +232,24 @@ class AdjustLabelSmoothedEncouragingLossCriterion(FairseqCriterion):
         """
         if isinstance(sample, list):
             if self.sample_patch_num > 0:
-                sample[0]['net_input']['sample_patch_num'] = self.sample_patch_num
-            loss_v1, sample_size_v1, logging_output_v1 = self.forward(model, sample[0], update_num, reduce)
-            loss_v2, sample_size_v2, logging_output_v2 = self.forward(model, sample[1], update_num, reduce)
+                sample[0]["net_input"]["sample_patch_num"] = self.sample_patch_num
+            loss_v1, sample_size_v1, logging_output_v1 = self.forward(
+                model, sample[0], update_num, reduce
+            )
+            loss_v2, sample_size_v2, logging_output_v2 = self.forward(
+                model, sample[1], update_num, reduce
+            )
             loss = loss_v1 / sample_size_v1 + loss_v2 / sample_size_v2
             sample_size = 1
             logging_output = {
                 "loss": loss.data,
                 "loss_v1": loss_v1.data,
                 "loss_v2": loss_v2.data,
-                "nll_loss": logging_output_v1["nll_loss"].data / sample_size_v1 + logging_output_v2["nll_loss"].data / sample_size_v2,
+                "nll_loss": logging_output_v1["nll_loss"].data / sample_size_v1
+                + logging_output_v2["nll_loss"].data / sample_size_v2,
                 "ntokens": logging_output_v1["ntokens"] + logging_output_v2["ntokens"],
-                "nsentences": logging_output_v1["nsentences"] + logging_output_v2["nsentences"],
+                "nsentences": logging_output_v1["nsentences"]
+                + logging_output_v2["nsentences"],
                 "sample_size": 1,
                 "sample_size_v1": sample_size_v1,
                 "sample_size_v2": sample_size_v2,
@@ -230,10 +260,10 @@ class AdjustLabelSmoothedEncouragingLossCriterion(FairseqCriterion):
             construct_rdrop_sample(sample)
 
         net_output = model(**sample["net_input"])
-        loss, nll_loss, ntokens = self.compute_loss(model, net_output, sample, update_num, reduce=reduce)
-        sample_size = (
-            sample["target"].size(0) if self.sentence_avg else ntokens
+        loss, nll_loss, ntokens = self.compute_loss(
+            model, net_output, sample, update_num, reduce=reduce
         )
+        sample_size = sample["target"].size(0) if self.sentence_avg else ntokens
         logging_output = {
             "loss": loss.data,
             "nll_loss": nll_loss.data,
@@ -248,34 +278,44 @@ class AdjustLabelSmoothedEncouragingLossCriterion(FairseqCriterion):
         return loss, sample_size, logging_output
 
     def get_lprobs_and_target(self, model, net_output, sample):
-        conf = sample['conf'][:, None, None] if 'conf' in sample and sample['conf'] is not None else 1
+        conf = (
+            sample["conf"][:, None, None]
+            if "conf" in sample and sample["conf"] is not None
+            else 1
+        )
         constraint_masks = None
         if "constraint_masks" in sample and sample["constraint_masks"] is not None:
             constraint_masks = sample["constraint_masks"]
             net_output[0].masked_fill_(~constraint_masks, -math.inf)
         if self.constraint_start is not None and self.constraint_end is not None:
-            net_output[0][:, :, 4:self.constraint_start] = -math.inf
-            net_output[0][:, :, self.constraint_end:] = -math.inf
+            net_output[0][:, :, 4 : self.constraint_start] = -math.inf
+            net_output[0][:, :, self.constraint_end :] = -math.inf
         lprobs = model.get_normalized_probs(net_output, log_probs=True) * conf
         target = model.get_targets(sample, net_output)
         if self.ignore_prefix_size > 0:
             lprobs = lprobs[:, self.ignore_prefix_size :, :].contiguous()
             target = target[:, self.ignore_prefix_size :].contiguous()
             if constraint_masks is not None:
-                constraint_masks = constraint_masks[:, self.ignore_prefix_size :, :].contiguous()
+                constraint_masks = constraint_masks[
+                    :, self.ignore_prefix_size :, :
+                ].contiguous()
         if self.ignore_eos:
             bsz, seq_len, embed_dim = lprobs.size()
             eos_indices = target.eq(self.task.tgt_dict.eos())
-            lprobs = lprobs[~eos_indices].reshape(bsz, seq_len-1, embed_dim)
-            target = target[~eos_indices].reshape(bsz, seq_len-1)
+            lprobs = lprobs[~eos_indices].reshape(bsz, seq_len - 1, embed_dim)
+            target = target[~eos_indices].reshape(bsz, seq_len - 1)
             if constraint_masks is not None:
-                constraint_masks = constraint_masks[~eos_indices].reshape(bsz, seq_len-1, embed_dim)
+                constraint_masks = constraint_masks[~eos_indices].reshape(
+                    bsz, seq_len - 1, embed_dim
+                )
         if constraint_masks is not None:
             constraint_masks = constraint_masks.view(-1, constraint_masks.size(-1))
         return lprobs.view(-1, lprobs.size(-1)), target.view(-1), constraint_masks
 
     def compute_loss(self, model, net_output, sample, update_num, reduce=True):
-        lprobs, target, constraint_masks = self.get_lprobs_and_target(model, net_output, sample)
+        lprobs, target, constraint_masks = self.get_lprobs_and_target(
+            model, net_output, sample
+        )
         if constraint_masks is not None:
             constraint_masks = constraint_masks[target != self.padding_idx]
         lprobs = lprobs[target != self.padding_idx]
@@ -292,25 +332,31 @@ class AdjustLabelSmoothedEncouragingLossCriterion(FairseqCriterion):
             reg_alpha=self.reg_alpha,
             constraint_masks=constraint_masks,
             constraint_start=self.constraint_start,
-            constraint_end=self.constraint_end
+            constraint_end=self.constraint_end,
         )
         # for encouraging loss
         probs = torch.exp(lprobs)
-        bonus = torch.log(torch.clamp((torch.ones_like(probs) - probs), min=1e-5))  # likelihood bonus
+        bonus = torch.log(
+            torch.clamp((torch.ones_like(probs) - probs), min=1e-5)
+        )  # likelihood bonus
         log_end = self.log_end
         if log_end != 1.0:  # e.g. 0.9
             y_log_end = torch.log(torch.ones_like(probs) - log_end)
-            bonus_after_log_end = 1 / (log_end - torch.ones_like(probs)) * (probs - log_end) + y_log_end
+            bonus_after_log_end = (
+                1 / (log_end - torch.ones_like(probs)) * (probs - log_end) + y_log_end
+            )
             # x:log_end, y  torch.log(torch.clamp((torch.ones_like(probs) - probs), min=self.cl_eps))
             bonus = torch.where(probs > log_end, bonus_after_log_end, bonus)
         c_loss = F.nll_loss(
             -bonus,
             target.view(-1),
-            reduction='sum',
+            reduction="sum",
         )
         smoothing_c_loss = bonus.sum(dim=-1)
         smoothing_c_loss = smoothing_c_loss.sum()
-        c_loss = c_loss * (1 - self.eps) + (self.eps / lprobs.size(-1)) * smoothing_c_loss
+        c_loss = (
+            c_loss * (1 - self.eps) + (self.eps / lprobs.size(-1)) * smoothing_c_loss
+        )
         loss = loss + c_loss
         # end for encouraging loss
         return loss, nll_loss, ntokens
@@ -337,37 +383,29 @@ class AdjustLabelSmoothedEncouragingLossCriterion(FairseqCriterion):
         sample_size_v1 = sum(log.get("sample_size_v1", 0) for log in logging_outputs)
         sample_size_v2 = sum(log.get("sample_size_v2", 0) for log in logging_outputs)
 
+        metrics.log_scalar("loss", loss_sum / sample_size, sample_size, round=3)
         metrics.log_scalar(
-            "loss", loss_sum / sample_size, sample_size, round=3
+            "loss_v1",
+            loss_sum_v1 / max(sample_size_v1, 1),
+            max(sample_size_v1, 1),
+            round=3,
         )
         metrics.log_scalar(
-            "loss_v1", loss_sum_v1 / max(sample_size_v1, 1), max(sample_size_v1, 1), round=3
+            "loss_v2",
+            loss_sum_v2 / max(sample_size_v2, 1),
+            max(sample_size_v2, 1),
+            round=3,
         )
-        metrics.log_scalar(
-            "loss_v2", loss_sum_v2 / max(sample_size_v2, 1), max(sample_size_v2, 1), round=3
-        )
-        metrics.log_scalar(
-            "nll_loss", nll_loss_sum / sample_size, ntokens, round=3
-        )
+        metrics.log_scalar("nll_loss", nll_loss_sum / sample_size, ntokens, round=3)
         metrics.log_derived(
             "ppl", lambda meters: utils.get_perplexity(meters["nll_loss"].avg)
         )
 
-        metrics.log_scalar(
-            "ntokens", ntokens, 1, round=3
-        )
-        metrics.log_scalar(
-            "nsentences", nsentences, 1, round=3
-        )
-        metrics.log_scalar(
-            "sample_size", sample_size, 1, round=3
-        )
-        metrics.log_scalar(
-            "sample_size_v1", sample_size_v1, 1, round=3
-        )
-        metrics.log_scalar(
-            "sample_size_v2", sample_size_v2, 1, round=3
-        )
+        metrics.log_scalar("ntokens", ntokens, 1, round=3)
+        metrics.log_scalar("nsentences", nsentences, 1, round=3)
+        metrics.log_scalar("sample_size", sample_size, 1, round=3)
+        metrics.log_scalar("sample_size_v1", sample_size_v1, 1, round=3)
+        metrics.log_scalar("sample_size_v2", sample_size_v2, 1, round=3)
 
         total = utils.item(sum(log.get("total", 0) for log in logging_outputs))
         if total > 0:

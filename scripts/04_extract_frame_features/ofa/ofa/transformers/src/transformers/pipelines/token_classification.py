@@ -4,7 +4,12 @@ from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
-from ..file_utils import ExplicitEnum, add_end_docstrings, is_tf_available, is_torch_available
+from ..file_utils import (
+    ExplicitEnum,
+    add_end_docstrings,
+    is_tf_available,
+    is_torch_available,
+)
 from ..models.bert.tokenization_bert import BasicTokenizer
 from .base import PIPELINE_INIT_ARGS, ArgumentHandler, Dataset, Pipeline
 
@@ -22,24 +27,31 @@ class TokenClassificationArgumentHandler(ArgumentHandler):
     """
 
     def __call__(self, inputs: Union[str, List[str]], **kwargs):
-
         if inputs is not None and isinstance(inputs, (list, tuple)) and len(inputs) > 0:
             inputs = list(inputs)
             batch_size = len(inputs)
         elif isinstance(inputs, str):
             inputs = [inputs]
             batch_size = 1
-        elif Dataset is not None and isinstance(inputs, Dataset) or isinstance(inputs, types.GeneratorType):
+        elif (
+            Dataset is not None
+            and isinstance(inputs, Dataset)
+            or isinstance(inputs, types.GeneratorType)
+        ):
             return inputs, None
         else:
             raise ValueError("At least one input is required.")
 
         offset_mapping = kwargs.get("offset_mapping")
         if offset_mapping:
-            if isinstance(offset_mapping, list) and isinstance(offset_mapping[0], tuple):
+            if isinstance(offset_mapping, list) and isinstance(
+                offset_mapping[0], tuple
+            ):
                 offset_mapping = [offset_mapping]
             if len(offset_mapping) != batch_size:
-                raise ValueError("offset_mapping should have the same batch size as the input")
+                raise ValueError(
+                    "offset_mapping should have the same batch size as the input"
+                )
         return inputs, offset_mapping
 
 
@@ -98,7 +110,9 @@ class TokenClassificationPipeline(Pipeline):
 
     default_input_names = "sequences"
 
-    def __init__(self, args_parser=TokenClassificationArgumentHandler(), *args, **kwargs):
+    def __init__(
+        self, args_parser=TokenClassificationArgumentHandler(), *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.check_model_type(
             TF_MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING
@@ -117,7 +131,6 @@ class TokenClassificationPipeline(Pipeline):
         aggregation_strategy: Optional[AggregationStrategy] = None,
         offset_mapping: Optional[List[Tuple[int, int]]] = None,
     ):
-
         preprocess_params = {}
         if offset_mapping is not None:
             preprocess_params["offset_mapping"] = offset_mapping
@@ -145,7 +158,11 @@ class TokenClassificationPipeline(Pipeline):
                 aggregation_strategy = AggregationStrategy[aggregation_strategy.upper()]
             if (
                 aggregation_strategy
-                in {AggregationStrategy.FIRST, AggregationStrategy.MAX, AggregationStrategy.AVERAGE}
+                in {
+                    AggregationStrategy.FIRST,
+                    AggregationStrategy.MAX,
+                    AggregationStrategy.AVERAGE,
+                }
                 and not self.tokenizer.is_fast
             ):
                 raise ValueError(
@@ -189,7 +206,11 @@ class TokenClassificationPipeline(Pipeline):
         return super().__call__(inputs, **kwargs)
 
     def preprocess(self, sentence, offset_mapping=None):
-        truncation = True if self.tokenizer.model_max_length and self.tokenizer.model_max_length > 0 else False
+        truncation = (
+            True
+            if self.tokenizer.model_max_length and self.tokenizer.model_max_length > 0
+            else False
+        )
         model_inputs = self.tokenizer(
             sentence,
             return_tensors=self.framework,
@@ -222,13 +243,22 @@ class TokenClassificationPipeline(Pipeline):
             **model_inputs,
         }
 
-    def postprocess(self, model_outputs, aggregation_strategy=AggregationStrategy.NONE, ignore_labels=None):
+    def postprocess(
+        self,
+        model_outputs,
+        aggregation_strategy=AggregationStrategy.NONE,
+        ignore_labels=None,
+    ):
         if ignore_labels is None:
             ignore_labels = ["O"]
         logits = model_outputs["logits"][0].numpy()
         sentence = model_outputs["sentence"]
         input_ids = model_outputs["input_ids"][0]
-        offset_mapping = model_outputs["offset_mapping"][0] if model_outputs["offset_mapping"] is not None else None
+        offset_mapping = (
+            model_outputs["offset_mapping"][0]
+            if model_outputs["offset_mapping"] is not None
+            else None
+        )
         special_tokens_mask = model_outputs["special_tokens_mask"][0].numpy()
 
         maxes = np.max(logits, axis=-1, keepdims=True)
@@ -236,7 +266,12 @@ class TokenClassificationPipeline(Pipeline):
         scores = shifted_exp / shifted_exp.sum(axis=-1, keepdims=True)
 
         pre_entities = self.gather_pre_entities(
-            sentence, input_ids, scores, offset_mapping, special_tokens_mask, aggregation_strategy
+            sentence,
+            input_ids,
+            scores,
+            offset_mapping,
+            special_tokens_mask,
+            aggregation_strategy,
         )
         grouped_entities = self.aggregate(pre_entities, aggregation_strategy)
         # Filter anything that is in self.ignore_labels
@@ -277,7 +312,9 @@ class TokenClassificationPipeline(Pipeline):
                         start_ind = int(start_ind.numpy())
                         end_ind = int(end_ind.numpy())
                 word_ref = sentence[start_ind:end_ind]
-                if getattr(self.tokenizer._tokenizer.model, "continuing_subword_prefix", None):
+                if getattr(
+                    self.tokenizer._tokenizer.model, "continuing_subword_prefix", None
+                ):
                     # This is a BPE, word aware tokenizer, there is a correct way
                     # to fuse tokens
                     is_subword = len(word) != len(word_ref)
@@ -288,8 +325,15 @@ class TokenClassificationPipeline(Pipeline):
                         AggregationStrategy.AVERAGE,
                         AggregationStrategy.MAX,
                     }:
-                        warnings.warn("Tokenizer does not support real words, using fallback heuristic", UserWarning)
-                    is_subword = sentence[start_ind - 1 : start_ind] != " " if start_ind > 0 else False
+                        warnings.warn(
+                            "Tokenizer does not support real words, using fallback heuristic",
+                            UserWarning,
+                        )
+                    is_subword = (
+                        sentence[start_ind - 1 : start_ind] != " "
+                        if start_ind > 0
+                        else False
+                    )
 
                 if int(input_ids[idx]) == self.tokenizer.unk_token_id:
                     word = word_ref
@@ -310,8 +354,13 @@ class TokenClassificationPipeline(Pipeline):
             pre_entities.append(pre_entity)
         return pre_entities
 
-    def aggregate(self, pre_entities: List[dict], aggregation_strategy: AggregationStrategy) -> List[dict]:
-        if aggregation_strategy in {AggregationStrategy.NONE, AggregationStrategy.SIMPLE}:
+    def aggregate(
+        self, pre_entities: List[dict], aggregation_strategy: AggregationStrategy
+    ) -> List[dict]:
+        if aggregation_strategy in {
+            AggregationStrategy.NONE,
+            AggregationStrategy.SIMPLE,
+        }:
             entities = []
             for pre_entity in pre_entities:
                 entity_idx = pre_entity["scores"].argmax()
@@ -332,8 +381,12 @@ class TokenClassificationPipeline(Pipeline):
             return entities
         return self.group_entities(entities)
 
-    def aggregate_word(self, entities: List[dict], aggregation_strategy: AggregationStrategy) -> dict:
-        word = self.tokenizer.convert_tokens_to_string([entity["word"] for entity in entities])
+    def aggregate_word(
+        self, entities: List[dict], aggregation_strategy: AggregationStrategy
+    ) -> dict:
+        word = self.tokenizer.convert_tokens_to_string(
+            [entity["word"] for entity in entities]
+        )
         if aggregation_strategy == AggregationStrategy.FIRST:
             scores = entities[0]["scores"]
             idx = scores.argmax()
@@ -362,7 +415,9 @@ class TokenClassificationPipeline(Pipeline):
         }
         return new_entity
 
-    def aggregate_words(self, entities: List[dict], aggregation_strategy: AggregationStrategy) -> List[dict]:
+    def aggregate_words(
+        self, entities: List[dict], aggregation_strategy: AggregationStrategy
+    ) -> List[dict]:
         """
         Override tokens from a given word that disagree to force agreement on word boundaries.
 
@@ -373,7 +428,9 @@ class TokenClassificationPipeline(Pipeline):
             AggregationStrategy.NONE,
             AggregationStrategy.SIMPLE,
         }:
-            raise ValueError("NONE and SIMPLE strategies are invalid for word aggregation")
+            raise ValueError(
+                "NONE and SIMPLE strategies are invalid for word aggregation"
+            )
 
         word_entities = []
         word_group = None
@@ -383,7 +440,9 @@ class TokenClassificationPipeline(Pipeline):
             elif entity["is_subword"]:
                 word_group.append(entity)
             else:
-                word_entities.append(self.aggregate_word(word_group, aggregation_strategy))
+                word_entities.append(
+                    self.aggregate_word(word_group, aggregation_strategy)
+                )
                 word_group = [entity]
         # Last item
         word_entities.append(self.aggregate_word(word_group, aggregation_strategy))

@@ -37,11 +37,16 @@ from test_module.custom_configuration import CustomConfig  # noqa E402
 from test_module.custom_feature_extraction import CustomFeatureExtractor  # noqa E402
 
 
-SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../fixtures")
-SAMPLE_FEATURE_EXTRACTION_CONFIG = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "../fixtures/dummy_feature_extractor_config.json"
+SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "../fixtures"
 )
-SAMPLE_CONFIG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../fixtures/dummy-config.json")
+SAMPLE_FEATURE_EXTRACTION_CONFIG = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "../fixtures/dummy_feature_extractor_config.json",
+)
+SAMPLE_CONFIG = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "../fixtures/dummy-config.json"
+)
 
 
 class AutoFeatureExtractorTest(unittest.TestCase):
@@ -50,7 +55,9 @@ class AutoFeatureExtractorTest(unittest.TestCase):
         self.assertIsInstance(config, Wav2Vec2FeatureExtractor)
 
     def test_feature_extractor_from_local_directory_from_key(self):
-        config = AutoFeatureExtractor.from_pretrained(SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR)
+        config = AutoFeatureExtractor.from_pretrained(
+            SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR
+        )
         self.assertIsInstance(config, Wav2Vec2FeatureExtractor)
 
     def test_feature_extractor_from_local_directory_from_config(self):
@@ -58,7 +65,9 @@ class AutoFeatureExtractorTest(unittest.TestCase):
             model_config = Wav2Vec2Config()
 
             # remove feature_extractor_type to make sure config.json alone is enough to load feature processor locally
-            config_dict = AutoFeatureExtractor.from_pretrained(SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR).to_dict()
+            config_dict = AutoFeatureExtractor.from_pretrained(
+                SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR
+            ).to_dict()
 
             config_dict.pop("feature_extractor_type")
             config = Wav2Vec2FeatureExtractor(**config_dict)
@@ -81,22 +90,28 @@ class AutoFeatureExtractorTest(unittest.TestCase):
 
     def test_repo_not_found(self):
         with self.assertRaisesRegex(
-            EnvironmentError, "bert-base is not a local folder and is not a valid model identifier"
+            EnvironmentError,
+            "bert-base is not a local folder and is not a valid model identifier",
         ):
             _ = AutoFeatureExtractor.from_pretrained("bert-base")
 
     def test_revision_not_found(self):
         with self.assertRaisesRegex(
-            EnvironmentError, r"aaaaaa is not a valid git identifier \(branch name, tag name or commit id\)"
+            EnvironmentError,
+            r"aaaaaa is not a valid git identifier \(branch name, tag name or commit id\)",
         ):
-            _ = AutoFeatureExtractor.from_pretrained(DUMMY_UNKNOWN_IDENTIFIER, revision="aaaaaa")
+            _ = AutoFeatureExtractor.from_pretrained(
+                DUMMY_UNKNOWN_IDENTIFIER, revision="aaaaaa"
+            )
 
     def test_feature_extractor_not_found(self):
         with self.assertRaisesRegex(
             EnvironmentError,
             "hf-internal-testing/config-no-model does not appear to have a file named preprocessor_config.json.",
         ):
-            _ = AutoFeatureExtractor.from_pretrained("hf-internal-testing/config-no-model")
+            _ = AutoFeatureExtractor.from_pretrained(
+                "hf-internal-testing/config-no-model"
+            )
 
     def test_from_pretrained_dynamic_feature_extractor(self):
         model = AutoFeatureExtractor.from_pretrained(
@@ -113,7 +128,9 @@ class AutoFeatureExtractorTest(unittest.TestCase):
                 AutoFeatureExtractor.register(Wav2Vec2Config, Wav2Vec2FeatureExtractor)
 
             # Now that the config is registered, it can be used as any other config with the auto-API
-            feature_extractor = CustomFeatureExtractor.from_pretrained(SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR)
+            feature_extractor = CustomFeatureExtractor.from_pretrained(
+                SAMPLE_FEATURE_EXTRACTION_CONFIG_DIR
+            )
             with tempfile.TemporaryDirectory() as tmp_dir:
                 feature_extractor.save_pretrained(tmp_dir)
                 new_feature_extractor = AutoFeatureExtractor.from_pretrained(tmp_dir)

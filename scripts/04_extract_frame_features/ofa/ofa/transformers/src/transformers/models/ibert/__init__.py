@@ -22,7 +22,11 @@ from ...file_utils import _LazyModule, is_torch_available
 
 
 _import_structure = {
-    "configuration_ibert": ["IBERT_PRETRAINED_CONFIG_ARCHIVE_MAP", "IBertConfig", "IBertOnnxConfig"],
+    "configuration_ibert": [
+        "IBERT_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "IBertConfig",
+        "IBertOnnxConfig",
+    ],
 }
 
 if is_torch_available():
@@ -38,7 +42,11 @@ if is_torch_available():
     ]
 
 if TYPE_CHECKING:
-    from .configuration_ibert import IBERT_PRETRAINED_CONFIG_ARCHIVE_MAP, IBertConfig, IBertOnnxConfig
+    from .configuration_ibert import (
+        IBERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        IBertConfig,
+        IBertOnnxConfig,
+    )
 
     if is_torch_available():
         from .modeling_ibert import (
@@ -55,4 +63,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

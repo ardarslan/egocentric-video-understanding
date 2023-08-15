@@ -62,7 +62,10 @@ if is_flax_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_pegasus import PEGASUS_PRETRAINED_CONFIG_ARCHIVE_MAP, PegasusConfig
+    from .configuration_pegasus import (
+        PEGASUS_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        PegasusConfig,
+    )
 
     if is_sentencepiece_available():
         from .tokenization_pegasus import PegasusTokenizer
@@ -80,7 +83,11 @@ if TYPE_CHECKING:
         )
 
     if is_tf_available():
-        from .modeling_tf_pegasus import TFPegasusForConditionalGeneration, TFPegasusModel, TFPegasusPreTrainedModel
+        from .modeling_tf_pegasus import (
+            TFPegasusForConditionalGeneration,
+            TFPegasusModel,
+            TFPegasusPreTrainedModel,
+        )
 
     if is_flax_available():
         from .modeling_flax_pegasus import (
@@ -92,4 +99,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

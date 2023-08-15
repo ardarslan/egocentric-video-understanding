@@ -134,7 +134,7 @@ class TruncatedBPTTLMTask(FairseqTask):
 
         # fairseq expects batches to have the following structure
         return {
-            "id": torch.tensor([id]*item.size(0)),
+            "id": torch.tensor([id] * item.size(0)),
             "net_input": {
                 "src_tokens": item,
             },

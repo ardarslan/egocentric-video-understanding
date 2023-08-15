@@ -80,25 +80,41 @@ class CLIPFeatureExtractionTester(unittest.TestCase):
         or a list of PyTorch tensors if one specifies torchify=True.
         """
 
-        assert not (numpify and torchify), "You cannot specify both numpy and PyTorch tensors at the same time"
+        assert not (
+            numpify and torchify
+        ), "You cannot specify both numpy and PyTorch tensors at the same time"
 
         if equal_resolution:
             image_inputs = []
             for i in range(self.batch_size):
                 image_inputs.append(
                     np.random.randint(
-                        255, size=(self.num_channels, self.max_resolution, self.max_resolution), dtype=np.uint8
+                        255,
+                        size=(
+                            self.num_channels,
+                            self.max_resolution,
+                            self.max_resolution,
+                        ),
+                        dtype=np.uint8,
                     )
                 )
         else:
             image_inputs = []
             for i in range(self.batch_size):
-                width, height = np.random.choice(np.arange(self.min_resolution, self.max_resolution), 2)
-                image_inputs.append(np.random.randint(255, size=(self.num_channels, width, height), dtype=np.uint8))
+                width, height = np.random.choice(
+                    np.arange(self.min_resolution, self.max_resolution), 2
+                )
+                image_inputs.append(
+                    np.random.randint(
+                        255, size=(self.num_channels, width, height), dtype=np.uint8
+                    )
+                )
 
         if not numpify and not torchify:
             # PIL expects the channel dimension as last dimension
-            image_inputs = [Image.fromarray(np.moveaxis(x, 0, -1)) for x in image_inputs]
+            image_inputs = [
+                Image.fromarray(np.moveaxis(x, 0, -1)) for x in image_inputs
+            ]
 
         if torchify:
             image_inputs = [torch.from_numpy(x) for x in image_inputs]
@@ -109,7 +125,6 @@ class CLIPFeatureExtractionTester(unittest.TestCase):
 @require_torch
 @require_vision
 class CLIPFeatureExtractionTest(FeatureExtractionSavingTestMixin, unittest.TestCase):
-
     feature_extraction_class = CLIPFeatureExtractor if is_vision_available() else None
 
     def setUp(self):
@@ -136,12 +151,16 @@ class CLIPFeatureExtractionTest(FeatureExtractionSavingTestMixin, unittest.TestC
         # Initialize feature_extractor
         feature_extractor = self.feature_extraction_class(**self.feat_extract_dict)
         # create random PIL images
-        image_inputs = self.feature_extract_tester.prepare_inputs(equal_resolution=False)
+        image_inputs = self.feature_extract_tester.prepare_inputs(
+            equal_resolution=False
+        )
         for image in image_inputs:
             self.assertIsInstance(image, Image.Image)
 
         # Test not batched input
-        encoded_images = feature_extractor(image_inputs[0], return_tensors="pt").pixel_values
+        encoded_images = feature_extractor(
+            image_inputs[0], return_tensors="pt"
+        ).pixel_values
         self.assertEqual(
             encoded_images.shape,
             (
@@ -153,7 +172,9 @@ class CLIPFeatureExtractionTest(FeatureExtractionSavingTestMixin, unittest.TestC
         )
 
         # Test batched
-        encoded_images = feature_extractor(image_inputs, return_tensors="pt").pixel_values
+        encoded_images = feature_extractor(
+            image_inputs, return_tensors="pt"
+        ).pixel_values
         self.assertEqual(
             encoded_images.shape,
             (
@@ -168,12 +189,16 @@ class CLIPFeatureExtractionTest(FeatureExtractionSavingTestMixin, unittest.TestC
         # Initialize feature_extractor
         feature_extractor = self.feature_extraction_class(**self.feat_extract_dict)
         # create random numpy tensors
-        image_inputs = self.feature_extract_tester.prepare_inputs(equal_resolution=False, numpify=True)
+        image_inputs = self.feature_extract_tester.prepare_inputs(
+            equal_resolution=False, numpify=True
+        )
         for image in image_inputs:
             self.assertIsInstance(image, np.ndarray)
 
         # Test not batched input
-        encoded_images = feature_extractor(image_inputs[0], return_tensors="pt").pixel_values
+        encoded_images = feature_extractor(
+            image_inputs[0], return_tensors="pt"
+        ).pixel_values
         self.assertEqual(
             encoded_images.shape,
             (
@@ -185,7 +210,9 @@ class CLIPFeatureExtractionTest(FeatureExtractionSavingTestMixin, unittest.TestC
         )
 
         # Test batched
-        encoded_images = feature_extractor(image_inputs, return_tensors="pt").pixel_values
+        encoded_images = feature_extractor(
+            image_inputs, return_tensors="pt"
+        ).pixel_values
         self.assertEqual(
             encoded_images.shape,
             (
@@ -200,12 +227,16 @@ class CLIPFeatureExtractionTest(FeatureExtractionSavingTestMixin, unittest.TestC
         # Initialize feature_extractor
         feature_extractor = self.feature_extraction_class(**self.feat_extract_dict)
         # create random PyTorch tensors
-        image_inputs = self.feature_extract_tester.prepare_inputs(equal_resolution=False, torchify=True)
+        image_inputs = self.feature_extract_tester.prepare_inputs(
+            equal_resolution=False, torchify=True
+        )
         for image in image_inputs:
             self.assertIsInstance(image, torch.Tensor)
 
         # Test not batched input
-        encoded_images = feature_extractor(image_inputs[0], return_tensors="pt").pixel_values
+        encoded_images = feature_extractor(
+            image_inputs[0], return_tensors="pt"
+        ).pixel_values
         self.assertEqual(
             encoded_images.shape,
             (
@@ -217,7 +248,9 @@ class CLIPFeatureExtractionTest(FeatureExtractionSavingTestMixin, unittest.TestC
         )
 
         # Test batched
-        encoded_images = feature_extractor(image_inputs, return_tensors="pt").pixel_values
+        encoded_images = feature_extractor(
+            image_inputs, return_tensors="pt"
+        ).pixel_values
         self.assertEqual(
             encoded_images.shape,
             (

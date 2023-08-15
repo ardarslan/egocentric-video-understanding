@@ -17,11 +17,21 @@
 # limitations under the License.
 from typing import TYPE_CHECKING
 
-from ...file_utils import _LazyModule, is_flax_available, is_tf_available, is_torch_available, is_vision_available
+from ...file_utils import (
+    _LazyModule,
+    is_flax_available,
+    is_tf_available,
+    is_torch_available,
+    is_vision_available,
+)
 
 
 _import_structure = {
-    "configuration_vit": ["VIT_PRETRAINED_CONFIG_ARCHIVE_MAP", "ViTConfig", "ViTOnnxConfig"],
+    "configuration_vit": [
+        "VIT_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "ViTConfig",
+        "ViTOnnxConfig",
+    ],
 }
 
 if is_vision_available():
@@ -51,7 +61,11 @@ if is_flax_available():
     ]
 
 if TYPE_CHECKING:
-    from .configuration_vit import VIT_PRETRAINED_CONFIG_ARCHIVE_MAP, ViTConfig, ViTOnnxConfig
+    from .configuration_vit import (
+        VIT_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        ViTConfig,
+        ViTOnnxConfig,
+    )
 
     if is_vision_available():
         from .feature_extraction_vit import ViTFeatureExtractor
@@ -66,13 +80,23 @@ if TYPE_CHECKING:
         )
 
     if is_tf_available():
-        from .modeling_tf_vit import TFViTForImageClassification, TFViTModel, TFViTPreTrainedModel
+        from .modeling_tf_vit import (
+            TFViTForImageClassification,
+            TFViTModel,
+            TFViTPreTrainedModel,
+        )
 
     if is_flax_available():
-        from .modeling_flax_vit import FlaxViTForImageClassification, FlaxViTModel, FlaxViTPreTrainedModel
+        from .modeling_flax_vit import (
+            FlaxViTForImageClassification,
+            FlaxViTModel,
+            FlaxViTPreTrainedModel,
+        )
 
 
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

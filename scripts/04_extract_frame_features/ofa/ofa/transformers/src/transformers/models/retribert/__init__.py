@@ -22,7 +22,10 @@ from ...file_utils import _LazyModule, is_tokenizers_available, is_torch_availab
 
 
 _import_structure = {
-    "configuration_retribert": ["RETRIBERT_PRETRAINED_CONFIG_ARCHIVE_MAP", "RetriBertConfig"],
+    "configuration_retribert": [
+        "RETRIBERT_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "RetriBertConfig",
+    ],
     "tokenization_retribert": ["RetriBertTokenizer"],
 }
 
@@ -38,7 +41,10 @@ if is_torch_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_retribert import RETRIBERT_PRETRAINED_CONFIG_ARCHIVE_MAP, RetriBertConfig
+    from .configuration_retribert import (
+        RETRIBERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        RetriBertConfig,
+    )
     from .tokenization_retribert import RetriBertTokenizer
 
     if is_tokenizers_available():
@@ -54,4 +60,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

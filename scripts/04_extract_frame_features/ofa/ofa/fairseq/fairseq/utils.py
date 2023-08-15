@@ -85,7 +85,9 @@ def apply_to_sample(f, sample):
             return f(x)
         elif isinstance(x, collections.OrderedDict):
             # OrderedDict has attributes that needs to be preserved
-            od = collections.OrderedDict((key, _apply(value)) for key, value in x.items())
+            od = collections.OrderedDict(
+                (key, _apply(value)) for key, value in x.items()
+            )
             od.__dict__ = x.__dict__
             return od
         elif isinstance(x, dict):
@@ -125,7 +127,6 @@ def move_to_cpu(sample):
 
 
 def move_to_tpu(sample):
-
     import torch_xla.core.xla_model as xm
 
     device = xm.xla_device()
@@ -527,7 +528,7 @@ def get_perplexity(loss, round=2, base=2):
     if loss is None:
         return 0.0
     try:
-        return safe_round(base ** loss, round)
+        return safe_round(base**loss, round)
     except OverflowError:
         return float("inf")
 

@@ -249,7 +249,7 @@ def main(cfg: FairseqConfig):
 
         # sort output to match input order
         for id_, src_tokens, hypos, info in sorted(results, key=lambda x: x[0]):
-            src_str = ''
+            src_str = ""
             if src_dict is not None:
                 src_str = src_dict.string(src_tokens, cfg.common_eval.post_process)
                 print("S-{}\t{}".format(id_, src_str))
@@ -257,7 +257,8 @@ def main(cfg: FairseqConfig):
                 for constraint in info["constraints"]:
                     print(
                         "C-{}\t{}".format(
-                            id_, tgt_dict.string(constraint, cfg.common_eval.post_process)
+                            id_,
+                            tgt_dict.string(constraint, cfg.common_eval.post_process),
                         )
                     )
 

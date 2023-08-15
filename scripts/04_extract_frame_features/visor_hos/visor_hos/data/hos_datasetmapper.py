@@ -1,4 +1,3 @@
-
 import logging
 import numpy as np
 from typing import List, Union
@@ -24,8 +23,7 @@ from detectron2.data import DatasetMapper
 class HOSMapper(DatasetMapper):
     def __init__(self, cfg):
         super().__init__(cfg)
-        
-        
+
     def _transform_annotations(self, dataset_dict, transforms, image_shape):
         # USER: Modify this if you want to keep them for some reason.
         for anno in dataset_dict["annotations"]:
@@ -37,7 +35,10 @@ class HOSMapper(DatasetMapper):
         # USER: Implement additional transformations if you have other types of data
         annos = [
             utils.transform_instance_annotations(
-                obj, transforms, image_shape, keypoint_hflip_indices=self.keypoint_hflip_indices
+                obj,
+                transforms,
+                image_shape,
+                keypoint_hflip_indices=self.keypoint_hflip_indices,
             )
             for obj in dataset_dict.pop("annotations")
             if obj.get("iscrowd", 0) == 0
@@ -54,9 +55,8 @@ class HOSMapper(DatasetMapper):
         if self.recompute_boxes:
             instances.gt_boxes = instances.gt_masks.get_bounding_boxes()
         dataset_dict["instances"] = utils.filter_empty_instances(instances)
-                
-        
-        
+
+
 def annotations_to_instances(annos, image_size, mask_format="polygon"):
     """
     Create an :class:`Instances` object used by the models,
@@ -75,7 +75,10 @@ def annotations_to_instances(annos, image_size, mask_format="polygon"):
     """
     boxes = (
         np.stack(
-            [BoxMode.convert(obj["bbox"], obj["bbox_mode"], BoxMode.XYXY_ABS) for obj in annos]
+            [
+                BoxMode.convert(obj["bbox"], obj["bbox_mode"], BoxMode.XYXY_ABS)
+                for obj in annos
+            ]
         )
         if len(annos)
         else np.zeros((0, 4))
@@ -107,9 +110,9 @@ def annotations_to_instances(annos, image_size, mask_format="polygon"):
                     # COCO RLE
                     masks.append(mask_util.decode(segm))
                 elif isinstance(segm, np.ndarray):
-                    assert segm.ndim == 2, "Expect segmentation of 2 dimensions, got {}.".format(
-                        segm.ndim
-                    )
+                    assert (
+                        segm.ndim == 2
+                    ), "Expect segmentation of 2 dimensions, got {}.".format(segm.ndim)
                     # mask array
                     masks.append(segm)
                 else:
@@ -128,27 +131,32 @@ def annotations_to_instances(annos, image_size, mask_format="polygon"):
     if len(annos) and "keypoints" in annos[0]:
         kpts = [obj.get("keypoints", []) for obj in annos]
         target.gt_keypoints = Keypoints(kpts)
-        
+
     # TODO: add gt_handsides, gt_contacts, gt_offsets
     if len(annos) and "handside" in annos[0]:
         handsides = [int(obj["handside"]) for obj in annos]
         handsides = torch.tensor(handsides, dtype=torch.int64)
         target.gt_handsides = handsides
-    
+
     if len(annos) and "isincontact" in annos[0]:
         contacts = [int(obj["isincontact"]) for obj in annos]
         contacts = torch.tensor(contacts, dtype=torch.int64)
         target.gt_contacts = contacts
-        
+
     if len(annos) and "offset" in annos[0]:
         offsets = [obj["offset"] for obj in annos]
         offsets = torch.tensor(offsets, dtype=torch.float32)
         target.gt_offsets = offsets
-        
+
     if len(annos) and "incontact_object_bbox" in annos[0]:
         obj_boxes = (
             np.stack(
-                [BoxMode.convert(obj["incontact_object_bbox"], obj["bbox_mode"], BoxMode.XYXY_ABS) for obj in annos]
+                [
+                    BoxMode.convert(
+                        obj["incontact_object_bbox"], obj["bbox_mode"], BoxMode.XYXY_ABS
+                    )
+                    for obj in annos
+                ]
             )
             if len(annos)
             else np.zeros((0, 4))

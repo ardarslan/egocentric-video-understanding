@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 try:
@@ -330,9 +330,7 @@ def batch_by_size(
         )
 
     # added int() to avoid TypeError: an integer is required
-    max_tokens = (
-        int(max_tokens) if max_tokens is not None else -1
-    )
+    max_tokens = int(max_tokens) if max_tokens is not None else -1
     max_sentences = max_sentences if max_sentences is not None else -1
     bsz_mult = required_batch_size_multiple
 
@@ -381,8 +379,9 @@ def post_process(sentence: str, symbol: str):
         sentence = sentence.replace(" ", "").replace("|", " ").strip()
     elif symbol == "silence":
         import re
+
         sentence = sentence.replace("<SIL>", "")
-        sentence = re.sub(' +', ' ', sentence).strip()
+        sentence = re.sub(" +", " ", sentence).strip()
     elif symbol == "_EOW":
         sentence = sentence.replace(" ", "").replace("_EOW", " ").strip()
     elif symbol in {"subword_nmt", "@@ ", "@@"}:
@@ -553,7 +552,7 @@ def get_buckets(sizes, num_buckets):
         np.percentile(
             sizes,
             np.linspace(0, 100, num_buckets + 1),
-            interpolation='lower',
+            interpolation="lower",
         )[1:]
     )
     return buckets
@@ -568,7 +567,6 @@ def get_bucketed_sizes(orig_sizes, buckets):
         sizes[mask] = end_val
         start_val = end_val
     return sizes
-
 
 
 def _find_extra_valid_paths(dataset_path: str) -> set:

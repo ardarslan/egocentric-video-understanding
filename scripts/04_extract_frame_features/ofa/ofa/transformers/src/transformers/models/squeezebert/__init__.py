@@ -22,7 +22,10 @@ from ...file_utils import _LazyModule, is_tokenizers_available, is_torch_availab
 
 
 _import_structure = {
-    "configuration_squeezebert": ["SQUEEZEBERT_PRETRAINED_CONFIG_ARCHIVE_MAP", "SqueezeBertConfig"],
+    "configuration_squeezebert": [
+        "SQUEEZEBERT_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "SqueezeBertConfig",
+    ],
     "tokenization_squeezebert": ["SqueezeBertTokenizer"],
 }
 
@@ -44,7 +47,10 @@ if is_torch_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_squeezebert import SQUEEZEBERT_PRETRAINED_CONFIG_ARCHIVE_MAP, SqueezeBertConfig
+    from .configuration_squeezebert import (
+        SQUEEZEBERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        SqueezeBertConfig,
+    )
     from .tokenization_squeezebert import SqueezeBertTokenizer
 
     if is_tokenizers_available():
@@ -66,4 +72,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

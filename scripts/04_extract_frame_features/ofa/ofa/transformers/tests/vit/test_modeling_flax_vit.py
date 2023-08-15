@@ -25,9 +25,11 @@ from ..test_modeling_flax_common import FlaxModelTesterMixin, floats_tensor
 
 
 if is_flax_available():
-
     import jax
-    from transformers.models.vit.modeling_flax_vit import FlaxViTForImageClassification, FlaxViTModel
+    from transformers.models.vit.modeling_flax_vit import (
+        FlaxViTForImageClassification,
+        FlaxViTModel,
+    )
 
 
 class FlaxViTModelTester(unittest.TestCase):
@@ -68,7 +70,9 @@ class FlaxViTModelTester(unittest.TestCase):
         self.initializer_range = initializer_range
 
     def prepare_config_and_inputs(self):
-        pixel_values = floats_tensor([self.batch_size, self.num_channels, self.image_size, self.image_size])
+        pixel_values = floats_tensor(
+            [self.batch_size, self.num_channels, self.image_size, self.image_size]
+        )
 
         config = ViTConfig(
             image_size=self.image_size,
@@ -88,14 +92,18 @@ class FlaxViTModelTester(unittest.TestCase):
         return config, pixel_values
 
     def create_and_check_model(self, config, pixel_values, labels):
-
         model = FlaxViTModel(config=config)
         result = model(pixel_values)
         # expected sequence length = num_patches + 1 (we add 1 for the [CLS] token)
         image_size = (self.image_size, self.image_size)
         patch_size = (self.patch_size, self.patch_size)
-        num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, num_patches + 1, self.hidden_size))
+        num_patches = (image_size[1] // patch_size[1]) * (
+            image_size[0] // patch_size[0]
+        )
+        self.parent.assertEqual(
+            result.last_hidden_state.shape,
+            (self.batch_size, num_patches + 1, self.hidden_size),
+        )
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -109,12 +117,15 @@ class FlaxViTModelTester(unittest.TestCase):
 
 @require_flax
 class FlaxViTModelTest(FlaxModelTesterMixin, unittest.TestCase):
-
-    all_model_classes = (FlaxViTModel, FlaxViTForImageClassification) if is_flax_available() else ()
+    all_model_classes = (
+        (FlaxViTModel, FlaxViTForImageClassification) if is_flax_available() else ()
+    )
 
     def setUp(self) -> None:
         self.model_tester = FlaxViTModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=ViTConfig, has_text_modality=False, hidden_size=37)
+        self.config_tester = ConfigTester(
+            self, config_class=ViTConfig, has_text_modality=False, hidden_size=37
+        )
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -213,7 +224,9 @@ class FlaxViTModelTest(FlaxModelTesterMixin, unittest.TestCase):
             outputs = model(**self._prepare_for_class(inputs_dict, model_class))
             hidden_states = outputs.hidden_states
 
-            self.assertEqual(len(hidden_states), self.model_tester.num_hidden_layers + 1)
+            self.assertEqual(
+                len(hidden_states), self.model_tester.num_hidden_layers + 1
+            )
 
             self.assertListEqual(
                 list(hidden_states[0].shape[-2:]),

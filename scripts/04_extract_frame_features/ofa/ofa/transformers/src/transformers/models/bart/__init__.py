@@ -17,11 +17,21 @@
 # limitations under the License.
 from typing import TYPE_CHECKING
 
-from ...file_utils import _LazyModule, is_flax_available, is_tf_available, is_tokenizers_available, is_torch_available
+from ...file_utils import (
+    _LazyModule,
+    is_flax_available,
+    is_tf_available,
+    is_tokenizers_available,
+    is_torch_available,
+)
 
 
 _import_structure = {
-    "configuration_bart": ["BART_PRETRAINED_CONFIG_ARCHIVE_MAP", "BartConfig", "BartOnnxConfig"],
+    "configuration_bart": [
+        "BART_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "BartConfig",
+        "BartOnnxConfig",
+    ],
     "tokenization_bart": ["BartTokenizer"],
 }
 
@@ -41,7 +51,11 @@ if is_torch_available():
     ]
 
 if is_tf_available():
-    _import_structure["modeling_tf_bart"] = ["TFBartForConditionalGeneration", "TFBartModel", "TFBartPretrainedModel"]
+    _import_structure["modeling_tf_bart"] = [
+        "TFBartForConditionalGeneration",
+        "TFBartModel",
+        "TFBartPretrainedModel",
+    ]
 
 if is_flax_available():
     _import_structure["modeling_flax_bart"] = [
@@ -55,7 +69,11 @@ if is_flax_available():
     ]
 
 if TYPE_CHECKING:
-    from .configuration_bart import BART_PRETRAINED_CONFIG_ARCHIVE_MAP, BartConfig, BartOnnxConfig
+    from .configuration_bart import (
+        BART_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        BartConfig,
+        BartOnnxConfig,
+    )
     from .tokenization_bart import BartTokenizer
 
     if is_tokenizers_available():
@@ -74,7 +92,11 @@ if TYPE_CHECKING:
         )
 
     if is_tf_available():
-        from .modeling_tf_bart import TFBartForConditionalGeneration, TFBartModel, TFBartPretrainedModel
+        from .modeling_tf_bart import (
+            TFBartForConditionalGeneration,
+            TFBartModel,
+            TFBartPretrainedModel,
+        )
 
     if is_flax_available():
         from .modeling_flax_bart import (
@@ -90,4 +112,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

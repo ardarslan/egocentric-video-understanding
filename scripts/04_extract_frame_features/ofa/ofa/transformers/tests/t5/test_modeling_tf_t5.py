@@ -17,7 +17,12 @@ import unittest
 
 from transformers import T5Config, is_tf_available
 from transformers.file_utils import cached_property
-from transformers.testing_utils import require_sentencepiece, require_tf, require_tokenizers, slow
+from transformers.testing_utils import (
+    require_sentencepiece,
+    require_tf,
+    require_tokenizers,
+    slow,
+)
 
 from ..test_configuration_common import ConfigTester
 from ..test_modeling_tf_common import TFModelTesterMixin, ids_tensor
@@ -26,7 +31,13 @@ from ..test_modeling_tf_common import TFModelTesterMixin, ids_tensor
 if is_tf_available():
     import tensorflow as tf
 
-    from transformers import ByT5Tokenizer, T5Tokenizer, TFT5EncoderModel, TFT5ForConditionalGeneration, TFT5Model
+    from transformers import (
+        ByT5Tokenizer,
+        T5Tokenizer,
+        TFT5EncoderModel,
+        TFT5ForConditionalGeneration,
+        TFT5Model,
+    )
 
 
 class TFT5ModelTester:
@@ -62,7 +73,9 @@ class TFT5ModelTester:
 
         token_labels = None
         if self.use_labels:
-            token_labels = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+            token_labels = ids_tensor(
+                [self.batch_size, self.seq_length], self.vocab_size
+            )
 
         config = T5Config(
             vocab_size=self.vocab_size,
@@ -92,18 +105,28 @@ class TFT5ModelTester:
         }
         result = model(inputs)
 
-        result = model(input_ids, decoder_attention_mask=input_mask, decoder_input_ids=input_ids)
+        result = model(
+            input_ids, decoder_attention_mask=input_mask, decoder_input_ids=input_ids
+        )
         decoder_output = result.last_hidden_state
         decoder_past = result.past_key_values
         encoder_output = result.encoder_last_hidden_state
-        self.parent.assertListEqual(list(encoder_output.shape), [self.batch_size, self.seq_length, self.hidden_size])
-        self.parent.assertListEqual(list(decoder_output.shape), [self.batch_size, self.seq_length, self.hidden_size])
+        self.parent.assertListEqual(
+            list(encoder_output.shape),
+            [self.batch_size, self.seq_length, self.hidden_size],
+        )
+        self.parent.assertListEqual(
+            list(decoder_output.shape),
+            [self.batch_size, self.seq_length, self.hidden_size],
+        )
         # There should be `num_layers` key value embeddings stored in decoder_past[1]
         self.parent.assertEqual(len(decoder_past), config.num_layers)
         # There should be a self attn key, a self attn value, a cross attn key and a cross attn value stored in each decoder_past[1] tuple
         self.parent.assertEqual(len(decoder_past[0]), 4)
 
-    def create_and_check_t5_with_lm_head(self, config, input_ids, input_mask, token_labels):
+    def create_and_check_t5_with_lm_head(
+        self, config, input_ids, input_mask, token_labels
+    ):
         model = TFT5ForConditionalGeneration(config=config)
         inputs_dict = {
             "input_ids": input_ids,
@@ -113,9 +136,13 @@ class TFT5ModelTester:
 
         result = model(inputs_dict)
 
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size)
+        )
 
-    def create_and_check_t5_decoder_model_past(self, config, input_ids, decoder_input_ids, attention_mask):
+    def create_and_check_t5_decoder_model_past(
+        self, config, input_ids, decoder_input_ids, attention_mask
+    ):
         model = TFT5Model(config=config).get_decoder()
 
         input_ids = input_ids[:1, :]
@@ -137,7 +164,9 @@ class TFT5ModelTester:
         next_input_ids = tf.concat([input_ids, next_tokens], axis=-1)
 
         output_from_no_past = model(next_input_ids)[0]
-        output_from_past = model(next_tokens, past_key_values=outputs.past_key_values)[0]
+        output_from_past = model(next_tokens, past_key_values=outputs.past_key_values)[
+            0
+        ]
 
         # select random slice
         random_slice_idx = int(ids_tensor((1,), output_from_past.shape[-1]))
@@ -145,7 +174,9 @@ class TFT5ModelTester:
         output_from_past_slice = output_from_past[:, 0, random_slice_idx]
 
         # test that outputs are equal for slice
-        tf.debugging.assert_near(output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
+        tf.debugging.assert_near(
+            output_from_past_slice, output_from_no_past_slice, rtol=1e-3
+        )
 
     def create_and_check_t5_decoder_model_attention_mask_past(
         self, config, input_ids, decoder_input_ids, attention_mask
@@ -155,7 +186,9 @@ class TFT5ModelTester:
         # create attention mask
         half_seq_length = self.seq_length // 2
         attn_mask_begin = tf.ones((self.batch_size, half_seq_length), dtype=tf.int32)
-        attn_mask_end = tf.zeros((self.batch_size, self.seq_length - half_seq_length), dtype=tf.int32)
+        attn_mask_end = tf.zeros(
+            (self.batch_size, self.seq_length - half_seq_length), dtype=tf.int32
+        )
         attn_mask = tf.concat([attn_mask_begin, attn_mask_end], axis=1)
 
         # first forward pass
@@ -166,10 +199,16 @@ class TFT5ModelTester:
 
         # change a random masked slice from input_ids
         random_seq_idx_to_change = ids_tensor((1,), half_seq_length).numpy() + 1
-        random_other_next_tokens = ids_tensor((self.batch_size, self.seq_length), config.vocab_size)
-        vector_condition = tf.range(self.seq_length) == (self.seq_length - random_seq_idx_to_change)
+        random_other_next_tokens = ids_tensor(
+            (self.batch_size, self.seq_length), config.vocab_size
+        )
+        vector_condition = tf.range(self.seq_length) == (
+            self.seq_length - random_seq_idx_to_change
+        )
         condition = tf.transpose(
-            tf.broadcast_to(tf.expand_dims(vector_condition, -1), (self.seq_length, self.batch_size))
+            tf.broadcast_to(
+                tf.expand_dims(vector_condition, -1), (self.seq_length, self.batch_size)
+            )
         )
         input_ids = tf.where(condition, random_other_next_tokens, input_ids)
 
@@ -182,7 +221,11 @@ class TFT5ModelTester:
 
         # get two different outputs
         output_from_no_past = model(next_input_ids, attention_mask=attn_mask)[0]
-        output_from_past = model(next_tokens, past_key_values=outputs.past_key_values, attention_mask=attn_mask)[0]
+        output_from_past = model(
+            next_tokens,
+            past_key_values=outputs.past_key_values,
+            attention_mask=attn_mask,
+        )[0]
 
         # select random slice
         random_slice_idx = ids_tensor((1,), output_from_past.shape[-1]).numpy().item()
@@ -190,7 +233,9 @@ class TFT5ModelTester:
         output_from_past_slice = output_from_past[:, 0, random_slice_idx]
 
         # test that outputs are equal for slice
-        tf.debugging.assert_near(output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
+        tf.debugging.assert_near(
+            output_from_past_slice, output_from_no_past_slice, rtol=1e-3
+        )
 
     def create_and_check_t5_decoder_model_past_large_inputs(
         self, config, input_ids, decoder_input_ids, attention_mask
@@ -212,9 +257,13 @@ class TFT5ModelTester:
         next_input_ids = tf.concat([input_ids, next_tokens], axis=-1)
         next_attention_mask = tf.concat([attention_mask, next_attn_mask], axis=-1)
 
-        output_from_no_past = model(next_input_ids, attention_mask=next_attention_mask)[0]
+        output_from_no_past = model(next_input_ids, attention_mask=next_attention_mask)[
+            0
+        ]
         output_from_past = model(
-            next_tokens, attention_mask=next_attention_mask, past_key_values=outputs.past_key_values
+            next_tokens,
+            attention_mask=next_attention_mask,
+            past_key_values=outputs.past_key_values,
         )[0]
 
         self.parent.assertEqual(next_tokens.shape[1], output_from_past.shape[1])
@@ -225,7 +274,9 @@ class TFT5ModelTester:
         output_from_past_slice = output_from_past[:, :, random_slice_idx]
 
         # test that outputs are equal for slice
-        tf.debugging.assert_near(output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
+        tf.debugging.assert_near(
+            output_from_past_slice, output_from_no_past_slice, rtol=1e-3
+        )
 
     def create_and_check_t5_xla_generate(self, config, input_ids, *args):
         config.eos_token_id = None
@@ -235,14 +286,18 @@ class TFT5ModelTester:
         model = TFT5ForConditionalGeneration(config=config)
 
         # make sure there are no pad tokens in prompt
-        input_ids = tf.where(input_ids != config.pad_token_id, input_ids, config.pad_token_id + 5)
+        input_ids = tf.where(
+            input_ids != config.pad_token_id, input_ids, config.pad_token_id + 5
+        )
 
         generated = model.generate(input_ids)
 
         generate_xla = tf.function(model.generate, jit_compile=True)
         generated_xla = generate_xla(input_ids)
 
-        self.parent.assertListEqual(generated.numpy().tolist(), generated_xla.numpy().tolist())
+        self.parent.assertListEqual(
+            generated.numpy().tolist(), generated_xla.numpy().tolist()
+        )
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -257,10 +312,13 @@ class TFT5ModelTester:
 
 @require_tf
 class TFT5ModelTest(TFModelTesterMixin, unittest.TestCase):
-
     is_encoder_decoder = True
-    all_model_classes = (TFT5Model, TFT5ForConditionalGeneration) if is_tf_available() else ()
-    all_generative_model_classes = (TFT5ForConditionalGeneration,) if is_tf_available() else ()
+    all_model_classes = (
+        (TFT5Model, TFT5ForConditionalGeneration) if is_tf_available() else ()
+    )
+    all_generative_model_classes = (
+        (TFT5ForConditionalGeneration,) if is_tf_available() else ()
+    )
     test_onnx = False
 
     def setUp(self):
@@ -291,11 +349,15 @@ class TFT5ModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def test_t5_decoder_model_past_with_attn_mask(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_t5_decoder_model_attention_mask_past(*config_and_inputs)
+        self.model_tester.create_and_check_t5_decoder_model_attention_mask_past(
+            *config_and_inputs
+        )
 
     def test_t5_decoder_model_past_large_inputs(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_t5_decoder_model_past_large_inputs(*config_and_inputs)
+        self.model_tester.create_and_check_t5_decoder_model_past_large_inputs(
+            *config_and_inputs
+        )
 
     def test_t5_model_xla_generate(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
@@ -344,7 +406,9 @@ class TFT5ModelTest(TFModelTesterMixin, unittest.TestCase):
         model._resize_token_embeddings(len(tokenizer))
         # the vocab size is now resized to the length of the tokenizer, which is different from the original size
         self.assertEqual(model.get_input_embeddings().weight.shape[0], len(tokenizer))
-        self.assertNotEqual(model.get_input_embeddings().weight.shape[0], original_vocab_size)
+        self.assertNotEqual(
+            model.get_input_embeddings().weight.shape[0], original_vocab_size
+        )
 
 
 class TFT5EncoderOnlyModelTester:
@@ -369,7 +433,6 @@ class TFT5EncoderOnlyModelTester:
         pad_token_id=0,
         scope=None,
     ):
-
         self.parent = parent
         self.batch_size = batch_size
         self.encoder_seq_length = encoder_seq_length
@@ -391,11 +454,15 @@ class TFT5EncoderOnlyModelTester:
         self.is_training = is_training
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.encoder_seq_length], self.vocab_size)
+        input_ids = ids_tensor(
+            [self.batch_size, self.encoder_seq_length], self.vocab_size
+        )
 
         attention_mask = None
         if self.use_attention_mask:
-            attention_mask = ids_tensor([self.batch_size, self.encoder_seq_length], vocab_size=2)
+            attention_mask = ids_tensor(
+                [self.batch_size, self.encoder_seq_length], vocab_size=2
+            )
 
         config = T5Config(
             vocab_size=self.vocab_size,
@@ -433,7 +500,10 @@ class TFT5EncoderOnlyModelTester:
         result = model(input_ids=input_ids)
         encoder_output = result.last_hidden_state
 
-        self.parent.assertEqual(encoder_output.shape, (self.batch_size, self.encoder_seq_length, self.hidden_size))
+        self.parent.assertEqual(
+            encoder_output.shape,
+            (self.batch_size, self.encoder_seq_length, self.hidden_size),
+        )
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -489,7 +559,9 @@ class TFT5GenerationIntegrationTests(unittest.TestCase):
         output_ids_xla = xla_generate(input_ids)
 
         output_strings = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
-        output_strings_xla = tokenizer.batch_decode(output_ids_xla, skip_special_tokens=True)
+        output_strings_xla = tokenizer.batch_decode(
+            output_ids_xla, skip_special_tokens=True
+        )
 
         expected_output_string = ["Heute ist ein schöner Tag."]
 
@@ -505,7 +577,10 @@ class TFT5GenerationIntegrationTests(unittest.TestCase):
         input_ids = tokenizer(sentences, return_tensors="tf", padding=True).input_ids
 
         generation_kwargs = {
-            "bad_words_ids": [tokenizer("my").input_ids, tokenizer("ein schöner").input_ids],
+            "bad_words_ids": [
+                tokenizer("my").input_ids,
+                tokenizer("ein schöner").input_ids,
+            ],
             "no_repeat_ngram_size": 3,
             "do_sample": False,
             "repetition_penalty": 2.2,
@@ -515,7 +590,10 @@ class TFT5GenerationIntegrationTests(unittest.TestCase):
 
         output_strings = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
 
-        expected_output_string = ["Yesterday, my name was", "Heute ist ein schöne Tag und"]
+        expected_output_string = [
+            "Yesterday, my name was",
+            "Heute ist ein schöne Tag und",
+        ]
 
         self.assertListEqual(expected_output_string, output_strings)
 
@@ -524,12 +602,18 @@ class TFT5GenerationIntegrationTests(unittest.TestCase):
         model = TFT5ForConditionalGeneration.from_pretrained("t5-small")
         tokenizer = T5Tokenizer.from_pretrained("t5-small")
 
-        sentences = ["I really love my", "Translate English to German: the transformers are truly amazing"]
+        sentences = [
+            "I really love my",
+            "Translate English to German: the transformers are truly amazing",
+        ]
         input_ids = tokenizer(sentences, return_tensors="tf", padding=True).input_ids
 
         generation_kwargs = {
             "do_sample": True,
-            "bad_words_ids": [tokenizer("my").input_ids, tokenizer("ein schöner").input_ids],
+            "bad_words_ids": [
+                tokenizer("my").input_ids,
+                tokenizer("ein schöner").input_ids,
+            ],
             "no_repeat_ngram_size": 3,
             "repetition_penalty": 2.2,
             "temperature": 0.8,
@@ -539,12 +623,17 @@ class TFT5GenerationIntegrationTests(unittest.TestCase):
 
         # forces the generation to happen on CPU, to avoid GPU-related quirks
         with tf.device(":/CPU:0"):
-            tf.random.set_seed(42)  # deterministic sampling sequence -> deterministic generation
+            tf.random.set_seed(
+                42
+            )  # deterministic sampling sequence -> deterministic generation
             output_ids = model.generate(input_ids, **generation_kwargs)
 
         output_strings = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
 
-        expected_output_string = ["i love her I really love my heart", "die Transformatoren sind wirklich erstaunlich"]
+        expected_output_string = [
+            "i love her I really love my heart",
+            "die Transformatoren sind wirklich erstaunlich",
+        ]
 
         self.assertListEqual(expected_output_string, output_strings)
 
@@ -553,11 +642,17 @@ class TFT5GenerationIntegrationTests(unittest.TestCase):
         model = TFT5ForConditionalGeneration.from_pretrained("t5-small")
         tokenizer = T5Tokenizer.from_pretrained("t5-small")
 
-        sentences = ["I really love my", "Translate English to German: the transformers are truly amazing"]
+        sentences = [
+            "I really love my",
+            "Translate English to German: the transformers are truly amazing",
+        ]
         input_ids = tokenizer(sentences, return_tensors="tf", padding=True).input_ids
 
         generation_kwargs = {
-            "bad_words_ids": [tokenizer("my").input_ids, tokenizer("ein schöner").input_ids],
+            "bad_words_ids": [
+                tokenizer("my").input_ids,
+                tokenizer("ein schöner").input_ids,
+            ],
             "no_repeat_ngram_size": 3,
             "do_sample": False,
             "repetition_penalty": 2.2,
@@ -568,7 +663,10 @@ class TFT5GenerationIntegrationTests(unittest.TestCase):
 
         output_strings = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
 
-        expected_output_string = ["Ich liebe es so sehr!", "die Transformatoren sind wirklich erstaunlich"]
+        expected_output_string = [
+            "Ich liebe es so sehr!",
+            "die Transformatoren sind wirklich erstaunlich",
+        ]
         self.assertListEqual(expected_output_string, output_strings)
 
 
@@ -681,7 +779,10 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
         model.config.update(summarization_config)
 
         dct = tok(
-            [model.config.prefix + x for x in [FRANCE_ARTICLE, SHORTER_ARTICLE, IRAN_ARTICLE, ARTICLE_SUBWAY]],
+            [
+                model.config.prefix + x
+                for x in [FRANCE_ARTICLE, SHORTER_ARTICLE, IRAN_ARTICLE, ARTICLE_SUBWAY]
+            ],
             max_length=512,
             padding="max_length",
             truncation=True,
@@ -702,7 +803,8 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
         )
 
         decoded = [
-            tok.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=False) for g in hypotheses_batch
+            tok.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=False)
+            for g in hypotheses_batch
         ]
 
         self.assertListEqual(
@@ -720,11 +822,11 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
         self.model.config.update(translation_config)
 
         original_input = '"Luigi often said to me that he never wanted the brothers to end up in court", she wrote.'
-        expected_translation = (
-            '"Luigi sagte mir oft, dass er nie wollte, dass die Brüder am Gericht sitzen", schrieb sie.'
-        )
+        expected_translation = '"Luigi sagte mir oft, dass er nie wollte, dass die Brüder am Gericht sitzen", schrieb sie.'
 
-        input_ids = tok.encode(model.config.prefix + original_input, return_tensors="tf")
+        input_ids = tok.encode(
+            model.config.prefix + original_input, return_tensors="tf"
+        )
 
         output = model.generate(
             input_ids=input_ids,
@@ -735,7 +837,9 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
             do_sample=False,
             early_stopping=True,
         )
-        translation = tok.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        translation = tok.decode(
+            output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )
 
         self.assertEqual(translation, expected_translation)
 
@@ -769,7 +873,9 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
             do_sample=False,
             early_stopping=True,
         )
-        translation = tok.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        translation = tok.decode(
+            output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )
 
         self.assertEqual(translation, new_truncated_translation)
 
@@ -782,10 +888,14 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
         translation_config = task_specific_config.get("translation_en_to_ro", {})
         model.config.update(translation_config)
 
-        original_input = "Taco Bell said it plans to add 2,000 locations in the US by 2022."
+        original_input = (
+            "Taco Bell said it plans to add 2,000 locations in the US by 2022."
+        )
         expected_translation = "Taco Bell a declarat că intenţionează să adauge 2 000 de locaţii în SUA până în 2022."
 
-        input_ids = tok.encode(model.config.prefix + original_input, return_tensors="tf")
+        input_ids = tok.encode(
+            model.config.prefix + original_input, return_tensors="tf"
+        )
 
         output = model.generate(
             input_ids=input_ids,
@@ -796,7 +906,9 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
             do_sample=False,
             early_stopping=True,
         )
-        translation = tok.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        translation = tok.decode(
+            output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )
 
         self.assertEqual(translation, expected_translation)
 
@@ -807,7 +919,9 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
 
         # This metric expects to be called with the logits output
         def _accuracy(y_true, y_pred):
-            return tf.keras.metrics.sparse_categorical_crossentropy(y_true[:, 0], y_pred[:, 0])
+            return tf.keras.metrics.sparse_categorical_crossentropy(
+                y_true[:, 0], y_pred[:, 0]
+            )
 
         # measure the accuracy of the first token
         class FirstTokenAccuracy(tf.keras.metrics.MeanMetricWrapper):
@@ -823,8 +937,12 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
             ("sentiment: Tensorflow datasets are hard to use", "negative"),
         ]
 
-        inputs = dict(tokenizer([x[0] for x in examples], padding=True, return_tensors="tf"))
-        inputs["labels"] = tokenizer([x[1] for x in examples], return_tensors="tf").input_ids
+        inputs = dict(
+            tokenizer([x[0] for x in examples], padding=True, return_tensors="tf")
+        )
+        inputs["labels"] = tokenizer(
+            [x[1] for x in examples], return_tensors="tf"
+        ).input_ids
 
         model.fit(inputs)
         m = model.evaluate(inputs)

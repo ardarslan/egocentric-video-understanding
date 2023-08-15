@@ -1161,7 +1161,7 @@ class TestLanguageModeling(unittest.TestCase):
                 train_language_model(
                     data_dir,
                     "transformer_lm",
-                    ["--add-bos-token", '--nval',  '1'],
+                    ["--add-bos-token", "--nval", "1"],
                     run_validation=True,
                 )
                 eval_lm_main(data_dir)
@@ -1697,7 +1697,6 @@ class TestActivationCheckpointing(unittest.TestCase):
     def test_activation_offloading_does_not_change_metrics(self):
         """Neither ----checkpoint-activations nor --offload-activations should change loss"""
         with tempfile.TemporaryDirectory("test_transformer_with_act_cpt") as data_dir:
-
             with self.assertLogs():
                 create_dummy_data(data_dir, num_examples=20)
                 preprocess_translation_data(data_dir)

@@ -22,7 +22,9 @@ import unittest
 import black
 
 
-git_repo_path = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+git_repo_path = os.path.abspath(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+)
 sys.path.append(os.path.join(git_repo_path, "utils"))
 
 import check_copies  # noqa: E402
@@ -56,7 +58,9 @@ class CopyCheckTester(unittest.TestCase):
         os.makedirs(os.path.join(self.transformer_dir, "models/bert/"))
         check_copies.TRANSFORMER_PATH = self.transformer_dir
         shutil.copy(
-            os.path.join(git_repo_path, "src/transformers/models/bert/modeling_bert.py"),
+            os.path.join(
+                git_repo_path, "src/transformers/models/bert/modeling_bert.py"
+            ),
             os.path.join(self.transformer_dir, "models/bert/modeling_bert.py"),
         )
 
@@ -64,10 +68,14 @@ class CopyCheckTester(unittest.TestCase):
         check_copies.TRANSFORMER_PATH = "src/transformers"
         shutil.rmtree(self.transformer_dir)
 
-    def check_copy_consistency(self, comment, class_name, class_code, overwrite_result=None):
+    def check_copy_consistency(
+        self, comment, class_name, class_code, overwrite_result=None
+    ):
         code = comment + f"\nclass {class_name}(nn.Module):\n" + class_code
         if overwrite_result is not None:
-            expected = comment + f"\nclass {class_name}(nn.Module):\n" + overwrite_result
+            expected = (
+                comment + f"\nclass {class_name}(nn.Module):\n" + overwrite_result
+            )
         mode = black.Mode(target_versions={black.TargetVersion.PY35}, line_length=119)
         code = black.format_str(code, mode=mode)
         fname = os.path.join(self.transformer_dir, "new_code.py")
@@ -81,7 +89,9 @@ class CopyCheckTester(unittest.TestCase):
                 self.assertTrue(f.read(), expected)
 
     def test_find_code_in_transformers(self):
-        code = check_copies.find_code_in_transformers("models.bert.modeling_bert.BertLMPredictionHead")
+        code = check_copies.find_code_in_transformers(
+            "models.bert.modeling_bert.BertLMPredictionHead"
+        )
         self.assertEqual(code, REFERENCE_CODE)
 
     def test_is_copy_consistent(self):
@@ -107,7 +117,9 @@ class CopyCheckTester(unittest.TestCase):
         )
 
         # Copy consistency with a really long name
-        long_class_name = "TestModelWithAReallyLongNameBecauseSomePeopleLikeThatForSomeReason"
+        long_class_name = (
+            "TestModelWithAReallyLongNameBecauseSomePeopleLikeThatForSomeReason"
+        )
         self.check_copy_consistency(
             f"# Copied from transformers.models.bert.modeling_bert.BertLMPredictionHead with Bert->{long_class_name}",
             f"{long_class_name}LMPredictionHead",
@@ -148,7 +160,9 @@ class CopyCheckTester(unittest.TestCase):
         converted_md_list_sample = "1. **[ALBERT](https://huggingface.co/transformers/model_doc/albert.html)** (来自 Google Research and the Toyota Technological Institute at Chicago) 伴随论文 [ALBERT: A Lite BERT for Self-supervised Learning of Language Representations](https://arxiv.org/abs/1909.11942), 由 Zhenzhong Lan, Mingda Chen, Sebastian Goodman, Kevin Gimpel, Piyush Sharma, Radu Soricut 发布。\n"
 
         num_models_equal, converted_md_list = check_copies.convert_to_localized_md(
-            link_changed_md_list, link_unchanged_md_list, localized_readme["format_model_list"]
+            link_changed_md_list,
+            link_unchanged_md_list,
+            localized_readme["format_model_list"],
         )
 
         # Check if the model link is synchronized.

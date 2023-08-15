@@ -36,7 +36,7 @@ class DummyMTTask(LegacyFairseqTask):
 
     @classmethod
     def setup_task(cls, args, **kwargs):
-        """Setup the task. """
+        """Setup the task."""
         dictionary = Dictionary()
         for i in range(args.dict_size):
             dictionary.add_symbol("word{}".format(i))

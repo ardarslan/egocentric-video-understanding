@@ -60,7 +60,12 @@ from .file_utils import (
     is_torchaudio_available,
     is_vision_available,
 )
-from .integrations import is_optuna_available, is_ray_available, is_sigopt_available, is_wandb_available
+from .integrations import (
+    is_optuna_available,
+    is_ray_available,
+    is_sigopt_available,
+    is_wandb_available,
+)
 
 
 SMALL_MODEL_IDENTIFIER = "julien-c/bert-xsmall-dummy"
@@ -140,7 +145,11 @@ def is_pt_flax_cross_test(test_case):
     variable to a truthy value and selecting the is_pt_flax_cross_test pytest mark.
 
     """
-    if not _run_pt_flax_cross_tests or not is_torch_available() or not is_flax_available():
+    if (
+        not _run_pt_flax_cross_tests
+        or not is_torch_available()
+        or not is_flax_available()
+    ):
         return unittest.skip("test is PT+FLAX test")(test_case)
     else:
         try:
@@ -533,7 +542,9 @@ def require_torch_gpu(test_case):
 def require_torch_bf16(test_case):
     """Decorator marking a test that requires Ampere or a newer GPU arch, cuda>=11 and torch>=1.10."""
     if not is_torch_bf16_available():
-        return unittest.skip("test requires Ampere or a newer GPU arch, cuda>=11 and torch>=1.10")(test_case)
+        return unittest.skip(
+            "test requires Ampere or a newer GPU arch, cuda>=11 and torch>=1.10"
+        )(test_case)
     else:
         return test_case
 
@@ -541,7 +552,9 @@ def require_torch_bf16(test_case):
 def require_torch_tf32(test_case):
     """Decorator marking a test that requires Ampere or a newer GPU arch, cuda>=11 and torch>=1.7."""
     if not is_torch_tf32_available():
-        return unittest.skip("test requires Ampere or a newer GPU arch, cuda>=11 and torch>=1.7")(test_case)
+        return unittest.skip(
+            "test requires Ampere or a newer GPU arch, cuda>=11 and torch>=1.7"
+        )(test_case)
     else:
         return test_case
 
@@ -715,6 +728,7 @@ def get_tests_dir(append_path=None):
 # The original code came from:
 # https://github.com/fastai/fastai/blob/master/tests/utils/text.py
 
+
 # When any function contains print() calls that get overwritten, like progress bars,
 # a special care needs to be applied, since under pytest -s captured output (capsys
 # or contextlib.redirect_stdout) contains any temporary printed strings, followed by
@@ -784,7 +798,6 @@ class CaptureStd:
     ```"""
 
     def __init__(self, out=True, err=True, replay=True):
-
         self.replay = replay
 
         if out:
@@ -1036,7 +1049,9 @@ class TestCasePlus(unittest.TestCase):
         if tmp_dir:
             self._repo_root_dir = tmp_dir
         else:
-            raise ValueError(f"can't figure out the root of the repo from {self._test_file_path}")
+            raise ValueError(
+                f"can't figure out the root of the repo from {self._test_file_path}"
+            )
         self._tests_dir = self._repo_root_dir / "tests"
         self._examples_dir = self._repo_root_dir / "examples"
         self._src_dir = self._repo_root_dir / "src"
@@ -1134,7 +1149,6 @@ class TestCasePlus(unittest.TestCase):
             tmp_dir(`string`): either the same value as passed via *tmp_dir* or the path to the auto-selected tmp dir
         """
         if tmp_dir is not None:
-
             # defining the most likely desired behavior for when a custom path is provided.
             # this most likely indicates the debug mode where we want an easily locatable dir that:
             # 1. gets cleared out before the test (if it already exists)
@@ -1179,7 +1193,6 @@ class TestCasePlus(unittest.TestCase):
         return tmp_dir
 
     def tearDown(self):
-
         # get_auto_remove_tmp_dir feature: remove registered temp dirs
         for path in self.teardown_tmp_dirs:
             shutil.rmtree(path, ignore_errors=True)
@@ -1317,7 +1330,9 @@ def pytest_terminal_summary_main(tr, id):
             f.write("slowest durations\n")
             for i, rep in enumerate(dlist):
                 if rep.duration < durations_min:
-                    f.write(f"{len(dlist)-i} durations < {durations_min} secs were omitted")
+                    f.write(
+                        f"{len(dlist)-i} durations < {durations_min} secs were omitted"
+                    )
                     break
                 f.write(f"{rep.duration:02.2f}s {rep.when:<8} {rep.nodeid}\n")
 
@@ -1331,7 +1346,9 @@ def pytest_terminal_summary_main(tr, id):
             msg = tr._getfailureheadline(rep)
             tr.write_sep("_", msg, red=True, bold=True)
             # chop off the optional leading extra frames, leaving only the last one
-            longrepr = re.sub(r".*_ _ _ (_ ){10,}_ _ ", "", rep.longreprtext, 0, re.M | re.S)
+            longrepr = re.sub(
+                r".*_ _ _ (_ ){10,}_ _ ", "", rep.longreprtext, 0, re.M | re.S
+            )
             tr._tw.line(longrepr)
             # note: not printing out any rep.sections to keep the report short
 
@@ -1365,7 +1382,9 @@ def pytest_terminal_summary_main(tr, id):
         tr.summary_warnings()  # normal warnings
         tr.summary_warnings()  # final warnings
 
-    tr.reportchars = "wPpsxXEf"  # emulate -rA (used in summary_passes() and short_test_summary())
+    tr.reportchars = (
+        "wPpsxXEf"  # emulate -rA (used in summary_passes() and short_test_summary())
+    )
     with open(report_files["passes"], "w") as f:
         tr._tw = create_terminal_writer(config, f)
         tr.summary_passes()
@@ -1406,7 +1425,9 @@ async def _read_stream(stream, callback):
             break
 
 
-async def _stream_subprocess(cmd, env=None, stdin=None, timeout=None, quiet=False, echo=False) -> _RunOutput:
+async def _stream_subprocess(
+    cmd, env=None, stdin=None, timeout=None, quiet=False, echo=False
+) -> _RunOutput:
     if echo:
         print("\nRunning: ", " ".join(cmd))
 
@@ -1447,11 +1468,14 @@ async def _stream_subprocess(cmd, env=None, stdin=None, timeout=None, quiet=Fals
     return _RunOutput(await p.wait(), out, err)
 
 
-def execute_subprocess_async(cmd, env=None, stdin=None, timeout=180, quiet=False, echo=True) -> _RunOutput:
-
+def execute_subprocess_async(
+    cmd, env=None, stdin=None, timeout=180, quiet=False, echo=True
+) -> _RunOutput:
     loop = asyncio.get_event_loop()
     result = loop.run_until_complete(
-        _stream_subprocess(cmd, env=env, stdin=stdin, timeout=timeout, quiet=quiet, echo=echo)
+        _stream_subprocess(
+            cmd, env=env, stdin=stdin, timeout=timeout, quiet=quiet, echo=echo
+        )
     )
 
     cmd_str = " ".join(cmd)
@@ -1506,7 +1530,10 @@ def nested_simplify(obj, decimals=3):
     elif isinstance(obj, np.ndarray):
         return nested_simplify(obj.tolist())
     elif isinstance(obj, (dict, BatchEncoding)):
-        return {nested_simplify(k, decimals): nested_simplify(v, decimals) for k, v in obj.items()}
+        return {
+            nested_simplify(k, decimals): nested_simplify(v, decimals)
+            for k, v in obj.items()
+        }
     elif isinstance(obj, (str, int, np.int64)):
         return obj
     elif obj is None:

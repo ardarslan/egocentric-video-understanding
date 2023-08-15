@@ -23,26 +23,34 @@ def process(process_idx, data):
             output_dir = get_extracted_frame_dir_path(video_id)
         else:
             output_dir = join(args.output_dir, video_id)
-        #if os.path.isdir(output_dir):
+        # if os.path.isdir(output_dir):
         #    continue
 
         try:
-            gen = get_action_recognition_frame_gen(subsets=["val"], videos=[video_id],
-                                                   action_frames_only=not args.full_video,
-                                                   max_width=args.max_width, max_height=args.max_height)
-            os.makedirs(output_dir, exist_ok=True) # only create directory here!
+            gen = get_action_recognition_frame_gen(
+                subsets=["val"],
+                videos=[video_id],
+                action_frames_only=not args.full_video,
+                max_width=args.max_width,
+                max_height=args.max_height,
+            )
+            os.makedirs(output_dir, exist_ok=True)  # only create directory here!
             for frame_data in gen:
                 # progress_bar.set_description(frame_data["frame_id"])
-                output_path = join(output_dir, f"frame_{(frame_data['original_frame_idx']):07}.jpg")
+                output_path = join(
+                    output_dir, f"frame_{(frame_data['original_frame_idx']):07}.jpg"
+                )
                 if isfile(output_path):
                     continue
-                
+
                 img = Image.fromarray(frame_data["image"])
                 img.save(output_path)
 
                 num_processed_frames += 1
                 if num_processed_frames % 100 == 0:
-                    print(f"Process {process_idx}: at {frame_data['frame_id']} ({num_processed_frames} frames , {video_idx}/{len(video_ids)} videos)")
+                    print(
+                        f"Process {process_idx}: at {frame_data['frame_id']} ({num_processed_frames} frames , {video_idx}/{len(video_ids)} videos)"
+                    )
         except Exception as ex:
             print(f"Error processing {video_id}:", ex)
             continue
@@ -63,7 +71,9 @@ def main(arg_dict=None):
     if args.generator_videos is None:
         args.generator_videos = get_video_list()
     else:
-        args.generator_videos = extend_video_list([s.strip() for v in args.generator_videos for s in v.split(",")])
+        args.generator_videos = extend_video_list(
+            [s.strip() for v in args.generator_videos for s in v.split(",")]
+        )
 
     args.num_jobs = min(args.num_jobs, len(args.generator_videos))
 
@@ -71,7 +81,12 @@ def main(arg_dict=None):
         process(0, (args, args.generator_videos))
     else:
         with Pool(processes=args.num_jobs) as pool:
-            paths_split = list(map(lambda a: list(map(str, a)), np.array_split(args.generator_videos, args.num_jobs)))
+            paths_split = list(
+                map(
+                    lambda a: list(map(str, a)),
+                    np.array_split(args.generator_videos, args.num_jobs),
+                )
+            )
             pool.starmap(process, enumerate(zip([args] * args.num_jobs, paths_split)))
 
 

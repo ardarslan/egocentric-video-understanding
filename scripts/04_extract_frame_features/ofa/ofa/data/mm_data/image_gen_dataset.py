@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 from io import BytesIO
@@ -31,11 +31,11 @@ warnings.filterwarnings("ignore", "(Possibly )?corrupt EXIF data", UserWarning)
 
 
 def collate(
-        samples,
-        pad_idx,
-        eos_idx,
-        left_pad_source=False,
-        left_pad_target=False,
+    samples,
+    pad_idx,
+    eos_idx,
+    left_pad_source=False,
+    left_pad_target=False,
 ):
     if len(samples) == 0:
         return {}
@@ -52,10 +52,12 @@ def collate(
     id = np.array([s["id"] for s in samples])
     src_tokens = merge("source", left_pad=left_pad_source)
     # sort by descending source length
-    src_lengths = torch.LongTensor([s["source"].ne(pad_idx).long().sum() for s in samples])
+    src_lengths = torch.LongTensor(
+        [s["source"].ne(pad_idx).long().sum() for s in samples]
+    )
 
     code_images = np.array([s["code_image"] for s in samples])
-    code_masks = torch.cat([sample['code_mask'] for sample in samples])
+    code_masks = torch.cat([sample["code_mask"] for sample in samples])
 
     prev_output_tokens = None
     target = None
@@ -79,32 +81,32 @@ def collate(
             "src_tokens": src_tokens,
             "src_lengths": src_lengths,
             "code_masks": code_masks,
-            "prev_output_tokens": prev_output_tokens
+            "prev_output_tokens": prev_output_tokens,
         },
         "code_images": code_images,
-        "target": target
+        "target": target,
     }
 
     return batch
 
 
 def preprocess_vqgan(x):
-    x = 2. * x - 1.
+    x = 2.0 * x - 1.0
     return x
 
 
 class ImageGenDataset(OFADataset):
     def __init__(
-            self,
-            split,
-            dataset,
-            bpe,
-            src_dict,
-            tgt_dict=None,
-            max_src_length=128,
-            code_dict_size=8192,
-            code_image_size=256,
-            num_bins=1000
+        self,
+        split,
+        dataset,
+        bpe,
+        src_dict,
+        tgt_dict=None,
+        max_src_length=128,
+        code_dict_size=8192,
+        code_image_size=256,
+        num_bins=1000,
     ):
         super().__init__(split, dataset, bpe, src_dict, tgt_dict)
         self.max_src_length = max_src_length
@@ -114,16 +116,15 @@ class ImageGenDataset(OFADataset):
         self.num_bins = num_bins
 
         slice_id = self.dataset.slice_id
-        empty_img = Image.new('RGB', (code_image_size, code_image_size))
-        empty_img.save(f'temp_{slice_id}.png')
-        img = Image.open(f'temp_{slice_id}.png')
+        empty_img = Image.new("RGB", (code_image_size, code_image_size))
+        empty_img.save(f"temp_{slice_id}.png")
+        img = Image.open(f"temp_{slice_id}.png")
         img_buffer = BytesIO()
         img.save(img_buffer, format=img.format)
         byte_data = img_buffer.getvalue()
         self.empty_image_base64 = base64.urlsafe_b64encode(byte_data)
 
     def __getitem__(self, index):
-
         data = self.dataset[index]
         if len(data) == 2:
             uniq_id, text = data
@@ -145,11 +146,11 @@ class ImageGenDataset(OFADataset):
         prev_output_item = torch.cat([self.bos_item, tgt_item])
 
         caption_token_list = text.strip().split()
-        caption = ' '.join(caption_token_list[:self.max_src_length])
+        caption = " ".join(caption_token_list[: self.max_src_length])
         src_item = self.encode_text(
             " what is the complete image? caption: {}".format(caption),
             append_bos=True,
-            append_eos=True
+            append_eos=True,
         )
         example = {
             "id": uniq_id,
@@ -157,7 +158,7 @@ class ImageGenDataset(OFADataset):
             "code_mask": code_mask,
             "code_image": image,
             "target": target_item,
-            "prev_output_tokens": prev_output_item
+            "prev_output_tokens": prev_output_item,
         }
         return example
 

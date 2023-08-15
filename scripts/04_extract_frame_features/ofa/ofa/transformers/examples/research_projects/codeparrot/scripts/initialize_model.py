@@ -1,5 +1,10 @@
 from arguments import InitializationArguments
-from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    HfArgumentParser,
+)
 
 
 # Configuration
@@ -10,7 +15,11 @@ args = parser.parse_args()
 tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name)
 
 # Config: "scale_attn_by_layer_idx" and "reorder_and_upcast_attn" are Mistral stability tweaks
-config_kwargs = {"vocab_size": len(tokenizer), "scale_attn_by_layer_idx": True, "reorder_and_upcast_attn": True}
+config_kwargs = {
+    "vocab_size": len(tokenizer),
+    "scale_attn_by_layer_idx": True,
+    "reorder_and_upcast_attn": True,
+}
 
 # Load model config (GPT-2 large in this case)
 config = AutoConfig.from_pretrained(args.config_name, **config_kwargs)

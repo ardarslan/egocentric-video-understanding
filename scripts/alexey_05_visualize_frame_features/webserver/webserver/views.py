@@ -27,9 +27,14 @@ def index(request):
     template = loader.get_template("webserver/index.html")
     context = {}
     # add videos
-    context["videos"] = [{"name": "P01_12"}, {"name": "P01_13"}, {"name": "P08_17"}, {"name": "P09_07"}]
-    #context["videos"] = [{"name": video_name} for video_name in get_video_list()]
-    
+    context["videos"] = [
+        {"name": "P01_12"},
+        {"name": "P01_13"},
+        {"name": "P08_17"},
+        {"name": "P09_07"},
+    ]
+    # context["videos"] = [{"name": video_name} for video_name in get_video_list()]
+
     for global_name in dir(utils.globals):
         if global_name.startswith("__"):
             continue
@@ -97,7 +102,7 @@ def index(request):
 #         range_obj = range(row["start_frame"], row["stop_frame"])
 
 #         av["gt_activity"].append([row["start_frame"], row["stop_frame"]-1, row["verb"], row["noun"]])
-    
+
 #     print("csv_data.iterrows(): %.4f" % (time.time() - start_tm))
 
 #     with open(FOCUS_DATA_PATH, "rb") as f:
@@ -145,7 +150,7 @@ def index(request):
 
 #         if "image" not in handled_channels:
 #             av["image"].append([0, reader.get_virtual_frame_count()])
-        
+
 #         unavailable_channels = set()
 
 #         for frame_idx in range(reader.get_virtual_frame_count()):
@@ -164,9 +169,9 @@ def index(request):
 
 #                 if channel not in av:
 #                     av[channel] = []
-                
+
 #                 path = CHANNEL_FRAME_PATH_FUNCTS[path_funct_channel](video_id, frame_idx, frame_id, version)
-                
+
 #                 if isfile(path):
 #                     if len(av[channel]) == 0 or av[channel][-1][1] != frame_idx:
 #                         av[channel].append([frame_idx, frame_idx+1])
@@ -191,7 +196,7 @@ def index(request):
 #                     elif not isdir(dirname(hand_mesh_path)) and not isdir(dirname(hand_mesh_vis_path)):
 #                         unavailable_channels.add(channel)
 #                         continue
-                    
+
 #             if "hand_bbox" not in handled_channels and "hand_bbox" not in unavailable_channels:
 #                 hand_bbox_path = CHANNEL_FRAME_PATH_FUNCTS["hand_bbox"](video_id, frame_idx, frame_id)
 #                 if isfile(hand_bbox_path):
@@ -208,7 +213,7 @@ def index(request):
 #                     if channel not in handled_channels and channel not in unavailable_channels:
 #                         if channel not in av:
 #                             av[channel] = []
-                        
+
 #                         hos_path = CHANNEL_FRAME_PATH_FUNCTS[super_channel](video_id, frame_idx, frame_id, version)
 #                         if isfile(hos_path):
 #                             if len(av[channel]) == 0 or av[channel][-1][-1] != frame_idx:
@@ -225,7 +230,7 @@ def index(request):
 #                     if isfile(segmentation_mask_path):
 #                         if channel not in av:
 #                             av[channel] = []
-                        
+
 #                         if len(av[channel]) == 0 or av[channel][-1][-1] != frame_idx:
 #                             av[channel].append([frame_idx, frame_idx+1])
 #                         else:
@@ -239,7 +244,7 @@ def index(request):
 #                     if isfile(CHANNEL_FRAME_PATH_FUNCTS["object_bbox"](video_id, frame_idx, frame_id, object_bbox_version)):
 #                         if channel not in av:
 #                             av[channel] = []
-                        
+
 #                         if len(av[channel]) == 0 or av[channel][-1][-1] != frame_idx:
 #                             av[channel].append([frame_idx, frame_idx+1])
 #                         else:
@@ -257,8 +262,8 @@ def index(request):
 
 #             for image_version in available_image_versions:
 #                 for hos_version in available_hos_versions:
-#                     for min_length in available_tracking_mask_min_lengths: 
-                        
+#                     for min_length in available_tracking_mask_min_lengths:
+
 #                         found_object_tracks, found_left_hand_tracks, found_right_hand_tracks  = [], [], []
 #                         for track_type, track_list in zip(["object", "left_hand", "right_hand"],
 #                                                           [found_object_tracks, found_left_hand_tracks, found_right_hand_tracks]):
@@ -267,9 +272,9 @@ def index(request):
 #                             if channel not in handled_channels and channel not in unavailable_channels:
 #                                 if channel not in av:
 #                                     av[channel] = []
-                                
+
 #                                 tracking_mask_path = CHANNEL_FRAME_PATH_FUNCTS["tracking_mask"](video_id, frame_idx, frame_id, image_version, hos_version, min_length, track_type)
-                        
+
 #                                 if isdir(tracking_mask_path):
 #                                     for dir_name in os.listdir(join(tracking_mask_path)):
 #                                         dir_path = join(tracking_mask_path, dir_name)
@@ -279,7 +284,7 @@ def index(request):
 #                                 else:
 #                                     unavailable_channels.add(channel)
 
-#                                 # slowdown?      
+#                                 # slowdown?
 #                                 # track_list.sort()
 
 #                                 if len(track_list) > 0:
@@ -295,11 +300,11 @@ def index(request):
 #                         av["focus"].append([frame_idx, frame_idx+1])
 #                     else:
 #                         av["focus"][-1][-1] = frame_idx+1
-    
+
 #     for channel in all_channels:
 #         if channel in handled_channels or channel == "focus" or channel not in av:
 #             continue
-        
+
 #         file_count, last_mod_timestamp = channel_fc_lm[channel]
 #         channel_cache_path = get_channel_cache_path(channel)
 #         os.makedirs(dirname(channel_cache_path), exist_ok=True)
@@ -360,7 +365,7 @@ def index(request):
 #             path = join(root, fn)
 #             with open(path, "rb") as f:
 #                 video_data["comments"][fn.replace(".pkl", "")] = pickle.load(f)
-    
+
 #     return JsonResponse(video_data)
 
 
@@ -410,9 +415,9 @@ def index(request):
 
 #     channels = [strp for s in request.GET["channels"].split(",") if len(strp := s.strip()) > 0 ] if "channels" in request.GET else []
 #     tracking_bbox_channels = [strp for s in request.GET["tracking_channels"].split(",") if len(strp := s.strip()) > 0 ] if "tracking_channels" in request.GET else []
-    
+
 #     frame_id = fmt_frame(video_id, frame_idx)
-    
+
 #     base_image = None
 #     reader = None
 #     try:
@@ -444,7 +449,7 @@ def index(request):
 #                 depth_top_path = join(ROOT_PATH, "data", "EK_depth", video_id)
 #                 print(f"{depth_top_path=}")
 #                 _, original_frame_idx = reader.get_frame(frame_idx, return_real_frame_idx=True)
-                
+
 #                 for depth_top_subdir in os.listdir(depth_top_path):
 #                     depth_top_subdir_path = join(depth_top_path, depth_top_subdir)
 #                     if not isdir(depth_top_subdir_path):
@@ -465,7 +470,7 @@ def index(request):
 #                             depth_h = disparity_data.shape[0]
 
 #                             depth = ((1.0 / disparity_data) * (3.0 / 255.0) * 65535.0)
-                            
+
 #                             depth_out_path = join(ROOT_PATH, "data", "EK_temp_depth", video_id, f"{frame_id}.png")
 #                             os.makedirs(dirname(depth_out_path), exist_ok=True)
 
@@ -482,7 +487,7 @@ def index(request):
 
 #     if base_image is None:
 #         base_image = Image.fromarray(cv2.imread(join(ROOT_PATH, "data", "etc", "no_image.png"))).convert("RGBA")
-    
+
 #     x_ratio = base_image.width / orig_image_width
 #     y_ratio = base_image.height / orig_image_height
 
@@ -525,7 +530,7 @@ def index(request):
 #                 suffix += "; CLS: " + top_iou_class
 #             cd = float(postprocessing_data["cd_avg"]) if "cd_avg" in postprocessing_data else np.nan
 #             cd_90 = float(postprocessing_data["cd_avg_quantiles_ema"][90]) if "cd_avg_quantiles_ema" in postprocessing_data else np.nan
-            
+
 #             hands_iou = val if (val := postprocessing_data.get("track_hos_hands_intersection_iou", np.nan)) is not None else np.nan
 #             hands_ioa = val if (val := postprocessing_data.get("track_hos_hands_intersection_ioa", np.nan)) is not None else np.nan
 #             hands_iou_ema = val if (val := postprocessing_data.get("track_hos_hands_intersection_iou_ema", np.nan)) is not None else np.nan
@@ -541,10 +546,10 @@ def index(request):
 
 #             if not np.isnan(cd_90):
 #                 suffix += f'; CDQ90: {"%.4f" % cd_90}'
-                
+
 #             filter_passed = not (np.isnan(tortuosity) or np.isnan(tortuosity_ema) or tortuosity_ema > max_tortuosity
 #                                  or cd_90 > max_cd or (not np.isnan(hands_ioa_ema) and hands_ioa_ema > max_ema_hand_ioa))
-            
+
 #             return tortuosity, tortuosity_ema, top_iou_class, cd, cd_90,\
 #                    hands_iou, hands_ioa, hands_iou_ema, hands_ioa_ema,\
 #                    object_iou, object_ioa, object_iou_ema, object_ioa_ema,\
@@ -579,7 +584,7 @@ def index(request):
 #                     for dir_name in sorted(dirs):
 #                         track_ids.add(dir_name)
 #                         # dir_name is track ID
-                        
+
 #                         # don't apply filtering to merging
 #                         #if len(tracking_mask_filter) > 0 and not any((dir_name.startswith(fs) for fs in tracking_mask_filter)):
 #                         #    continue
@@ -620,7 +625,7 @@ def index(request):
 #                             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 #         # calculate which tracks to merge
-        
+
 #         print(f"{tracking_summaries.keys()=}")
 
 #         tracking_mask_merging_scheme = [strp for s in request.GET.get("tracking_mask_merging_scheme", "iou").split(",") if len(strp := s.strip()) > 0]
@@ -642,7 +647,7 @@ def index(request):
 #                         frames_ioas = {}
 
 #                     print(f"{track_id=} {other_track_id=}")
-                    
+
 #                     num_iou_overlaps = sum((1 for v in frames_ious.values() if v >= min_iou))
 #                     num_ioa_overlaps = sum((1 for v in frames_ioas.values() if v >= min_ioa))
 #                     num_iou_ioa_overlaps = sum((1 for k, iou in frames_ious.items() if iou >= min_iou and k in frames_ioas and frames_ioas[k] >= min_ioa))
@@ -659,7 +664,7 @@ def index(request):
 #                         num_filtered_overlaps = len(frames_ious)
 
 #                     overlap_fraction = num_filtered_overlaps / max(1, this_track_appearance_count)
-#                     overlap_fraction_reverse = -1.0 
+#                     overlap_fraction_reverse = -1.0
 
 #                     if overlap_fraction >= min_frame_fraction:
 #                         if dir_name not in tracking_mask_merge_dict:
@@ -667,7 +672,7 @@ def index(request):
 #                         tracking_mask_merge_dict[dir_name].add(other_track_id)
 
 #                         print(f"Merging {dir_name} into {other_track_id}")
-                    
+
 #                     if other_track_id in tracking_summaries:
 #                         other_tracking_summary = tracking_summaries[other_track_id]
 #                         if "track_mask_appearances_filter2_passed" not in other_tracking_summary:
@@ -729,10 +734,10 @@ def index(request):
 
 #                             exclude_main = False
 #                             mask = np.zeros(tracking_mask_data["masks"].shape, dtype=bool)
-                            
+
 #                             if len(tracking_mask_filter) > 0 and not any((dir_name.startswith(fs) for fs in tracking_mask_filter)):
 #                                 exclude_main = True
-                            
+
 #                             tracks_merged_into_this = []
 #                             if merge_tracking_mask_tracks:
 #                                 merge_this_track_into = find(dir_name)
@@ -747,13 +752,13 @@ def index(request):
 #                                             candidate_track_in_this_frame = (candidate_track_id in tracking_data
 #                                                                             and candidate_track_id in tracking_summaries
 #                                                                             and frame_id in tracking_summaries[candidate_track_id].get("track_mask_appearances_filter2_passed", []))
-                                            
+
 #                                             tortuosity, tortuosity_ema, top_iou_class, cd, cd_90,\
 #                                             hands_iou, hands_ioa, hands_iou_ema, hands_ioa_ema,\
 #                                             object_iou, object_ioa, object_iou_ema, object_ioa_ema,\
 #                                             suffix, filter_passed = get_track_data(tracking_postprocessing_data.get(candidate_track_id, {}),
 #                                                                                    tracking_summaries.get(candidate_track_id, {}))
-                                            
+
 #                                             if not filter_passed:
 #                                                 continue
 
@@ -765,7 +770,7 @@ def index(request):
 #                             # check if we have tortuosity info
 #                             # lambda video_id, frame_idx, frame_id, image_version, hos_version, min_length, track_type:
 #                             # join(TRACKING_MASK_POSTPROCESSING_DATA_DIR, image_version.replace("inpainted_", ""), hos_version, f"min-length={min_length}", video_id, track_type),
-                            
+
 #                             # postprocessing_dir = CHANNEL_FRAME_PATH_FUNCTS["tracking_mask_postprocessing"](video_id, frame_idx, frame_id, image_version, hos_version, min_length, track_type)
 #                             # postprocessing_summary_path = join(postprocessing_dir, dir_name, "_summary.pkl")
 #                             # if isfile(postprocessing_summary_path):
@@ -814,14 +819,14 @@ def index(request):
 #                             tracking_mask_img = superimpose_colored_mask(tracking_mask_img, mask, color=(255, 255, 255), alpha=255).convert("L")
 #                             draw = ImageDraw.Draw(base_image, "RGBA")
 #                             box = bbox_from_mask(mask)
-                        
+
 #                             tracking_mask_width_ratio = base_image.width / mask.shape[1]
 #                             tracking_mask_height_ratio = base_image.height / mask.shape[0]
 #                             scaled_box = [box[0] * tracking_mask_width_ratio,
 #                                           box[1] * tracking_mask_height_ratio,
 #                                           box[2] * tracking_mask_width_ratio,
 #                                           box[3] * tracking_mask_height_ratio]
-                        
+
 #                             if suffix not in ["", None]:
 #                                 suffix = f" ({suffix})"
 
@@ -850,7 +855,7 @@ def index(request):
 #         filter_hand_border_clearance = float(request.GET["filter_hand_border_clearance"])
 #         if filter_hand_border_clearance == 0.0:
 #             return
-        
+
 #         min_dim = min(base_image.width, base_image.height)
 #         hand_clearance_box = (filter_hand_border_clearance * min_dim, filter_hand_border_clearance * min_dim,
 #                 base_image.width - filter_hand_border_clearance * min_dim,
@@ -858,7 +863,7 @@ def index(request):
 
 #     if "filter_hand_border_clearance" in request.GET:
 #         recompute_hand_clearance_box()
-    
+
 #     if "hand_mesh" in channels:
 #         hand_mesh_version = request.GET.get("hand_mesh_version", DEFAULT_HAND_MESH_VERSION)
 #         vis_path = CHANNEL_FRAME_PATH_FUNCTS["hand_mesh_vis"](video_id, frame_idx, frame_id, hand_mesh_version)
@@ -870,7 +875,7 @@ def index(request):
 #             array_mesh = img_array[:,img_array.shape[1]//2:]
 #             if array_mesh.shape[-1] == 3:
 #                 array_mesh = np.concatenate((array_mesh, 255 * np.ones((*array_mesh.shape[:-1], 1))), axis=-1)
-            
+
 #             array_mesh[np.amax(array_mesh[:,:,:-1], axis=-1) < 10] = 0
 
 #             mesh_img = Image.fromarray(array_mesh.astype(np.uint8)).convert("RGBA")
@@ -878,7 +883,7 @@ def index(request):
 #             base_image = base_image.convert("RGBA")
 #             if base_image.size != mesh_img.size:
 #                 mesh_img = mesh_img.resize(base_image.size, Image.BILINEAR)
-            
+
 #             recompute_hand_clearance_box()
 
 #             base_image = Image.alpha_composite(base_image, mesh_img)
@@ -897,7 +902,7 @@ def index(request):
 #                 print(f"Exception reading {data_path}:", ex)
 #                 pred_output_list = None
 
-            
+
 #             if pred_output_list is not None:
 #                 for hand_side in pred_output_list.keys():
 #                     if pred_output_list[hand_side].get("outlier", False) and "bbox_top_left" in pred_output_list[hand_side]:
@@ -953,7 +958,7 @@ def index(request):
 #                                         else:
 #                                             found_right = True
 #                                     pred_joints_img_history[hand].append((offset+extra_offset, hand_data_container[hand]["pred_joints_img"]))
-                        
+
 #                         if found_left and found_right:
 #                             break
 
@@ -961,7 +966,7 @@ def index(request):
 #                     hand_str = "hand_mesh_track_" + hand.split('_')[0]
 #                     if not (hand_str in request.GET and request.GET[hand_str] == "1"):
 #                         continue
-                    
+
 #                     hist = pred_joints_img_history[hand]
 #                     hist_length = len(hist)
 
@@ -975,7 +980,7 @@ def index(request):
 #                             # base_image already scaled to size that was used for this estimate
 #                             # thumb to little finger: 4, 8, 12, 16, 20
 #                             # "#0673B0", "#069E73", "#5BB4E4", "#5AB4E2", "#E5A023"
-                            
+
 #                             for joint_name, joint_color in HAND_JOINT_COLORS.items():
 #                                 joint_idx = HAND_JOINT_INDICES[joint_name]
 #                                 pred_joints_img[joint_idx][0] *= base_image.width / 1280
@@ -993,7 +998,7 @@ def index(request):
 #                                                      coords[0]+ellipse_radius_ext, coords[1]+ellipse_radius_ext), fill=(*tuple(hand_color.tolist()), alpha))
 #                                 overlay_draw.ellipse((coords[0]-ellipse_radius, coords[1]-ellipse_radius,
 #                                                      coords[0]+ellipse_radius, coords[1]+ellipse_radius), fill=(*hex_to_rgb(joint_color), alpha))
-                            
+
 #                             prev_offset, prev_pred_joints_img = offset, pred_joints_img
 
 #                     base_image = Image.alpha_composite(base_image, overlay)
@@ -1020,7 +1025,7 @@ def index(request):
 #                 if sum_left > 0:
 #                     base_image = superimpose_colored_mask(base_image, (pkl == 1), left_color)
 #                     draw = ImageDraw.Draw(base_image, "RGBA")
-                
+
 #                 if sum_right > 0:
 #                     base_image = superimpose_colored_mask(base_image, (pkl == 2), right_color)
 #                     draw = ImageDraw.Draw(base_image, "RGBA")
@@ -1029,7 +1034,7 @@ def index(request):
 #             if isfile(path_object):
 #                 pkl = read_pkl(path_object)
 #                 sum_obj = (pkl > 0).sum()
-                
+
 #                 if sum_obj > 0:
 #                     base_image = superimpose_colored_mask(base_image, (pkl > 0), object_color)
 #                     draw = ImageDraw.Draw(base_image, "RGBA")
@@ -1061,7 +1066,7 @@ def index(request):
 #                         tbd_channel = "hos_object"
 
 #                     tbd_channel += f"_{hos_version}"
-                    
+
 #                     if tracking_bbox_data is not None and "tracking_bbox" in channels:  # "hos" in tracking_bbox_channels:
 #                         tbd = tracking_bbox_data["frame_original_box_idxs_to_tracks"][tbd_channel]
 #                         if idx in tbd:
@@ -1085,12 +1090,12 @@ def index(request):
 #                 hand_data = pkl_data[2]
 #                 if isinstance(hand_data, list):
 #                     hand_data = hand_data[0]
-                
+
 #                 if isinstance(hand_data, dict):
 #                     for hand, hand_color in [("left_hand", "blue"), ("right_hand", "red")]:
 #                         if hand in hand_data and hand_data[hand] is not None:
 #                             d = hand_data[hand]
-                            
+
 #                             box = (d[0], d[1], d[0] + d[2], d[1] + d[3])
 #                             text = hand[0].upper() + (" | VoL: %.2f" % hand_data[hand + "_laplacian_var"] if (hand + "_laplacian_var") in hand_data else "")
 
@@ -1155,7 +1160,7 @@ def index(request):
 
 #                     # get box
 #                     box_img = base_image.crop(extended_box)
-                    
+
 #                     texts_to_draw = []
 
 #                     # draw masks
@@ -1173,7 +1178,7 @@ def index(request):
 #                                 part_ids = tbd[(box_idx, mask_idx)]
 #                             elif len(tracking_bbox_filter) > 0:
 #                                 continue
-                        
+
 #                         if mask["area"] < min_area:
 #                             continue
 
@@ -1183,9 +1188,9 @@ def index(request):
 #                             color = get_color_from_track_id(part_ids[0])
 #                         else:
 #                             color = tuple(np.clip(np.array(hex_to_rgb(PALETTE[(area // 200) % len(PALETTE)])) + np.random.randint(-20, 20, size=3), 0, 255))
-                        
+
 #                         box_img = superimpose_colored_mask(box_img, seg_mask, color)
-                        
+
 #                         if part_ids is not None:
 #                             inner_box = np.array(mask["bbox"])
 #                             inner_box[2] += inner_box[0]
@@ -1230,7 +1235,7 @@ def index(request):
 #                         idx += 1
 #                         if score < min_confidence:
 #                             continue
-                        
+
 #                         text = cls + " | %.2f" % score
 
 #                         if tracking_bbox_data is not None and "tracking_bbox" in channels: #  "object_bbox" in tracking_bbox_channels:
@@ -1247,13 +1252,13 @@ def index(request):
 #                         draw_text_box(box, text, border_color, universal_mask,
 #                                       do_draw_text="box_labels" in channels,
 #                                       orig_box_width=l.get("image_width"), orig_box_height=l.get("image_height"))
-                        
+
 #         else:
 #             print(f"Not found: {path}")
 
 #     if tracking_bbox_data is not None and "tracking_bbox" in channels:
 #         hos_version = request.GET.get("hos_version", DEFAULT_HOS_VERSION)
-        
+
 #         tracking_bbox_channels_repl = [*tracking_bbox_channels]
 
 #         if "hos_hands" in tracking_bbox_channels_repl:
@@ -1269,7 +1274,7 @@ def index(request):
 #         for tracking_channel in tracking_bbox_channels_repl:
 #             if tracking_channel not in tracking_bbox_data["tracks"]:
 #                 continue
-            
+
 #             tch = tracking_bbox_data["tracks"][tracking_channel]
 #             for track_id, track_data in tch.items():
 #                 if len(tracking_bbox_filter) > 0 and not any([track_id.startswith(c) for c in tracking_bbox_filter]):
@@ -1319,7 +1324,7 @@ def index(request):
 #                 hand_bbox_data = pickle.load(f)[2][0]
 #                 frame_data["hand_bbox"] = {k: v.tolist() if isinstance(v, np.ndarray) else v
 #                                            for k, v in hand_bbox_data.items()}
-    
+
 #     if "gt_activity" in channels:
 #         val_csv = get_dataset_csv("val")
 #         row = val_csv[(val_csv["video_id"] == video_id) & (val_csv["start_frame"] <= frame_idx) & (frame_idx < val_csv["stop_frame"])]

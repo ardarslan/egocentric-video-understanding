@@ -49,7 +49,7 @@ class PolynomialDecayLRSchedule(FairseqLRScheduler):
 
         assert cfg.total_num_update > 0
         # set defaults
-        cfg.warmup_updates = getattr(cfg, 'warmup_updates', 0) or 0
+        cfg.warmup_updates = getattr(cfg, "warmup_updates", 0) or 0
 
         self.lr = cfg.lr[0]
         self.warmup_updates = cfg.warmup_updates
@@ -88,7 +88,9 @@ class PolynomialDecayLRSchedule(FairseqLRScheduler):
         else:
             warmup = self.warmup_updates
             lr_range = self.lr - self.end_learning_rate
-            pct_remaining = 1 - (num_updates - warmup) / (self.total_num_update - warmup)
+            pct_remaining = 1 - (num_updates - warmup) / (
+                self.total_num_update - warmup
+            )
             lr = lr_range * pct_remaining ** (self.power) + self.end_learning_rate
         self.optimizer.set_lr(lr)
         return self.optimizer.get_lr()
@@ -106,5 +108,8 @@ class PolynomialDecayLRSchedule(FairseqLRScheduler):
         else:
             self.warmup_factor = 1.0 / self.warmup_updates
             self.optimizer.set_lr(self.warmup_factor * self.lr)
-        print('Total steps {}, warmup steps {}, warmup_factor {}'.format(self.total_num_update, self.warmup_updates,
-                                                                         self.warmup_factor))
+        print(
+            "Total steps {}, warmup steps {}, warmup_factor {}".format(
+                self.total_num_update, self.warmup_updates, self.warmup_factor
+            )
+        )

@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 import math
@@ -38,7 +38,7 @@ class MultiheadAttention(nn.Module):
         q_noise=0.0,
         qn_block_size=8,
         scale_factor=2,
-        scale_heads=False
+        scale_heads=False,
     ):
         super().__init__()
         self.embed_dim = embed_dim
@@ -59,7 +59,11 @@ class MultiheadAttention(nn.Module):
 
         self.self_attention = self_attention
         self.encoder_decoder_attention = encoder_decoder_attention
-        self.c_attn = nn.Parameter(torch.ones((self.num_heads,)), requires_grad=True) if scale_heads else None
+        self.c_attn = (
+            nn.Parameter(torch.ones((self.num_heads,)), requires_grad=True)
+            if scale_heads
+            else None
+        )
 
         assert not self.self_attention or self.qkv_same_dim, (
             "Self-attention requires query, key and " "value to be of the same size"
@@ -127,7 +131,7 @@ class MultiheadAttention(nn.Module):
         self_attn_mask: Optional[Tensor] = None,
         before_softmax: bool = False,
         need_head_weights: bool = False,
-        attn_bias: Optional[Tensor] = None
+        attn_bias: Optional[Tensor] = None,
     ) -> Tuple[Tensor, Optional[Tensor]]:
         """Input shape: Time x Batch x Channel
 
@@ -351,8 +355,12 @@ class MultiheadAttention(nn.Module):
             attn_weights += attn_mask
 
         if self_attn_mask is not None:
-            self_attn_mask = self_attn_mask.unsqueeze(1).expand(bsz, self.num_heads, tgt_len, src_len)
-            attn_weights += self_attn_mask.contiguous().view(bsz * self.num_heads, tgt_len, src_len)
+            self_attn_mask = self_attn_mask.unsqueeze(1).expand(
+                bsz, self.num_heads, tgt_len, src_len
+            )
+            attn_weights += self_attn_mask.contiguous().view(
+                bsz * self.num_heads, tgt_len, src_len
+            )
 
         if key_padding_mask is not None:
             # don't attend to padding symbols
@@ -388,7 +396,7 @@ class MultiheadAttention(nn.Module):
             attn = attn.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
         if self.c_attn is not None:
             attn = attn.view(tgt_len, bsz, self.num_heads, self.head_dim)
-            attn = torch.einsum('tbhd,h->tbhd', attn, self.c_attn)
+            attn = torch.einsum("tbhd,h->tbhd", attn, self.c_attn)
             attn = attn.reshape(tgt_len, bsz, self.embed_dim)
         attn = self.out_proj(attn)
         attn_weights: Optional[Tensor] = None

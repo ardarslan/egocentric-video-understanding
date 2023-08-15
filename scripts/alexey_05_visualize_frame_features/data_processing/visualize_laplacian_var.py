@@ -10,30 +10,40 @@ import sys
 
 sys.path.append(dirname(dirname(__file__)))
 
-from data_handling.specific.ek100 import get_action_recognition_frame_gen, get_video_list
+from data_handling.specific.ek100 import (
+    get_action_recognition_frame_gen,
+    get_video_list,
+)
 from utils.args import arg_dict_to_list
 from utils.globals import *
 from utils.imaging import vstack_np_images
 
 
 def main(arg_dict=None):
-    parser = argparse.ArgumentParser()    
+    parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--f", type=str, default=None)
-    parser.add_argument("--focus_path", type=str,
-                        default="/mnt/scratch/agavryushin/Thesis/data/ek_variance_of_laplacian_1686167060.pkl.bak")
+    parser.add_argument(
+        "--focus_path",
+        type=str,
+        default="/mnt/scratch/agavryushin/Thesis/data/ek_variance_of_laplacian_1686167060.pkl.bak",
+    )
     parser.add_argument("--max_frames_per_video", type=int, default=10)
     parser.add_argument("--max_frames_per_bucket", type=int, default=10)
-    parser.add_argument("--max_frames", type=int, default=1000) # 200
+    parser.add_argument("--max_frames", type=int, default=1000)  # 200
     parser.add_argument("--thumbnail_size", type=int, default=480)
     parser.add_argument("--bucket_size", type=int, default=10)
-    parser.add_argument("--output_dir", type=str, default=join(ROOT_PATH, "data", "laplacian_var_vis"))
+    parser.add_argument(
+        "--output_dir", type=str, default=join(ROOT_PATH, "data", "laplacian_var_vis")
+    )
     parser.add_argument("--generator_videos", action="append", type=str, default=None)
     args, _ = parser.parse_known_args(arg_dict_to_list(arg_dict))
 
     if args.generator_videos is None:
         args.generator_videos = get_video_list()
     else:
-        args.generator_videos = [s.strip() for v in args.generator_videos for s in v.split(",")]
+        args.generator_videos = [
+            s.strip() for v in args.generator_videos for s in v.split(",")
+        ]
 
     with open(args.focus_path, "rb") as f:
         focus_dict = pickle.load(f)
@@ -44,8 +54,7 @@ def main(arg_dict=None):
     videos_frames_processed = {}
     frames_processed = 0
     for video in args.generator_videos:
-        gen = get_action_recognition_frame_gen(subsets=["val"],
-                                               videos=[video])
+        gen = get_action_recognition_frame_gen(subsets=["val"], videos=[video])
         for frame_data in gen:
             video_id = frame_data["video_id"]
             frame_id = frame_data["frame_id"]
@@ -70,7 +79,7 @@ def main(arg_dict=None):
             print(f"{frames_processed=}, {focus_value=}, {bucket=}")
             if frames_processed >= args.max_frames:
                 break
-        
+
         if frames_processed >= args.max_frames:
             break
 

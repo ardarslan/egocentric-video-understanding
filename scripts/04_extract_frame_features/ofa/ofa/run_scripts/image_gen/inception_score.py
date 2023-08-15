@@ -14,15 +14,21 @@ from eval_utils.dataset import Dataset
 from eval_utils.inceptionV3 import InceptionV3
 
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-parser.add_argument('--batch-size', type=int, default=64,
-                    help='Batch size to use')
-parser.add_argument('--dims', type=int, default=2048,
-                    choices=list(InceptionV3.BLOCK_INDEX_BY_DIM),
-                    help=('Dimensionality of Inception features to use. '
-                          'By default, uses pool3 features'))
-parser.add_argument('-c', '--gpu', default='', type=str,
-                    help='GPU to use (leave blank for CPU only)')
-parser.add_argument('--path1', type=str, help='path to images')
+parser.add_argument("--batch-size", type=int, default=64, help="Batch size to use")
+parser.add_argument(
+    "--dims",
+    type=int,
+    default=2048,
+    choices=list(InceptionV3.BLOCK_INDEX_BY_DIM),
+    help=(
+        "Dimensionality of Inception features to use. "
+        "By default, uses pool3 features"
+    ),
+)
+parser.add_argument(
+    "-c", "--gpu", default="", type=str, help="GPU to use (leave blank for CPU only)"
+)
+parser.add_argument("--path1", type=str, help="path to images")
 
 
 def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
@@ -43,7 +49,9 @@ def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
         dtype = torch.cuda.FloatTensor
     else:
         if torch.cuda.is_available():
-            print("WARNING: You have a CUDA device, so you should probably set cuda=True")
+            print(
+                "WARNING: You have a CUDA device, so you should probably set cuda=True"
+            )
         dtype = torch.FloatTensor
 
     # Set up dataloader
@@ -52,7 +60,7 @@ def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
     # Load inception model
     inception_model = inception_v3(pretrained=True, transform_input=False).type(dtype)
     inception_model.eval()
-    up = nn.Upsample(size=(299, 299), mode='bilinear').type(dtype)
+    up = nn.Upsample(size=(299, 299), mode="bilinear").type(dtype)
 
     def get_pred(x):
         if resize:
@@ -68,13 +76,13 @@ def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
         batchv = Variable(batch)
         batch_size_i = batch.size()[0]
 
-        preds[i * batch_size:i * batch_size + batch_size_i] = get_pred(batchv)
+        preds[i * batch_size : i * batch_size + batch_size_i] = get_pred(batchv)
 
     # Now compute the mean kl-div
     split_scores = []
 
     for k in range(splits):
-        part = preds[k * (N // splits): (k + 1) * (N // splits), :]
+        part = preds[k * (N // splits) : (k + 1) * (N // splits), :]
         py = np.mean(part, axis=0)
         scores = []
         for i in range(part.shape[0]):
@@ -85,14 +93,21 @@ def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
     return np.mean(split_scores), np.std(split_scores)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parser.parse_args()
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
-    dataset = Dataset(args.path1, transforms.Compose([
-        transforms.Resize((299, 299)),
-        transforms.ToTensor(),
-    ]))
-    mean, std = inception_score(dataset, cuda=True, batch_size=32, resize=False, splits=1)
-    print('IS mean: ', mean)
-    print('IS std: ', std)
+    dataset = Dataset(
+        args.path1,
+        transforms.Compose(
+            [
+                transforms.Resize((299, 299)),
+                transforms.ToTensor(),
+            ]
+        ),
+    )
+    mean, std = inception_score(
+        dataset, cuda=True, batch_size=32, resize=False, splits=1
+    )
+    print("IS mean: ", mean)
+    print("IS std: ", std)

@@ -100,7 +100,9 @@ class GenericMask:
             self._mask = m.astype("uint8")
             return
 
-        raise ValueError("GenericMask cannot handle object {} of type '{}'".format(m, type(m)))
+        raise ValueError(
+            "GenericMask cannot handle object {} of type '{}'".format(m, type(m))
+        )
 
     @property
     def mask(self):
@@ -120,7 +122,9 @@ class GenericMask:
             if self._mask is not None:
                 self._polygons, self._has_holes = self.mask_to_polygons(self._mask)
             else:
-                self._has_holes = False  # if original format is polygon, does not have holes
+                self._has_holes = (
+                    False  # if original format is polygon, does not have holes
+                )
         return self._has_holes
 
     def mask_to_polygons(self, mask):
@@ -128,8 +132,12 @@ class GenericMask:
         # hierarchy. External contours (boundary) of the object are placed in hierarchy-1.
         # Internal contours (holes) are placed in hierarchy-2.
         # cv2.CHAIN_APPROX_NONE flag gets vertices of polygons from contours.
-        mask = np.ascontiguousarray(mask)  # some versions of cv2 does not support incontiguous arr
-        res = cv2.findContours(mask.astype("uint8"), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+        mask = np.ascontiguousarray(
+            mask
+        )  # some versions of cv2 does not support incontiguous arr
+        res = cv2.findContours(
+            mask.astype("uint8"), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE
+        )
         hierarchy = res[-1]
         if hierarchy is None:  # empty mask
             return [], False
@@ -178,7 +186,9 @@ class _PanopticPrediction:
                     # VOID region.
                     continue
                 pred_class = panoptic_label // label_divisor
-                isthing = pred_class in metadata.thing_dataset_id_to_contiguous_id.values()
+                isthing = (
+                    pred_class in metadata.thing_dataset_id_to_contiguous_id.values()
+                )
                 segments_info.append(
                     {
                         "id": int(panoptic_label),
@@ -304,7 +314,9 @@ class VisImage:
             img: same as in __init__
         """
         img = img.astype("uint8")
-        self.ax.imshow(img, extent=(0, self.width, self.height, 0), interpolation="nearest")
+        self.ax.imshow(
+            img, extent=(0, self.width, self.height, 0), interpolation="nearest"
+        )
 
     def save(self, filepath):
         """
@@ -361,7 +373,9 @@ class Visualizer:
 
     # TODO implement a fast, rasterized version using OpenCV
 
-    def __init__(self, img_rgb, metadata=None, scale=1.0, instance_mode=ColorMode.IMAGE):
+    def __init__(
+        self, img_rgb, metadata=None, scale=1.0, instance_mode=ColorMode.IMAGE
+    ):
         """
         Args:
             img_rgb: a numpy array of shape (H, W, C), where H and W correspond to
@@ -401,24 +415,49 @@ class Visualizer:
         """
         boxes = predictions.pred_boxes if predictions.has("pred_boxes") else None
         scores = predictions.scores if predictions.has("scores") else None
-        classes = predictions.pred_classes.tolist() if predictions.has("pred_classes") else None
+        classes = (
+            predictions.pred_classes.tolist()
+            if predictions.has("pred_classes")
+            else None
+        )
         ###
-        handsides = predictions.pred_handsides.tolist() if predictions.has('pred_handsides') else None
-        contacts = predictions.pred_contacts.tolist() if predictions.has('pred_contacts') else None
-        offsets = predictions.pred_offsets.tolist() if predictions.has('pred_offsets') else None
+        handsides = (
+            predictions.pred_handsides.tolist()
+            if predictions.has("pred_handsides")
+            else None
+        )
+        contacts = (
+            predictions.pred_contacts.tolist()
+            if predictions.has("pred_contacts")
+            else None
+        )
+        offsets = (
+            predictions.pred_offsets.tolist()
+            if predictions.has("pred_offsets")
+            else None
+        )
         #
-        labels = _create_text_labels(classes, scores, self.metadata.get("thing_classes", None))
-        keypoints = predictions.pred_keypoints if predictions.has("pred_keypoints") else None
+        labels = _create_text_labels(
+            classes, scores, self.metadata.get("thing_classes", None)
+        )
+        keypoints = (
+            predictions.pred_keypoints if predictions.has("pred_keypoints") else None
+        )
 
         if predictions.has("pred_masks"):
             masks = np.asarray(predictions.pred_masks)
-            masks = [GenericMask(x, self.output.height, self.output.width) for x in masks]
+            masks = [
+                GenericMask(x, self.output.height, self.output.width) for x in masks
+            ]
         else:
             masks = None
 
-        if self._instance_mode == ColorMode.SEGMENTATION and self.metadata.get("thing_colors"):
+        if self._instance_mode == ColorMode.SEGMENTATION and self.metadata.get(
+            "thing_colors"
+        ):
             colors = [
-                self._jitter([x / 255 for x in self.metadata.thing_colors[c]]) for c in classes
+                self._jitter([x / 255 for x in self.metadata.thing_colors[c]])
+                for c in classes
             ]
             alpha = 0.8
         else:
@@ -438,7 +477,7 @@ class Visualizer:
         self.overlay_instances(
             masks=masks,
             boxes=boxes,
-            handsides=handsides, 
+            handsides=handsides,
             contacts=contacts,
             offsets=offsets,
             labels=labels,
@@ -484,7 +523,9 @@ class Visualizer:
             )
         return self.output
 
-    def draw_panoptic_seg(self, panoptic_seg, segments_info, area_threshold=None, alpha=0.7):
+    def draw_panoptic_seg(
+        self, panoptic_seg, segments_info, area_threshold=None, alpha=0.7
+    ):
         """
         Draw panoptic prediction annotations or results.
 
@@ -535,16 +576,22 @@ class Visualizer:
         except KeyError:
             scores = None
         labels = _create_text_labels(
-            category_ids, scores, self.metadata.thing_classes, [x.get("iscrowd", 0) for x in sinfo]
+            category_ids,
+            scores,
+            self.metadata.thing_classes,
+            [x.get("iscrowd", 0) for x in sinfo],
         )
 
         try:
             colors = [
-                self._jitter([x / 255 for x in self.metadata.thing_colors[c]]) for c in category_ids
+                self._jitter([x / 255 for x in self.metadata.thing_colors[c]])
+                for c in category_ids
             ]
         except AttributeError:
             colors = None
-        self.overlay_instances(masks=masks, labels=labels, assigned_colors=colors, alpha=alpha)
+        self.overlay_instances(
+            masks=masks, labels=labels, assigned_colors=colors, alpha=alpha
+        )
 
         return self.output
 
@@ -581,7 +628,9 @@ class Visualizer:
 
             colors = None
             category_ids = [x["category_id"] for x in annos]
-            if self._instance_mode == ColorMode.SEGMENTATION and self.metadata.get("thing_colors"):
+            if self._instance_mode == ColorMode.SEGMENTATION and self.metadata.get(
+                "thing_colors"
+            ):
                 colors = [
                     self._jitter([x / 255 for x in self.metadata.thing_colors[c]])
                     for c in category_ids
@@ -593,20 +642,24 @@ class Visualizer:
                 class_names=names,
                 is_crowd=[x.get("iscrowd", 0) for x in annos],
             )
-            
+
             # draw offset from hand center
-            handsides = [x['handside'] for x in annos]
-            contacts = [x['isincontact'] for x in annos]
-            offsets = [x['offset'] for x in annos]
+            handsides = [x["handside"] for x in annos]
+            contacts = [x["isincontact"] for x in annos]
+            offsets = [x["offset"] for x in annos]
             # incontact_object_boxes = [x['incontact_object_bbox'] for x in annos]
-            
+
             # pdb.set_trace()
             self.overlay_instances(
-                labels=labels, boxes=boxes, handsides=handsides, contacts=contacts, offsets=offsets, masks=masks, keypoints=keypts, assigned_colors=colors
+                labels=labels,
+                boxes=boxes,
+                handsides=handsides,
+                contacts=contacts,
+                offsets=offsets,
+                masks=masks,
+                keypoints=keypts,
+                assigned_colors=colors,
             )
-            
-            
-            
 
         sem_seg = dic.get("sem_seg", None)
         if sem_seg is None and "sem_seg_file_name" in dic:
@@ -713,7 +766,9 @@ class Visualizer:
         if labels is not None:
             assert len(labels) == num_instances
         if assigned_colors is None:
-            assigned_colors = [random_color(rgb=True, maximum=1) for _ in range(num_instances)]
+            assigned_colors = [
+                random_color(rgb=True, maximum=1) for _ in range(num_instances)
+            ]
         if num_instances == 0:
             return self.output
         if boxes is not None and boxes.shape[1] == 5:
@@ -744,40 +799,47 @@ class Visualizer:
             keypoints = keypoints[sorted_idxs] if keypoints is not None else None
 
         for i in range(num_instances):
-            
             # assign color for hand, object
-            # hand_rgb = [(0, 90, 181), (220, 50, 32)] 
+            # hand_rgb = [(0, 90, 181), (220, 50, 32)]
             # hand_rgba = [(0, 90, 181, 70), (220, 50, 32, 70)]
             # obj_rgb = (255, 194, 10)
             # obj_rgba = (255, 194, 10, 70)
-            
-            # hos 
-            if labels is not None and handsides is not None and contacts is not None and handsides[i] is not None and contacts[i] is not None:
+
+            # hos
+            if (
+                labels is not None
+                and handsides is not None
+                and contacts is not None
+                and handsides[i] is not None
+                and contacts[i] is not None
+            ):
                 # color = assigned_colors[i]
-                class_name, side, conta, side_cont_label = self._parse_handside_contact(labels[i], handsides[i], contacts[i])
-                if class_name == 'hand':
-                    if side == 'left':
-                        color = [ x/255 for x in [0, 90, 181]]
-                    elif side == 'right':
-                        color = [ x/255 for x in [220, 50, 32]]
-                elif class_name == 'object':
-                    color = [ x/255 for x in [255, 194, 10]] 
+                class_name, side, conta, side_cont_label = self._parse_handside_contact(
+                    labels[i], handsides[i], contacts[i]
+                )
+                if class_name == "hand":
+                    if side == "left":
+                        color = [x / 255 for x in [0, 90, 181]]
+                    elif side == "right":
+                        color = [x / 255 for x in [220, 50, 32]]
+                elif class_name == "object":
+                    color = [x / 255 for x in [255, 194, 10]]
                 else:
-                    print(f'Error(hos): {class_name}, {side}, {conta}')
-                    print(f'Error category, {class_name}, outside [hand, object]')
+                    print(f"Error(hos): {class_name}, {side}, {conta}")
+                    print(f"Error category, {class_name}, outside [hand, object]")
                     pdb.set_trace()
                     exit(0)
             else:
-                class_name, _, _, side_cont_label = self._parse_handside_contact(labels[i], None, None)
-                if class_name  == 'hand':
-                    color = [x/255 for x in [112, 48, 160]]
-                elif class_name == 'object':
-                    color = [ x/255 for x in [255, 194, 10]] 
-                    
-            
-            
+                class_name, _, _, side_cont_label = self._parse_handside_contact(
+                    labels[i], None, None
+                )
+                if class_name == "hand":
+                    color = [x / 255 for x in [112, 48, 160]]
+                elif class_name == "object":
+                    color = [x / 255 for x in [255, 194, 10]]
+
             # pdb.set_trace()
-            print(f'{class_name}, {side_cont_label}')
+            print(f"{class_name}, {side_cont_label}")
             # print(f'{color}')
             if boxes is not None:
                 self.draw_box(boxes[i], alpha=1.0, edge_color=color)
@@ -816,21 +878,27 @@ class Visualizer:
                     else:
                         text_pos = (x0, y1)
 
-                height_ratio = (y1 - y0) / np.sqrt(self.output.height * self.output.width)
-                lighter_color = self._change_color_brightness(color, brightness_factor=0.7)
+                height_ratio = (y1 - y0) / np.sqrt(
+                    self.output.height * self.output.width
+                )
+                lighter_color = self._change_color_brightness(
+                    color, brightness_factor=0.7
+                )
                 font_size = (
                     np.clip((height_ratio - 0.02) / 0.08 + 1, 1.2, 2)
                     * 0.5
                     * self._default_font_size
                 )
-                        
+
                 if offsets is not None and offsets[i] is not None:
                     if class_name == "hand" and conta == "incontact":
-                        self.draw_offset(offsets[i], boxes[i], labels[i], edge_color=color)
-                        
+                        self.draw_offset(
+                            offsets[i], boxes[i], labels[i], edge_color=color
+                        )
+
                 ### add handside, contact after label
                 self.draw_text(
-                    labels[i]+f'{side_cont_label}',
+                    labels[i] + f"{side_cont_label}",
                     # "",
                     text_pos,
                     color=lighter_color,
@@ -845,64 +913,62 @@ class Visualizer:
                 self.draw_and_connect_keypoints(keypoints_per_instance)
 
         return self.output
-    
+
     def _parse_handside_contact(self, class_name, handside, contact):
-        '''
+        """
         Two kinds of input: from pred or gt.
-        '''
-        
+        """
+
         if handside is None and contact is None:
             class_name = class_name.split(" ")[0]
             return class_name, None, None, ""
-        
+
         else:
             # hos preds
             if isinstance(handside, np.ndarray):
-                sind = np.argmax(handside) # 0 or 1
-                prob_side = handside[sind] 
+                sind = np.argmax(handside)  # 0 or 1
+                prob_side = handside[sind]
                 cind = np.argmax(contact)
                 prob_cont = contact[cind]
-                if class_name.split(" ")[0] == "hand" and sind == 1 :
-                    side = "right" 
-                elif class_name.split(" ")[0] == "hand" and sind == 0 :
+                if class_name.split(" ")[0] == "hand" and sind == 1:
+                    side = "right"
+                elif class_name.split(" ")[0] == "hand" and sind == 0:
                     side = "left"
                 else:
                     side = "*"
-                    
-                if class_name.split(" ")[0] == "hand" and cind == 1 :
+
+                if class_name.split(" ")[0] == "hand" and cind == 1:
                     cont = "incontact"
-                elif class_name.split(" ")[0] == "hand" and cind == 0 :
+                elif class_name.split(" ")[0] == "hand" and cind == 0:
                     cont = "not-incontact"
                 else:
                     cont = "*"
-                
+
                 if class_name.split(" ")[0] == "hand":
-                    side_cont_label = f"; {side} {int(prob_side*100)}%; {cont} {int(prob_cont*100)}%"
+                    side_cont_label = (
+                        f"; {side} {int(prob_side*100)}%; {cont} {int(prob_cont*100)}%"
+                    )
                 else:
                     side_cont_label = ""
                 return class_name.split(" ")[0], side, cont, side_cont_label
-            
+
             # hos gt
             else:
-                if class_name == "hand" and handside == 1 :
-                    side = "right" 
-                elif class_name == "hand" and handside == 0 :
+                if class_name == "hand" and handside == 1:
+                    side = "right"
+                elif class_name == "hand" and handside == 0:
                     side = "left"
                 else:
                     side = "*"
-                        
-                if class_name == "hand" and contact == 1 :
+
+                if class_name == "hand" and contact == 1:
                     cont = "incontact"
-                elif class_name == "hand" and contact == 0 :
+                elif class_name == "hand" and contact == 0:
                     cont = "not-incontact"
                 else:
                     cont = "*"
                 side_cont_label = f"; {side}; {cont}"
                 return class_name, side, cont, side_cont_label
-            
-            
-                
-        
 
     def overlay_rotated_instances(self, boxes=None, labels=None, assigned_colors=None):
         """
@@ -921,7 +987,9 @@ class Visualizer:
         num_instances = len(boxes)
 
         if assigned_colors is None:
-            assigned_colors = [random_color(rgb=True, maximum=1) for _ in range(num_instances)]
+            assigned_colors = [
+                random_color(rgb=True, maximum=1) for _ in range(num_instances)
+            ]
         if num_instances == 0:
             return self.output
 
@@ -937,7 +1005,9 @@ class Visualizer:
 
         for i in range(num_instances):
             self.draw_rotated_box_with_label(
-                boxes[i], edge_color=colors[i], label=labels[i] if labels is not None else None
+                boxes[i],
+                edge_color=colors[i],
+                label=labels[i] if labels is not None else None,
             )
 
         return self.output
@@ -958,7 +1028,6 @@ class Visualizer:
         visible = {}
         keypoint_names = self.metadata.get("keypoint_names")
         for idx, keypoint in enumerate(keypoints):
-
             # draw keypoint
             x, y, prob = keypoint
             if prob > self.keypoint_threshold:
@@ -988,7 +1057,9 @@ class Visualizer:
             # draw line from nose to mid-shoulder
             nose_x, nose_y = visible.get("nose", (None, None))
             if nose_x is not None:
-                self.draw_line([nose_x, mid_shoulder_x], [nose_y, mid_shoulder_y], color=_RED)
+                self.draw_line(
+                    [nose_x, mid_shoulder_x], [nose_y, mid_shoulder_y], color=_RED
+                )
 
             try:
                 # draw line from mid-shoulder to mid-hip
@@ -998,7 +1069,9 @@ class Visualizer:
                 pass
             else:
                 mid_hip_x, mid_hip_y = (lh_x + rh_x) / 2, (lh_y + rh_y) / 2
-                self.draw_line([mid_hip_x, mid_shoulder_x], [mid_hip_y, mid_shoulder_y], color=_RED)
+                self.draw_line(
+                    [mid_hip_x, mid_shoulder_x], [mid_hip_y, mid_shoulder_y], color=_RED
+                )
         return self.output
 
     """
@@ -1035,30 +1108,28 @@ class Visualizer:
         # since the text background is dark, we don't want the text to be dark
         color = np.maximum(list(mplc.to_rgb(color)), 0.2)
         color[np.argmax(color)] = max(0.8, np.max(color))
-        
+
         # text
         # print(text)
-        
+
         # pred
-        if ';' in text:
-            name, side, contact = text.split(';')
+        if ";" in text:
+            name, side, contact = text.split(";")
             print(text, name, side, contact)
-            if 'hand' in name:
-                if 'left' in side:
-                    text = 'LH'
-                elif 'right' in side:
-                    text = 'RH'
+            if "hand" in name:
+                if "left" in side:
+                    text = "LH"
+                elif "right" in side:
+                    text = "RH"
                 else:
-                    text = 'H'
-            elif 'object' in name:
-                text = 'O'
+                    text = "H"
+            elif "object" in name:
+                text = "O"
         else:
-            if 'hand' in text:
-                text = 'H'
-            elif 'object' in text:
-                text = 'O'
-            
-        
+            if "hand" in text:
+                text = "H"
+            elif "object" in text:
+                text = "O"
 
         x, y = position
         self.output.ax.text(
@@ -1094,7 +1165,7 @@ class Visualizer:
         width = x1 - x0
         height = y1 - y0
 
-        linewidth = max(self._default_font_size / 4, 1) 
+        linewidth = max(self._default_font_size / 4, 1)
 
         self.output.ax.add_patch(
             mpl.patches.Rectangle(
@@ -1109,8 +1180,10 @@ class Visualizer:
             )
         )
         return self.output
-    
-    def draw_offset(self, offset, box_coord, label, alpha=0.5, edge_color='g', line_style="-"):
+
+    def draw_offset(
+        self, offset, box_coord, label, alpha=0.5, edge_color="g", line_style="-"
+    ):
         """
         Args:
             offset_vec:
@@ -1127,20 +1200,22 @@ class Visualizer:
             output (VisImage): image object with box drawn.
         """
         # if label != 'hand': return
-        if offset is None: return 
+        if offset is None:
+            return
         x0, y0, x1, y1 = box_coord
-        h_center = [int((x0+x1)/2), int((y0+y1)/2)]
+        h_center = [int((x0 + x1) / 2), int((y0 + y1) / 2)]
         scalar = 1000
-        offset_vec = [ offset[0]*offset[2]*scalar, offset[1]*offset[2]*scalar ] 
-        o_center = [h_center[0]+offset_vec[0], h_center[1]+offset_vec[1]]
-        self.draw_line([h_center[0], o_center[0]], [h_center[1], o_center[1]], color=edge_color)
-        
+        offset_vec = [offset[0] * offset[2] * scalar, offset[1] * offset[2] * scalar]
+        o_center = [h_center[0] + offset_vec[0], h_center[1] + offset_vec[1]]
+        self.draw_line(
+            [h_center[0], o_center[0]], [h_center[1], o_center[1]], color=edge_color
+        )
+
         # end points
         point_radius = self._default_font_size / 3
         point_radius = max(point_radius, 1) * 2
         self.draw_circle(h_center, color=edge_color, radius=point_radius)
         self.draw_circle(o_center, color=edge_color, radius=point_radius)
-
 
     def draw_rotated_box_with_label(
         self, rotated_box, alpha=0.5, edge_color="g", line_style="-", label=None
@@ -1174,7 +1249,9 @@ class Visualizer:
         s = math.sin(theta)
         rect = [(-w / 2, h / 2), (-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2)]
         # x: left->right ; y: top->down
-        rotated_rect = [(s * yy + c * xx + cnt_x, c * yy - s * xx + cnt_y) for (xx, yy) in rect]
+        rotated_rect = [
+            (s * yy + c * xx + cnt_x, c * yy - s * xx + cnt_y) for (xx, yy) in rect
+        ]
         for k in range(4):
             j = (k + 1) % 4
             self.draw_line(
@@ -1189,11 +1266,17 @@ class Visualizer:
             text_pos = rotated_rect[1]  # topleft corner
 
             height_ratio = h / np.sqrt(self.output.height * self.output.width)
-            label_color = self._change_color_brightness(edge_color, brightness_factor=0.7)
-            font_size = (
-                np.clip((height_ratio - 0.02) / 0.08 + 1, 1.2, 2) * 0.5 * self._default_font_size
+            label_color = self._change_color_brightness(
+                edge_color, brightness_factor=0.7
             )
-            self.draw_text(label, text_pos, color=label_color, font_size=font_size, rotation=angle)
+            font_size = (
+                np.clip((height_ratio - 0.02) / 0.08 + 1, 1.2, 2)
+                * 0.5
+                * self._default_font_size
+            )
+            self.draw_text(
+                label, text_pos, color=label_color, font_size=font_size, rotation=angle
+            )
 
         return self.output
 
@@ -1247,7 +1330,14 @@ class Visualizer:
         return self.output
 
     def draw_binary_mask(
-        self, binary_mask, color=None, *, edge_color=None, text=None, alpha=0.5, area_threshold=10
+        self,
+        binary_mask,
+        color=None,
+        *,
+        edge_color=None,
+        text=None,
+        alpha=0.5,
+        area_threshold=10,
     ):
         """
         Args:
@@ -1277,12 +1367,16 @@ class Visualizer:
         if not mask.has_holes:
             # draw polygons for regular masks
             for segment in mask.polygons:
-                area = mask_util.area(mask_util.frPyObjects([segment], shape2d[0], shape2d[1]))
+                area = mask_util.area(
+                    mask_util.frPyObjects([segment], shape2d[0], shape2d[1])
+                )
                 if area < (area_threshold or 0):
                     continue
                 has_valid_segment = True
                 segment = segment.reshape(-1, 2)
-                self.draw_polygon(segment, color=color, edge_color=edge_color, alpha=alpha)
+                self.draw_polygon(
+                    segment, color=color, edge_color=edge_color, alpha=alpha
+                )
         else:
             # TODO: Use Path/PathPatch to draw vector graphics:
             # https://stackoverflow.com/questions/8919719/how-to-plot-a-complex-polygon
@@ -1290,7 +1384,9 @@ class Visualizer:
             rgba[:, :, :3] = color
             rgba[:, :, 3] = (mask.mask == 1).astype("float32") * alpha
             has_valid_segment = True
-            self.output.ax.imshow(rgba, extent=(0, self.output.width, self.output.height, 0))
+            self.output.ax.imshow(
+                rgba, extent=(0, self.output.width, self.output.height, 0)
+            )
 
         if text is not None and has_valid_segment:
             lighter_color = self._change_color_brightness(color, brightness_factor=0.7)
@@ -1317,7 +1413,9 @@ class Visualizer:
         rgba = np.zeros(shape2d + (4,), dtype="float32")
         rgba[:, :, :3] = color
         rgba[:, :, 3] = soft_mask * alpha
-        self.output.ax.imshow(rgba, extent=(0, self.output.width, self.output.height, 0))
+        self.output.ax.imshow(
+            rgba, extent=(0, self.output.width, self.output.height, 0)
+        )
 
         if text is not None:
             lighter_color = self._change_color_brightness(color, brightness_factor=0.7)
@@ -1342,7 +1440,9 @@ class Visualizer:
         if edge_color is None:
             # make edge color darker than the polygon color
             if alpha > 0.8:
-                edge_color = self._change_color_brightness(color, brightness_factor=-0.7)
+                edge_color = self._change_color_brightness(
+                    color, brightness_factor=-0.7
+                )
             else:
                 edge_color = color
         edge_color = mplc.to_rgb(edge_color) + (1,)
@@ -1413,7 +1513,9 @@ class Visualizer:
         modified_lightness = polygon_color[1] + (brightness_factor * polygon_color[1])
         modified_lightness = 0.0 if modified_lightness < 0.0 else modified_lightness
         modified_lightness = 1.0 if modified_lightness > 1.0 else modified_lightness
-        modified_color = colorsys.hls_to_rgb(polygon_color[0], modified_lightness, polygon_color[2])
+        modified_color = colorsys.hls_to_rgb(
+            polygon_color[0], modified_lightness, polygon_color[2]
+        )
         return modified_color
 
     def _convert_boxes(self, boxes):
@@ -1424,8 +1526,6 @@ class Visualizer:
             return boxes.tensor.detach().numpy()
         else:
             return np.asarray(boxes)
-            
-            
 
     def _convert_masks(self, masks_or_polygons):
         """
@@ -1455,7 +1555,9 @@ class Visualizer:
         Find proper places to draw text given a binary mask.
         """
         # TODO sometimes drawn on wrong objects. the heuristics here can improve.
-        _num_cc, cc_labels, stats, centroids = cv2.connectedComponentsWithStats(binary_mask, 8)
+        _num_cc, cc_labels, stats, centroids = cv2.connectedComponentsWithStats(
+            binary_mask, 8
+        )
         if stats[1:, -1].size == 0:
             return
         largest_component_id = np.argmax(stats[1:, -1]) + 1

@@ -41,7 +41,6 @@ class MultidatasetEpochBatchIterator(iterators.EpochBatchIterating):
         num_workers=0,
         epoch=1,
     ):
-
         assert isinstance(dataset, OrderedDict)
         assert len(dataset)
         assert isinstance(dataset[next(iter(dataset))], FairseqDataset)

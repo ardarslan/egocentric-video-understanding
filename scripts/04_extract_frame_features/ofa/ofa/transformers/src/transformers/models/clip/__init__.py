@@ -28,7 +28,12 @@ from ...file_utils import (
 
 
 _import_structure = {
-    "configuration_clip": ["CLIP_PRETRAINED_CONFIG_ARCHIVE_MAP", "CLIPConfig", "CLIPTextConfig", "CLIPVisionConfig"],
+    "configuration_clip": [
+        "CLIP_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "CLIPConfig",
+        "CLIPTextConfig",
+        "CLIPVisionConfig",
+    ],
     "tokenization_clip": ["CLIPTokenizer"],
 }
 
@@ -69,7 +74,12 @@ if is_flax_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_clip import CLIP_PRETRAINED_CONFIG_ARCHIVE_MAP, CLIPConfig, CLIPTextConfig, CLIPVisionConfig
+    from .configuration_clip import (
+        CLIP_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        CLIPConfig,
+        CLIPTextConfig,
+        CLIPVisionConfig,
+    )
     from .tokenization_clip import CLIPTokenizer
 
     if is_tokenizers_available():
@@ -111,4 +121,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

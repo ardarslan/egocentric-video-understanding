@@ -102,7 +102,9 @@ class THUMOS14Dataset(Dataset):
             if value["subset"].lower() not in self.split:
                 continue
             # or does not have the feature file
-            feat_file = os.path.join(self.feat_folder, self.file_prefix + key + self.file_ext)
+            feat_file = os.path.join(
+                self.feat_folder, self.file_prefix + key + self.file_ext
+            )
             if not os.path.exists(feat_file):
                 continue
 
@@ -120,7 +122,9 @@ class THUMOS14Dataset(Dataset):
             else:
                 duration = 1e8
 
-            segmentation_labels = torch.zeros((int(duration), self.num_classes), dtype=torch.float)
+            segmentation_labels = torch.zeros(
+                (int(duration), self.num_classes), dtype=torch.float
+            )
 
             # get annotations if available
             if ("annotations" in value) and (len(value["annotations"]) > 0):
@@ -146,7 +150,16 @@ class THUMOS14Dataset(Dataset):
             else:
                 segments = None
                 labels = None
-            dict_db += ({"id": key, "fps": fps, "duration": duration, "segments": segments, "labels": labels, "segmentation_labels": segmentation_labels},)
+            dict_db += (
+                {
+                    "id": key,
+                    "fps": fps,
+                    "duration": duration,
+                    "segments": segments,
+                    "labels": labels,
+                    "segmentation_labels": segmentation_labels,
+                },
+            )
 
         return dict_db, label_dict
 
@@ -161,7 +174,9 @@ class THUMOS14Dataset(Dataset):
         segmentation_labels = video_item["segmentation_labels"]
 
         # load features
-        filename = os.path.join(self.feat_folder, self.file_prefix + video_item["id"] + self.file_ext)
+        filename = os.path.join(
+            self.feat_folder, self.file_prefix + video_item["id"] + self.file_ext
+        )
         feats = np.load(filename).astype(np.float32)
 
         # deal with downsampling (= increased feat stride)
@@ -173,7 +188,10 @@ class THUMOS14Dataset(Dataset):
         # convert time stamp (in second) into temporal feature grids
         # ok to have small negative values here
         if video_item["segments"] is not None:
-            segments = torch.from_numpy((video_item["segments"] * video_item["fps"] - 0.5 * self.num_frames) / feat_stride)
+            segments = torch.from_numpy(
+                (video_item["segments"] * video_item["fps"] - 0.5 * self.num_frames)
+                / feat_stride
+            )
             labels = torch.from_numpy(video_item["labels"])
         else:
             segments, labels = None, None
@@ -193,6 +211,8 @@ class THUMOS14Dataset(Dataset):
 
         # truncate the features during training
         if self.is_training and (segments is not None):
-            data_dict = truncate_feats(data_dict, self.max_seq_len, self.trunc_thresh, self.crop_ratio)
+            data_dict = truncate_feats(
+                data_dict, self.max_seq_len, self.trunc_thresh, self.crop_ratio
+            )
 
         return data_dict

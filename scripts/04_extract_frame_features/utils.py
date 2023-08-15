@@ -1,7 +1,9 @@
 from unidet.unidet_frame_feature_extractor import UnidetFrameFeatureExtractor
 from ofa.ofa_frame_feature_extractor import OFAFrameFeatureExtractor
 from visor_hos.visor_hos_frame_feature_extractor import VisorHOSFrameFeatureExtractor
-from blip.blip_captioning_frame_feature_extractor import BLIPCaptioningFrameFeatureExtractor
+from blip.blip_captioning_frame_feature_extractor import (
+    BLIPCaptioningFrameFeatureExtractor,
+)
 from blip.blip_vqa_frame_feature_extractor import BLIPVQAFrameFeatureExtractor
 from gsam.gsam_frame_feature_extractor import GSAMFrameFeatureExtractor
 from ego_hos.ego_hos_frame_feature_extractor import EgoHOSFrameFeatureExtractor

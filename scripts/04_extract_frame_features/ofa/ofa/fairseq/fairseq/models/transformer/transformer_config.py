@@ -243,7 +243,7 @@ class TransformerConfig(FairseqDataclass):
     @staticmethod
     def _copy_keys(args, cls, prefix, seen):
         """
-            copy the prefixed keys (decoder_embed_dim) to the DC fields: decoder.embed_dim
+        copy the prefixed keys (decoder_embed_dim) to the DC fields: decoder.embed_dim
         """
         cfg = cls()
         for fld in fields(cls):
@@ -309,7 +309,13 @@ class TransformerConfig(FairseqDataclass):
             # the argparse namespace might have extra args for two reasons:
             #   - we are in a legacy class so all the args are not declared in the dataclass. Ideally once everyone has defined a dataclass for their model, we won't need this
             #   - some places expect args to be there but never define them
-            args_dict = args._asdict() if hasattr(args, '_asdict') else vars(args) if hasattr(args, '__dict__') else {}  # namedtupled doesn't have __dict__ :-/
+            args_dict = (
+                args._asdict()
+                if hasattr(args, "_asdict")
+                else vars(args)
+                if hasattr(args, "__dict__")
+                else {}
+            )  # namedtupled doesn't have __dict__ :-/
             for key, value in args_dict.items():
                 if key not in seen:
                     setattr(config, key, value)

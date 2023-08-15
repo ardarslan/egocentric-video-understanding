@@ -21,7 +21,11 @@ import tempfile
 import unittest
 
 from transformers import ViTConfig
-from transformers.file_utils import cached_property, is_tf_available, is_vision_available
+from transformers.file_utils import (
+    cached_property,
+    is_tf_available,
+    is_vision_available,
+)
 from transformers.testing_utils import require_tf, require_vision, slow, tooslow
 
 from ..test_configuration_common import ConfigTester
@@ -82,7 +86,9 @@ class TFViTModelTester:
         self.scope = scope
 
     def prepare_config_and_inputs(self):
-        pixel_values = floats_tensor([self.batch_size, self.num_channels, self.image_size, self.image_size])
+        pixel_values = floats_tensor(
+            [self.batch_size, self.num_channels, self.image_size, self.image_size]
+        )
 
         labels = None
         if self.use_labels:
@@ -114,8 +120,13 @@ class TFViTModelTester:
         # expected sequence length = num_patches + 1 (we add 1 for the [CLS] token)
         image_size = to_2tuple(self.image_size)
         patch_size = to_2tuple(self.patch_size)
-        num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, num_patches + 1, self.hidden_size))
+        num_patches = (image_size[1] // patch_size[1]) * (
+            image_size[0] // patch_size[0]
+        )
+        self.parent.assertEqual(
+            result.last_hidden_state.shape,
+            (self.batch_size, num_patches + 1, self.hidden_size),
+        )
 
         # Test with an image with different size than the one specified in config.
         image_size = self.image_size // 2
@@ -123,20 +134,29 @@ class TFViTModelTester:
         result = model(pixel_values, interpolate_pos_encoding=True, training=False)
         # expected sequence length = num_patches + 1 (we add 1 for the [CLS] token)
         image_size = to_2tuple(image_size)
-        num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, num_patches + 1, self.hidden_size))
+        num_patches = (image_size[1] // patch_size[1]) * (
+            image_size[0] // patch_size[0]
+        )
+        self.parent.assertEqual(
+            result.last_hidden_state.shape,
+            (self.batch_size, num_patches + 1, self.hidden_size),
+        )
 
     def create_and_check_for_image_classification(self, config, pixel_values, labels):
         config.num_labels = self.type_sequence_label_size
         model = TFViTForImageClassification(config)
         result = model(pixel_values, labels=labels, training=False)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.type_sequence_label_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.type_sequence_label_size)
+        )
 
         # Test with an image with different size than the one specified in config.
         image_size = self.image_size // 2
         pixel_values = pixel_values[:, :, :image_size, :image_size]
         result = model(pixel_values, interpolate_pos_encoding=True, training=False)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.type_sequence_label_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.type_sequence_label_size)
+        )
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -152,7 +172,9 @@ class TFViTModelTest(TFModelTesterMixin, unittest.TestCase):
     attention_mask and seq_length.
     """
 
-    all_model_classes = (TFViTModel, TFViTForImageClassification) if is_tf_available() else ()
+    all_model_classes = (
+        (TFViTModel, TFViTForImageClassification) if is_tf_available() else ()
+    )
 
     test_resize_embeddings = False
     test_head_masking = False
@@ -160,7 +182,9 @@ class TFViTModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def setUp(self):
         self.model_tester = TFViTModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=ViTConfig, has_text_modality=False, hidden_size=37)
+        self.config_tester = ConfigTester(
+            self, config_class=ViTConfig, has_text_modality=False, hidden_size=37
+        )
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -212,10 +236,14 @@ class TFViTModelTest(TFModelTesterMixin, unittest.TestCase):
         # in ViT, the seq_len equals the number of patches + 1 (we add 1 for the [CLS] token)
         image_size = to_2tuple(self.model_tester.image_size)
         patch_size = to_2tuple(self.model_tester.patch_size)
-        num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
+        num_patches = (image_size[1] // patch_size[1]) * (
+            image_size[0] // patch_size[0]
+        )
         seq_len = num_patches + 1
         encoder_seq_length = getattr(self.model_tester, "encoder_seq_length", seq_len)
-        encoder_key_length = getattr(self.model_tester, "key_length", encoder_seq_length)
+        encoder_key_length = getattr(
+            self.model_tester, "key_length", encoder_seq_length
+        )
 
         for model_class in self.all_model_classes:
             class_inputs_dict = self._prepare_for_class(inputs_dict, model_class)
@@ -238,7 +266,9 @@ class TFViTModelTest(TFModelTesterMixin, unittest.TestCase):
                 self.assertEqual(len(outputs), num_out)
 
                 expected_num_layers = getattr(
-                    self.model_tester, "expected_num_hidden_layers", self.model_tester.num_hidden_layers + 1
+                    self.model_tester,
+                    "expected_num_hidden_layers",
+                    self.model_tester.num_hidden_layers + 1,
                 )
 
                 self.assertEqual(len(output_hidden_states), expected_num_layers)
@@ -247,10 +277,16 @@ class TFViTModelTest(TFModelTesterMixin, unittest.TestCase):
                     [seq_len, self.model_tester.hidden_size],
                 )
 
-                self.assertEqual(len(output_attentions), self.model_tester.num_hidden_layers)
+                self.assertEqual(
+                    len(output_attentions), self.model_tester.num_hidden_layers
+                )
                 self.assertListEqual(
                     list(output_attentions[0].shape[-3:]),
-                    [self.model_tester.num_attention_heads, encoder_seq_length, encoder_key_length],
+                    [
+                        self.model_tester.num_attention_heads,
+                        encoder_seq_length,
+                        encoder_key_length,
+                    ],
                 )
 
     def test_attention_outputs(self):
@@ -260,31 +296,51 @@ class TFViTModelTest(TFModelTesterMixin, unittest.TestCase):
         # in ViT, the seq_len equals the number of patches + 1 (we add 1 for the [CLS] token)
         image_size = to_2tuple(self.model_tester.image_size)
         patch_size = to_2tuple(self.model_tester.patch_size)
-        num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
+        num_patches = (image_size[1] // patch_size[1]) * (
+            image_size[0] // patch_size[0]
+        )
         seq_len = num_patches + 1
         encoder_seq_length = getattr(self.model_tester, "encoder_seq_length", seq_len)
-        encoder_key_length = getattr(self.model_tester, "key_length", encoder_seq_length)
+        encoder_key_length = getattr(
+            self.model_tester, "key_length", encoder_seq_length
+        )
 
         for model_class in self.all_model_classes:
             inputs_dict["output_attentions"] = True
             inputs_dict["output_hidden_states"] = False
             config.return_dict = True
             model = model_class(config)
-            outputs = model(**self._prepare_for_class(inputs_dict, model_class), training=False)
-            attentions = outputs.encoder_attentions if config.is_encoder_decoder else outputs.attentions
+            outputs = model(
+                **self._prepare_for_class(inputs_dict, model_class), training=False
+            )
+            attentions = (
+                outputs.encoder_attentions
+                if config.is_encoder_decoder
+                else outputs.attentions
+            )
             self.assertEqual(len(attentions), self.model_tester.num_hidden_layers)
 
             # check that output_attentions also work using config
             del inputs_dict["output_attentions"]
             config.output_attentions = True
             model = model_class(config)
-            outputs = model(**self._prepare_for_class(inputs_dict, model_class), training=False)
-            attentions = outputs.encoder_attentions if config.is_encoder_decoder else outputs.attentions
+            outputs = model(
+                **self._prepare_for_class(inputs_dict, model_class), training=False
+            )
+            attentions = (
+                outputs.encoder_attentions
+                if config.is_encoder_decoder
+                else outputs.attentions
+            )
             self.assertEqual(len(attentions), self.model_tester.num_hidden_layers)
 
             self.assertListEqual(
                 list(attentions[0].shape[-3:]),
-                [self.model_tester.num_attention_heads, encoder_seq_length, encoder_key_length],
+                [
+                    self.model_tester.num_attention_heads,
+                    encoder_seq_length,
+                    encoder_key_length,
+                ],
             )
             out_len = len(outputs)
 
@@ -292,7 +348,9 @@ class TFViTModelTest(TFModelTesterMixin, unittest.TestCase):
             inputs_dict["output_attentions"] = True
             inputs_dict["output_hidden_states"] = True
             model = model_class(config)
-            outputs = model(**self._prepare_for_class(inputs_dict, model_class), training=False)
+            outputs = model(
+                **self._prepare_for_class(inputs_dict, model_class), training=False
+            )
 
             if hasattr(self.model_tester, "num_hidden_states_types"):
                 added_hidden_states = self.model_tester.num_hidden_states_types
@@ -302,12 +360,20 @@ class TFViTModelTest(TFModelTesterMixin, unittest.TestCase):
                 added_hidden_states = 1
             self.assertEqual(out_len + added_hidden_states, len(outputs))
 
-            self_attentions = outputs.encoder_attentions if config.is_encoder_decoder else outputs.attentions
+            self_attentions = (
+                outputs.encoder_attentions
+                if config.is_encoder_decoder
+                else outputs.attentions
+            )
 
             self.assertEqual(len(self_attentions), self.model_tester.num_hidden_layers)
             self.assertListEqual(
                 list(self_attentions[0].shape[-3:]),
-                [self.model_tester.num_attention_heads, encoder_seq_length, encoder_key_length],
+                [
+                    self.model_tester.num_attention_heads,
+                    encoder_seq_length,
+                    encoder_key_length,
+                ],
             )
 
     def test_hidden_states_output(self):
@@ -316,17 +382,25 @@ class TFViTModelTest(TFModelTesterMixin, unittest.TestCase):
 
             outputs = model(**self._prepare_for_class(inputs_dict, model_class))
 
-            hidden_states = outputs.encoder_hidden_states if config.is_encoder_decoder else outputs.hidden_states
+            hidden_states = (
+                outputs.encoder_hidden_states
+                if config.is_encoder_decoder
+                else outputs.hidden_states
+            )
 
             expected_num_layers = getattr(
-                self.model_tester, "expected_num_hidden_layers", self.model_tester.num_hidden_layers + 1
+                self.model_tester,
+                "expected_num_hidden_layers",
+                self.model_tester.num_hidden_layers + 1,
             )
             self.assertEqual(len(hidden_states), expected_num_layers)
 
             # ViT has a different seq_length
             image_size = to_2tuple(self.model_tester.image_size)
             patch_size = to_2tuple(self.model_tester.patch_size)
-            num_patches = (image_size[1] // patch_size[1]) * (image_size[0] // patch_size[0])
+            num_patches = (image_size[1] // patch_size[1]) * (
+                image_size[0] // patch_size[0]
+            )
             seq_length = num_patches + 1
 
             self.assertListEqual(
@@ -352,7 +426,6 @@ class TFViTModelTest(TFModelTesterMixin, unittest.TestCase):
 
     @slow
     def test_model_from_pretrained(self):
-
         model = TFViTModel.from_pretrained("google/vit-base-patch16-224")
         self.assertIsNotNone(model)
 
@@ -368,11 +441,17 @@ def prepare_img():
 class TFViTModelIntegrationTest(unittest.TestCase):
     @cached_property
     def default_feature_extractor(self):
-        return ViTFeatureExtractor.from_pretrained("google/vit-base-patch16-224") if is_vision_available() else None
+        return (
+            ViTFeatureExtractor.from_pretrained("google/vit-base-patch16-224")
+            if is_vision_available()
+            else None
+        )
 
     @slow
     def test_inference_image_classification_head(self):
-        model = TFViTForImageClassification.from_pretrained("google/vit-base-patch16-224")
+        model = TFViTForImageClassification.from_pretrained(
+            "google/vit-base-patch16-224"
+        )
 
         feature_extractor = self.default_feature_extractor
         image = prepare_img()

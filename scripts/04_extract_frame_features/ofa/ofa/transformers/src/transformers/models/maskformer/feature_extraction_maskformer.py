@@ -31,7 +31,9 @@ if is_torch_available():
     from torch.nn.functional import interpolate
 
     if TYPE_CHECKING:
-        from transformers.models.maskformer.modeling_maskformer import MaskFormerForInstanceSegmentationOutput
+        from transformers.models.maskformer.modeling_maskformer import (
+            MaskFormerForInstanceSegmentationOutput,
+        )
 
 logger = logging.get_logger(__name__)
 
@@ -82,7 +84,7 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
         image_mean=None,
         image_std=None,
         ignore_index=255,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.do_resize = do_resize
@@ -91,8 +93,12 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
         self.size_divisibility = size_divisibility
         self.ignore_index = ignore_index
         self.do_normalize = do_normalize
-        self.image_mean = image_mean if image_mean is not None else [0.485, 0.456, 0.406]  # ImageNet mean
-        self.image_std = image_std if image_std is not None else [0.229, 0.224, 0.225]  # ImageNet std
+        self.image_mean = (
+            image_mean if image_mean is not None else [0.485, 0.456, 0.406]
+        )  # ImageNet mean
+        self.image_std = (
+            image_std if image_std is not None else [0.229, 0.224, 0.225]
+        )  # ImageNet std
 
     def _resize(self, image, size, target=None, max_size=None):
         """
@@ -112,7 +118,9 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
                 if max_original_size / min_original_size * size > max_size:
                     size = int(round(max_size * min_original_size / max_original_size))
 
-            if (width <= height and width == size) or (height <= width and height == size):
+            if (width <= height and width == size) or (
+                height <= width and height == size
+            ):
                 return (height, width)
 
             if width < height:
@@ -135,8 +143,12 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
         width, height = get_size(image.size, size, max_size)
 
         if self.size_divisibility > 0:
-            height = int(np.ceil(height / self.size_divisibility)) * self.size_divisibility
-            width = int(np.ceil(width / self.size_divisibility)) * self.size_divisibility
+            height = (
+                int(np.ceil(height / self.size_divisibility)) * self.size_divisibility
+            )
+            width = (
+                int(np.ceil(width / self.size_divisibility)) * self.size_divisibility
+            )
 
         size = (width, height)
         rescaled_image = self.resize(image, size=size)
@@ -152,7 +164,10 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
                 #  use PyTorch as current workaround
                 # TODO replace by self.resize
                 interpolated_masks = (
-                    nn.functional.interpolate(masks, size=(height, width), mode="nearest")[:, 0] > 0.5
+                    nn.functional.interpolate(
+                        masks, size=(height, width), mode="nearest"
+                    )[:, 0]
+                    > 0.5
                 ).float()
                 target["masks"] = interpolated_masks.numpy()
 
@@ -221,7 +236,11 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
         if isinstance(images, (Image.Image, np.ndarray)) or is_torch_tensor(images):
             valid_images = True
         elif isinstance(images, (list, tuple)):
-            if len(images) == 0 or isinstance(images[0], (Image.Image, np.ndarray)) or is_torch_tensor(images[0]):
+            if (
+                len(images) == 0
+                or isinstance(images[0], (Image.Image, np.ndarray))
+                or is_torch_tensor(images[0])
+            ):
                 valid_images = True
 
         if not valid_images:
@@ -232,7 +251,10 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
 
         is_batched = bool(
             isinstance(images, (list, tuple))
-            and (isinstance(images[0], (Image.Image, np.ndarray)) or is_torch_tensor(images[0]))
+            and (
+                isinstance(images[0], (Image.Image, np.ndarray))
+                or is_torch_tensor(images[0])
+            )
         )
 
         if not is_batched:
@@ -242,7 +264,11 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
 
         # Check that annotations has a valid type
         if annotations is not None:
-            valid_annotations = type(annotations) is list and "masks" in annotations[0] and "labels" in annotations[0]
+            valid_annotations = (
+                type(annotations) is list
+                and "masks" in annotations[0]
+                and "labels" in annotations[0]
+            )
             if not valid_annotations:
                 raise ValueError(
                     "Annotations must of type `Dict` (single image) or `List[Dict]` (batch of images)."
@@ -254,18 +280,31 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
         if self.do_resize and self.size is not None:
             if annotations is not None:
                 for idx, (image, target) in enumerate(zip(images, annotations)):
-                    image, target = self._resize(image=image, target=target, size=self.size, max_size=self.max_size)
+                    image, target = self._resize(
+                        image=image,
+                        target=target,
+                        size=self.size,
+                        max_size=self.max_size,
+                    )
                     images[idx] = image
                     annotations[idx] = target
             else:
                 for idx, image in enumerate(images):
-                    images[idx] = self._resize(image=image, target=None, size=self.size, max_size=self.max_size)[0]
+                    images[idx] = self._resize(
+                        image=image, target=None, size=self.size, max_size=self.max_size
+                    )[0]
 
         if self.do_normalize:
-            images = [self.normalize(image=image, mean=self.image_mean, std=self.image_std) for image in images]
+            images = [
+                self.normalize(image=image, mean=self.image_mean, std=self.image_std)
+                for image in images
+            ]
         # NOTE I will be always forced to pad them them since they have to be stacked in the batch dim
         encoded_inputs = self.encode_inputs(
-            images, annotations, pad_and_return_pixel_mask, return_tensors=return_tensors
+            images,
+            annotations,
+            pad_and_return_pixel_mask,
+            return_tensors=return_tensors,
         )
 
         # Convert to TensorType
@@ -277,7 +316,9 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
             raise ValueError("Only PyTorch is supported for the moment.")
         else:
             if not is_torch_available():
-                raise ImportError("Unable to convert output to PyTorch tensors format, PyTorch is not installed.")
+                raise ImportError(
+                    "Unable to convert output to PyTorch tensors format, PyTorch is not installed."
+                )
 
         return encoded_inputs
 
@@ -342,7 +383,9 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
             # create padded image
             if pad_and_return_pixel_mask:
                 padded_image = np.zeros((channels, height, width), dtype=np.float32)
-                padded_image[: image.shape[0], : image.shape[1], : image.shape[2]] = np.copy(image)
+                padded_image[
+                    : image.shape[0], : image.shape[1], : image.shape[2]
+                ] = np.copy(image)
                 image = padded_image
             pixel_values.append(image)
             # if we have a target, pad it
@@ -350,7 +393,9 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
                 annotation = annotations[idx]
                 masks = annotation["masks"]
                 if pad_and_return_pixel_mask:
-                    padded_masks = np.zeros((masks.shape[0], height, width), dtype=masks.dtype)
+                    padded_masks = np.zeros(
+                        (masks.shape[0], height, width), dtype=masks.dtype
+                    )
                     padded_masks[:, : masks.shape[1], : masks.shape[2]] = np.copy(masks)
                     masks = padded_masks
                 mask_labels.append(masks)
@@ -373,7 +418,9 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
         return encoded_inputs
 
     def post_process_segmentation(
-        self, outputs: "MaskFormerForInstanceSegmentationOutput", target_size: Tuple[int, int] = None
+        self,
+        outputs: "MaskFormerForInstanceSegmentationOutput",
+        target_size: Tuple[int, int] = None,
     ) -> "torch.Tensor":
         """
         Converts the output of [`MaskFormerForInstanceSegmentationOutput`] into image segmentation predictions. Only
@@ -414,7 +461,9 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
 
         return segmentation
 
-    def remove_low_and_no_objects(self, masks, scores, labels, object_mask_threshold, num_labels):
+    def remove_low_and_no_objects(
+        self, masks, scores, labels, object_mask_threshold, num_labels
+    ):
         """
         Binarize the given masks using `object_mask_threshold`, it returns the associated values of `masks`, `scores`
         and `labels`.
@@ -444,7 +493,9 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
         return masks[to_keep], scores[to_keep], labels[to_keep]
 
     def post_process_semantic_segmentation(
-        self, outputs: "MaskFormerForInstanceSegmentationOutput", target_size: Tuple[int, int] = None
+        self,
+        outputs: "MaskFormerForInstanceSegmentationOutput",
+        target_size: Tuple[int, int] = None,
     ) -> "torch.Tensor":
         """
         Converts the output of [`MaskFormerForInstanceSegmentationOutput`] into semantic segmentation predictions. Only
@@ -505,19 +556,25 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
         # since all images are padded, they all have the same spatial dimensions
         _, _, height, width = masks_queries_logits.shape
         # for each query, the best scores and their indeces
-        pred_scores, pred_labels = nn.functional.softmax(class_queries_logits, dim=-1).max(-1)
+        pred_scores, pred_labels = nn.functional.softmax(
+            class_queries_logits, dim=-1
+        ).max(-1)
         # pred_scores and pred_labels shape = [BATH,NUM_QUERIES]
         mask_probs = masks_queries_logits.sigmoid()
         # mask probs has shape [BATCH, QUERIES, HEIGHT, WIDTH]
         # now, we need to iterate over the batch size to correctly process the segmentation we got from the queries using our thresholds. Even if the original predicted masks have the same shape across the batch, they won't after thresholding so batch-wise operations are impossible
         results: List[Dict[str, Tensor]] = []
-        for (mask_probs, pred_scores, pred_labels) in zip(mask_probs, pred_scores, pred_labels):
+        for mask_probs, pred_scores, pred_labels in zip(
+            mask_probs, pred_scores, pred_labels
+        ):
             mask_probs, pred_scores, pred_labels = self.remove_low_and_no_objects(
                 mask_probs, pred_scores, pred_labels, object_mask_threshold, num_labels
             )
             we_detect_something = mask_probs.shape[0] > 0
 
-            segmentation = torch.zeros((height, width), dtype=torch.int32, device=mask_probs.device)
+            segmentation = torch.zeros(
+                (height, width), dtype=torch.int32, device=mask_probs.device
+            )
             segments: List[Dict] = []
 
             if we_detect_something:
@@ -545,7 +602,9 @@ class MaskFormerFeatureExtractor(FeatureExtractionMixin, ImageFeatureExtractionM
                     if mask_exists:
                         # find out how much of the all area mask_k is using
                         area_ratio = mask_k_area / original_area
-                        mask_k_is_overlapping_enough = area_ratio.item() > overlap_mask_area_threshold
+                        mask_k_is_overlapping_enough = (
+                            area_ratio.item() > overlap_mask_area_threshold
+                        )
 
                         if mask_k_is_overlapping_enough:
                             # merge stuff regions

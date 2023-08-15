@@ -27,10 +27,11 @@ class APMeter(Meter):
     (for positive examples); and (3) the `weight` ( > 0) represents weight for
     each sample.
     """
-    def __init__(self,weighted=False):
+
+    def __init__(self, weighted=False):
         super(APMeter, self).__init__()
         self.reset()
-        self.weighted=weighted
+        self.weighted = weighted
 
     def reset(self):
         """Resets the meter with empty member variables"""
@@ -64,25 +65,28 @@ class APMeter(Meter):
         if output.dim() == 1:
             output = output.view(-1, 1)
         else:
-            assert output.dim() == 2, \
-                'wrong output size (should be 1D or 2D with one column \
-                per class)'
+            assert (
+                output.dim() == 2
+            ), "wrong output size (should be 1D or 2D with one column \
+                per class)"
         if target.dim() == 1:
             target = target.view(-1, 1)
         else:
-            assert target.dim() == 2, \
-                'wrong target size (should be 1D or 2D with one column \
-                per class)'
+            assert (
+                target.dim() == 2
+            ), "wrong target size (should be 1D or 2D with one column \
+                per class)"
         if weight is not None:
-            assert weight.dim() == 1, 'Weight dimension should be 1'
-            assert weight.numel() == target.size(0), \
-                'Weight dimension 1 should be the same as that of target'
-            assert torch.min(weight) >= 0, 'Weight should be non-negative only'
-        assert torch.equal(target**2, target), \
-            'targets should be binary (0 or 1)'
+            assert weight.dim() == 1, "Weight dimension should be 1"
+            assert weight.numel() == target.size(
+                0
+            ), "Weight dimension 1 should be the same as that of target"
+            assert torch.min(weight) >= 0, "Weight should be non-negative only"
+        assert torch.equal(target**2, target), "targets should be binary (0 or 1)"
         if self.scores.numel() > 0:
-            assert target.size(1) == self.targets.size(1), \
-                'dimensions for output should match previously added examples.'
+            assert target.size(1) == self.targets.size(
+                1
+            ), "dimensions for output should match previously added examples."
 
         # make sure storage is of sufficient size
         if self.scores.storage().size() < self.scores.numel() + output.numel():
@@ -91,8 +95,7 @@ class APMeter(Meter):
             self.scores.storage().resize_(int(new_size + output.numel()))
             self.targets.storage().resize_(int(new_size + output.numel()))
             if weight is not None:
-                self.weights.storage().resize_(int(new_weight_size
-                                               + output.size(0)))
+                self.weights.storage().resize_(int(new_weight_size + output.size(0)))
 
         # store scores and targets
         offset = self.scores.size(0) if self.scores.dim() > 0 else 0

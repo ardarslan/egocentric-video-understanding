@@ -125,7 +125,7 @@ class TranslationMultiSimpleEpochTask(LegacyFairseqTask):
     @classmethod
     def setup_task(cls, args, **kwargs):
         langs, dicts, training = MultilingualDatasetManager.prepare(
-           cls.load_dictionary, args, **kwargs
+            cls.load_dictionary, args, **kwargs
         )
         return cls(args, langs, dicts, training)
 

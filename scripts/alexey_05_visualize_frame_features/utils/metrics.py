@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
 
-def chamfer_distance(x, y, metric='l2', direction='bi'):
+def chamfer_distance(x, y, metric="l2", direction="bi"):
     """Chamfer distance between two point clouds
 
     Parameters
@@ -24,23 +24,33 @@ def chamfer_distance(x, y, metric='l2', direction='bi'):
             'bi': compute both
     """
 
-    if direction == 'y_to_x':
-        x_nn = NearestNeighbors(n_neighbors=1, leaf_size=1, algorithm='kd_tree', metric=metric).fit(x)
+    if direction == "y_to_x":
+        x_nn = NearestNeighbors(
+            n_neighbors=1, leaf_size=1, algorithm="kd_tree", metric=metric
+        ).fit(x)
         min_x_to_y = None
         min_y_to_x = x_nn.kneighbors(y)[0]
         chamfer_dist = np.mean(min_y_to_x)
-    elif direction == 'x_to_y':
-        y_nn = NearestNeighbors(n_neighbors=1, leaf_size=1, algorithm='kd_tree', metric=metric).fit(y)
+    elif direction == "x_to_y":
+        y_nn = NearestNeighbors(
+            n_neighbors=1, leaf_size=1, algorithm="kd_tree", metric=metric
+        ).fit(y)
         min_x_to_y = y_nn.kneighbors(x)[0]
         min_y_to_x = None
         chamfer_dist = np.mean(min_x_to_y)
-    elif direction == 'bi':
-        x_nn = NearestNeighbors(n_neighbors=1, leaf_size=1, algorithm='kd_tree', metric=metric).fit(x)
+    elif direction == "bi":
+        x_nn = NearestNeighbors(
+            n_neighbors=1, leaf_size=1, algorithm="kd_tree", metric=metric
+        ).fit(x)
         min_y_to_x = x_nn.kneighbors(y)[0]
-        y_nn = NearestNeighbors(n_neighbors=1, leaf_size=1, algorithm='kd_tree', metric=metric).fit(y)
+        y_nn = NearestNeighbors(
+            n_neighbors=1, leaf_size=1, algorithm="kd_tree", metric=metric
+        ).fit(y)
         min_x_to_y = y_nn.kneighbors(x)[0]
-        chamfer_dist = np.mean(min_y_to_x) + np.mean(min_x_to_y) # bidirectional errors are accumulated
+        chamfer_dist = np.mean(min_y_to_x) + np.mean(
+            min_x_to_y
+        )  # bidirectional errors are accumulated
     else:
-        raise ValueError("Invalid direction type. Supported types: \'y_x\', \'x_y\', \'bi\'")
+        raise ValueError("Invalid direction type. Supported types: 'y_x', 'x_y', 'bi'")
 
     return min_x_to_y, min_y_to_x, chamfer_dist

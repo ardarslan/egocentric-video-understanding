@@ -25,10 +25,13 @@ class UnifiedVisualizationDemo(object):
                 Useful since the visualization logic can be slow.
         """
         self.metadata = MetadataCatalog.get("__unused")
-        unified_label_file = json.load(open(unidet_cfg.MULTI_DATASET.UNIFIED_LABEL_FILE))
+        unified_label_file = json.load(
+            open(unidet_cfg.MULTI_DATASET.UNIFIED_LABEL_FILE)
+        )
         self.metadata.thing_classes = [
-            '{}'.format([xx for xx in x['name'].split('_') if xx != ''][0]) \
-                for x in unified_label_file['categories']]
+            "{}".format([xx for xx in x["name"].split("_") if xx != ""][0])
+            for x in unified_label_file["categories"]
+        ]
         self.cpu_device = torch.device("cpu")
         self.instance_mode = instance_mode
 
@@ -100,7 +103,9 @@ class UnifiedVisualizationDemo(object):
                 )
             elif "instances" in predictions:
                 predictions = predictions["instances"].to(self.cpu_device)
-                vis_frame = video_visualizer.draw_instance_predictions(frame, predictions)
+                vis_frame = video_visualizer.draw_instance_predictions(
+                    frame, predictions
+                )
             elif "sem_seg" in predictions:
                 vis_frame = video_visualizer.draw_sem_seg(
                     frame, predictions["sem_seg"].argmax(dim=0).to(self.cpu_device)

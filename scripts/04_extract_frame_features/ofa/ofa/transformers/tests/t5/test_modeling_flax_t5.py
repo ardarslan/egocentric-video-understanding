@@ -47,8 +47,14 @@ if is_flax_available():
     from flax.training.common_utils import onehot
     from flax.traverse_util import flatten_dict
     from transformers import FLAX_MODEL_MAPPING, ByT5Tokenizer, T5Config, T5Tokenizer
-    from transformers.modeling_flax_pytorch_utils import load_flax_weights_in_pytorch_model
-    from transformers.models.t5.modeling_flax_t5 import FlaxT5ForConditionalGeneration, FlaxT5Model, shift_tokens_right
+    from transformers.modeling_flax_pytorch_utils import (
+        load_flax_weights_in_pytorch_model,
+    )
+    from transformers.models.t5.modeling_flax_t5 import (
+        FlaxT5ForConditionalGeneration,
+        FlaxT5Model,
+        shift_tokens_right,
+    )
 
 
 class FlaxT5ModelTester:
@@ -76,7 +82,6 @@ class FlaxT5ModelTester:
         scope=None,
         decoder_layers=None,
     ):
-
         self.parent = parent
         self.batch_size = batch_size
         self.encoder_seq_length = encoder_seq_length
@@ -101,14 +106,22 @@ class FlaxT5ModelTester:
         self.decoder_layers = decoder_layers
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.encoder_seq_length], self.vocab_size)
-        decoder_input_ids = ids_tensor([self.batch_size, self.decoder_seq_length], self.vocab_size)
+        input_ids = ids_tensor(
+            [self.batch_size, self.encoder_seq_length], self.vocab_size
+        )
+        decoder_input_ids = ids_tensor(
+            [self.batch_size, self.decoder_seq_length], self.vocab_size
+        )
 
         attention_mask = None
         decoder_attention_mask = None
         if self.use_attention_mask:
-            attention_mask = ids_tensor([self.batch_size, self.encoder_seq_length], vocab_size=2)
-            decoder_attention_mask = ids_tensor([self.batch_size, self.decoder_seq_length], vocab_size=2)
+            attention_mask = ids_tensor(
+                [self.batch_size, self.encoder_seq_length], vocab_size=2
+            )
+            decoder_attention_mask = ids_tensor(
+                [self.batch_size, self.decoder_seq_length], vocab_size=2
+            )
 
         config = T5Config(
             vocab_size=self.vocab_size,
@@ -154,8 +167,14 @@ class FlaxT5ModelTester:
         decoder_output = result.last_hidden_state
         encoder_output = result.encoder_last_hidden_state
 
-        self.parent.assertEqual(encoder_output.shape, (self.batch_size, self.encoder_seq_length, self.hidden_size))
-        self.parent.assertEqual(decoder_output.shape, (self.batch_size, self.decoder_seq_length, self.hidden_size))
+        self.parent.assertEqual(
+            encoder_output.shape,
+            (self.batch_size, self.encoder_seq_length, self.hidden_size),
+        )
+        self.parent.assertEqual(
+            decoder_output.shape,
+            (self.batch_size, self.decoder_seq_length, self.hidden_size),
+        )
 
     def check_use_cache_forward_with_attn_mask(
         self,
@@ -177,12 +196,19 @@ class FlaxT5ModelTester:
         decoder_attention_mask_cache = jnp.concatenate(
             [
                 decoder_attention_mask,
-                jnp.zeros((decoder_attention_mask.shape[0], max_decoder_length - decoder_attention_mask.shape[1])),
+                jnp.zeros(
+                    (
+                        decoder_attention_mask.shape[0],
+                        max_decoder_length - decoder_attention_mask.shape[1],
+                    )
+                ),
             ],
             axis=-1,
         )
 
-        past_key_values = model.init_cache(decoder_input_ids.shape[0], max_decoder_length, encoder_outputs)
+        past_key_values = model.init_cache(
+            decoder_input_ids.shape[0], max_decoder_length, encoder_outputs
+        )
 
         outputs_cache = model.decode(
             decoder_input_ids[:, :-1],
@@ -197,9 +223,15 @@ class FlaxT5ModelTester:
             decoder_attention_mask=decoder_attention_mask_cache,
         )
 
-        outputs = model.decode(decoder_input_ids, encoder_outputs, decoder_attention_mask=decoder_attention_mask)
+        outputs = model.decode(
+            decoder_input_ids,
+            encoder_outputs,
+            decoder_attention_mask=decoder_attention_mask,
+        )
 
-        diff = np.max(np.abs((outputs_cache_next[0][:, -1, :5] - outputs[0][:, -1, :5])))
+        diff = np.max(
+            np.abs((outputs_cache_next[0][:, -1, :5] - outputs[0][:, -1, :5]))
+        )
         self.parent.assertTrue(diff < 1e-3, msg=f"Max diff is {diff}")
 
     def prepare_config_and_inputs_for_common(self):
@@ -222,10 +254,15 @@ class FlaxT5ModelTester:
 
 
 @require_flax
-class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.TestCase):
-
-    all_model_classes = (FlaxT5Model, FlaxT5ForConditionalGeneration) if is_flax_available() else ()
-    all_generative_model_classes = (FlaxT5ForConditionalGeneration,) if is_flax_available() else ()
+class FlaxT5ModelTest(
+    FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.TestCase
+):
+    all_model_classes = (
+        (FlaxT5Model, FlaxT5ForConditionalGeneration) if is_flax_available() else ()
+    )
+    all_generative_model_classes = (
+        (FlaxT5ForConditionalGeneration,) if is_flax_available() else ()
+    )
     is_encoder_decoder = True
 
     def setUp(self):
@@ -250,7 +287,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
     def test_use_cache_forward_with_attn_mask(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
         for model_class in self.all_model_classes:
-            self.model_tester.check_use_cache_forward_with_attn_mask(model_class, *config_and_inputs)
+            self.model_tester.check_use_cache_forward_with_attn_mask(
+                model_class, *config_and_inputs
+            )
 
     def test_encode(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
@@ -262,7 +301,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
 
                 @jax.jit
                 def encode_jitted(input_ids, attention_mask=None, **kwargs):
-                    return model.encode(input_ids=input_ids, attention_mask=attention_mask)
+                    return model.encode(
+                        input_ids=input_ids, attention_mask=attention_mask
+                    )
 
                 with self.subTest("JIT Enabled"):
                     jitted_outputs = encode_jitted(**prepared_inputs_dict).to_tuple()
@@ -281,7 +322,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
         for model_class in self.all_model_classes:
             with self.subTest(model_class.__name__):
                 model = model_class(config)
-                encoder_outputs = model.encode(inputs_dict["input_ids"], inputs_dict["attention_mask"])
+                encoder_outputs = model.encode(
+                    inputs_dict["input_ids"], inputs_dict["attention_mask"]
+                )
 
                 prepared_inputs_dict = {
                     "decoder_input_ids": inputs_dict["decoder_input_ids"],
@@ -290,7 +333,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
                 }
 
                 @jax.jit
-                def decode_jitted(decoder_input_ids, decoder_attention_mask, encoder_outputs):
+                def decode_jitted(
+                    decoder_input_ids, decoder_attention_mask, encoder_outputs
+                ):
                     return model.decode(
                         decoder_input_ids=decoder_input_ids,
                         decoder_attention_mask=decoder_attention_mask,
@@ -314,7 +359,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
         labels = np.arange(2, 102).reshape(5, 20)
         labels[:2, 15:] = -100
 
-        decoder_input_ids = shift_tokens_right(labels, pad_token_id, decoder_start_token_id)
+        decoder_input_ids = shift_tokens_right(
+            labels, pad_token_id, decoder_start_token_id
+        )
         np_decoder_input_ids = np.array(decoder_input_ids)
 
         padded_slice = np_decoder_input_ids[:2, (15 + 1) :]
@@ -345,7 +392,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
                 base_param_from_head = flatten_dict(unfreeze(head_model.params))
 
                 for key in base_param_from_head.keys():
-                    max_diff = (base_params[key] - base_param_from_head[key]).sum().item()
+                    max_diff = (
+                        (base_params[key] - base_param_from_head[key]).sum().item()
+                    )
                     self.assertLessEqual(max_diff, 1e-3, msg=f"{key} not identical")
 
     # overwrite since special base model prefix is used
@@ -368,7 +417,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
                 base_params = flatten_dict(unfreeze(base_model.params))
 
                 for key in base_params_from_head.keys():
-                    max_diff = (base_params[key] - base_params_from_head[key]).sum().item()
+                    max_diff = (
+                        (base_params[key] - base_params_from_head[key]).sum().item()
+                    )
                     self.assertLessEqual(max_diff, 1e-3, msg=f"{key} not identical")
 
     # overwrite since special base model prefix is used
@@ -385,7 +436,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
             base_params = flatten_dict(unfreeze(model.params))
 
             # convert Flax model to PyTorch model
-            pt_model_class = getattr(transformers, base_class.__name__[4:])  # Skip the "Flax" at the beginning
+            pt_model_class = getattr(
+                transformers, base_class.__name__[4:]
+            )  # Skip the "Flax" at the beginning
             pt_model = pt_model_class(config).eval()
             pt_model = load_flax_weights_in_pytorch_model(pt_model, model.params)
 
@@ -398,7 +451,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
                 base_param_from_head = flatten_dict(unfreeze(head_model.params))
 
                 for key in base_param_from_head.keys():
-                    max_diff = (base_params[key] - base_param_from_head[key]).sum().item()
+                    max_diff = (
+                        (base_params[key] - base_param_from_head[key]).sum().item()
+                    )
                     self.assertLessEqual(max_diff, 1e-3, msg=f"{key} not identical")
 
     # overwrite since special base model prefix is used
@@ -415,7 +470,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
             base_params_from_head = flatten_dict(unfreeze(model.params))
 
             # convert Flax model to PyTorch model
-            pt_model_class = getattr(transformers, model_class.__name__[4:])  # Skip the "Flax" at the beginning
+            pt_model_class = getattr(
+                transformers, model_class.__name__[4:]
+            )  # Skip the "Flax" at the beginning
             pt_model = pt_model_class(config).eval()
             pt_model = load_flax_weights_in_pytorch_model(pt_model, model.params)
 
@@ -427,7 +484,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
                 base_params = flatten_dict(unfreeze(base_model.params))
 
                 for key in base_params_from_head.keys():
-                    max_diff = (base_params[key] - base_params_from_head[key]).sum().item()
+                    max_diff = (
+                        (base_params[key] - base_params_from_head[key]).sum().item()
+                    )
                     self.assertLessEqual(max_diff, 1e-3, msg=f"{key} not identical")
 
     # overwrite since special base model prefix is used
@@ -445,7 +504,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
             base_params_from_head = flatten_dict(unfreeze(model.params))
 
             # convert Flax model to PyTorch model
-            pt_model_class = getattr(transformers, model_class.__name__[4:])  # Skip the "Flax" at the beginning
+            pt_model_class = getattr(
+                transformers, model_class.__name__[4:]
+            )  # Skip the "Flax" at the beginning
             pt_model = pt_model_class(config).eval()
             pt_model = load_flax_weights_in_pytorch_model(pt_model, model.params)
 
@@ -457,7 +518,9 @@ class FlaxT5ModelTest(FlaxModelTesterMixin, FlaxGenerationTesterMixin, unittest.
                 base_params = flatten_dict(unfreeze(base_model.params))
 
                 for key in base_params_from_head.keys():
-                    max_diff = (base_params[key] - base_params_from_head[key]).sum().item()
+                    max_diff = (
+                        (base_params[key] - base_params_from_head[key]).sum().item()
+                    )
                     self.assertLessEqual(max_diff, 1e-3, msg=f"{key} not identical")
 
 
@@ -485,11 +548,15 @@ class FlaxT5ModelIntegrationTests(unittest.TestCase):
         input_ids = tokenizer("Hello there", return_tensors="np").input_ids
         labels = tokenizer("Hi I am", return_tensors="np").input_ids
 
-        decoder_input_ids = shift_tokens_right(labels, model.config.pad_token_id, model.config.decoder_start_token_id)
+        decoder_input_ids = shift_tokens_right(
+            labels, model.config.pad_token_id, model.config.decoder_start_token_id
+        )
 
         logits = model(input_ids, decoder_input_ids=decoder_input_ids).logits
 
-        loss = optax.softmax_cross_entropy(logits, onehot(labels, logits.shape[-1])).mean()
+        loss = optax.softmax_cross_entropy(
+            logits, onehot(labels, logits.shape[-1])
+        ).mean()
         mtf_score = -(labels.shape[-1] * loss.item())
 
         EXPECTED_SCORE = -19.0845
@@ -515,10 +582,14 @@ class FlaxT5ModelIntegrationTests(unittest.TestCase):
         input_ids = tokenizer("Hello there", return_tensors="np").input_ids
         labels = tokenizer("Hi I am", return_tensors="np").input_ids
 
-        decoder_input_ids = shift_tokens_right(labels, model.config.pad_token_id, model.config.decoder_start_token_id)
+        decoder_input_ids = shift_tokens_right(
+            labels, model.config.pad_token_id, model.config.decoder_start_token_id
+        )
 
         logits = model(input_ids, decoder_input_ids=decoder_input_ids).logits
-        loss = optax.softmax_cross_entropy(logits, onehot(labels, logits.shape[-1])).mean()
+        loss = optax.softmax_cross_entropy(
+            logits, onehot(labels, logits.shape[-1])
+        ).mean()
 
         mtf_score = -(labels.shape[-1] * loss.item())
 
@@ -543,10 +614,14 @@ class FlaxT5ModelIntegrationTests(unittest.TestCase):
         input_ids = tokenizer("Hello there", return_tensors="np").input_ids
         labels = tokenizer("Hi I am", return_tensors="np").input_ids
 
-        decoder_input_ids = shift_tokens_right(labels, model.config.pad_token_id, model.config.decoder_start_token_id)
+        decoder_input_ids = shift_tokens_right(
+            labels, model.config.pad_token_id, model.config.decoder_start_token_id
+        )
 
         logits = model(input_ids, decoder_input_ids=decoder_input_ids).logits
-        loss = optax.softmax_cross_entropy(logits, onehot(labels, logits.shape[-1])).mean()
+        loss = optax.softmax_cross_entropy(
+            logits, onehot(labels, logits.shape[-1])
+        ).mean()
 
         mtf_score = -(labels.shape[-1] * loss.item())
 
@@ -586,7 +661,10 @@ class FlaxT5ModelIntegrationTests(unittest.TestCase):
         ]
 
         dct = tok(
-            ["summarize: " + x for x in [FRANCE_ARTICLE, SHORTER_ARTICLE, IRAN_ARTICLE, ARTICLE_SUBWAY]],
+            [
+                "summarize: " + x
+                for x in [FRANCE_ARTICLE, SHORTER_ARTICLE, IRAN_ARTICLE, ARTICLE_SUBWAY]
+            ],
             padding="max_length",
             truncation=True,
             return_tensors="np",
@@ -603,7 +681,11 @@ class FlaxT5ModelIntegrationTests(unittest.TestCase):
             early_stopping=True,
         ).sequences
 
-        decoded = tok.batch_decode(hypotheses_batch, skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        decoded = tok.batch_decode(
+            hypotheses_batch,
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=False,
+        )
         self.assertListEqual(
             expected_summaries,
             decoded,

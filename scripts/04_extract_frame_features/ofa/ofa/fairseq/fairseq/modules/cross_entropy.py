@@ -54,7 +54,6 @@ try:
             else:
                 raise NotImplementedError
 
-
 except ImportError:
 
     def cross_entropy(logits, target, ignore_index=-100, reduction="mean"):

@@ -46,19 +46,21 @@ Copyright William Ravenscroft 2022
 from multiprocessing.dummy import Pool
 import torch
 import torch.multiprocessing as mp
+
 # from torch.cuda.amp import autocast
 from functools import partial
 
+
 def full_seq_linterpolate(
-    x, 
+    x,
     offsets,
-    kernel_size, 
+    kernel_size,
     dilation,
     stride,
     dilated_positions=None,
     device="cpu",
-    _test=False
-    ):
+    _test=False,
+):
     """
     Full sequence linear interpolation function for 1D deformable convolution. This should only be used for short sequence lengths else the user will be likely to run into memory issues.
     Args:
@@ -72,205 +74,303 @@ def full_seq_linterpolate(
     """
     # Every index in x we need to consider
     if dilated_positions == None:
-        dilated_positions = torch.linspace(0, dilation*kernel_size-dilation,kernel_size,device=device) # kernel_size
-    max_t0 = (offsets.shape[-2]-1)*stride
-    t0s = torch.linspace(0, max_t0, offsets.shape[-2],device=device).unsqueeze(-1) # out_length x 1
-    dilated_offsets_repeated = dilated_positions+offsets
-    T = t0s + dilated_offsets_repeated # batch_size x groups x out_length x kernel_size
+        dilated_positions = torch.linspace(
+            0, dilation * kernel_size - dilation, kernel_size, device=device
+        )  # kernel_size
+    max_t0 = (offsets.shape[-2] - 1) * stride
+    t0s = torch.linspace(0, max_t0, offsets.shape[-2], device=device).unsqueeze(
+        -1
+    )  # out_length x 1
+    dilated_offsets_repeated = dilated_positions + offsets
+    T = t0s + dilated_offsets_repeated  # batch_size x groups x out_length x kernel_size
 
     if _test:
-        print("x:",x.shape) # batch_size x in_channels x input_length
-        print("offsets:",offsets.shape) # batch_size x groups x out_length x kernel_size
+        print("x:", x.shape)  # batch_size x in_channels x input_length
+        print(
+            "offsets:", offsets.shape
+        )  # batch_size x groups x out_length x kernel_size
         print("max_t0:", max_t0)
-        print("t0s:",t0s.shape) # out_lengths x 1
-        print("dilated positions:",dilated_positions.shape) # kernel_size
-        print("dilated_offsets_repeated:",dilated_offsets_repeated.shape)
-    
-    
-    max_U = x.shape[-1]-1
-    U = torch.linspace(0,max_U,max_U+1,device=device).repeat(1,1,1,1,1) # 1 x 1 x 1 x 1 x_length
-    abs_sub = 1-torch.abs(U-T.unsqueeze(-1)) # batch_size x groups x out_length x kernel_size x_length
-    _zeros = torch.zeros(abs_sub.shape,device=device)
-    G = torch.max(_zeros, abs_sub) # batch_size x groups x out_length x kernel_size x_length
-    
-    if _test:
-        print("T:",T.shape) # batch_size x groups x out_length x kernel_size
-        print("U:",U.shape); 
-        print("abs_sub:", abs_sub.shape)
-        print("G:",G.shape)
-    
-    mx = torch.multiply(G.moveaxis((0,1),(2,3)),x)
-    x_offset = torch.sum(mx, axis=-1).moveaxis((0,1),(-2,-1))   # batch_size x channels x output_length x kernel size
+        print("t0s:", t0s.shape)  # out_lengths x 1
+        print("dilated positions:", dilated_positions.shape)  # kernel_size
+        print("dilated_offsets_repeated:", dilated_offsets_repeated.shape)
+
+    max_U = x.shape[-1] - 1
+    U = torch.linspace(0, max_U, max_U + 1, device=device).repeat(
+        1, 1, 1, 1, 1
+    )  # 1 x 1 x 1 x 1 x_length
+    abs_sub = 1 - torch.abs(
+        U - T.unsqueeze(-1)
+    )  # batch_size x groups x out_length x kernel_size x_length
+    _zeros = torch.zeros(abs_sub.shape, device=device)
+    G = torch.max(
+        _zeros, abs_sub
+    )  # batch_size x groups x out_length x kernel_size x_length
 
     if _test:
-        print("mx:",mx.shape)
+        print("T:", T.shape)  # batch_size x groups x out_length x kernel_size
+        print("U:", U.shape)
+        print("abs_sub:", abs_sub.shape)
+        print("G:", G.shape)
+
+    mx = torch.multiply(G.moveaxis((0, 1), (2, 3)), x)
+    x_offset = torch.sum(mx, axis=-1).moveaxis(
+        (0, 1), (-2, -1)
+    )  # batch_size x channels x output_length x kernel size
+
+    if _test:
+        print("mx:", mx.shape)
         print("x_offset:", x_offset.shape)
         print(
             "Desired shape:",
             (batch_size, x.shape[1], offsets.shape[-2], kernel_size),
-            "(batch_size, in_channels, output_length, kernel_size)")
-        assert x_offset.shape == (batch_size, x.shape[1],offsets.shape[-2], kernel_size)
+            "(batch_size, in_channels, output_length, kernel_size)",
+        )
+        assert x_offset.shape == (
+            batch_size,
+            x.shape[1],
+            offsets.shape[-2],
+            kernel_size,
+        )
     return x_offset
 
-def _interpolate(i,x,t0s,T,kernel_rfield,x_offset,device):
-    t0 = int(t0s[i,0].item())
-    max_U = int(t0+kernel_rfield-1)
-    U = torch.linspace(t0,max_U,kernel_rfield,device=device) #  kernel_size*max_dilation_factor
-    abs_sub = 1-torch.abs(U.repeat(1,1,T.shape[-1],1)-T[:,:,i,:].unsqueeze(-1)) # batch_size x groups x kernel_size
-    _zeros = torch.zeros(abs_sub.shape,device=device)
-    G = torch.max(_zeros, abs_sub) # batch_size x channels x out_length x kernel_size x input_length
-    mx = torch.multiply(G,x[:,:,t0:max_U+1].unsqueeze(-2))
-    x_offset[:,:,i,:,] = torch.sum(mx, axis=-1)   # batch_size x channels x output_length x kernel size
+
+def _interpolate(i, x, t0s, T, kernel_rfield, x_offset, device):
+    t0 = int(t0s[i, 0].item())
+    max_U = int(t0 + kernel_rfield - 1)
+    U = torch.linspace(
+        t0, max_U, kernel_rfield, device=device
+    )  #  kernel_size*max_dilation_factor
+    abs_sub = 1 - torch.abs(
+        U.repeat(1, 1, T.shape[-1], 1) - T[:, :, i, :].unsqueeze(-1)
+    )  # batch_size x groups x kernel_size
+    _zeros = torch.zeros(abs_sub.shape, device=device)
+    G = torch.max(
+        _zeros, abs_sub
+    )  # batch_size x channels x out_length x kernel_size x input_length
+    mx = torch.multiply(G, x[:, :, t0 : max_U + 1].unsqueeze(-2))
+    x_offset[
+        :,
+        :,
+        i,
+        :,
+    ] = torch.sum(
+        mx, axis=-1
+    )  # batch_size x channels x output_length x kernel size
+
 
 def kernel_width_linterpolate(
-    x, 
+    x,
     offsets,
-    kernel_size, 
+    kernel_size,
     dilation,
     stride,
     dilated_positions=None,
     device="cpu",
     _test=False,
     _multiprocess=False,
-    _max_memory=True
+    _max_memory=True,
 ):
     assert x.device == offsets.device, "x and offsets must be on same device"
-    kernel_rfield=dilation*(kernel_size-1)+1
+    kernel_rfield = dilation * (kernel_size - 1) + 1
     # Every index in x we need to consider
     if dilated_positions == None:
-        dilated_positions = torch.linspace(0, kernel_rfield-1,kernel_size,device=device) # kernel_size
-    
-    max_t0 = (offsets.shape[-2]-1)*stride
-    t0s = torch.linspace(0, max_t0, offsets.shape[-2],device=device).unsqueeze(-1) # out_length x 1
-    dilated_offsets_repeated = dilated_positions+offsets
-    
-    T = t0s + dilated_offsets_repeated # batch_size x channels x out_length x kernel_size
-    T = torch.max(T, t0s)
-    T = torch.min(T, t0s+torch.max(dilated_positions))
+        dilated_positions = torch.linspace(
+            0, kernel_rfield - 1, kernel_size, device=device
+        )  # kernel_size
 
+    max_t0 = (offsets.shape[-2] - 1) * stride
+    t0s = torch.linspace(0, max_t0, offsets.shape[-2], device=device).unsqueeze(
+        -1
+    )  # out_length x 1
+    dilated_offsets_repeated = dilated_positions + offsets
+
+    T = (
+        t0s + dilated_offsets_repeated
+    )  # batch_size x channels x out_length x kernel_size
+    T = torch.max(T, t0s)
+    T = torch.min(T, t0s + torch.max(dilated_positions))
 
     if _test:
-        print("x:",x.shape) # batch_size x in_channels x input_length
-        print("offsets:",offsets.shape) # batch_size x groups x out_length x kernel_size
+        print("x:", x.shape)  # batch_size x in_channels x input_length
+        print(
+            "offsets:", offsets.shape
+        )  # batch_size x groups x out_length x kernel_size
         print("max_t0:", max_t0)
-        print("t0s:",t0s.shape) # out_lengths x 1
-        print("dilated positions:",dilated_positions.shape) # kernel_size
-        print("dilated_offsets_repeated:",dilated_offsets_repeated.shape)
-        print("T:",T.shape) # batch_size x groups x out_length x kernel_rfield
+        print("t0s:", t0s.shape)  # out_lengths x 1
+        print("dilated positions:", dilated_positions.shape)  # kernel_size
+        print("dilated_offsets_repeated:", dilated_offsets_repeated.shape)
+        print("T:", T.shape)  # batch_size x groups x out_length x kernel_rfield
 
     if _max_memory:
-        U = t0s+torch.linspace(0,kernel_rfield-1,kernel_rfield,device=device).repeat(1,1,1,1) # 1 x 1 x 1 x length x kernel_rfield
+        U = t0s + torch.linspace(
+            0, kernel_rfield - 1, kernel_rfield, device=device
+        ).repeat(
+            1, 1, 1, 1
+        )  # 1 x 1 x 1 x length x kernel_rfield
         if _test:
-            print("U:",U.shape)
+            print("U:", U.shape)
 
-        abs_sub = 1-torch.abs(U.unsqueeze(-1)-T.unsqueeze(-2)) # batch_size x groups x out_length x kernel_size x_length
+        abs_sub = 1 - torch.abs(
+            U.unsqueeze(-1) - T.unsqueeze(-2)
+        )  # batch_size x groups x out_length x kernel_size x_length
         if _test:
             print("abs_sub:", abs_sub.shape)
 
-        _zeros = torch.zeros(abs_sub.shape,device=device)
+        _zeros = torch.zeros(abs_sub.shape, device=device)
         x = x.unfold(dimension=2, size=kernel_rfield, step=stride).unsqueeze(-1)
         if _test:
-            print("x unfolded:",x.shape)
+            print("x unfolded:", x.shape)
 
-        G = torch.max(_zeros, abs_sub) # batch_size x groups x out_length x kernel_rfield x kernel_size
+        G = torch.max(
+            _zeros, abs_sub
+        )  # batch_size x groups x out_length x kernel_rfield x kernel_size
         if _test:
-            print("G:",G.shape)
+            print("G:", G.shape)
 
-        mx = torch.multiply(G,x)
-        x_offset = torch.sum(mx, axis=-2)  # batch_size x channels x output_length x kernel size
+        mx = torch.multiply(G, x)
+        x_offset = torch.sum(
+            mx, axis=-2
+        )  # batch_size x channels x output_length x kernel size
         return x_offset
 
-    elif not _multiprocess: 
-        x_offset = torch.zeros((x.shape[0], x.shape[1], offsets.shape[-2], kernel_size),device=x.device)
+    elif not _multiprocess:
+        x_offset = torch.zeros(
+            (x.shape[0], x.shape[1], offsets.shape[-2], kernel_size), device=x.device
+        )
         for i in range(t0s.shape[0]):
-            t0 = int(t0s[i,0].item())
-            max_U = int(t0+kernel_rfield-1)
-            U = torch.linspace(t0,max_U,kernel_rfield,device=device) #  kernel_size*max_dilation_factor
-            abs_sub = 1-torch.abs(U.repeat(1,1,T.shape[-1],1)-T[:,:,i,:].unsqueeze(-1)) # batch_size x groups x kernel_size
-            _zeros = torch.zeros(abs_sub.shape,device=device)
-            G = torch.max(_zeros, abs_sub) # batch_size x channels x out_length x kernel_size x input_length
-            mx = torch.multiply(G,x[:,:,t0:max_U+1].unsqueeze(-2))
-            x_offset[:,:,i,:,] = torch.sum(mx, axis=-1)   # batch_size x channels x output_length x kernel size
+            t0 = int(t0s[i, 0].item())
+            max_U = int(t0 + kernel_rfield - 1)
+            U = torch.linspace(
+                t0, max_U, kernel_rfield, device=device
+            )  #  kernel_size*max_dilation_factor
+            abs_sub = 1 - torch.abs(
+                U.repeat(1, 1, T.shape[-1], 1) - T[:, :, i, :].unsqueeze(-1)
+            )  # batch_size x groups x kernel_size
+            _zeros = torch.zeros(abs_sub.shape, device=device)
+            G = torch.max(
+                _zeros, abs_sub
+            )  # batch_size x channels x out_length x kernel_size x input_length
+            mx = torch.multiply(G, x[:, :, t0 : max_U + 1].unsqueeze(-2))
+            x_offset[
+                :,
+                :,
+                i,
+                :,
+            ] = torch.sum(
+                mx, axis=-1
+            )  # batch_size x channels x output_length x kernel size
         return x_offset
 
     else:
-        x_offset = torch.zeros((x.shape[0], x.shape[1], offsets.shape[-2], kernel_size),device=x.device)
+        x_offset = torch.zeros(
+            (x.shape[0], x.shape[1], offsets.shape[-2], kernel_size), device=x.device
+        )
         T.share_memory_()
         x.share_memory_()
         t0s.share_memory_()
         x_offset.share_memory_()
         with mp.Pool() as p:
             p.map(
-                partial(_interpolate,t0s=t0s,T=T,x=x,x_offset=x_offset,kernel_rfield=kernel_rfield,device=x.device),
-                range(t0s.shape[0])
-                )
+                partial(
+                    _interpolate,
+                    t0s=t0s,
+                    T=T,
+                    x=x,
+                    x_offset=x_offset,
+                    kernel_rfield=kernel_rfield,
+                    device=x.device,
+                ),
+                range(t0s.shape[0]),
+            )
         return x_offset
 
+
 def efficient_linterpolate(
-    x, 
+    x,
     offsets,
-    kernel_size, 
+    kernel_size,
     dilation,
     stride,
     dilated_positions=None,
     device="cpu",
     _test=False,
-    unconstrained=False
-):  
-
+    unconstrained=False,
+):
     assert x.device == offsets.device, "x and offsets must be on same device"
-    kernel_rfield=dilation*(kernel_size-1)+1
+    kernel_rfield = dilation * (kernel_size - 1) + 1
     # Every index in x we need to consider
     if dilated_positions == None:
-        dilated_positions = torch.linspace(0, kernel_rfield-1,kernel_size,device=offsets.device,dtype=offsets.dtype) # kernel_size
+        dilated_positions = torch.linspace(
+            0,
+            kernel_rfield - 1,
+            kernel_size,
+            device=offsets.device,
+            dtype=offsets.dtype,
+        )  # kernel_size
 
-    max_t0 = (offsets.shape[-2]-1)*stride
-    t0s = torch.linspace(0, max_t0, offsets.shape[-2],device=offsets.device,dtype=offsets.dtype).unsqueeze(-1) # out_length x 1
-    dilated_offsets_repeated = dilated_positions+offsets
-    
-    T = t0s + dilated_offsets_repeated # batch_size x channels x out_length x kernel_size
+    max_t0 = (offsets.shape[-2] - 1) * stride
+    t0s = torch.linspace(
+        0, max_t0, offsets.shape[-2], device=offsets.device, dtype=offsets.dtype
+    ).unsqueeze(
+        -1
+    )  # out_length x 1
+    dilated_offsets_repeated = dilated_positions + offsets
+
+    T = (
+        t0s + dilated_offsets_repeated
+    )  # batch_size x channels x out_length x kernel_size
     if not unconstrained:
         T = torch.max(T, t0s)
-        T = torch.min(T, t0s+torch.max(dilated_positions))
+        T = torch.min(T, t0s + torch.max(dilated_positions))
     else:
         T = torch.clamp(T, 0.0, float(x.shape[-1]))
 
     if _test:
-        print("x:",x.shape) # batch_size x in_channels x input_length
-        print("offsets:",offsets.shape) # batch_size x groups x out_length x kernel_size
+        print("x:", x.shape)  # batch_size x in_channels x input_length
+        print(
+            "offsets:", offsets.shape
+        )  # batch_size x groups x out_length x kernel_size
         print("max_t0:", max_t0)
-        print("t0s:",t0s.shape) # out_lengths x 1
-        print("dilated positions:",dilated_positions.shape) # kernel_size
-        print("dilated_offsets_repeated:",dilated_offsets_repeated.shape)
-        print("T:",T.shape) # batch_size x groups x out_length x kernel_rfield
+        print("t0s:", t0s.shape)  # out_lengths x 1
+        print("dilated positions:", dilated_positions.shape)  # kernel_size
+        print("dilated_offsets_repeated:", dilated_offsets_repeated.shape)
+        print("T:", T.shape)  # batch_size x groups x out_length x kernel_rfield
 
     with torch.no_grad():
-        U = torch.floor(T).to(torch.long) # 1 x 1 x length x kernel_rfield
-        U = torch.clamp(U,min=0,max=x.shape[2]-2)
+        U = torch.floor(T).to(torch.long)  # 1 x 1 x length x kernel_rfield
+        U = torch.clamp(U, min=0, max=x.shape[2] - 2)
 
-        if _test:
-            print("U:",U.shape)
-
-        U = torch.stack([U,U+1],dim=-1)
-        if U.shape[1] < x.shape[1]:
-            U=U.repeat(1,x.shape[1],1,1,1)
         if _test:
             print("U:", U.shape)
 
-    x=x.unsqueeze(-1).repeat(1,1,1,U.shape[-1])
-    x = torch.stack([x.gather(index=U[:,:,:,i,:],dim=-2) for i in range(U.shape[-2])],dim=-1)
-    
-    G = torch.max(torch.zeros(U.shape,device=device), 1-torch.abs(U-T.unsqueeze(-1))) # batch_size x groups x out_length x kernel_rfield x kernel_size
-    
-    if _test:
-        print("G:",G.shape)
+        U = torch.stack([U, U + 1], dim=-1)
+        if U.shape[1] < x.shape[1]:
+            U = U.repeat(1, x.shape[1], 1, 1, 1)
+        if _test:
+            print("U:", U.shape)
 
-    mx = torch.multiply(G,x.moveaxis(-2,-1))
-    
-    return torch.sum(mx, axis=-1) # .float()  # batch_size x channels x output_length x kernel size
+    x = x.unsqueeze(-1).repeat(1, 1, 1, U.shape[-1])
+    x = torch.stack(
+        [x.gather(index=U[:, :, :, i, :], dim=-2) for i in range(U.shape[-2])], dim=-1
+    )
+
+    G = torch.max(
+        torch.zeros(U.shape, device=device), 1 - torch.abs(U - T.unsqueeze(-1))
+    )  # batch_size x groups x out_length x kernel_rfield x kernel_size
+
+    if _test:
+        print("G:", G.shape)
+
+    mx = torch.multiply(G, x.moveaxis(-2, -1))
+
+    return torch.sum(
+        mx, axis=-1
+    )  # .float()  # batch_size x channels x output_length x kernel size
+
 
 class DeformConv1d(nn.Module):
-    def __init__(self,
+    def __init__(
+        self,
         in_channels: int,
         out_channels: int,
         kernel_size: int,
@@ -282,10 +382,10 @@ class DeformConv1d(nn.Module):
         padding_mode: str = "reflect",
         device: str = "cpu",
         interpolation_function: Callable = efficient_linterpolate,
-        unconstrained: str = None, # default None to maintain backwards compatibility
+        unconstrained: str = None,  # default None to maintain backwards compatibility
         *args,
-        **kwargs
-        ) -> None:
+        **kwargs,
+    ) -> None:
         """
         1D Deformable convolution kernel layer
         Args:
@@ -303,8 +403,8 @@ class DeformConv1d(nn.Module):
 
         self.device = device
         self.interpolation_function = interpolation_function
-        
-        super(DeformConv1d, self).__init__(*args,**kwargs)
+
+        super(DeformConv1d, self).__init__(*args, **kwargs)
 
         if in_channels % groups != 0:
             raise ValueError("in_channels must be divisible by groups")
@@ -322,32 +422,36 @@ class DeformConv1d(nn.Module):
 
         if isinstance(self.padding, str):
             self._reversed_padding_repeated_twice = [0, 0]
-            if padding == 'same':
-                for d, k, i in zip([dilation], [kernel_size], range( 0, -1, -1)):
+            if padding == "same":
+                for d, k, i in zip([dilation], [kernel_size], range(0, -1, -1)):
                     total_padding = d * (k - 1)
                     left_pad = total_padding // 2
                     self._reversed_padding_repeated_twice[2 * i] = left_pad
                     self._reversed_padding_repeated_twice[2 * i + 1] = (
-                        total_padding - left_pad)
+                        total_padding - left_pad
+                    )
         else:
-            self._reversed_padding_repeated_twice = _reverse_repeat_tuple(self.padding, 2)
+            self._reversed_padding_repeated_twice = _reverse_repeat_tuple(
+                self.padding, 2
+            )
 
         self.weight = Parameter(
             torch.empty(out_channels, in_channels // groups, self.kernel_size)
         )
 
-        self.dilated_positions = torch.linspace(0,
-            dilation*kernel_size-dilation,
+        self.dilated_positions = torch.linspace(
+            0,
+            dilation * kernel_size - dilation,
             kernel_size,
-            ) # automatically store dilation offsets
+        )  # automatically store dilation offsets
 
         if bias:
             self.bias = Parameter(torch.empty(out_channels))
         else:
             self.register_parameter("bias", None)
 
-        if not unconstrained==None:
-            self.unconstrained=unconstrained
+        if not unconstrained == None:
+            self.unconstrained = unconstrained
 
         self.reset_parameters()
         self.to(device)
@@ -361,11 +465,8 @@ class DeformConv1d(nn.Module):
             init.uniform_(self.bias, -bound, bound)
 
     def forward(
-        self, 
-        input: Tensor, 
-        offsets: Tensor, 
-        mask: Optional[Tensor] = None # TODO
-        ) -> Tensor:
+        self, input: Tensor, offsets: Tensor, mask: Optional[Tensor] = None  # TODO
+    ) -> Tensor:
         """
         Forward pass of 1D deformable convolution layer
         Args:
@@ -376,51 +477,48 @@ class DeformConv1d(nn.Module):
         Returns:
             output (Tensor[batch_size, in_channels, length]): output tensor
         """
-        
-        if self.padding_mode != 'zeros':
+
+        if self.padding_mode != "zeros":
             input = F.pad(
-                input, 
-                self._reversed_padding_repeated_twice, 
-                mode=self.padding_mode
-                )
-        if not self.device == offsets.device: # naive assumption
+                input, self._reversed_padding_repeated_twice, mode=self.padding_mode
+            )
+        if not self.device == offsets.device:  # naive assumption
             self.device = offsets.device
         if self.dilated_positions.device != self.device:
             self.dilated_positions = self.dilated_positions.to(offsets.device)
 
         if "unconstrained" in self.__dict__.keys():
             input = self.interpolation_function(
-                input, 
-                kernel_size=self.kernel_size, 
+                input,
+                kernel_size=self.kernel_size,
                 dilation=self.dilation,
-                offsets=offsets, 
+                offsets=offsets,
                 stride=self.stride,
                 dilated_positions=self.dilated_positions,
                 device=self.device,
-                unconstrained=self.unconstrained
-                )
+                unconstrained=self.unconstrained,
+            )
         else:
             input = self.interpolation_function(
-                input, 
-                kernel_size=self.kernel_size, 
+                input,
+                kernel_size=self.kernel_size,
                 dilation=self.dilation,
-                offsets=offsets, 
+                offsets=offsets,
                 stride=self.stride,
                 dilated_positions=self.dilated_positions,
-                device=self.device
-                ) 
-        input = input.flatten(-2,-1)
-        output=F.conv1d(input, 
-            self.weight, 
-            self.bias, 
-            stride=self.kernel_size, 
-            groups=self.groups
+                device=self.device,
             )
-        
+        input = input.flatten(-2, -1)
+        output = F.conv1d(
+            input, self.weight, self.bias, stride=self.kernel_size, groups=self.groups
+        )
+
         return output
 
+
 class PackedDeformConv1d(DeformConv1d):
-    def __init__(self,
+    def __init__(
+        self,
         in_channels: int,
         out_channels: int,
         kernel_size: int,
@@ -433,10 +531,10 @@ class PackedDeformConv1d(DeformConv1d):
         offset_groups: int = 1,
         device: str = "cpu",
         interpolation_function: Callable = efficient_linterpolate,
-        unconstrained: str = None, # default None to maintain backwards compatibility
+        unconstrained: str = None,  # default None to maintain backwards compatibility
         *args,
-        **kwargs
-        ) -> None:
+        **kwargs,
+    ) -> None:
         """
         Packed 1D Deformable convolution class. Depthwise-Separable convolution is used to compute offsets.
         Args:
@@ -452,66 +550,99 @@ class PackedDeformConv1d(DeformConv1d):
             offset_groups (int): 1 or in_channels
             device: Device to operate function on. Default: torch.device("cuda:0" if torch.cuda.is_available() else "cpu").
         """
-        assert offset_groups in [1,in_channels], "offset_groups only implemented for offset_groups in {1,in_channels}"
-        
-        super(PackedDeformConv1d,self).__init__(
-            in_channels = in_channels,
-            out_channels = out_channels,
-            kernel_size = kernel_size,
-            stride = stride,
-            padding = padding,
-            dilation = dilation,
-            groups = groups,
-            bias = bias,
-            padding_mode = padding_mode,
-            device = device,
-            interpolation_function = interpolation_function,
+        assert offset_groups in [
+            1,
+            in_channels,
+        ], "offset_groups only implemented for offset_groups in {1,in_channels}"
+
+        super(PackedDeformConv1d, self).__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+            bias=bias,
+            padding_mode=padding_mode,
+            device=device,
+            interpolation_function=interpolation_function,
             unconstrained=unconstrained,
             *args,
-            **kwargs
-            )
+            **kwargs,
+        )
         self.offset_groups = offset_groups
 
-        self.offset_dconv = nn.Conv1d(in_channels,in_channels,kernel_size,stride=1,groups=in_channels,padding=padding,padding_mode=padding_mode,bias=False)
+        self.offset_dconv = nn.Conv1d(
+            in_channels,
+            in_channels,
+            kernel_size,
+            stride=1,
+            groups=in_channels,
+            padding=padding,
+            padding_mode=padding_mode,
+            bias=False,
+        )
         self.odc_norm = gLN(in_channels)
         self.odc_prelu = nn.PReLU()
-        
-        self.offset_pconv = nn.Conv1d(in_channels,kernel_size*offset_groups,1,stride=1,bias=False)
-        self.offset_pconv_tal = nn.Conv1d(2,kernel_size*offset_groups,1,stride=1,bias=False)   # for tal task
-        self.odp_norm = gLN(kernel_size*offset_groups)
+
+        self.offset_pconv = nn.Conv1d(
+            in_channels, kernel_size * offset_groups, 1, stride=1, bias=False
+        )
+        self.offset_pconv_tal = nn.Conv1d(
+            2, kernel_size * offset_groups, 1, stride=1, bias=False
+        )  # for tal task
+        self.odp_norm = gLN(kernel_size * offset_groups)
         self.odp_prelu = nn.PReLU()
 
-        self.device=device
+        self.device = device
         self.to(device)
-    
+
     def forward(self, input, offsets=None, with_offsets=False):
         """
         Forward pass of 1D deformable convolution layer
         Args:
             input (Tensor[batch_size, in_channels, length]): input tensor
-            
+
         Returns:
             output (Tensor[batch_size, in_channels, length]): output tensor
         """
-        self.device = offsets.device # naive assumption to fix errors
+        self.device = offsets.device  # naive assumption to fix errors
         if offsets is not None:
             if len(offsets.shape) == 3:
                 offsets = self.offset_pconv_tal(offsets)
-                offsets = self.odp_norm(self.odp_prelu(offsets).moveaxis(1,2)).moveaxis(2,1) # batch_size x (kernel_size*offset_groups) x length
-                offsets = offsets.unsqueeze(0).chunk(self.offset_groups,dim=2)# batch_size x offset_groups x length x kernel_size
-                offsets = torch.vstack(offsets).moveaxis((0,2),(1,3))# batch_size x offset_groups x length x kernel_size
+                offsets = self.odp_norm(
+                    self.odp_prelu(offsets).moveaxis(1, 2)
+                ).moveaxis(
+                    2, 1
+                )  # batch_size x (kernel_size*offset_groups) x length
+                offsets = offsets.unsqueeze(0).chunk(
+                    self.offset_groups, dim=2
+                )  # batch_size x offset_groups x length x kernel_size
+                offsets = torch.vstack(offsets).moveaxis(
+                    (0, 2), (1, 3)
+                )  # batch_size x offset_groups x length x kernel_size
         elif offsets is None:
             offsets = self.offset_dconv(input)
-            offsets = self.odc_norm(self.odc_prelu(offsets).moveaxis(1,2)).moveaxis(2,1)
-            assert str(input.device) == str(self.device), f"Input is on {input.device} but self is on {self.device}"
-            assert str(input.device) == str(offsets.device), f"Input is on {input.device} but self is on {self.device}"
+            offsets = self.odc_norm(self.odc_prelu(offsets).moveaxis(1, 2)).moveaxis(
+                2, 1
+            )
+            assert str(input.device) == str(
+                self.device
+            ), f"Input is on {input.device} but self is on {self.device}"
+            assert str(input.device) == str(
+                offsets.device
+            ), f"Input is on {input.device} but self is on {self.device}"
             offsets = self.offset_pconv(offsets)
 
         if with_offsets:
-            return super().forward(input,offsets), offsets
+            return super().forward(input, offsets), offsets
         else:
-            return super().forward(input,offsets)
-EPS=1e-9
+            return super().forward(input, offsets)
+
+
+EPS = 1e-9
+
 
 class gLN(nn.Module):
     """Global Layer Normalization (gLN).
@@ -543,7 +674,6 @@ class gLN(nn.Module):
         self.gamma.data.fill_(1)
         self.beta.data.zero_()
 
-
     def forward(self, y):
         """
         Arguments
@@ -556,13 +686,9 @@ class gLN(nn.Module):
         gLN_y : Tensor
             Tensor shape [M, K. N]
         """
-        mean = y.mean(dim=1, keepdim=True).mean(
-            dim=2, keepdim=True
-        )  # [M, 1, 1]
+        mean = y.mean(dim=1, keepdim=True).mean(dim=2, keepdim=True)  # [M, 1, 1]
         var = (
-            (torch.pow(y - mean, 2))
-            .mean(dim=1, keepdim=True)
-            .mean(dim=2, keepdim=True)
+            (torch.pow(y - mean, 2)).mean(dim=1, keepdim=True).mean(dim=2, keepdim=True)
         )
         gLN_y = self.gamma * (y - mean) / torch.pow(var + EPS, 0.5) + self.beta
         return gLN_y
@@ -596,7 +722,6 @@ class cLN(nn.Module):
         self.gamma.data.fill_(1)
         self.beta.data.zero_()
 
-
     def forward(self, y):
         """
         Args:
@@ -608,37 +733,32 @@ class cLN(nn.Module):
         var = torch.var(y, dim=2, keepdim=True, unbiased=False)  # [M, K, 1]
         cLN_y = self.gamma * (y - mean) / torch.pow(var + EPS, 0.5) + self.beta
         return cLN_y
-   
-
-
-
-
-
 
 
 class CxAM(nn.Module):
     def __init__(self, in_channels, out_channels, reduction=8):
         super(CxAM, self).__init__()
-        self.key_conv = nn.Conv1d(in_channels, out_channels//reduction, 1)
-        self.query_conv = nn.Conv1d(in_channels, out_channels//reduction, 1)
+        self.key_conv = nn.Conv1d(in_channels, out_channels // reduction, 1)
+        self.query_conv = nn.Conv1d(in_channels, out_channels // reduction, 1)
         self.value_conv = nn.Conv1d(in_channels, in_channels, 1)
 
     def forward(self, x):
         batch_size, C, T = x.size()
 
-        proj_query = self.query_conv(x).permute(0, 2, 1)   # B x T x C'
+        proj_query = self.query_conv(x).permute(0, 2, 1)  # B x T x C'
 
         proj_key = self.key_conv(x)  # B x C' x T
 
-        R = torch.bmm(proj_query, proj_key)     # [b,t,t]    
+        R = torch.bmm(proj_query, proj_key)  # [b,t,t]
         # 先进行全局平均池化, 此时 R 的shape为 B x N x 1 x 1, 再进行view, R 的shape为 B x 1 x W x H
-        attention = F.softmax(R, dim=-1)        # [b,t,t]
+        attention = F.softmax(R, dim=-1)  # [b,t,t]
 
-        proj_value = self.value_conv(x).permute(0,2,1)     # [b,t,c]
+        proj_value = self.value_conv(x).permute(0, 2, 1)  # [b,t,c]
 
         out = torch.bmm(attention, proj_value)  # [b,t,c]
 
         return out.permute(0, 2, 1)
+
 
 class CnAM(nn.Module):
     def __init__(self, in_channels, out_channels, reduction=8):
@@ -652,15 +772,15 @@ class CnAM(nn.Module):
     def forward(self, x, init):
         batch_size, C, T = x.size()
 
-        proj_query = self.query_conv(init).permute(0, 2, 1)   # B x T x C'
+        proj_query = self.query_conv(init).permute(0, 2, 1)  # B x T x C'
 
         proj_key = self.key_conv(init)  # B x C' x T
 
-        R = torch.bmm(proj_query, proj_key)     # [b,t,t]    
+        R = torch.bmm(proj_query, proj_key)  # [b,t,t]
         # 先进行全局平均池化, 此时 R 的shape为 B x N x 1 x 1, 再进行view, R 的shape为 B x 1 x W x H
-        attention = F.softmax(R, dim=-1)        # [b,t,t]
+        attention = F.softmax(R, dim=-1)  # [b,t,t]
 
-        proj_value = self.value_conv(x).permute(0,2,1)     # [b,t,c]
+        proj_value = self.value_conv(x).permute(0, 2, 1)  # [b,t,c]
 
         out = torch.bmm(attention, proj_value)  # [b,t,c]
 
@@ -668,15 +788,24 @@ class CnAM(nn.Module):
 
         return out
 
+
 class DenseBlock(nn.Module):
     def __init__(self, input_num, num1, num2, rate, drop_out):
         super(DenseBlock, self).__init__()
 
         # C: 2048 --> 512 --> 256
-        self.conv1x1 = nn.Conv1d(in_channels=input_num, out_channels=num1, kernel_size=1)
+        self.conv1x1 = nn.Conv1d(
+            in_channels=input_num, out_channels=num1, kernel_size=1
+        )
         self.ConvGN = nn.GroupNorm(num_groups=32, num_channels=num1)
         self.relu1 = nn.ReLU(inplace=True)
-        self.dilaconv = nn.Conv1d(in_channels=num1, out_channels=num2, kernel_size=3, padding=1 * rate, dilation=rate)
+        self.dilaconv = nn.Conv1d(
+            in_channels=num1,
+            out_channels=num2,
+            kernel_size=3,
+            padding=1 * rate,
+            dilation=rate,
+        )
         self.relu2 = nn.ReLU(inplace=True)
         self.drop = nn.Dropout(p=drop_out)
 
@@ -696,21 +825,44 @@ class DenseAPP(nn.Module):
         self.channels1 = 512
         self.channels2 = 256
         self.num_channels = num_channels
-        self.aspp3 = DenseBlock(self.num_channels, num1=self.channels1, num2=self.channels2, rate=3,
-                                drop_out=self.drop_out)
-        self.aspp6 = DenseBlock(self.num_channels + self.channels2 * 1, num1=self.channels1, num2=self.channels2,
-                                rate=6,
-                                drop_out=self.drop_out)
-        self.aspp12 = DenseBlock(self.num_channels + self.channels2 * 2, num1=self.channels1, num2=self.channels2,
-                                 rate=12,
-                                 drop_out=self.drop_out)
-        self.aspp18 = DenseBlock(self.num_channels + self.channels2 * 3, num1=self.channels1, num2=self.channels2,
-                                 rate=18,
-                                 drop_out=self.drop_out)
-        self.aspp24 = DenseBlock(self.num_channels + self.channels2 * 4, num1=self.channels1, num2=self.channels2,
-                                 rate=24,
-                                 drop_out=self.drop_out)
-        self.conv1x1 = nn.Conv1d(in_channels=5*self.channels2, out_channels=num_channels, kernel_size=1)
+        self.aspp3 = DenseBlock(
+            self.num_channels,
+            num1=self.channels1,
+            num2=self.channels2,
+            rate=3,
+            drop_out=self.drop_out,
+        )
+        self.aspp6 = DenseBlock(
+            self.num_channels + self.channels2 * 1,
+            num1=self.channels1,
+            num2=self.channels2,
+            rate=6,
+            drop_out=self.drop_out,
+        )
+        self.aspp12 = DenseBlock(
+            self.num_channels + self.channels2 * 2,
+            num1=self.channels1,
+            num2=self.channels2,
+            rate=12,
+            drop_out=self.drop_out,
+        )
+        self.aspp18 = DenseBlock(
+            self.num_channels + self.channels2 * 3,
+            num1=self.channels1,
+            num2=self.channels2,
+            rate=18,
+            drop_out=self.drop_out,
+        )
+        self.aspp24 = DenseBlock(
+            self.num_channels + self.channels2 * 4,
+            num1=self.channels1,
+            num2=self.channels2,
+            rate=24,
+            drop_out=self.drop_out,
+        )
+        self.conv1x1 = nn.Conv1d(
+            in_channels=5 * self.channels2, out_channels=num_channels, kernel_size=1
+        )
         self.ConvGN = nn.GroupNorm(num_groups=32, num_channels=num_channels)
 
     def forward(self, feature):
@@ -734,18 +886,18 @@ class ACConv(nn.Module):
         super().__init__()
         self.denseapp = DenseAPP(d_in)
         self.CxAM = CxAM(in_channels=d_in, out_channels=d_out)
-        self.CnAM = CnAM(in_channels=d_in, out_channels=d_out) 
+        self.CnAM = CnAM(in_channels=d_in, out_channels=d_out)
 
     def forward(self, x, mask):
         out_mask = mask.to(x.dtype)
 
-        out = self.denseapp(x)          # [b,c,t]
+        out = self.denseapp(x)  # [b,c,t]
 
-        # ==== add cxam anam 
+        # ==== add cxam anam
         # cxam = self.CxAM(out)
         # cnam = self.CnAM(out, x)
         # out = cxam + cnam
-        # ==== add cxam anam 
+        # ==== add cxam anam
 
         out = out * out_mask
         return out, out_mask.bool()
@@ -771,9 +923,10 @@ def calc_ious(input_offsets, target_offsets, eps=1e-8):
     iouk = intsctk / unionk.clamp(min=eps)
     return iouk
 
+
 def calc_cls_scores(input_preds, gt_targets, eps=1e-8):
     # [#, n_cls]. [#, n_cls]
-    cls_idx = gt_targets.max(-1)[1]    # [numpos]
+    cls_idx = gt_targets.max(-1)[1]  # [numpos]
     gt_one_label = F.one_hot(cls_idx, input_preds.shape[-1])
-    cls_scores = input_preds[gt_one_label!=0]   # [numpos]
+    cls_scores = input_preds[gt_one_label != 0]  # [numpos]
     return cls_scores

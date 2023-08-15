@@ -28,11 +28,15 @@ _import_structure = {
 
 
 if is_torch_available():
-    _import_structure["modeling_vision_text_dual_encoder"] = ["VisionTextDualEncoderModel"]
+    _import_structure["modeling_vision_text_dual_encoder"] = [
+        "VisionTextDualEncoderModel"
+    ]
 
 
 if is_flax_available():
-    _import_structure["modeling_flax_vision_text_dual_encoder"] = ["FlaxVisionTextDualEncoderModel"]
+    _import_structure["modeling_flax_vision_text_dual_encoder"] = [
+        "FlaxVisionTextDualEncoderModel"
+    ]
 
 
 if TYPE_CHECKING:
@@ -49,4 +53,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure
+    )

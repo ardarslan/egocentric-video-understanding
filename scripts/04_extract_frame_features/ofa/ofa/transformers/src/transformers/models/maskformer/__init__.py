@@ -21,7 +21,10 @@ from ...file_utils import _LazyModule, is_torch_available, is_vision_available
 
 
 _import_structure = {
-    "configuration_maskformer": ["MASKFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP", "MaskFormerConfig"],
+    "configuration_maskformer": [
+        "MASKFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "MaskFormerConfig",
+    ],
 }
 
 if is_vision_available():
@@ -37,7 +40,10 @@ if is_torch_available():
     ]
 
 if TYPE_CHECKING:
-    from .configuration_maskformer import MASKFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP, MaskFormerConfig
+    from .configuration_maskformer import (
+        MASKFORMER_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        MaskFormerConfig,
+    )
 
     if is_vision_available():
         from .feature_extraction_maskformer import MaskFormerFeatureExtractor
@@ -53,4 +59,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure
+    )

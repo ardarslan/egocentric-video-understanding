@@ -21,7 +21,11 @@ from ...file_utils import _LazyModule, is_flax_available, is_torch_available
 
 
 _import_structure = {
-    "configuration_gpt_neo": ["GPT_NEO_PRETRAINED_CONFIG_ARCHIVE_MAP", "GPTNeoConfig", "GPTNeoOnnxConfig"],
+    "configuration_gpt_neo": [
+        "GPT_NEO_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "GPTNeoConfig",
+        "GPTNeoOnnxConfig",
+    ],
 }
 
 if is_torch_available():
@@ -43,7 +47,11 @@ if is_flax_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_gpt_neo import GPT_NEO_PRETRAINED_CONFIG_ARCHIVE_MAP, GPTNeoConfig, GPTNeoOnnxConfig
+    from .configuration_gpt_neo import (
+        GPT_NEO_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        GPTNeoConfig,
+        GPTNeoOnnxConfig,
+    )
 
     if is_torch_available():
         from .modeling_gpt_neo import (
@@ -56,10 +64,16 @@ if TYPE_CHECKING:
         )
 
     if is_flax_available():
-        from .modeling_flax_gpt_neo import FlaxGPTNeoForCausalLM, FlaxGPTNeoModel, FlaxGPTNeoPreTrainedModel
+        from .modeling_flax_gpt_neo import (
+            FlaxGPTNeoForCausalLM,
+            FlaxGPTNeoModel,
+            FlaxGPTNeoPreTrainedModel,
+        )
 
 
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

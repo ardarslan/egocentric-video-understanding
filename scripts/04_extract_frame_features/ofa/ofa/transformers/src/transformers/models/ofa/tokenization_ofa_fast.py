@@ -17,12 +17,26 @@ from ...utils import logging
 from ..bart.tokenization_bart_fast import BartTokenizerFast
 from .tokenization_ofa import OFATokenizer
 
-from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 import os
 
 logger = logging.get_logger(__name__)
 
-VOCAB_FILES_NAMES = {"vocab_file": "vocab.json", "merges_file": "merges.txt", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {
+    "vocab_file": "vocab.json",
+    "merges_file": "merges.txt",
+    "tokenizer_file": "tokenizer.json",
+}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
@@ -63,8 +77,15 @@ class OFATokenizerFast(BartTokenizerFast):
     slow_tokenizer_class = OFATokenizer
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path: Union[str, os.PathLike], *init_inputs, **kwargs):
-        tokenizer = super().from_pretrained(pretrained_model_name_or_path, *init_inputs, **kwargs)
+    def from_pretrained(
+        cls,
+        pretrained_model_name_or_path: Union[str, os.PathLike],
+        *init_inputs,
+        **kwargs
+    ):
+        tokenizer = super().from_pretrained(
+            pretrained_model_name_or_path, *init_inputs, **kwargs
+        )
         tokenizer.add_tokens(["<code_{}>".format(i) for i in range(8192)])
         tokenizer.add_tokens(["<bin_{}>".format(i) for i in range(1000)])
         return tokenizer

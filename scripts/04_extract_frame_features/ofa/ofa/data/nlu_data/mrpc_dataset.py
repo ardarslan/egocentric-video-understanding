@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 import logging
@@ -27,11 +27,13 @@ def collate(samples, pad_idx, eos_idx):
         )
 
     src_tokens = merge("source")
-    src_lengths = torch.LongTensor([s["source"].ne(pad_idx).long().sum() for s in samples])
+    src_lengths = torch.LongTensor(
+        [s["source"].ne(pad_idx).long().sum() for s in samples]
+    )
 
     ref_dict = None
     if samples[0].get("ref_dict", None) is not None:
-        ref_dict = np.array([s['ref_dict'] for s in samples])
+        ref_dict = np.array([s["ref_dict"] for s in samples])
 
     constraint_masks = None
     if samples[0].get("constraint_mask", None) is not None:
@@ -57,7 +59,7 @@ def collate(samples, pad_idx, eos_idx):
         "net_input": {
             "src_tokens": src_tokens,
             "src_lengths": src_lengths,
-            "prev_output_tokens": prev_output_tokens
+            "prev_output_tokens": prev_output_tokens,
         },
         "ref_dict": ref_dict,
         "constraint_masks": constraint_masks,
@@ -78,7 +80,7 @@ class MRPCDataset(OFADataset):
         max_src_length=512,
         max_tgt_length=30,
         constraint_trie=None,
-        prompt_type="none"
+        prompt_type="none",
     ):
         super().__init__(split, dataset, bpe, src_dict, tgt_dict)
         self.max_src_length = max_src_length
@@ -88,30 +90,32 @@ class MRPCDataset(OFADataset):
 
     def __getitem__(self, index):
         sentence1, sentence2, label = self.dataset[index]
-        if label == '0':
-            label = 'no'
-        elif label == '1':
-            label = 'yes'
+        if label == "0":
+            label = "no"
+        elif label == "1":
+            label = "yes"
         else:
             raise NotImplementedError
 
-        sentence1 = ' '.join(sentence1.lower().strip().split()[:self.max_src_length])
-        sentence2 = ' '.join(sentence2.lower().strip().split()[:self.max_src_length])
+        sentence1 = " ".join(sentence1.lower().strip().split()[: self.max_src_length])
+        sentence2 = " ".join(sentence2.lower().strip().split()[: self.max_src_length])
         src_item = self.encode_text(
-            ' does text1 " {} " and text2 " {} " have the same semantics?'.format(sentence1, sentence2),
+            ' does text1 " {} " and text2 " {} " have the same semantics?'.format(
+                sentence1, sentence2
+            ),
         )
         tgt_item = self.encode_text(" {}".format(label))
         assert tgt_item.size(0) == 1
         ref_dict = {label: 1.0}
 
         src_item = torch.cat([self.bos_item, src_item, self.eos_item])
-        if self.prompt_type == 'none':
+        if self.prompt_type == "none":
             prev_output_item = self.bos_item
             target_item = tgt_item
-        elif self.prompt_type == 'src':
+        elif self.prompt_type == "src":
             prev_output_item = src_item.clone()
             target_item = torch.cat([prev_output_item[1:], tgt_item])
-        elif self.prompt_type == 'prev_output':
+        elif self.prompt_type == "prev_output":
             prev_output_item = src_item[:-1].clone()
             target_item = torch.cat([prev_output_item[1:], tgt_item])
         else:
@@ -125,8 +129,12 @@ class MRPCDataset(OFADataset):
             "ref_dict": ref_dict,
         }
         if self.constraint_trie is not None:
-            constraint_mask = torch.zeros((len(prev_output_item), len(self.tgt_dict))).bool()
-            constraint_nodes = self.constraint_trie.get_next_layer(self.bos_item.tolist())
+            constraint_mask = torch.zeros(
+                (len(prev_output_item), len(self.tgt_dict))
+            ).bool()
+            constraint_nodes = self.constraint_trie.get_next_layer(
+                self.bos_item.tolist()
+            )
             constraint_mask[-1][constraint_nodes] = True
             example["constraint_mask"] = constraint_mask
         return example

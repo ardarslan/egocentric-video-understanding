@@ -51,19 +51,26 @@ class TFLogitsProcessorTest(unittest.TestCase):
         batch_size = 4
         eos_token_id = 0
 
-        min_dist_processor = TFMinLengthLogitsProcessor(min_length=10, eos_token_id=eos_token_id)
+        min_dist_processor = TFMinLengthLogitsProcessor(
+            min_length=10, eos_token_id=eos_token_id
+        )
 
         # check that min length is applied at length 5
         input_ids = ids_tensor((batch_size, 5), vocab_size=20)
         scores = self._get_uniform_logits(batch_size, vocab_size)
         scores_before_min_length = min_dist_processor(input_ids, scores)
-        self.assertListEqual(scores_before_min_length[:, eos_token_id].numpy().tolist(), 4 * [-float("inf")])
+        self.assertListEqual(
+            scores_before_min_length[:, eos_token_id].numpy().tolist(),
+            4 * [-float("inf")],
+        )
 
         # check that min length is not applied anymore at length 15
         input_ids = ids_tensor((batch_size, 15), vocab_size=20)
         scores = self._get_uniform_logits(batch_size, vocab_size)
         scores_before_min_length = min_dist_processor(input_ids, scores)
-        self.assertFalse(tf.math.reduce_any(tf.math.is_inf(scores_before_min_length)).numpy())
+        self.assertFalse(
+            tf.math.reduce_any(tf.math.is_inf(scores_before_min_length)).numpy()
+        )
 
     def test_temperature_dist_warper(self):
         input_ids = None
@@ -81,20 +88,34 @@ class TFLogitsProcessorTest(unittest.TestCase):
         temp_dist_warper_sharper = TFTemperatureLogitsWarper(temperature=0.5)
         temp_dist_warper_smoother = TFTemperatureLogitsWarper(temperature=1.3)
 
-        warped_prob_sharp = tf.nn.softmax(temp_dist_warper_sharper(input_ids, tf.identity(scores)), axis=-1)
-        warped_prob_smooth = tf.nn.softmax(temp_dist_warper_smoother(input_ids, tf.identity(scores)), axis=-1)
+        warped_prob_sharp = tf.nn.softmax(
+            temp_dist_warper_sharper(input_ids, tf.identity(scores)), axis=-1
+        )
+        warped_prob_smooth = tf.nn.softmax(
+            temp_dist_warper_smoother(input_ids, tf.identity(scores)), axis=-1
+        )
 
         # uniform distribution stays uniform
         tf.debugging.assert_near(probs[0, :], warped_prob_sharp[0, :], atol=1e-3)
         tf.debugging.assert_near(probs[0, :], warped_prob_smooth[0, :], atol=1e-3)
 
         # sharp peaks get higher, valleys get lower
-        self.assertLess(tf.math.reduce_max(probs[1, :]), tf.math.reduce_max(warped_prob_sharp[1, :]))
-        self.assertGreater(tf.math.reduce_min(probs[1, :]), tf.math.reduce_min(warped_prob_sharp[1, :]))
+        self.assertLess(
+            tf.math.reduce_max(probs[1, :]), tf.math.reduce_max(warped_prob_sharp[1, :])
+        )
+        self.assertGreater(
+            tf.math.reduce_min(probs[1, :]), tf.math.reduce_min(warped_prob_sharp[1, :])
+        )
 
         # smooth peaks get lower, valleys get higher
-        self.assertGreater(tf.math.reduce_max(probs[1, :]), tf.math.reduce_max(warped_prob_smooth[1, :]))
-        self.assertLess(tf.math.reduce_min(probs[1, :]), tf.math.reduce_min(warped_prob_smooth[1, :]))
+        self.assertGreater(
+            tf.math.reduce_max(probs[1, :]),
+            tf.math.reduce_max(warped_prob_smooth[1, :]),
+        )
+        self.assertLess(
+            tf.math.reduce_min(probs[1, :]),
+            tf.math.reduce_min(warped_prob_smooth[1, :]),
+        )
 
     def test_repetition_penalty_dist_process(self):
         input_ids = tf.constant([[0, 1], [5, 0]], dtype=tf.int32)
@@ -124,32 +145,51 @@ class TFLogitsProcessorTest(unittest.TestCase):
         batch_size = 2
 
         # create ramp distribution
-        ramp_logits = np.broadcast_to(np.arange(vocab_size)[None, :], (batch_size, vocab_size)).copy()
-        ramp_logits[1:, : vocab_size // 2] = ramp_logits[1:, : vocab_size // 2] + vocab_size
+        ramp_logits = np.broadcast_to(
+            np.arange(vocab_size)[None, :], (batch_size, vocab_size)
+        ).copy()
+        ramp_logits[1:, : vocab_size // 2] = (
+            ramp_logits[1:, : vocab_size // 2] + vocab_size
+        )
 
         top_k_warp = TFTopKLogitsWarper(3)
 
         scores = top_k_warp(input_ids, ramp_logits)
 
         # check that correct tokens are filtered
-        self.assertListEqual(tf.math.is_inf(scores[0]).numpy().tolist(), 7 * [True] + 3 * [False])
-        self.assertListEqual(tf.math.is_inf(scores[1]).numpy().tolist(), 2 * [True] + 3 * [False] + 5 * [True])
+        self.assertListEqual(
+            tf.math.is_inf(scores[0]).numpy().tolist(), 7 * [True] + 3 * [False]
+        )
+        self.assertListEqual(
+            tf.math.is_inf(scores[1]).numpy().tolist(),
+            2 * [True] + 3 * [False] + 5 * [True],
+        )
 
         # check special cases
         length = 5
 
         logits = self._get_uniform_logits(batch_size=batch_size, length=length)
-        top_k_warp_safety_check = TFTopKLogitsWarper(top_k=1, filter_value=0.0, min_tokens_to_keep=3)
+        top_k_warp_safety_check = TFTopKLogitsWarper(
+            top_k=1, filter_value=0.0, min_tokens_to_keep=3
+        )
 
         scores = top_k_warp_safety_check(input_ids, logits)
         # uniform dist is not changed
-        self.assertListEqual(tf.math.reduce_sum(tf.where(scores == 0.0, 1, 0), axis=-1).numpy().tolist(), [0, 0])
+        self.assertListEqual(
+            tf.math.reduce_sum(tf.where(scores == 0.0, 1, 0), axis=-1).numpy().tolist(),
+            [0, 0],
+        )
 
-        ramp_logits = np.broadcast_to(np.arange(length)[None, :], (batch_size, length)).copy()
+        ramp_logits = np.broadcast_to(
+            np.arange(length)[None, :], (batch_size, length)
+        ).copy()
         scores = top_k_warp_safety_check(input_ids, ramp_logits)
 
         # min_tokens overwrites k: 3 tokens are kept => 2 tokens are nullified
-        self.assertListEqual(tf.math.reduce_sum(tf.where(scores == 0.0, 1, 0), axis=-1).numpy().tolist(), [2, 2])
+        self.assertListEqual(
+            tf.math.reduce_sum(tf.where(scores == 0.0, 1, 0), axis=-1).numpy().tolist(),
+            [2, 2],
+        )
 
     def test_top_p_dist_warper(self):
         input_ids = None
@@ -157,14 +197,18 @@ class TFLogitsProcessorTest(unittest.TestCase):
         batch_size = 2
 
         # create distribution and take log (inverse to Softmax as taken in TFTopPLogitsWarper)
-        dist = np.log(np.array([[0.3, 0.1, 0.1, 0.5], [0.15, 0.3, 0.3, 0.25]], dtype=np.float32))
+        dist = np.log(
+            np.array([[0.3, 0.1, 0.1, 0.5], [0.15, 0.3, 0.3, 0.25]], dtype=np.float32)
+        )
 
         top_p_warp = TFTopPLogitsWarper(0.7)
         filtered_dist = tf.exp(top_p_warp(input_ids, dist))
 
         # dist should be filtered to keep min num values so that sum is >= 0.7
         # exp (-inf) => 0
-        EXPECTED_FILTERED_DIST = tf.constant([[0.3, 0.0, 0.0, 0.5], [0.0, 0.3, 0.3, 0.25]], dtype=tf.float32)
+        EXPECTED_FILTERED_DIST = tf.constant(
+            [[0.3, 0.0, 0.0, 0.5], [0.0, 0.3, 0.3, 0.25]], dtype=tf.float32
+        )
         tf.debugging.assert_near(filtered_dist, EXPECTED_FILTERED_DIST, atol=1e-3)
 
         # check edge cases with negative and extreme logits
@@ -182,7 +226,10 @@ class TFLogitsProcessorTest(unittest.TestCase):
         # first batch should keep three tokens, second batch would keep only 1, but due to `min_tokens_to_keep=2` keeps
         # 2.
         self.assertListEqual(
-            tf.math.reduce_sum(tf.where(filtered_dist != 0.0, 1, 0), axis=-1).numpy().tolist(), [3, 2]
+            tf.math.reduce_sum(tf.where(filtered_dist != 0.0, 1, 0), axis=-1)
+            .numpy()
+            .tolist(),
+            [3, 2],
         )
 
     def test_no_repeat_ngram_dist_processor(self):
@@ -200,12 +247,14 @@ class TFLogitsProcessorTest(unittest.TestCase):
 
         # 2-gram would forbid 2nd and 3rd token (1,2) at 1st batch and 1st token (0) at 2nd batch
         self.assertListEqual(
-            tf.math.is_inf(filtered_scores_2_gram).numpy().tolist(), [[False, True, True], [True, False, False]]
+            tf.math.is_inf(filtered_scores_2_gram).numpy().tolist(),
+            [[False, True, True], [True, False, False]],
         )
 
         # 3-gram would forbid no token at 1st batch and 1st token (0) at 2nd batch
         self.assertListEqual(
-            tf.math.is_inf(filtered_scores_3_gram).numpy().tolist(), [[False, False, False], [True, False, False]]
+            tf.math.is_inf(filtered_scores_3_gram).numpy().tolist(),
+            [[False, False, False], [True, False, False]],
         )
 
     def test_no_bad_words_dist_processor(self):
@@ -217,7 +266,9 @@ class TFLogitsProcessorTest(unittest.TestCase):
         bad_word_tokens = [[1], [4], [1, 0], [0, 1, 2], [1, 3, 1, 3]]
         scores = self._get_uniform_logits(batch_size, vocab_size)
 
-        no_bad_words_dist_proc = TFNoBadWordsLogitsProcessor(bad_words_ids=bad_word_tokens, eos_token_id=eos_token_id)
+        no_bad_words_dist_proc = TFNoBadWordsLogitsProcessor(
+            bad_words_ids=bad_word_tokens, eos_token_id=eos_token_id
+        )
 
         filtered_scores = no_bad_words_dist_proc(input_ids, tf.identity(scores))
 
@@ -242,13 +293,17 @@ class TFLogitsProcessorTest(unittest.TestCase):
         scores_comp = tf.identity(scores)
 
         # instantiate all dist processors
-        min_dist_proc = TFMinLengthLogitsProcessor(min_length=10, eos_token_id=eos_token_id)
+        min_dist_proc = TFMinLengthLogitsProcessor(
+            min_length=10, eos_token_id=eos_token_id
+        )
         temp_dist_warp = TFTemperatureLogitsWarper(temperature=0.5)
         rep_penalty_proc = TFRepetitionPenaltyLogitsProcessor(penalty=2.0)
         top_k_warp = TFTopKLogitsWarper(3)
         top_p_warp = TFTopPLogitsWarper(0.8)
         no_repeat_proc = TFNoRepeatNGramLogitsProcessor(2)
-        no_bad_words_dist_proc = TFNoBadWordsLogitsProcessor(bad_words_ids=[[1]], eos_token_id=eos_token_id)
+        no_bad_words_dist_proc = TFNoBadWordsLogitsProcessor(
+            bad_words_ids=[[1]], eos_token_id=eos_token_id
+        )
 
         # no processor list
         scores = min_dist_proc(input_ids, scores)
@@ -275,10 +330,14 @@ class TFLogitsProcessorTest(unittest.TestCase):
 
         # remove inf
         scores = set_tensor_by_indices_to_value(scores, tf.math.is_inf(scores), -1e9)
-        scores_comp = set_tensor_by_indices_to_value(scores_comp, tf.math.is_inf(scores_comp), -1e9)
+        scores_comp = set_tensor_by_indices_to_value(
+            scores_comp, tf.math.is_inf(scores_comp), -1e9
+        )
 
         # scores should be equal
         tf.debugging.assert_near(scores, scores_comp, atol=1e-3)
 
         # input_ids should never be changed
-        self.assertListEqual(input_ids.numpy().tolist(), input_ids_comp.numpy().tolist())
+        self.assertListEqual(
+            input_ids.numpy().tolist(), input_ids_comp.numpy().tolist()
+        )

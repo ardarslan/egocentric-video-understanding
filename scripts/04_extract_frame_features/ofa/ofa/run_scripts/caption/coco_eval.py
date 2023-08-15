@@ -19,7 +19,7 @@ def evaluate_on_coco_caption(res_file, label_file, outfile=None):
     # evaluate on a subset of images by setting
     # cocoEval.params['image_id'] = cocoRes.getImgIds()
     # please remove this line when evaluating the full validation set
-    cocoEval.params['image_id'] = cocoRes.getImgIds()
+    cocoEval.params["image_id"] = cocoRes.getImgIds()
 
     # evaluate results
     # SPICE will take a few minutes the first time, but speeds up due to caching
@@ -28,7 +28,7 @@ def evaluate_on_coco_caption(res_file, label_file, outfile=None):
     if not outfile:
         print(result)
     else:
-        with open(outfile, 'w') as fp:
+        with open(outfile, "w") as fp:
             json.dump(result, fp, indent=4)
     return result
 

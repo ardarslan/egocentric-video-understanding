@@ -208,7 +208,7 @@ class LaserTask(LegacyFairseqTask):
                 if init_pair_datasets[key]["sample"] is None:
                     val = float(init_pair_datasets[key]["len"]) / length_sum
                     freq_per_dataset[key] = val
-                    weighted_freqs_sum += val ** self.args.weighting_alpha
+                    weighted_freqs_sum += val**self.args.weighting_alpha
 
             for key in freq_per_dataset:
                 val = (
@@ -283,7 +283,6 @@ class LaserTask(LegacyFairseqTask):
         data_buffer_size=0,
         disable_iterator_cache=False,
     ):
-
         assert isinstance(dataset, OrderedDict)
         assert len(dataset)
         assert isinstance(dataset[next(iter(dataset))], FairseqDataset)

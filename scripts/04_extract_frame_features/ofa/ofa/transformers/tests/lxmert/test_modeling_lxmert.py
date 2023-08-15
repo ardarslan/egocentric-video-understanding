@@ -24,7 +24,12 @@ import numpy as np
 import transformers
 from transformers import LxmertConfig, is_tf_available, is_torch_available
 from transformers.models.auto import get_values
-from transformers.testing_utils import is_pt_tf_cross_test, require_torch, slow, torch_device
+from transformers.testing_utils import (
+    is_pt_tf_cross_test,
+    require_torch,
+    slow,
+    torch_device,
+)
 
 from ..test_configuration_common import ConfigTester
 from ..test_modeling_common import ModelTesterMixin, ids_tensor
@@ -40,7 +45,9 @@ if is_torch_available():
         LxmertForQuestionAnswering,
         LxmertModel,
     )
-    from transformers.models.lxmert.modeling_lxmert import LXMERT_PRETRAINED_MODEL_ARCHIVE_LIST
+    from transformers.models.lxmert.modeling_lxmert import (
+        LXMERT_PRETRAINED_MODEL_ARCHIVE_LIST,
+    )
 
 
 if is_tf_available():
@@ -129,47 +136,75 @@ class LxmertModelTester:
         self.output_attentions = output_attentions
         self.output_hidden_states = output_hidden_states
         self.scope = scope
-        self.num_hidden_layers = {"vision": r_layers, "cross_encoder": x_layers, "language": l_layers}
+        self.num_hidden_layers = {
+            "vision": r_layers,
+            "cross_encoder": x_layers,
+            "language": l_layers,
+        }
 
     def prepare_config_and_inputs(self):
-
         output_attentions = self.output_attentions
-        input_ids = ids_tensor([self.batch_size, self.seq_length], vocab_size=self.vocab_size)
-        visual_feats = torch.rand(self.batch_size, self.num_visual_features, self.visual_feat_dim, device=torch_device)
-        bounding_boxes = torch.rand(self.batch_size, self.num_visual_features, 4, device=torch_device)
+        input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], vocab_size=self.vocab_size
+        )
+        visual_feats = torch.rand(
+            self.batch_size,
+            self.num_visual_features,
+            self.visual_feat_dim,
+            device=torch_device,
+        )
+        bounding_boxes = torch.rand(
+            self.batch_size, self.num_visual_features, 4, device=torch_device
+        )
 
         input_mask = None
         if self.use_lang_mask:
             input_mask = ids_tensor([self.batch_size, self.seq_length], vocab_size=2)
         token_type_ids = None
         if self.use_token_type_ids:
-            token_type_ids = ids_tensor([self.batch_size, self.seq_length], self.type_vocab_size)
+            token_type_ids = ids_tensor(
+                [self.batch_size, self.seq_length], self.type_vocab_size
+            )
         obj_labels = None
         if self.task_obj_predict:
             obj_labels = {}
         if self.visual_attr_loss and self.task_obj_predict:
             obj_labels["attr"] = (
-                ids_tensor([self.batch_size, self.num_visual_features], self.num_attr_labels),
-                ids_tensor([self.batch_size, self.num_visual_features], self.num_attr_labels),
+                ids_tensor(
+                    [self.batch_size, self.num_visual_features], self.num_attr_labels
+                ),
+                ids_tensor(
+                    [self.batch_size, self.num_visual_features], self.num_attr_labels
+                ),
             )
         if self.visual_feat_loss and self.task_obj_predict:
             obj_labels["feat"] = (
                 ids_tensor(
-                    [self.batch_size, self.num_visual_features, self.visual_feat_dim], self.num_visual_features
+                    [self.batch_size, self.num_visual_features, self.visual_feat_dim],
+                    self.num_visual_features,
                 ),
-                ids_tensor([self.batch_size, self.num_visual_features], self.num_visual_features),
+                ids_tensor(
+                    [self.batch_size, self.num_visual_features],
+                    self.num_visual_features,
+                ),
             )
         if self.visual_obj_loss and self.task_obj_predict:
             obj_labels["obj"] = (
-                ids_tensor([self.batch_size, self.num_visual_features], self.num_object_labels),
-                ids_tensor([self.batch_size, self.num_visual_features], self.num_object_labels),
+                ids_tensor(
+                    [self.batch_size, self.num_visual_features], self.num_object_labels
+                ),
+                ids_tensor(
+                    [self.batch_size, self.num_visual_features], self.num_object_labels
+                ),
             )
         ans = None
         if self.task_qa:
             ans = ids_tensor([self.batch_size], self.num_qa_labels)
         masked_lm_labels = None
         if self.task_mask_lm:
-            masked_lm_labels = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+            masked_lm_labels = ids_tensor(
+                [self.batch_size, self.seq_length], self.vocab_size
+            )
         matched_label = None
         if self.task_matched:
             matched_label = ids_tensor([self.batch_size], self.num_labels)
@@ -261,11 +296,17 @@ class LxmertModelTester:
         result = model(input_ids, visual_feats, bounding_boxes, return_dict=False)
         result = model(input_ids, visual_feats, bounding_boxes, return_dict=True)
 
-        self.parent.assertEqual(result.language_output.shape, (self.batch_size, self.seq_length, self.hidden_size))
         self.parent.assertEqual(
-            result.vision_output.shape, (self.batch_size, self.num_visual_features, self.hidden_size)
+            result.language_output.shape,
+            (self.batch_size, self.seq_length, self.hidden_size),
         )
-        self.parent.assertEqual(result.pooled_output.shape, (self.batch_size, self.hidden_size))
+        self.parent.assertEqual(
+            result.vision_output.shape,
+            (self.batch_size, self.num_visual_features, self.hidden_size),
+        )
+        self.parent.assertEqual(
+            result.pooled_output.shape, (self.batch_size, self.hidden_size)
+        )
 
     def create_and_check_lxmert_for_question_answering(
         self,
@@ -313,7 +354,9 @@ class LxmertModelTester:
             output_attentions=not output_attentions,
         )
 
-        self.parent.assertEqual(result.question_answering_score.shape, (self.batch_size, self.num_qa_labels))
+        self.parent.assertEqual(
+            result.question_answering_score.shape, (self.batch_size, self.num_qa_labels)
+        )
 
     def create_and_check_lxmert_for_pretraining(
         self,
@@ -399,7 +442,10 @@ class LxmertModelTester:
             output_attentions=not output_attentions,
         )
 
-        self.parent.assertEqual(result.prediction_logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        self.parent.assertEqual(
+            result.prediction_logits.shape,
+            (self.batch_size, self.seq_length, self.vocab_size),
+        )
 
     def resize_lxmert_num_qa_labels(
         self,
@@ -415,7 +461,6 @@ class LxmertModelTester:
         ans,
         output_attentions,
     ):
-
         start_labels = config.num_qa_labels
         num_large_labels = config.num_qa_labels * 2
         num_small_labels = int(config.num_qa_labels * 2)
@@ -490,15 +535,28 @@ class LxmertModelTester:
 
         self.parent.assertNotEqual(start_labels, end_labels)
         self.parent.assertNotEqual(model_qa_labels, start_labels)
-        self.parent.assertEqual(result_qa.question_answering_score.shape, (self.batch_size, start_labels))
-        self.parent.assertEqual(result_pretrain.question_answering_score.shape, (self.batch_size, start_labels))
-        self.parent.assertEqual(result_qa_less.question_answering_score.shape, (self.batch_size, num_small_labels))
         self.parent.assertEqual(
-            result_pretrain_less.question_answering_score.shape, (self.batch_size, num_small_labels)
+            result_qa.question_answering_score.shape, (self.batch_size, start_labels)
         )
-        self.parent.assertEqual(result_qa_more.question_answering_score.shape, (self.batch_size, num_large_labels))
         self.parent.assertEqual(
-            result_pretrain_more.question_answering_score.shape, (self.batch_size, num_large_labels)
+            result_pretrain.question_answering_score.shape,
+            (self.batch_size, start_labels),
+        )
+        self.parent.assertEqual(
+            result_qa_less.question_answering_score.shape,
+            (self.batch_size, num_small_labels),
+        )
+        self.parent.assertEqual(
+            result_pretrain_less.question_answering_score.shape,
+            (self.batch_size, num_small_labels),
+        )
+        self.parent.assertEqual(
+            result_qa_more.question_answering_score.shape,
+            (self.batch_size, num_large_labels),
+        )
+        self.parent.assertEqual(
+            result_pretrain_more.question_answering_score.shape,
+            (self.batch_size, num_large_labels),
         )
 
     def prepare_config_and_inputs_for_common(self, return_obj_labels=False):
@@ -533,8 +591,11 @@ class LxmertModelTester:
 
 @require_torch
 class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
-
-    all_model_classes = (LxmertModel, LxmertForPreTraining, LxmertForQuestionAnswering) if is_torch_available() else ()
+    all_model_classes = (
+        (LxmertModel, LxmertForPreTraining, LxmertForQuestionAnswering)
+        if is_torch_available()
+        else ()
+    )
 
     test_head_masking = False
     test_pruning = False
@@ -552,13 +613,17 @@ class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
             elif model_class in get_values(MODEL_FOR_PRETRAINING_MAPPING):
                 # special case for models like BERT that use multi-loss training for PreTraining
                 inputs_dict["labels"] = torch.zeros(
-                    (self.model_tester.batch_size, self.model_tester.seq_length), dtype=torch.long, device=torch_device
+                    (self.model_tester.batch_size, self.model_tester.seq_length),
+                    dtype=torch.long,
+                    device=torch_device,
                 )
         return inputs_dict
 
     def setUp(self):
         self.model_tester = LxmertModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=LxmertConfig, hidden_size=37)
+        self.config_tester = ConfigTester(
+            self, config_class=LxmertConfig, hidden_size=37
+        )
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -569,7 +634,9 @@ class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
 
     def test_lxmert_question_answering(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_lxmert_for_question_answering(*config_and_inputs)
+        self.model_tester.create_and_check_lxmert_for_question_answering(
+            *config_and_inputs
+        )
 
     def test_lxmert_pretraining(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
@@ -590,7 +657,9 @@ class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
         seq_len = getattr(self.model_tester, "seq_length", None)
         encoder_seq_length = getattr(self.model_tester, "encoder_seq_length", seq_len)
-        encoder_key_length = getattr(self.model_tester, "key_length", encoder_seq_length)
+        encoder_key_length = getattr(
+            self.model_tester, "key_length", encoder_seq_length
+        )
         chunk_length = getattr(self.model_tester, "chunk_length", None)
         if chunk_length is not None and hasattr(self.model_tester, "num_hashes"):
             encoder_seq_length = encoder_seq_length * self.model_tester.num_hashes
@@ -604,11 +673,23 @@ class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
             with torch.no_grad():
                 outputs = model(**self._prepare_for_class(inputs_dict, model_class))
 
-            language_attentions, vision_attentions, cross_encoder_attentions = (outputs[-3], outputs[-2], outputs[-1])
+            language_attentions, vision_attentions, cross_encoder_attentions = (
+                outputs[-3],
+                outputs[-2],
+                outputs[-1],
+            )
 
-            self.assertEqual(len(language_attentions), self.model_tester.num_hidden_layers["language"])
-            self.assertEqual(len(vision_attentions), self.model_tester.num_hidden_layers["vision"])
-            self.assertEqual(len(cross_encoder_attentions), self.model_tester.num_hidden_layers["cross_encoder"])
+            self.assertEqual(
+                len(language_attentions),
+                self.model_tester.num_hidden_layers["language"],
+            )
+            self.assertEqual(
+                len(vision_attentions), self.model_tester.num_hidden_layers["vision"]
+            )
+            self.assertEqual(
+                len(cross_encoder_attentions),
+                self.model_tester.num_hidden_layers["cross_encoder"],
+            )
 
             # check that output_attentions also work using config
             del inputs_dict["output_attentions"]
@@ -619,20 +700,44 @@ class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
             with torch.no_grad():
                 outputs = model(**self._prepare_for_class(inputs_dict, model_class))
 
-            language_attentions, vision_attentions, cross_encoder_attentions = (outputs[-3], outputs[-2], outputs[-1])
-            self.assertEqual(len(language_attentions), self.model_tester.num_hidden_layers["language"])
-            self.assertEqual(len(vision_attentions), self.model_tester.num_hidden_layers["vision"])
-            self.assertEqual(len(cross_encoder_attentions), self.model_tester.num_hidden_layers["cross_encoder"])
+            language_attentions, vision_attentions, cross_encoder_attentions = (
+                outputs[-3],
+                outputs[-2],
+                outputs[-1],
+            )
+            self.assertEqual(
+                len(language_attentions),
+                self.model_tester.num_hidden_layers["language"],
+            )
+            self.assertEqual(
+                len(vision_attentions), self.model_tester.num_hidden_layers["vision"]
+            )
+            self.assertEqual(
+                len(cross_encoder_attentions),
+                self.model_tester.num_hidden_layers["cross_encoder"],
+            )
 
-            attentions = [language_attentions, vision_attentions, cross_encoder_attentions]
+            attentions = [
+                language_attentions,
+                vision_attentions,
+                cross_encoder_attentions,
+            ]
             attention_shapes = [
-                [self.model_tester.num_attention_heads, encoder_seq_length, encoder_key_length],
+                [
+                    self.model_tester.num_attention_heads,
+                    encoder_seq_length,
+                    encoder_key_length,
+                ],
                 [
                     self.model_tester.num_attention_heads,
                     self.model_tester.num_visual_features,
                     self.model_tester.num_visual_features,
                 ],
-                [self.model_tester.num_attention_heads, encoder_key_length, self.model_tester.num_visual_features],
+                [
+                    self.model_tester.num_attention_heads,
+                    encoder_key_length,
+                    self.model_tester.num_visual_features,
+                ],
             ]
 
             for attention, attention_shape in zip(attentions, attention_shapes):
@@ -651,20 +756,44 @@ class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
             # 2 hidden states were added
             self.assertEqual(out_len + 2, len(outputs))
 
-            language_attentions, vision_attentions, cross_encoder_attentions = (outputs[-3], outputs[-2], outputs[-1])
-            self.assertEqual(len(language_attentions), self.model_tester.num_hidden_layers["language"])
-            self.assertEqual(len(vision_attentions), self.model_tester.num_hidden_layers["vision"])
-            self.assertEqual(len(cross_encoder_attentions), self.model_tester.num_hidden_layers["cross_encoder"])
+            language_attentions, vision_attentions, cross_encoder_attentions = (
+                outputs[-3],
+                outputs[-2],
+                outputs[-1],
+            )
+            self.assertEqual(
+                len(language_attentions),
+                self.model_tester.num_hidden_layers["language"],
+            )
+            self.assertEqual(
+                len(vision_attentions), self.model_tester.num_hidden_layers["vision"]
+            )
+            self.assertEqual(
+                len(cross_encoder_attentions),
+                self.model_tester.num_hidden_layers["cross_encoder"],
+            )
 
-            attentions = [language_attentions, vision_attentions, cross_encoder_attentions]
+            attentions = [
+                language_attentions,
+                vision_attentions,
+                cross_encoder_attentions,
+            ]
             attention_shapes = [
-                [self.model_tester.num_attention_heads, encoder_seq_length, encoder_key_length],
+                [
+                    self.model_tester.num_attention_heads,
+                    encoder_seq_length,
+                    encoder_key_length,
+                ],
                 [
                     self.model_tester.num_attention_heads,
                     self.model_tester.num_visual_features,
                     self.model_tester.num_visual_features,
                 ],
-                [self.model_tester.num_attention_heads, encoder_key_length, self.model_tester.num_visual_features],
+                [
+                    self.model_tester.num_attention_heads,
+                    encoder_key_length,
+                    self.model_tester.num_visual_features,
+                ],
             ]
 
             for attention, attention_shape in zip(attentions, attention_shapes):
@@ -680,8 +809,14 @@ class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
                 outputs = model(**self._prepare_for_class(inputs_dict, model_class))
             language_hidden_states, vision_hidden_states = outputs[-2], outputs[-1]
 
-            self.assertEqual(len(language_hidden_states), self.model_tester.num_hidden_layers["language"] + 1)
-            self.assertEqual(len(vision_hidden_states), self.model_tester.num_hidden_layers["vision"] + 1)
+            self.assertEqual(
+                len(language_hidden_states),
+                self.model_tester.num_hidden_layers["language"] + 1,
+            )
+            self.assertEqual(
+                len(vision_hidden_states),
+                self.model_tester.num_hidden_layers["vision"] + 1,
+            )
 
             seq_length = self.model_tester.seq_length
             num_visual_features = self.model_tester.num_visual_features
@@ -743,11 +878,16 @@ class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
     @is_pt_tf_cross_test
     def test_pt_tf_model_equivalence(self):
         for model_class in self.all_model_classes:
-            config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common(
+            (
+                config,
+                inputs_dict,
+            ) = self.model_tester.prepare_config_and_inputs_for_common(
                 return_obj_labels="PreTraining" in model_class.__name__
             )
 
-            tf_model_class_name = "TF" + model_class.__name__  # Add the "TF" at the beginning
+            tf_model_class_name = (
+                "TF" + model_class.__name__
+            )  # Add the "TF" at the beginning
 
             if not hasattr(transformers, tf_model_class_name):
                 # transformers does not have TF version yet
@@ -774,16 +914,25 @@ class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
                     else:
                         if isinstance(value, (list, tuple)):
                             return_dict[key] = (
-                                tf.convert_to_tensor(iter_value.cpu().numpy(), dtype=tf.int32) for iter_value in value
+                                tf.convert_to_tensor(
+                                    iter_value.cpu().numpy(), dtype=tf.int32
+                                )
+                                for iter_value in value
                             )
                         else:
-                            return_dict[key] = tf.convert_to_tensor(value.cpu().numpy(), dtype=tf.int32)
+                            return_dict[key] = tf.convert_to_tensor(
+                                value.cpu().numpy(), dtype=tf.int32
+                            )
                 return return_dict
 
             tf_inputs_dict = recursive_numpy_convert(pt_inputs)
 
-            tf_model = transformers.load_pytorch_model_in_tf2_model(tf_model, pt_model, tf_inputs=tf_inputs_dict)
-            pt_model = transformers.load_tf2_model_in_pytorch_model(pt_model, tf_model).to(torch_device)
+            tf_model = transformers.load_pytorch_model_in_tf2_model(
+                tf_model, pt_model, tf_inputs=tf_inputs_dict
+            )
+            pt_model = transformers.load_tf2_model_in_pytorch_model(
+                pt_model, tf_model
+            ).to(torch_device)
 
             # Check predictions on first output (logits/hidden-states) are close enought given low-level computational differences
             pt_model.eval()
@@ -824,11 +973,15 @@ class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
             with tempfile.TemporaryDirectory() as tmpdirname:
                 pt_checkpoint_path = os.path.join(tmpdirname, "pt_model.bin")
                 torch.save(pt_model.state_dict(), pt_checkpoint_path)
-                tf_model = transformers.load_pytorch_checkpoint_in_tf2_model(tf_model, pt_checkpoint_path)
+                tf_model = transformers.load_pytorch_checkpoint_in_tf2_model(
+                    tf_model, pt_checkpoint_path
+                )
 
                 tf_checkpoint_path = os.path.join(tmpdirname, "tf_model.h5")
                 tf_model.save_weights(tf_checkpoint_path)
-                pt_model = transformers.load_tf2_checkpoint_in_pytorch_model(pt_model, tf_checkpoint_path)
+                pt_model = transformers.load_tf2_checkpoint_in_pytorch_model(
+                    pt_model, tf_checkpoint_path
+                )
 
             # Check predictions on first output (logits/hidden-states) are close enought given low-level computational differences
             pt_model.eval()
@@ -862,9 +1015,13 @@ class LxmertModelIntegrationTest(unittest.TestCase):
     @slow
     def test_inference_no_head_absolute_embedding(self):
         model = LxmertModel.from_pretrained(LXMERT_PRETRAINED_MODEL_ARCHIVE_LIST[0])
-        input_ids = torch.tensor([[101, 345, 232, 328, 740, 140, 1695, 69, 6078, 1588, 102]])
+        input_ids = torch.tensor(
+            [[101, 345, 232, 328, 740, 140, 1695, 69, 6078, 1588, 102]]
+        )
         num_visual_features = 10
-        _, visual_feats = np.random.seed(0), np.random.rand(1, num_visual_features, model.config.visual_feat_dim)
+        _, visual_feats = np.random.seed(0), np.random.rand(
+            1, num_visual_features, model.config.visual_feat_dim
+        )
         _, visual_pos = np.random.seed(0), np.random.rand(1, num_visual_features, 4)
         visual_feats = torch.as_tensor(visual_feats, dtype=torch.float32)
         visual_pos = torch.as_tensor(visual_pos, dtype=torch.float32)
@@ -872,7 +1029,13 @@ class LxmertModelIntegrationTest(unittest.TestCase):
         expected_shape = torch.Size([1, 11, 768])
         self.assertEqual(expected_shape, output.shape)
         expected_slice = torch.tensor(
-            [[[0.2417, -0.9807, 0.1480], [1.2541, -0.8320, 0.5112], [1.4070, -1.1052, 0.6990]]]
+            [
+                [
+                    [0.2417, -0.9807, 0.1480],
+                    [1.2541, -0.8320, 0.5112],
+                    [1.4070, -1.1052, 0.6990],
+                ]
+            ]
         )
 
         self.assertTrue(torch.allclose(output[:, :3, :3], expected_slice, atol=1e-4))

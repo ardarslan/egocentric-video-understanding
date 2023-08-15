@@ -4,13 +4,14 @@ from .oid import categories as oid_categories
 from .mapillary import categories as mapillary_categories
 
 categories = {
-    'coco': [x for x in coco_categories if x['isthing'] == 1],
-    'objects365': objects365_categories,
-    'oid': oid_categories,
-    'mapillary': mapillary_categories,
+    "coco": [x for x in coco_categories if x["isthing"] == 1],
+    "objects365": objects365_categories,
+    "oid": oid_categories,
+    "mapillary": mapillary_categories,
 }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import json
-    json.dump(categories, 'datasets/metadata/det_categories.json')
+
+    json.dump(categories, "datasets/metadata/det_categories.json")

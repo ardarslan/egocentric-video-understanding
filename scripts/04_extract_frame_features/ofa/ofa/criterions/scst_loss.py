@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 import math
@@ -20,7 +20,9 @@ from utils.cider.pyciderevalcap.ciderD.ciderD import CiderD
 
 
 def scst_loss(lprobs, target, reward, ignore_index=None, reduce=True):
-    loss = -lprobs.gather(dim=-1, index=target.unsqueeze(-1)).squeeze() * reward.unsqueeze(-1)
+    loss = -lprobs.gather(
+        dim=-1, index=target.unsqueeze(-1)
+    ).squeeze() * reward.unsqueeze(-1)
     if ignore_index is not None:
         pad_mask = target.eq(ignore_index)
         loss.masked_fill_(pad_mask, 0.0)
@@ -45,14 +47,11 @@ class ScstRewardCriterionConfig(FairseqDataclass):
     )
     sentence_avg: bool = II("optimization.sentence_avg")
     constraint_range: Optional[str] = field(
-        default=None,
-        metadata={"help": "constraint range"}
+        default=None, metadata={"help": "constraint range"}
     )
 
 
-@register_criterion(
-    "scst_reward_criterion", dataclass=ScstRewardCriterionConfig
-)
+@register_criterion("scst_reward_criterion", dataclass=ScstRewardCriterionConfig)
 class ScstRewardCriterion(FairseqCriterion):
     CIDER_REWARD_WEIGHT = 1
 
@@ -62,7 +61,7 @@ class ScstRewardCriterion(FairseqCriterion):
         scst_cider_cached_tokens,
         sentence_avg,
         ignore_prefix_size=0,
-        constraint_range=None
+        constraint_range=None,
     ):
         super().__init__(task)
         self.scst_cider_scorer = CiderD(df=scst_cider_cached_tokens)
@@ -73,7 +72,7 @@ class ScstRewardCriterion(FairseqCriterion):
         self.constraint_start = None
         self.constraint_end = None
         if constraint_range is not None:
-            constraint_start, constraint_end = constraint_range.split(',')
+            constraint_start, constraint_end = constraint_range.split(",")
             self.constraint_start = int(constraint_start)
             self.constraint_end = int(constraint_end)
 
@@ -85,11 +84,11 @@ class ScstRewardCriterion(FairseqCriterion):
         2) the sample size, which is used as the denominator for the gradient
         3) logging outputs to display while training
         """
-        loss, score, ntokens, nsentences = self.compute_loss(model, sample, reduce=reduce)
-
-        sample_size = (
-            nsentences if self.sentence_avg else ntokens
+        loss, score, ntokens, nsentences = self.compute_loss(
+            model, sample, reduce=reduce
         )
+
+        sample_size = nsentences if self.sentence_avg else ntokens
         logging_output = {
             "loss": loss.data,
             "score": score,
@@ -100,13 +99,13 @@ class ScstRewardCriterion(FairseqCriterion):
         return loss, sample_size, logging_output
 
     def _calculate_eval_scores(self, gen_res, gt_idx, gt_res):
-        '''
+        """
         gen_res: generated captions, list of str
         gt_idx: list of int, of the same length as gen_res
         gt_res: ground truth captions, list of list of str.
             gen_res[i] corresponds to gt_res[gt_idx[i]]
             Each image can have multiple ground truth captions
-        '''
+        """
         gen_res_size = len(gen_res)
 
         res = OrderedDict()
@@ -115,13 +114,16 @@ class ScstRewardCriterion(FairseqCriterion):
 
         gts = OrderedDict()
         gt_res_ = [
-            [self._wrap_sentence(gt_res[i][j].strip().translate(self.transtab)) for j in range(len(gt_res[i]))]
-                for i in range(len(gt_res))
+            [
+                self._wrap_sentence(gt_res[i][j].strip().translate(self.transtab))
+                for j in range(len(gt_res[i]))
+            ]
+            for i in range(len(gt_res))
         ]
         for i in range(gen_res_size):
             gts[i] = gt_res_[gt_idx[i]]
 
-        res_ = [{'image_id':i, 'caption': res[i]} for i in range(len(res))]
+        res_ = [{"image_id": i, "caption": res[i]} for i in range(len(res))]
         _, batch_cider_scores = self.scst_cider_scorer.compute_score(gts, res_)
         scores = self.CIDER_REWARD_WEIGHT * batch_cider_scores
         return scores
@@ -131,9 +133,9 @@ class ScstRewardCriterion(FairseqCriterion):
         # ensure the sentence ends with <eos> token
         # in order to keep consisitent with cider_cached_tokens
         r = s.strip()
-        if r.endswith('.'):
+        if r.endswith("."):
             r = r[:-1]
-        r += ' <eos>'
+        r += " <eos>"
         return r
 
     def get_generator_out(self, model, sample):
@@ -157,7 +159,9 @@ class ScstRewardCriterion(FairseqCriterion):
                 gen_target.append(hypo)
                 gen_res.append(hypo_str)
             gt_res.append(
-                decode(utils.strip_pad(sample["target"][i], self.padding_idx))[1].split('&&')
+                decode(utils.strip_pad(sample["target"][i], self.padding_idx))[1].split(
+                    "&&"
+                )
             )
 
         return gen_target, gen_res, gt_res
@@ -180,7 +184,9 @@ class ScstRewardCriterion(FairseqCriterion):
         return reward, scores
 
     def get_net_output(self, model, sample, gen_target):
-        def merge(sample_list, eos=self.task.tgt_dict.eos(), move_eos_to_beginning=False):
+        def merge(
+            sample_list, eos=self.task.tgt_dict.eos(), move_eos_to_beginning=False
+        ):
             return data_utils.collate_tokens(
                 sample_list,
                 pad_idx=self.padding_idx,
@@ -195,36 +201,39 @@ class ScstRewardCriterion(FairseqCriterion):
 
         model.train()
         sample_src_tokens = torch.repeat_interleave(
-            sample['net_input']['src_tokens'], seq_per_img, dim=0
+            sample["net_input"]["src_tokens"], seq_per_img, dim=0
         )
         sample_src_lengths = torch.repeat_interleave(
-            sample['net_input']['src_lengths'], seq_per_img, dim=0
+            sample["net_input"]["src_lengths"], seq_per_img, dim=0
         )
         sample_patch_images = torch.repeat_interleave(
-            sample['net_input']['patch_images'], seq_per_img, dim=0
+            sample["net_input"]["patch_images"], seq_per_img, dim=0
         )
         sample_patch_masks = torch.repeat_interleave(
-            sample['net_input']['patch_masks'], seq_per_img, dim=0
+            sample["net_input"]["patch_masks"], seq_per_img, dim=0
         )
         gen_prev_output_tokens = torch.as_tensor(
             merge(gen_target, eos=self.task.tgt_dict.bos(), move_eos_to_beginning=True),
-            device=sample["target"].device, dtype=torch.int64
+            device=sample["target"].device,
+            dtype=torch.int64,
         )
         gen_target_tokens = torch.as_tensor(
             merge(gen_target), device=sample["target"].device, dtype=torch.int64
         )
         net_output = model(
-            src_tokens=sample_src_tokens, src_lengths=sample_src_lengths,
-            patch_images=sample_patch_images, patch_masks=sample_patch_masks,
-            prev_output_tokens=gen_prev_output_tokens
+            src_tokens=sample_src_tokens,
+            src_lengths=sample_src_lengths,
+            patch_images=sample_patch_images,
+            patch_masks=sample_patch_masks,
+            prev_output_tokens=gen_prev_output_tokens,
         )
 
         return net_output, gen_target_tokens
 
     def get_lprobs_and_target(self, model, net_output, gen_target):
         if self.constraint_start is not None and self.constraint_end is not None:
-            net_output[0][:, :, 4:self.constraint_start] = -math.inf
-            net_output[0][:, :, self.constraint_end:] = -math.inf
+            net_output[0][:, :, 4 : self.constraint_start] = -math.inf
+            net_output[0][:, :, self.constraint_end :] = -math.inf
         lprobs = model.get_normalized_probs(net_output, log_probs=True)
         if self.ignore_prefix_size > 0:
             if getattr(lprobs, "batch_first", False):
@@ -237,10 +246,20 @@ class ScstRewardCriterion(FairseqCriterion):
 
     def compute_loss(self, model, sample, reduce=True):
         gen_target, gen_res, gt_res = self.get_generator_out(model, sample)
-        reward, scores = self.get_reward_and_scores(gen_res, gt_res, device=sample["target"].device)
+        reward, scores = self.get_reward_and_scores(
+            gen_res, gt_res, device=sample["target"].device
+        )
         net_output, gen_target_tokens = self.get_net_output(model, sample, gen_target)
-        gen_lprobs, gen_target_tokens = self.get_lprobs_and_target(model, net_output, gen_target_tokens)
-        loss, ntokens = scst_loss(gen_lprobs, gen_target_tokens, reward, ignore_index=self.padding_idx, reduce=reduce)
+        gen_lprobs, gen_target_tokens = self.get_lprobs_and_target(
+            model, net_output, gen_target_tokens
+        )
+        loss, ntokens = scst_loss(
+            gen_lprobs,
+            gen_target_tokens,
+            reward,
+            ignore_index=self.padding_idx,
+            reduce=reduce,
+        )
         nsentences = gen_target_tokens.size(0)
 
         return loss, scores.sum(), ntokens, nsentences
@@ -254,22 +273,12 @@ class ScstRewardCriterion(FairseqCriterion):
         nsentences = sum(log.get("nsentences", 0) for log in logging_outputs)
         sample_size = sum(log.get("sample_size", 0) for log in logging_outputs)
 
-        metrics.log_scalar(
-            "loss", loss_sum / sample_size, sample_size, round=3
-        )
-        metrics.log_scalar(
-            "score", score_sum / nsentences, nsentences, round=3
-        )
+        metrics.log_scalar("loss", loss_sum / sample_size, sample_size, round=3)
+        metrics.log_scalar("score", score_sum / nsentences, nsentences, round=3)
 
-        metrics.log_scalar(
-            "ntokens", ntokens, 1, round=3
-        )
-        metrics.log_scalar(
-            "nsentences", nsentences, 1, round=3
-        )
-        metrics.log_scalar(
-            "sample_size", sample_size, 1, round=3
-        )
+        metrics.log_scalar("ntokens", ntokens, 1, round=3)
+        metrics.log_scalar("nsentences", nsentences, 1, round=3)
+        metrics.log_scalar("sample_size", sample_size, 1, round=3)
 
     @staticmethod
     def logging_outputs_can_be_summed() -> bool:

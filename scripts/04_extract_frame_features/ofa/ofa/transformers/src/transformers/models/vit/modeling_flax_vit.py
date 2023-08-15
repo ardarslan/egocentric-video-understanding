@@ -22,7 +22,11 @@ from flax.core.frozen_dict import FrozenDict
 from flax.linen.attention import dot_product_attention_weights
 
 from ...file_utils import add_start_docstrings, add_start_docstrings_to_model_forward
-from ...modeling_flax_outputs import FlaxBaseModelOutput, FlaxBaseModelOutputWithPooling, FlaxSequenceClassifierOutput
+from ...modeling_flax_outputs import (
+    FlaxBaseModelOutput,
+    FlaxBaseModelOutputWithPooling,
+    FlaxSequenceClassifierOutput,
+)
 from ...modeling_flax_utils import (
     ACT2FN,
     FlaxPreTrainedModel,
@@ -84,7 +88,6 @@ VIT_INPUTS_DOCSTRING = r"""
 
 
 class FlaxPatchEmbeddings(nn.Module):
-
     config: ViTConfig
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
 
@@ -115,11 +118,15 @@ class FlaxViTEmbeddings(nn.Module):
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
 
     def setup(self):
-        self.cls_token = self.param("cls_token", nn.initializers.zeros, (1, 1, self.config.hidden_size))
+        self.cls_token = self.param(
+            "cls_token", nn.initializers.zeros, (1, 1, self.config.hidden_size)
+        )
         self.patch_embeddings = FlaxPatchEmbeddings(self.config, dtype=self.dtype)
         num_patches = self.patch_embeddings.num_patches
         self.position_embeddings = self.param(
-            "position_embeddings", nn.initializers.zeros, (1, num_patches + 1, self.config.hidden_size)
+            "position_embeddings",
+            nn.initializers.zeros,
+            (1, num_patches + 1, self.config.hidden_size),
         )
         self.dropout = nn.Dropout(rate=self.config.hidden_dropout_prob)
 
@@ -128,7 +135,9 @@ class FlaxViTEmbeddings(nn.Module):
 
         embeddings = self.patch_embeddings(pixel_values)
 
-        cls_tokens = jnp.broadcast_to(self.cls_token, (batch_size, 1, self.config.hidden_size))
+        cls_tokens = jnp.broadcast_to(
+            self.cls_token, (batch_size, 1, self.config.hidden_size)
+        )
         embeddings = jnp.concatenate((cls_tokens, embeddings), axis=1)
         embeddings = embeddings + self.position_embeddings
         embeddings = self.dropout(embeddings, deterministic=deterministic)
@@ -164,7 +173,9 @@ class FlaxViTSelfAttention(nn.Module):
             use_bias=self.config.qkv_bias,
         )
 
-    def __call__(self, hidden_states, deterministic: bool = True, output_attentions: bool = False):
+    def __call__(
+        self, hidden_states, deterministic: bool = True, output_attentions: bool = False
+    ):
         head_dim = self.config.hidden_size // self.config.num_attention_heads
 
         query_states = self.query(hidden_states).reshape(
@@ -225,10 +236,18 @@ class FlaxViTAttention(nn.Module):
         self.attention = FlaxViTSelfAttention(self.config, dtype=self.dtype)
         self.output = FlaxViTSelfOutput(self.config, dtype=self.dtype)
 
-    def __call__(self, hidden_states, deterministic=True, output_attentions: bool = False):
-        attn_outputs = self.attention(hidden_states, deterministic=deterministic, output_attentions=output_attentions)
+    def __call__(
+        self, hidden_states, deterministic=True, output_attentions: bool = False
+    ):
+        attn_outputs = self.attention(
+            hidden_states,
+            deterministic=deterministic,
+            output_attentions=output_attentions,
+        )
         attn_output = attn_outputs[0]
-        hidden_states = self.output(attn_output, hidden_states, deterministic=deterministic)
+        hidden_states = self.output(
+            attn_output, hidden_states, deterministic=deterministic
+        )
 
         outputs = (hidden_states,)
 
@@ -283,12 +302,20 @@ class FlaxViTLayer(nn.Module):
         self.attention = FlaxViTAttention(self.config, dtype=self.dtype)
         self.intermediate = FlaxViTIntermediate(self.config, dtype=self.dtype)
         self.output = FlaxViTOutput(self.config, dtype=self.dtype)
-        self.layernorm_before = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
-        self.layernorm_after = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
+        self.layernorm_before = nn.LayerNorm(
+            epsilon=self.config.layer_norm_eps, dtype=self.dtype
+        )
+        self.layernorm_after = nn.LayerNorm(
+            epsilon=self.config.layer_norm_eps, dtype=self.dtype
+        )
 
-    def __call__(self, hidden_states, deterministic: bool = True, output_attentions: bool = False):
+    def __call__(
+        self, hidden_states, deterministic: bool = True, output_attentions: bool = False
+    ):
         attention_outputs = self.attention(
-            self.layernorm_before(hidden_states),  # in ViT, layernorm is applied before self-attention
+            self.layernorm_before(
+                hidden_states
+            ),  # in ViT, layernorm is applied before self-attention
             deterministic=deterministic,
             output_attentions=output_attentions,
         )
@@ -302,7 +329,9 @@ class FlaxViTLayer(nn.Module):
         layer_output = self.layernorm_after(attention_output)
 
         hidden_states = self.intermediate(layer_output)
-        hidden_states = self.output(hidden_states, attention_output, deterministic=deterministic)
+        hidden_states = self.output(
+            hidden_states, attention_output, deterministic=deterministic
+        )
 
         outputs = (hidden_states,)
 
@@ -317,7 +346,8 @@ class FlaxViTLayerCollection(nn.Module):
 
     def setup(self):
         self.layers = [
-            FlaxViTLayer(self.config, name=str(i), dtype=self.dtype) for i in range(self.config.num_hidden_layers)
+            FlaxViTLayer(self.config, name=str(i), dtype=self.dtype)
+            for i in range(self.config.num_hidden_layers)
         ]
 
     def __call__(
@@ -328,7 +358,6 @@ class FlaxViTLayerCollection(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-
         all_attentions = () if output_attentions else None
         all_hidden_states = () if output_hidden_states else None
 
@@ -336,7 +365,11 @@ class FlaxViTLayerCollection(nn.Module):
             if output_hidden_states:
                 all_hidden_states += (hidden_states,)
 
-            layer_outputs = layer(hidden_states, deterministic=deterministic, output_attentions=output_attentions)
+            layer_outputs = layer(
+                hidden_states,
+                deterministic=deterministic,
+                output_attentions=output_attentions,
+            )
 
             hidden_states = layer_outputs[0]
 
@@ -351,7 +384,9 @@ class FlaxViTLayerCollection(nn.Module):
             return tuple(v for v in outputs if v is not None)
 
         return FlaxBaseModelOutput(
-            last_hidden_state=hidden_states, hidden_states=all_hidden_states, attentions=all_attentions
+            last_hidden_state=hidden_states,
+            hidden_states=all_hidden_states,
+            attentions=all_attentions,
         )
 
 
@@ -407,11 +442,20 @@ class FlaxViTPreTrainedModel(FlaxPreTrainedModel):
     main_input_name = "pixel_values"
     module_class: nn.Module = None
 
-    def __init__(self, config: ViTConfig, input_shape=None, seed: int = 0, dtype: jnp.dtype = jnp.float32, **kwargs):
+    def __init__(
+        self,
+        config: ViTConfig,
+        input_shape=None,
+        seed: int = 0,
+        dtype: jnp.dtype = jnp.float32,
+        **kwargs
+    ):
         module = self.module_class(config=config, dtype=dtype, **kwargs)
         if input_shape is None:
             input_shape = (1, config.image_size, config.image_size, 3)
-        super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+        super().__init__(
+            config, module, input_shape=input_shape, seed=seed, dtype=dtype
+        )
 
     def init_weights(self, rng: jax.random.PRNGKey, input_shape: Tuple) -> FrozenDict:
         # init input tensors
@@ -422,7 +466,9 @@ class FlaxViTPreTrainedModel(FlaxPreTrainedModel):
 
         return self.module.init(rngs, pixel_values, return_dict=False)["params"]
 
-    @add_start_docstrings_to_model_forward(VIT_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    @add_start_docstrings_to_model_forward(
+        VIT_INPUTS_DOCSTRING.format("batch_size, sequence_length")
+    )
     def __call__(
         self,
         pixel_values,
@@ -433,11 +479,19 @@ class FlaxViTPreTrainedModel(FlaxPreTrainedModel):
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
     ):
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
-        return_dict = return_dict if return_dict is not None else self.config.return_dict
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
+        return_dict = (
+            return_dict if return_dict is not None else self.config.return_dict
+        )
 
         pixel_values = jnp.transpose(pixel_values, (0, 2, 3, 1))
         # Handle any PRNG if needed
@@ -464,8 +518,14 @@ class FlaxViTModule(nn.Module):
     def setup(self):
         self.embeddings = FlaxViTEmbeddings(self.config, dtype=self.dtype)
         self.encoder = FlaxViTEncoder(self.config, dtype=self.dtype)
-        self.layernorm = nn.LayerNorm(epsilon=self.config.layer_norm_eps, dtype=self.dtype)
-        self.pooler = FlaxViTPooler(self.config, dtype=self.dtype) if self.add_pooling_layer else None
+        self.layernorm = nn.LayerNorm(
+            epsilon=self.config.layer_norm_eps, dtype=self.dtype
+        )
+        self.pooler = (
+            FlaxViTPooler(self.config, dtype=self.dtype)
+            if self.add_pooling_layer
+            else None
+        )
 
     def __call__(
         self,
@@ -475,7 +535,6 @@ class FlaxViTModule(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-
         hidden_states = self.embeddings(pixel_values, deterministic=deterministic)
 
         outputs = self.encoder(
@@ -534,7 +593,9 @@ FLAX_VISION_MODEL_DOCSTRING = """
 """
 
 overwrite_call_docstring(FlaxViTModel, FLAX_VISION_MODEL_DOCSTRING)
-append_replace_return_docstrings(FlaxViTModel, output_type=FlaxBaseModelOutputWithPooling, config_class=ViTConfig)
+append_replace_return_docstrings(
+    FlaxViTModel, output_type=FlaxBaseModelOutputWithPooling, config_class=ViTConfig
+)
 
 
 class FlaxViTForImageClassificationModule(nn.Module):
@@ -542,7 +603,9 @@ class FlaxViTForImageClassificationModule(nn.Module):
     dtype: jnp.dtype = jnp.float32
 
     def setup(self):
-        self.vit = FlaxViTModule(config=self.config, dtype=self.dtype, add_pooling_layer=False)
+        self.vit = FlaxViTModule(
+            config=self.config, dtype=self.dtype, add_pooling_layer=False
+        )
         self.classifier = nn.Dense(
             self.config.num_labels,
             dtype=self.dtype,
@@ -557,7 +620,9 @@ class FlaxViTForImageClassificationModule(nn.Module):
         output_hidden_states=None,
         return_dict=None,
     ):
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         outputs = self.vit(
             pixel_values,
@@ -621,5 +686,7 @@ FLAX_VISION_CLASSIF_DOCSTRING = """
 
 overwrite_call_docstring(FlaxViTForImageClassification, FLAX_VISION_CLASSIF_DOCSTRING)
 append_replace_return_docstrings(
-    FlaxViTForImageClassification, output_type=FlaxSequenceClassifierOutput, config_class=ViTConfig
+    FlaxViTForImageClassification,
+    output_type=FlaxSequenceClassifierOutput,
+    config_class=ViTConfig,
 )

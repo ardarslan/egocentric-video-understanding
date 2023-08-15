@@ -31,7 +31,6 @@ from ..bert.test_tokenization_bert import BertTokenizationTest
 
 @require_tokenizers
 class DPRContextEncoderTokenizationTest(BertTokenizationTest):
-
     tokenizer_class = DPRContextEncoderTokenizer
     rust_tokenizer_class = DPRContextEncoderTokenizerFast
     test_rust_tokenizer = True
@@ -39,7 +38,6 @@ class DPRContextEncoderTokenizationTest(BertTokenizationTest):
 
 @require_tokenizers
 class DPRQuestionEncoderTokenizationTest(BertTokenizationTest):
-
     tokenizer_class = DPRQuestionEncoderTokenizer
     rust_tokenizer_class = DPRQuestionEncoderTokenizerFast
     test_rust_tokenizer = True
@@ -47,7 +45,6 @@ class DPRQuestionEncoderTokenizationTest(BertTokenizationTest):
 
 @require_tokenizers
 class DPRReaderTokenizationTest(BertTokenizationTest):
-
     tokenizer_class = DPRReaderTokenizer
     rust_tokenizer_class = DPRReaderTokenizerFast
     test_rust_tokenizer = True
@@ -83,7 +80,11 @@ class DPRReaderTokenizationTest(BertTokenizationTest):
         text_2 = tokenizer.encode("title sequence", add_special_tokens=False)
         text_3 = tokenizer.encode("text sequence", add_special_tokens=False)
         expected_input_ids = [101] + text_1 + [102] + text_2 + [102] + text_3
-        encoded_input = tokenizer(questions=["question sequence"], titles=["title sequence"], texts=["text sequence"])
+        encoded_input = tokenizer(
+            questions=["question sequence"],
+            titles=["title sequence"],
+            texts=["text sequence"],
+        )
         self.assertIn("input_ids", encoded_input)
         self.assertIn("attention_mask", encoded_input)
         self.assertListEqual(encoded_input["input_ids"][0], expected_input_ids)

@@ -23,13 +23,14 @@ from transformers.testing_utils import require_sentencepiece, require_tokenizers
 from ..test_tokenization_common import TokenizerTesterMixin
 
 
-SAMPLE_VOCAB = os.path.join(dirname(dirname(os.path.abspath(__file__))), "fixtures/spiece.model")
+SAMPLE_VOCAB = os.path.join(
+    dirname(dirname(os.path.abspath(__file__))), "fixtures/spiece.model"
+)
 
 
 @require_sentencepiece
 @require_tokenizers
 class DebertaV2TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
-
     tokenizer_class = DebertaV2Tokenizer
     rust_tokenizer_class = None
     test_rust_tokenizer = False
@@ -95,7 +96,9 @@ class DebertaV2TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tokens = tokenizer.tokenize("This is a test")
         self.assertListEqual(tokens, ["▁", "[UNK]", "his", "▁is", "▁a", "▁test"])
 
-        self.assertListEqual(tokenizer.convert_tokens_to_ids(tokens), [13, 1, 4398, 25, 21, 1289])
+        self.assertListEqual(
+            tokenizer.convert_tokens_to_ids(tokens), [13, 1, 4398, 25, 21, 1289]
+        )
 
         tokens = tokenizer.tokenize("I was born in 92000, and this is falsé.")
         # fmt: off
@@ -122,9 +125,15 @@ class DebertaV2TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         encoded_sentence = tokenizer.build_inputs_with_special_tokens(text)
         encoded_pair = tokenizer.build_inputs_with_special_tokens(text, text_2)
 
-        self.assertEqual([tokenizer.cls_token_id] + text + [tokenizer.sep_token_id], encoded_sentence)
         self.assertEqual(
-            [tokenizer.cls_token_id] + text + [tokenizer.sep_token_id] + text_2 + [tokenizer.sep_token_id],
+            [tokenizer.cls_token_id] + text + [tokenizer.sep_token_id], encoded_sentence
+        )
+        self.assertEqual(
+            [tokenizer.cls_token_id]
+            + text
+            + [tokenizer.sep_token_id]
+            + text_2
+            + [tokenizer.sep_token_id],
             encoded_pair,
         )
 

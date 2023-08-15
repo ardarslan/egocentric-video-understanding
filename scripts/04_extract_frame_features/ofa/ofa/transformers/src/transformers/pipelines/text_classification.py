@@ -2,12 +2,19 @@ from typing import Dict
 
 import numpy as np
 
-from ..file_utils import ExplicitEnum, add_end_docstrings, is_tf_available, is_torch_available
+from ..file_utils import (
+    ExplicitEnum,
+    add_end_docstrings,
+    is_tf_available,
+    is_torch_available,
+)
 from .base import PIPELINE_INIT_ARGS, GenericTensor, Pipeline
 
 
 if is_tf_available():
-    from ..models.auto.modeling_tf_auto import TF_MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING
+    from ..models.auto.modeling_tf_auto import (
+        TF_MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING,
+    )
 
 if is_torch_available():
     from ..models.auto.modeling_auto import MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING
@@ -72,11 +79,16 @@ class TextClassificationPipeline(Pipeline):
             else MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING
         )
 
-    def _sanitize_parameters(self, return_all_scores=None, function_to_apply=None, **tokenizer_kwargs):
+    def _sanitize_parameters(
+        self, return_all_scores=None, function_to_apply=None, **tokenizer_kwargs
+    ):
         preprocess_params = tokenizer_kwargs
 
         postprocess_params = {}
-        if hasattr(self.model.config, "return_all_scores") and return_all_scores is None:
+        if (
+            hasattr(self.model.config, "return_all_scores")
+            and return_all_scores is None
+        ):
             return_all_scores = self.model.config.return_all_scores
 
         if return_all_scores is not None:
@@ -136,14 +148,25 @@ class TextClassificationPipeline(Pipeline):
     def _forward(self, model_inputs):
         return self.model(**model_inputs)
 
-    def postprocess(self, model_outputs, function_to_apply=None, return_all_scores=False):
+    def postprocess(
+        self, model_outputs, function_to_apply=None, return_all_scores=False
+    ):
         # Default value before `set_parameters`
         if function_to_apply is None:
-            if self.model.config.problem_type == "multi_label_classification" or self.model.config.num_labels == 1:
+            if (
+                self.model.config.problem_type == "multi_label_classification"
+                or self.model.config.num_labels == 1
+            ):
                 function_to_apply = ClassificationFunction.SIGMOID
-            elif self.model.config.problem_type == "single_label_classification" or self.model.config.num_labels > 1:
+            elif (
+                self.model.config.problem_type == "single_label_classification"
+                or self.model.config.num_labels > 1
+            ):
                 function_to_apply = ClassificationFunction.SOFTMAX
-            elif hasattr(self.model.config, "function_to_apply") and function_to_apply is None:
+            elif (
+                hasattr(self.model.config, "function_to_apply")
+                and function_to_apply is None
+            ):
                 function_to_apply = self.model.config.function_to_apply
             else:
                 function_to_apply = ClassificationFunction.NONE
@@ -158,9 +181,17 @@ class TextClassificationPipeline(Pipeline):
         elif function_to_apply == ClassificationFunction.NONE:
             scores = outputs
         else:
-            raise ValueError(f"Unrecognized `function_to_apply` argument: {function_to_apply}")
+            raise ValueError(
+                f"Unrecognized `function_to_apply` argument: {function_to_apply}"
+            )
 
         if return_all_scores:
-            return [{"label": self.model.config.id2label[i], "score": score.item()} for i, score in enumerate(scores)]
+            return [
+                {"label": self.model.config.id2label[i], "score": score.item()}
+                for i, score in enumerate(scores)
+            ]
         else:
-            return {"label": self.model.config.id2label[scores.argmax().item()], "score": scores.max().item()}
+            return {
+                "label": self.model.config.id2label[scores.argmax().item()],
+                "score": scores.max().item(),
+            }

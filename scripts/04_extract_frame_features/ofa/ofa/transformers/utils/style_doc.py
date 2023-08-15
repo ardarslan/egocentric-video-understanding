@@ -79,7 +79,12 @@ def parse_code_example(code_lines):
     current_bit = []
 
     for line in code_lines:
-        if in_code and has_doctest and not is_empty_line(line) and line[:3] not in DOCTEST_PROMPTS:
+        if (
+            in_code
+            and has_doctest
+            and not is_empty_line(line)
+            and line[:3] not in DOCTEST_PROMPTS
+        ):
             code_sample = "\n".join(current_bit)
             code_samples.append(code_sample.strip())
             in_code = False
@@ -146,7 +151,9 @@ def format_code_example(code: str, max_len: int, in_docstring: bool = False):
     for k, v in BLACK_AVOID_PATTERNS.items():
         full_code = full_code.replace(k, v)
     try:
-        mode = black.Mode(target_versions={black.TargetVersion.PY37}, line_length=line_length)
+        mode = black.Mode(
+            target_versions={black.TargetVersion.PY37}, line_length=line_length
+        )
         formatted_code = black.format_str(full_code, mode=mode)
         error = ""
     except Exception as e:
@@ -175,7 +182,10 @@ def format_code_example(code: str, max_len: int, in_docstring: bool = False):
             if has_doctest and not is_empty_line(line):
                 prefix = (
                     "... "
-                    if line.startswith(" ") or line in [")", "]", "}"] or in_triple_quotes or in_decorator
+                    if line.startswith(" ")
+                    or line in [")", "]", "}"]
+                    or in_triple_quotes
+                    or in_decorator
                     else ">>> "
                 )
             else:
@@ -286,9 +296,18 @@ def style_docstring(docstring, max_len):
         new_paragraph = new_paragraph or _re_tip.search(line)
 
         # In this case, we treat the current paragraph
-        if not in_code and new_paragraph and current_paragraph is not None and len(current_paragraph) > 0:
+        if (
+            not in_code
+            and new_paragraph
+            and current_paragraph is not None
+            and len(current_paragraph) > 0
+        ):
             paragraph = " ".join(current_paragraph)
-            new_lines.append(format_text(paragraph, max_len, prefix=prefix, min_indent=current_indent))
+            new_lines.append(
+                format_text(
+                    paragraph, max_len, prefix=prefix, min_indent=current_indent
+                )
+            )
             current_paragraph = None
 
         if code_search is not None:
@@ -303,7 +322,9 @@ def style_docstring(docstring, max_len):
                 current_indent = -1
                 code = "\n".join(current_paragraph)
                 if current_code in ["py", "python"]:
-                    formatted_code, error = format_code_example(code, max_len, in_docstring=True)
+                    formatted_code, error = format_code_example(
+                        code, max_len, in_docstring=True
+                    )
                     new_lines.append(formatted_code)
                     if len(error) > 0:
                         black_errors.append(error)
@@ -368,7 +389,9 @@ def style_docstring(docstring, max_len):
 
     if current_paragraph is not None and len(current_paragraph) > 0:
         paragraph = " ".join(current_paragraph)
-        new_lines.append(format_text(paragraph, max_len, prefix=prefix, min_indent=current_indent))
+        new_lines.append(
+            format_text(paragraph, max_len, prefix=prefix, min_indent=current_indent)
+        )
 
     return "\n".join(new_lines), "\n\n".join(black_errors)
 
@@ -469,7 +492,9 @@ def style_mdx_file(mdx_file, max_len=119, check_only=False):
             new_lines.append(line)
 
     if in_code:
-        raise ValueError(f"There was a problem when styling {mdx_file}. A code block is opened without being closed.")
+        raise ValueError(
+            f"There was a problem when styling {mdx_file}. A code block is opened without being closed."
+        )
 
     clean_content = "\n".join(new_lines)
     diff = clean_content != content
@@ -500,12 +525,18 @@ def style_doc_files(*files, max_len=119, check_only=False):
         # Treat folders
         if os.path.isdir(file):
             files = [os.path.join(file, f) for f in os.listdir(file)]
-            files = [f for f in files if os.path.isdir(f) or f.endswith(".mdx") or f.endswith(".py")]
+            files = [
+                f
+                for f in files
+                if os.path.isdir(f) or f.endswith(".mdx") or f.endswith(".py")
+            ]
             changed += style_doc_files(*files, max_len=max_len, check_only=check_only)
         # Treat mdx
         elif file.endswith(".mdx"):
             try:
-                diff, black_error = style_mdx_file(file, max_len=max_len, check_only=check_only)
+                diff, black_error = style_mdx_file(
+                    file, max_len=max_len, check_only=check_only
+                )
                 if diff:
                     changed.append(file)
                 if len(black_error) > 0:
@@ -518,7 +549,9 @@ def style_doc_files(*files, max_len=119, check_only=False):
         # Treat python files
         elif file.endswith(".py"):
             try:
-                diff, black_error = style_file_docstrings(file, max_len=max_len, check_only=check_only)
+                diff, black_error = style_file_docstrings(
+                    file, max_len=max_len, check_only=check_only
+                )
                 if diff:
                     changed.append(file)
                 if len(black_error) > 0:
@@ -529,7 +562,9 @@ def style_doc_files(*files, max_len=119, check_only=False):
                 print(f"There is a problem in {file}.")
                 raise
         else:
-            warnings.warn(f"Ignoring {file} because it's not a py or an mdx file or a folder.")
+            warnings.warn(
+                f"Ignoring {file} because it's not a py or an mdx file or a folder."
+            )
     if len(black_errors) > 0:
         black_message = "\n\n".join(black_errors)
         raise ValueError(
@@ -553,7 +588,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("files", nargs="+", help="The file(s) or folder(s) to restyle.")
     parser.add_argument("--max_len", type=int, help="The maximum length of lines.")
-    parser.add_argument("--check_only", action="store_true", help="Whether to only check and not fix styling issues.")
+    parser.add_argument(
+        "--check_only",
+        action="store_true",
+        help="Whether to only check and not fix styling issues.",
+    )
     args = parser.parse_args()
 
     main(*args.files, max_len=args.max_len, check_only=args.check_only)

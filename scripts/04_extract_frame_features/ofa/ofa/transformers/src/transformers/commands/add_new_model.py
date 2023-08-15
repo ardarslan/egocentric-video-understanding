@@ -41,10 +41,16 @@ class AddNewModelCommand(BaseTransformersCLICommand):
     @staticmethod
     def register_subcommand(parser: ArgumentParser):
         add_new_model_parser = parser.add_parser("add-new-model")
-        add_new_model_parser.add_argument("--testing", action="store_true", help="If in testing mode.")
-        add_new_model_parser.add_argument("--testing_file", type=str, help="Configuration file on which to run.")
         add_new_model_parser.add_argument(
-            "--path", type=str, help="Path to cookiecutter. Should only be used for testing purposes."
+            "--testing", action="store_true", help="If in testing mode."
+        )
+        add_new_model_parser.add_argument(
+            "--testing_file", type=str, help="Configuration file on which to run."
+        )
+        add_new_model_parser.add_argument(
+            "--path",
+            type=str,
+            help="Path to cookiecutter. Should only be used for testing purposes.",
         )
         add_new_model_parser.set_defaults(func=add_new_model_command_factory)
 
@@ -60,7 +66,11 @@ class AddNewModelCommand(BaseTransformersCLICommand):
                 "the following at the root of your `transformers` clone:\n\n\t$ pip install -e .[modelcreation]\n"
             )
         # Ensure that there is no other `cookiecutter-template-xxx` directory in the current working directory
-        directories = [directory for directory in os.listdir() if "cookiecutter-template-" == directory[:22]]
+        directories = [
+            directory
+            for directory in os.listdir()
+            if "cookiecutter-template-" == directory[:22]
+        ]
         if len(directories) > 0:
             raise ValueError(
                 "Several directories starting with `cookiecutter-template-` in current working directory. "
@@ -69,9 +79,13 @@ class AddNewModelCommand(BaseTransformersCLICommand):
             )
 
         path_to_transformer_root = (
-            Path(__file__).parent.parent.parent.parent if self._path is None else Path(self._path).parent.parent
+            Path(__file__).parent.parent.parent.parent
+            if self._path is None
+            else Path(self._path).parent.parent
         )
-        path_to_cookiecutter = path_to_transformer_root / "templates" / "adding_a_new_model"
+        path_to_cookiecutter = (
+            path_to_transformer_root / "templates" / "adding_a_new_model"
+        )
 
         # Execute cookiecutter
         if not self._testing:
@@ -86,26 +100,38 @@ class AddNewModelCommand(BaseTransformersCLICommand):
                 extra_context=testing_configuration,
             )
 
-        directory = [directory for directory in os.listdir() if "cookiecutter-template-" in directory[:22]][0]
+        directory = [
+            directory
+            for directory in os.listdir()
+            if "cookiecutter-template-" in directory[:22]
+        ][0]
 
         # Retrieve configuration
         with open(directory + "/configuration.json", "r") as configuration_file:
             configuration = json.load(configuration_file)
 
         lowercase_model_name = configuration["lowercase_modelname"]
-        generate_tensorflow_pytorch_and_flax = configuration["generate_tensorflow_pytorch_and_flax"]
+        generate_tensorflow_pytorch_and_flax = configuration[
+            "generate_tensorflow_pytorch_and_flax"
+        ]
         os.remove(f"{directory}/configuration.json")
 
         output_pytorch = "PyTorch" in generate_tensorflow_pytorch_and_flax
         output_tensorflow = "TensorFlow" in generate_tensorflow_pytorch_and_flax
         output_flax = "Flax" in generate_tensorflow_pytorch_and_flax
 
-        model_dir = f"{path_to_transformer_root}/src/transformers/models/{lowercase_model_name}"
+        model_dir = (
+            f"{path_to_transformer_root}/src/transformers/models/{lowercase_model_name}"
+        )
         os.makedirs(model_dir, exist_ok=True)
-        os.makedirs(f"{path_to_transformer_root}/tests/{lowercase_model_name}", exist_ok=True)
+        os.makedirs(
+            f"{path_to_transformer_root}/tests/{lowercase_model_name}", exist_ok=True
+        )
 
         # Tests require submodules as they have parent imports
-        with open(f"{path_to_transformer_root}/tests/{lowercase_model_name}/__init__.py", "w"):
+        with open(
+            f"{path_to_transformer_root}/tests/{lowercase_model_name}/__init__.py", "w"
+        ):
             pass
 
         shutil.move(
@@ -161,7 +187,9 @@ class AddNewModelCommand(BaseTransformersCLICommand):
 
         if output_flax:
             if not self._testing:
-                remove_copy_lines(f"{directory}/modeling_flax_{lowercase_model_name}.py")
+                remove_copy_lines(
+                    f"{directory}/modeling_flax_{lowercase_model_name}.py"
+                )
 
             shutil.move(
                 f"{directory}/modeling_flax_{lowercase_model_name}.py",
@@ -195,7 +223,9 @@ class AddNewModelCommand(BaseTransformersCLICommand):
         from shutil import copymode, move
         from tempfile import mkstemp
 
-        def replace(original_file: str, line_to_copy_below: str, lines_to_copy: List[str]):
+        def replace(
+            original_file: str, line_to_copy_below: str, lines_to_copy: List[str]
+        ):
             # Create temp file
             fh, abs_path = mkstemp()
             line_found = False
@@ -239,7 +269,9 @@ class AddNewModelCommand(BaseTransformersCLICommand):
                         skip_snippet = skip_units(line)
                     elif "# End." in line and "##" not in line:
                         if not skip_file and not skip_snippet:
-                            replace(file_to_replace_in, line_to_copy_below, lines_to_copy)
+                            replace(
+                                file_to_replace_in, line_to_copy_below, lines_to_copy
+                            )
 
                         lines_to_copy = []
                     elif "# Replace with" in line and "##" not in line:

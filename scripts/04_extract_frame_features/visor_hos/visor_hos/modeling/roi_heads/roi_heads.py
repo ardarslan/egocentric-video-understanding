@@ -75,7 +75,12 @@ class HOSROIHeads(StandardROIHeads):
         # Here we split "box head" and "box predictor", which is mainly due to historical reasons.
         # They are used together so the "box predictor" layers should be part of the "box head".
         # New subclasses of ROIHeads do not need "box predictor"s.
-        self.box_head = build_box_head(cfg, ShapeSpec(channels=in_channels, height=pooler_resolution, width=pooler_resolution))
+        self.box_head = build_box_head(
+            cfg,
+            ShapeSpec(
+                channels=in_channels, height=pooler_resolution, width=pooler_resolution
+            ),
+        )
         self.box_predictor = HOSFastRCNNOutputLayers(cfg, self.box_head.output_shape)
 
     # @torch.no_grad()
@@ -163,7 +168,9 @@ class HOSROIHeads(StandardROIHeads):
 
     #     return proposals_with_gt
 
-    def _forward_box(self, features: Dict[str, torch.Tensor], proposals: List[Instances]):
+    def _forward_box(
+        self, features: Dict[str, torch.Tensor], proposals: List[Instances]
+    ):
         """
         Forward logic of the box prediction branch. If `self.train_on_pred_boxes is True`,
             the function puts predicted boxes in the `proposal_boxes` field of `proposals` argument.
@@ -191,8 +198,12 @@ class HOSROIHeads(StandardROIHeads):
             # proposals is modified in-place below, so losses must be computed first.
             if self.train_on_pred_boxes:
                 with torch.no_grad():
-                    pred_boxes = self.box_predictor.predict_boxes_for_gt_classes(predictions, proposals)
-                    for proposals_per_image, pred_boxes_per_image in zip(proposals, pred_boxes):
+                    pred_boxes = self.box_predictor.predict_boxes_for_gt_classes(
+                        predictions, proposals
+                    )
+                    for proposals_per_image, pred_boxes_per_image in zip(
+                        proposals, pred_boxes
+                    ):
                         proposals_per_image.proposal_boxes = Boxes(pred_boxes_per_image)
             return losses
         else:

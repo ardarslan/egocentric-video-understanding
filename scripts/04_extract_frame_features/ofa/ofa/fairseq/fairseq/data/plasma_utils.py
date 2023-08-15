@@ -176,12 +176,11 @@ class PlasmaView:
         return self._n
 
 
-GB100 = (1024 ** 3) * 100
+GB100 = (1024**3) * 100
 
 
 class PlasmaStore:
     def __init__(self, path=DEFAULT_PLASMA_PATH, nbytes: int = GB100):
-
         self.server = self.start(path, nbytes)
 
     def __del__(self):

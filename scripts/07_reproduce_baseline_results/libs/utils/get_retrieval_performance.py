@@ -1,21 +1,27 @@
-
 import numpy as np
 import os
 import json
-class Moment_Retrieval(object):
-    GROUND_TRUTH_FIELDS = ['database']
-    PREDICTION_FIELDS = ['results', 'version', 'external_data']
 
-    def __init__(self, ground_truth_filename=None, prediction_filename=None,
-                 ground_truth_fields=GROUND_TRUTH_FIELDS,
-                 prediction_fields=PREDICTION_FIELDS,
-                 tiou_thresholds=np.linspace(0.5, 0.95, 10),
-                 subset='test', verbose=False,
-                 check_status=False):
+
+class Moment_Retrieval(object):
+    GROUND_TRUTH_FIELDS = ["database"]
+    PREDICTION_FIELDS = ["results", "version", "external_data"]
+
+    def __init__(
+        self,
+        ground_truth_filename=None,
+        prediction_filename=None,
+        ground_truth_fields=GROUND_TRUTH_FIELDS,
+        prediction_fields=PREDICTION_FIELDS,
+        tiou_thresholds=np.linspace(0.5, 0.95, 10),
+        subset="test",
+        verbose=False,
+        check_status=False,
+    ):
         if not ground_truth_filename:
-            raise IOError('Please input a valid ground truth file.')
+            raise IOError("Please input a valid ground truth file.")
         if not prediction_filename:
-            raise IOError('Please input a valid prediction file.')
+            raise IOError("Please input a valid prediction file.")
         self.subset = subset
         self.tiou_thresholds = tiou_thresholds
         self.verbose = verbose
@@ -26,58 +32,52 @@ class Moment_Retrieval(object):
         # Retrieve blocked videos from server.
 
         # Import ground truth and predictions.
-        self.ground_truth = self._import_ground_truth(
-            ground_truth_filename)
+        self.ground_truth = self._import_ground_truth(ground_truth_filename)
         self.prediction = self._import_prediction(prediction_filename)
 
         if self.verbose:
-            print('[INIT] Loaded annotations from {} subset.'.format(subset))
+            print("[INIT] Loaded annotations from {} subset.".format(subset))
             nr_gt = len(self.ground_truth)
-            print('\tNumber of ground truth instances: {}'.format(nr_gt))
+            print("\tNumber of ground truth instances: {}".format(nr_gt))
             nr_pred = len(self.prediction)
-            print('\tNumber of predictions: {}'.format(nr_pred))
-            print('\tFixed threshold for tiou score: {}'.format(self.tiou_thresholds))
+            print("\tNumber of predictions: {}".format(nr_pred))
+            print("\tFixed threshold for tiou score: {}".format(self.tiou_thresholds))
 
     def _import_ground_truth(self, ground_truth_filename):
-
-        with open(ground_truth_filename, 'r') as fobj:
+        with open(ground_truth_filename, "r") as fobj:
             data = json.load(fobj)
-
 
         ground_truth = {}
         for videoid, v in data.items():
-
-            if not v['subset'] in self.subset:
+            if not v["subset"] in self.subset:
                 continue
 
             annotations = {}
-            for ann in v['annotations']:
+            for ann in v["annotations"]:
+                if ann["label"] not in annotations.keys():
+                    annotations[ann["label"]] = []
+                annotations[ann["label"]].append([ann["segment"][0], ann["segment"][1]])
 
-                if ann['label'] not in annotations.keys():
-                    annotations[ann['label']] = []
-                annotations[ann['label']].append([ann['segment'][0], ann['segment'][1]])
-
-            ground_truth[v['clip_id']] = annotations
+            ground_truth[v["clip_id"]] = annotations
 
         return ground_truth
 
     def _import_prediction(self, prediction_filename):
-
-        with open(prediction_filename, 'r') as fobj:
+        with open(prediction_filename, "r") as fobj:
             data = json.load(fobj)
         # Checking format...
         if not all([field in data.keys() for field in self.pred_fields]):
-            raise IOError('Please input a valid prediction file.')
-
+            raise IOError("Please input a valid prediction file.")
 
         prediction = {}
-        for videoid, v in data['results'].items():
-
+        for videoid, v in data["results"].items():
             pred_props = {}
             for prop in v:
-                if prop['label'] not in pred_props.keys():
-                    pred_props[prop['label']] = []
-                pred_props[prop['label']].append([prop['segment'][0], prop['segment'][1], prop['score']])
+                if prop["label"] not in pred_props.keys():
+                    pred_props[prop["label"]] = []
+                pred_props[prop["label"]].append(
+                    [prop["segment"][0], prop["segment"][1], prop["score"]]
+                )
 
             prediction[videoid] = pred_props
 
@@ -88,7 +88,7 @@ class Moment_Retrieval(object):
         recalls = [1, 5]
 
         # eval_result = [[[ [] for _ in range(len(self.ground_truth))] for _ in recalls] for _ in tious]
-        eval_result = [[ [] for _ in recalls] for _ in tious]
+        eval_result = [[[] for _ in recalls] for _ in tious]
 
         # v_cnt = 0
         for key_v, value_v in self.ground_truth.items():
@@ -104,14 +104,15 @@ class Moment_Retrieval(object):
 
                     for i, t in enumerate(tious):
                         for j, r in enumerate(recalls):
-
-                            is_retrieved = [(overlap > t)[:r*num_gt_v_c][:,i].any() for i in range(num_gt_v_c)]
+                            is_retrieved = [
+                                (overlap > t)[: r * num_gt_v_c][:, i].any()
+                                for i in range(num_gt_v_c)
+                            ]
                             eval_result[i][j].extend(is_retrieved)
                 else:
                     for i, t in enumerate(tious):
                         for j, r in enumerate(recalls):
                             eval_result[i][j].extend([False] * len(gt_v_c))
-
 
         eval_result = np.array(eval_result).mean(axis=-1)
 
@@ -123,32 +124,38 @@ class Moment_Retrieval(object):
         return eval_result
 
 
-def iou(pred, gt): # require pred and gt is numpy
-    assert isinstance(pred, list) and isinstance(gt,list)
-    pred_is_list = isinstance(pred[0],list)
-    gt_is_list = isinstance(gt[0],list)
-    if not pred_is_list: pred = [pred]
-    if not gt_is_list: gt = [gt]
+def iou(pred, gt):  # require pred and gt is numpy
+    assert isinstance(pred, list) and isinstance(gt, list)
+    pred_is_list = isinstance(pred[0], list)
+    gt_is_list = isinstance(gt[0], list)
+    if not pred_is_list:
+        pred = [pred]
+    if not gt_is_list:
+        gt = [gt]
     pred, gt = np.array(pred), np.array(gt)
-    inter_left = np.maximum(pred[:,0,None], gt[None,:,0])
-    inter_right = np.minimum(pred[:,1,None], gt[None,:,1])
+    inter_left = np.maximum(pred[:, 0, None], gt[None, :, 0])
+    inter_right = np.minimum(pred[:, 1, None], gt[None, :, 1])
     inter = np.maximum(0.0, inter_right - inter_left)
-    union_left = np.minimum(pred[:,0,None], gt[None,:,0])
-    union_right = np.maximum(pred[:,1,None], gt[None,:,1])
+    union_left = np.minimum(pred[:, 0, None], gt[None, :, 0])
+    union_right = np.maximum(pred[:, 1, None], gt[None, :, 1])
     union = np.maximum(0.0, union_right - union_left)
     overlap = 1.0 * inter / union
     if not gt_is_list:
-        overlap = overlap[:,0]
+        overlap = overlap[:, 0]
     if not pred_is_list:
         overlap = overlap[0]
     return overlap
 
-def evaluation_retrieval(gt, pred, subset, tiou):
 
-    ego4d_MR = Moment_Retrieval(ground_truth_filename = gt,
-                   prediction_filename = pred,
-                   subset=subset, tiou_thresholds=tiou,
-                   verbose=True, check_status=False)
+def evaluation_retrieval(gt, pred, subset, tiou):
+    ego4d_MR = Moment_Retrieval(
+        ground_truth_filename=gt,
+        prediction_filename=pred,
+        subset=subset,
+        tiou_thresholds=tiou,
+        verbose=True,
+        check_status=False,
+    )
 
     eval_result = ego4d_MR.evaluate()
 

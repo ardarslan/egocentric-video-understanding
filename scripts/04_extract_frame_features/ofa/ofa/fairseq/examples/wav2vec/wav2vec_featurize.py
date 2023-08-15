@@ -23,7 +23,7 @@ from torch import nn
 
 
 def read_audio(fname):
-    """ Load an audio file and return PCM along with the sample rate """
+    """Load an audio file and return PCM along with the sample rate"""
 
     wav, sr = sf.read(fname)
     assert sr == 16e3
@@ -35,7 +35,9 @@ class PretrainedWav2VecModel(nn.Module):
     def __init__(self, fname):
         super().__init__()
 
-        model, cfg, task = fairseq.checkpoint_utils.load_model_ensemble_and_task([fname])
+        model, cfg, task = fairseq.checkpoint_utils.load_model_ensemble_and_task(
+            [fname]
+        )
         model = model[0]
         model.eval()
 
@@ -78,7 +80,7 @@ class EmbeddingWriterConfig(argparse.ArgumentParser):
 
 
 class Prediction:
-    """ Lightweight wrapper around a fairspeech embedding model """
+    """Lightweight wrapper around a fairspeech embedding model"""
 
     def __init__(self, fname, gpu=0):
         self.gpu = gpu
@@ -93,7 +95,7 @@ class Prediction:
 
 
 class H5Writer:
-    """ Write features as hdf5 file in flashlight compatible format """
+    """Write features as hdf5 file in flashlight compatible format"""
 
     def __init__(self, fname):
         self.fname = fname
@@ -131,7 +133,6 @@ class EmbeddingDatasetWriter(object):
         verbose=False,
         use_feat=False,
     ):
-
         assert os.path.exists(model_fname)
 
         self.model_fname = model_fname
@@ -194,7 +195,6 @@ class EmbeddingDatasetWriter(object):
         return len(self.input_fnames)
 
     def write_features(self):
-
         paths = self.input_fnames
 
         fnames_context = map(
@@ -214,18 +214,15 @@ class EmbeddingDatasetWriter(object):
             writer.write(feat)
 
     def __repr__(self):
-
         return "EmbeddingDatasetWriter ({n_files} files)\n\tinput:\t{input_root}\n\toutput:\t{output_root}\n\tsplit:\t{split})".format(
             n_files=len(self), **self.__dict__
         )
 
 
 if __name__ == "__main__":
-
     args = EmbeddingWriterConfig().parse_args()
 
     for split in args.split:
-
         writer = EmbeddingDatasetWriter(
             input_root=args.input,
             output_root=args.output,

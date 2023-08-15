@@ -22,7 +22,6 @@ from ..bert.test_tokenization_bert import BertTokenizationTest
 
 @require_tokenizers
 class DistilBertTokenizationTest(BertTokenizationTest):
-
     tokenizer_class = DistilBertTokenizer
     rust_tokenizer_class = DistilBertTokenizerFast
     test_rust_tokenizer = True
@@ -37,7 +36,9 @@ class DistilBertTokenizationTest(BertTokenizationTest):
         encoded_sentence = tokenizer.build_inputs_with_special_tokens(text)
         encoded_pair = tokenizer.build_inputs_with_special_tokens(text, text_2)
 
-        assert encoded_sentence == [tokenizer.cls_token_id] + text + [tokenizer.sep_token_id]
-        assert encoded_pair == [tokenizer.cls_token_id] + text + [tokenizer.sep_token_id] + text_2 + [
+        assert encoded_sentence == [tokenizer.cls_token_id] + text + [
             tokenizer.sep_token_id
         ]
+        assert encoded_pair == [tokenizer.cls_token_id] + text + [
+            tokenizer.sep_token_id
+        ] + text_2 + [tokenizer.sep_token_id]

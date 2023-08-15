@@ -58,15 +58,11 @@ class TestGradientScalingAMP(unittest.TestCase):
         self.scaler.update()
         self.assertEqual(
             model.weight,
-            torch.tensor(
-                [[3.1]], device="cuda:0", requires_grad=True
-            ),
+            torch.tensor([[3.1]], device="cuda:0", requires_grad=True),
         )
         self.assertEqual(
             model.bias,
-            torch.tensor(
-                [5.1], device="cuda:0", requires_grad=True
-            ),
+            torch.tensor([5.1], device="cuda:0", requires_grad=True),
         )
         self.assertEqual(self.scaler.get_scale(), 2.0)
 

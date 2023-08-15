@@ -60,7 +60,9 @@ class TestTranslationGPU(unittest.TestCase):
         self._test_resume_training(["--ddp-backend", "fully_sharded"])
 
     def test_resume_training_fsdp_sharded_state(self):
-        self._test_resume_training(["--ddp-backend", "fully_sharded", "--use-sharded-state"])
+        self._test_resume_training(
+            ["--ddp-backend", "fully_sharded", "--use-sharded-state"]
+        )
 
     def test_resume_training_noc10d(self):
         self._test_resume_training([])
@@ -84,7 +86,10 @@ class TestTranslationGPU(unittest.TestCase):
                 create_dummy_data(data_dir)
                 preprocess_translation_data(data_dir)
                 train_translation_model(
-                    data_dir, arch, flags + ["--log-file", log], world_size=world_size,
+                    data_dir,
+                    arch,
+                    flags + ["--log-file", log],
+                    world_size=world_size,
                 )
                 log2 = os.path.join(data_dir, "resume.log")
                 restore_file = os.path.join(data_dir, "checkpoint_1_2.pt")
@@ -244,7 +249,13 @@ class TestTranslationGPU(unittest.TestCase):
                 train_translation_model(
                     data_dir,
                     "fconv_iwslt_de_en",
-                    ["--log-file", log, "--ddp-backend", "fully_sharded", "--use-sharded-state"],
+                    [
+                        "--log-file",
+                        log,
+                        "--ddp-backend",
+                        "fully_sharded",
+                        "--use-sharded-state",
+                    ],
                     world_size=world_size,
                 )
                 generate_main(data_dir, ["--checkpoint-shard-count", str(world_size)])

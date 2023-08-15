@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 """
@@ -48,7 +48,7 @@ class OFAModel(TransformerModel):
         parser.add_argument(
             "--pooler-classifier",
             type=str,
-            choices=['mlp', 'linear'],
+            choices=["mlp", "linear"],
             help="type of pooler classifier",
         )
         parser.add_argument(
@@ -94,7 +94,7 @@ class OFAModel(TransformerModel):
             patch_images_2=patch_images_2,
             token_embeddings=token_embeddings,
             return_all_hiddens=return_all_hiddens,
-            sample_patch_num=sample_patch_num
+            sample_patch_num=sample_patch_num,
         )
         x, extra = self.decoder(
             prev_output_tokens,
@@ -110,11 +110,15 @@ class OFAModel(TransformerModel):
         pad = self.encoder.padding_idx
         if classification_head_name is not None:
             prev_lengths = prev_output_tokens.ne(pad).sum(1)
-            gather_index = prev_lengths[:, None, None].expand(x.size(0), 1, x.size(2)) - 1
+            gather_index = (
+                prev_lengths[:, None, None].expand(x.size(0), 1, x.size(2)) - 1
+            )
             sentence_representation = x.gather(1, gather_index).squeeze()
             if self.classification_heads[classification_head_name].use_two_images:
                 hidden_size = sentence_representation.size(1)
-                sentence_representation = sentence_representation.view(-1, hidden_size * 2)
+                sentence_representation = sentence_representation.view(
+                    -1, hidden_size * 2
+                )
             for k, head in self.classification_heads.items():
                 # for torch script only supports iteration
                 if k == classification_head_name:
@@ -128,12 +132,12 @@ class OFAModel(TransformerModel):
         logger.info("Registering embedding tokens")
         self.ans_tensor_list = []
         for i in range(len(ans2label_dict)):
-            ans = src_dict[-len(ans2label_dict)+i]
-            ans = ans[5:-1].replace('_', ' ')
+            ans = src_dict[-len(ans2label_dict) + i]
+            ans = ans[5:-1].replace("_", " ")
             ans_tensor = src_dict.encode_line(
-                line=bpe.encode(' {}'.format(ans.lower())),
+                line=bpe.encode(" {}".format(ans.lower())),
                 add_if_not_exist=False,
-                append_eos=False
+                append_eos=False,
             ).long()
             self.ans_tensor_list.append(ans_tensor)
 
@@ -239,11 +243,13 @@ class OFAModel(TransformerModel):
             if getattr(self, "ans_tensor_list", None):
                 assert len(new_lang_embed_to_add) == len(self.ans_tensor_list)
                 for i, ans_tensor in enumerate(self.ans_tensor_list):
-                    ans_embed = F.embedding(ans_tensor, state_dict["encoder.embed_tokens.weight"])
+                    ans_embed = F.embedding(
+                        ans_tensor, state_dict["encoder.embed_tokens.weight"]
+                    )
                     ans_embed = ans_embed.sum(0) / ans_embed.size(0)
                     new_lang_embed_to_add[i] = ans_embed
             else:
-                nn.init.normal_(new_lang_embed_to_add, mean=0, std=embed_dim ** -0.5)
+                nn.init.normal_(new_lang_embed_to_add, mean=0, std=embed_dim**-0.5)
             new_lang_embed_to_add = new_lang_embed_to_add.to(
                 dtype=state_dict["encoder.embed_tokens.weight"].dtype,
             )
@@ -301,14 +307,14 @@ class OFAClassificationHead(nn.Module):
             self.out_proj = torch.nn.utils.spectral_norm(self.out_proj)
 
     def forward(self, features, **kwargs):
-        if self.pooler_classifier == 'mlp':
+        if self.pooler_classifier == "mlp":
             x = features
             x = self.dropout(x)
             x = self.dense(x)
             x = self.activation_fn(x)
             x = self.dropout(x)
             x = self.out_proj(x)
-        elif self.pooler_classifier == 'linear':
+        elif self.pooler_classifier == "linear":
             x = features
             x = self.dropout(x)
             x = self.out_proj(x)
@@ -376,7 +382,9 @@ def ofa_large_architecture(args):
     args.code_image_size = getattr(args, "code_image_size", 128)
     args.patch_layernorm_embedding = getattr(args, "patch_layernorm_embedding", True)
     args.code_layernorm_embedding = getattr(args, "code_layernorm_embedding", True)
-    args.entangle_position_embedding = getattr(args, "entangle_position_embedding", False)
+    args.entangle_position_embedding = getattr(
+        args, "entangle_position_embedding", False
+    )
     args.disable_entangle = getattr(args, "disable_entangle", False)
     args.sync_bn = getattr(args, "sync_bn", False)
 

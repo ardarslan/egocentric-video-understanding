@@ -56,9 +56,15 @@ if TYPE_CHECKING:
         )
 
     if is_flax_available():
-        from .modeling_flax_gptj import FlaxGPTJForCausalLM, FlaxGPTJModel, FlaxGPTJPreTrainedModel
+        from .modeling_flax_gptj import (
+            FlaxGPTJForCausalLM,
+            FlaxGPTJModel,
+            FlaxGPTJPreTrainedModel,
+        )
 
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

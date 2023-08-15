@@ -8,7 +8,7 @@ from .data.datasets.viper import categories
 from .data.datasets.wilddash import categories
 from .data.datasets.crowdhuman import categories
 from .data.datasets.voc_cocoformat import categories
-from .data.datasets.cityscapes_cocoformat import categories 
+from .data.datasets.cityscapes_cocoformat import categories
 
 from .modeling.backbone.fpn_p5 import build_p67_resnet_fpn_backbone
 from .modeling.backbone.resnest import build_p67_resnest_fpn_backbone

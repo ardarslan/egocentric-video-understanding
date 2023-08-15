@@ -198,7 +198,6 @@ class UnpairedAudioText(FairseqTask):
                 sample["id"],
             )
         ):
-
             if t is not None:
                 t = t[(t >= self.target_dictionary.nspecial)]
             x = x[

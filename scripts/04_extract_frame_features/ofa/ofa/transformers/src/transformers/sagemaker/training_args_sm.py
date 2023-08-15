@@ -64,7 +64,9 @@ if is_sagemaker_model_parallel_available():
 class SageMakerTrainingArguments(TrainingArguments):
     mp_parameters: str = field(
         default="",
-        metadata={"help": "Used by the SageMaker launcher to send mp-specific args. Ignored in SageMakerTrainer"},
+        metadata={
+            "help": "Used by the SageMaker launcher to send mp-specific args. Ignored in SageMakerTrainer"
+        },
     )
 
     def __post_init__(self):

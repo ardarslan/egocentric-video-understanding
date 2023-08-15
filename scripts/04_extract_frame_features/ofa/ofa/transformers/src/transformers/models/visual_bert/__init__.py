@@ -21,7 +21,10 @@ from ...file_utils import _LazyModule, is_torch_available
 
 
 _import_structure = {
-    "configuration_visual_bert": ["VISUAL_BERT_PRETRAINED_CONFIG_ARCHIVE_MAP", "VisualBertConfig"],
+    "configuration_visual_bert": [
+        "VISUAL_BERT_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "VisualBertConfig",
+    ],
 }
 
 if is_torch_available():
@@ -39,7 +42,10 @@ if is_torch_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_visual_bert import VISUAL_BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, VisualBertConfig
+    from .configuration_visual_bert import (
+        VISUAL_BERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        VisualBertConfig,
+    )
 
     if is_torch_available():
         from .modeling_visual_bert import (
@@ -58,4 +64,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

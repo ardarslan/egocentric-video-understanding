@@ -17,13 +17,15 @@
 import os
 import unittest
 
-from transformers.models.transfo_xl.tokenization_transfo_xl import VOCAB_FILES_NAMES, TransfoXLTokenizer
+from transformers.models.transfo_xl.tokenization_transfo_xl import (
+    VOCAB_FILES_NAMES,
+    TransfoXLTokenizer,
+)
 
 from ..test_tokenization_common import TokenizerTesterMixin
 
 
 class TransfoXLTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
-
     tokenizer_class = TransfoXLTokenizer
     test_rust_tokenizer = False
     test_seq2seq = False
@@ -69,14 +71,16 @@ class TransfoXLTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tokenizer = TransfoXLTokenizer(lower_case=True)
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHeLLo ! how  \n Are yoU ?  "), ["hello", "!", "how", "are", "you", "?"]
+            tokenizer.tokenize(" \tHeLLo ! how  \n Are yoU ?  "),
+            ["hello", "!", "how", "are", "you", "?"],
         )
 
     def test_full_tokenizer_no_lower(self):
         tokenizer = TransfoXLTokenizer(lower_case=False)
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHeLLo ! how  \n Are yoU ?  "), ["HeLLo", "!", "how", "Are", "yoU", "?"]
+            tokenizer.tokenize(" \tHeLLo ! how  \n Are yoU ?  "),
+            ["HeLLo", "!", "how", "Are", "yoU", "?"],
         )
 
     def test_full_tokenizer_moses_numbers(self):

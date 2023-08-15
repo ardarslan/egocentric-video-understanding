@@ -1,7 +1,13 @@
 from functools import partial, reduce
 from typing import Callable, Dict, Optional, Tuple, Type, Union
 
-from .. import PretrainedConfig, PreTrainedModel, TFPreTrainedModel, is_tf_available, is_torch_available
+from .. import (
+    PretrainedConfig,
+    PreTrainedModel,
+    TFPreTrainedModel,
+    is_tf_available,
+    is_torch_available,
+)
 from ..models.albert import AlbertOnnxConfig
 from ..models.bart import BartOnnxConfig
 from ..models.bert import BertOnnxConfig
@@ -189,7 +195,11 @@ class FeaturesManager:
             onnx_config_cls=MarianOnnxConfig,
         ),
         "m2m-100": supported_features_mapping(
-            "default", "default-with-past", "seq2seq-lm", "seq2seq-lm-with-past", onnx_config_cls=M2M100OnnxConfig
+            "default",
+            "default-with-past",
+            "seq2seq-lm",
+            "seq2seq-lm-with-past",
+            onnx_config_cls=M2M100OnnxConfig,
         ),
         "roberta": supported_features_mapping(
             "default",
@@ -202,7 +212,11 @@ class FeaturesManager:
             onnx_config_cls=RobertaOnnxConfig,
         ),
         "t5": supported_features_mapping(
-            "default", "default-with-past", "seq2seq-lm", "seq2seq-lm-with-past", onnx_config_cls=T5OnnxConfig
+            "default",
+            "default-with-past",
+            "seq2seq-lm",
+            "seq2seq-lm-with-past",
+            onnx_config_cls=T5OnnxConfig,
         ),
         "xlm-roberta": supported_features_mapping(
             "default",
@@ -247,10 +261,16 @@ class FeaturesManager:
             "question-answering",
             onnx_config_cls=ElectraOnnxConfig,
         ),
-        "vit": supported_features_mapping("default", "image-classification", onnx_config_cls=ViTOnnxConfig),
+        "vit": supported_features_mapping(
+            "default", "image-classification", onnx_config_cls=ViTOnnxConfig
+        ),
     }
 
-    AVAILABLE_FEATURES = sorted(reduce(lambda s1, s2: s1 | s2, (v.keys() for v in _SUPPORTED_MODEL_TYPE.values())))
+    AVAILABLE_FEATURES = sorted(
+        reduce(
+            lambda s1, s2: s1 | s2, (v.keys() for v in _SUPPORTED_MODEL_TYPE.values())
+        )
+    )
 
     @staticmethod
     def get_supported_features_for_model_type(
@@ -270,7 +290,9 @@ class FeaturesManager:
         """
         model_type = model_type.lower()
         if model_type not in FeaturesManager._SUPPORTED_MODEL_TYPE:
-            model_type_and_model_name = f"{model_type} ({model_name})" if model_name else model_type
+            model_type_and_model_name = (
+                f"{model_type} ({model_name})" if model_name else model_type
+            )
             raise KeyError(
                 f"{model_type_and_model_name} is not supported yet. "
                 f"Only {list(FeaturesManager._SUPPORTED_MODEL_TYPE.keys())} are supported. "
@@ -293,9 +315,13 @@ class FeaturesManager:
                 f"Only two frameworks are supported for ONNX export: pt or tf, but {framework} was provided."
             )
         elif framework == "pt" and not is_torch_available():
-            raise RuntimeError("Cannot export model to ONNX using PyTorch because no PyTorch package was found.")
+            raise RuntimeError(
+                "Cannot export model to ONNX using PyTorch because no PyTorch package was found."
+            )
         elif framework == "tf" and not is_tf_available():
-            raise RuntimeError("Cannot export model to ONNX using TensorFlow because no TensorFlow package was found.")
+            raise RuntimeError(
+                "Cannot export model to ONNX using TensorFlow because no TensorFlow package was found."
+            )
 
     @staticmethod
     def get_model_class_for_feature(feature: str, framework: str = "pt") -> Type:
@@ -369,11 +395,16 @@ class FeaturesManager:
         """
         model_type = model.config.model_type.replace("_", "-")
         model_name = getattr(model, "name", "")
-        model_features = FeaturesManager.get_supported_features_for_model_type(model_type, model_name=model_name)
+        model_features = FeaturesManager.get_supported_features_for_model_type(
+            model_type, model_name=model_name
+        )
         if feature not in model_features:
             raise ValueError(
                 f"{model.config.model_type} doesn't support feature {feature}. "
                 f"Supported values are: {model_features}"
             )
 
-        return model.config.model_type, FeaturesManager._SUPPORTED_MODEL_TYPE[model_type][feature]
+        return (
+            model.config.model_type,
+            FeaturesManager._SUPPORTED_MODEL_TYPE[model_type][feature],
+        )

@@ -45,9 +45,14 @@ tokenizer_dict = {"facebook/bart-base": BartTokenizer}
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Export Bart model + Beam Search to ONNX graph.")
+    parser = argparse.ArgumentParser(
+        description="Export Bart model + Beam Search to ONNX graph."
+    )
     parser.add_argument(
-        "--validation_file", type=str, default=None, help="A csv or a json file containing the validation data."
+        "--validation_file",
+        type=str,
+        default=None,
+        help="A csv or a json file containing the validation data.",
     )
     parser.add_argument(
         "--max_length",
@@ -80,7 +85,12 @@ def parse_args():
         default="cpu",
         help="Device where the model will be run",
     )
-    parser.add_argument("--output_file_path", type=str, default=None, help="Where to store the final ONNX file.")
+    parser.add_argument(
+        "--output_file_path",
+        type=str,
+        default=None,
+        help="Where to store the final ONNX file.",
+    )
 
     args = parser.parse_args()
 
@@ -107,7 +117,9 @@ def export_and_validate_model(model, tokenizer, onnx_file_path, num_beams, max_l
 
     with torch.no_grad():
         ARTICLE_TO_SUMMARIZE = "My friends are cool but they eat too many carbs."
-        inputs = tokenizer([ARTICLE_TO_SUMMARIZE], max_length=1024, return_tensors="pt").to(model.device)
+        inputs = tokenizer(
+            [ARTICLE_TO_SUMMARIZE], max_length=1024, return_tensors="pt"
+        ).to(model.device)
 
         summary_ids = model.generate(
             inputs["input_ids"],
@@ -129,7 +141,13 @@ def export_and_validate_model(model, tokenizer, onnx_file_path, num_beams, max_l
             ),
             onnx_file_path,
             opset_version=14,
-            input_names=["input_ids", "attention_mask", "num_beams", "max_length", "decoder_start_token_id"],
+            input_names=[
+                "input_ids",
+                "attention_mask",
+                "num_beams",
+                "max_length",
+                "decoder_start_token_id",
+            ],
             output_names=["output_ids"],
             dynamic_axes={
                 "input_ids": {0: "batch", 1: "seq"},
@@ -142,7 +160,9 @@ def export_and_validate_model(model, tokenizer, onnx_file_path, num_beams, max_l
 
         new_onnx_file_path = remove_dup_initializers(os.path.abspath(onnx_file_path))
 
-        logger.info("Deduplicated and optimized model written to {}".format(new_onnx_file_path))
+        logger.info(
+            "Deduplicated and optimized model written to {}".format(new_onnx_file_path)
+        )
 
         ort_sess = onnxruntime.InferenceSession(new_onnx_file_path)
         ort_out = ort_sess.run(
@@ -156,7 +176,9 @@ def export_and_validate_model(model, tokenizer, onnx_file_path, num_beams, max_l
             },
         )
 
-        np.testing.assert_allclose(summary_ids.cpu().numpy(), ort_out[0], rtol=1e-3, atol=1e-3)
+        np.testing.assert_allclose(
+            summary_ids.cpu().numpy(), ort_out[0], rtol=1e-3, atol=1e-3
+        )
 
         logger.info("Model outputs from torch and ONNX Runtime are similar.")
         logger.info("Success.")
@@ -182,7 +204,9 @@ def main():
     model, tokenizer = load_model_tokenizer(args.model_name_or_path, device)
 
     if model.config.decoder_start_token_id is None:
-        raise ValueError("Make sure that `config.decoder_start_token_id` is correctly defined")
+        raise ValueError(
+            "Make sure that `config.decoder_start_token_id` is correctly defined"
+        )
 
     model.to(device)
 

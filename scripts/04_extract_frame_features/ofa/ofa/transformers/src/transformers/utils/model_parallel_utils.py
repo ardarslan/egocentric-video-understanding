@@ -19,7 +19,9 @@ from math import ceil
 def assert_device_map(device_map, num_blocks):
     blocks = list(range(0, num_blocks))
 
-    device_map_blocks = [item for sublist in list(device_map.values()) for item in sublist]
+    device_map_blocks = [
+        item for sublist in list(device_map.values()) for item in sublist
+    ]
 
     # Duplicate check
     duplicate_blocks = []

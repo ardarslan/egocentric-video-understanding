@@ -1,6 +1,6 @@
-# Copyright 2022 The OFA-Sys Team. 
+# Copyright 2022 The OFA-Sys Team.
 # All rights reserved.
-# This source code is licensed under the Apache 2.0 license 
+# This source code is licensed under the Apache 2.0 license
 # found in the LICENSE file in the root directory.
 
 from dataclasses import dataclass, field
@@ -27,7 +27,7 @@ class OFAConfig(FairseqDataclass):
         default=None,
         metadata={
             "help": "comma separated path to data list, will be iterated upon during epochs "
-                    "in round-robin manner; valid data are always in the last"
+            "in round-robin manner; valid data are always in the last"
         },
     )
     selected_cols: Optional[str] = field(
@@ -51,12 +51,8 @@ class OFAConfig(FairseqDataclass):
         default=30, metadata={"help": "the maximum target sequence length"}
     )
 
-    code_dict_size: int = field(
-        default=8192, metadata={"help": "code dict size"}
-    )
-    patch_image_size: int = field(
-        default=480, metadata={"help": "patch image size"}
-    )
+    code_dict_size: int = field(default=8192, metadata={"help": "code dict size"})
+    patch_image_size: int = field(default=480, metadata={"help": "patch image size"})
     num_bins: int = field(
         default=1000, metadata={"help": "number of quantization bins"}
     )
@@ -66,8 +62,7 @@ class OFAConfig(FairseqDataclass):
         metadata={"help": "imagenet normalize"},
     )
     constraint_range: Optional[str] = field(
-        default=None,
-        metadata={"help": "constraint range"}
+        default=None, metadata={"help": "constraint range"}
     )
 
 
@@ -83,12 +78,8 @@ class OFATask(FairseqTask):
         """Setup the task."""
 
         # load dictionaries
-        src_dict = cls.load_dictionary(
-            os.path.join(cfg.bpe_dir, "dict.txt")
-        )
-        tgt_dict = cls.load_dictionary(
-            os.path.join(cfg.bpe_dir, "dict.txt")
-        )
+        src_dict = cls.load_dictionary(os.path.join(cfg.bpe_dir, "dict.txt"))
+        tgt_dict = cls.load_dictionary(os.path.join(cfg.bpe_dir, "dict.txt"))
         src_dict.add_symbol("<mask>")
         tgt_dict.add_symbol("<mask>")
         for i in range(cfg.code_dict_size):
@@ -144,7 +135,7 @@ class OFATask(FairseqTask):
             shard_id=0,
             num_workers=num_workers,
             epoch=epoch,
-            buffer_size=data_buffer_size
+            buffer_size=data_buffer_size,
         )
 
         return epoch_iter
@@ -154,14 +145,19 @@ class OFATask(FairseqTask):
         bpe_dict = {
             "_name": "gpt2",
             "gpt2_encoder_json": os.path.join(self.cfg.bpe_dir, "encoder.json"),
-            "gpt2_vocab_bpe": os.path.join(self.cfg.bpe_dir, "vocab.bpe")
+            "gpt2_vocab_bpe": os.path.join(self.cfg.bpe_dir, "vocab.bpe"),
         }
         bpe_dict = DictConfig(bpe_dict)
         self.bpe = self.build_bpe(bpe_dict)
         return model
 
     def build_generator(
-        self, models, args, seq_gen_cls=None, extra_gen_cls_kwargs=None, prefix_allowed_tokens_fn=None,
+        self,
+        models,
+        args,
+        seq_gen_cls=None,
+        extra_gen_cls_kwargs=None,
+        prefix_allowed_tokens_fn=None,
     ):
         """
         Build a :class:`~fairseq.SequenceGenerator` instance for this
@@ -289,7 +285,14 @@ class OFATask(FairseqTask):
         )
 
     def train_step(
-        self, sample, model, criterion, optimizer, update_num, ignore_grad=False, **extra_kwargs
+        self,
+        sample,
+        model,
+        criterion,
+        optimizer,
+        update_num,
+        ignore_grad=False,
+        **extra_kwargs
     ):
         """
         Do forward and backward, and return the loss as computed by *criterion*
@@ -315,7 +318,9 @@ class OFATask(FairseqTask):
         model.set_num_updates(update_num)
         with torch.autograd.profiler.record_function("forward"):
             with torch.cuda.amp.autocast(enabled=(isinstance(optimizer, AMPOptimizer))):
-                loss, sample_size, logging_output = criterion(model, sample, update_num=update_num)
+                loss, sample_size, logging_output = criterion(
+                    model, sample, update_num=update_num
+                )
         if ignore_grad:
             loss *= 0
         with torch.autograd.profiler.record_function("backward"):

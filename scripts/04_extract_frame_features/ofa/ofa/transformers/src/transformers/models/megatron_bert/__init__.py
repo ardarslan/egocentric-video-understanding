@@ -21,7 +21,10 @@ from ...file_utils import _LazyModule, is_torch_available
 
 
 _import_structure = {
-    "configuration_megatron_bert": ["MEGATRON_BERT_PRETRAINED_CONFIG_ARCHIVE_MAP", "MegatronBertConfig"],
+    "configuration_megatron_bert": [
+        "MEGATRON_BERT_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "MegatronBertConfig",
+    ],
 }
 
 if is_torch_available():
@@ -40,7 +43,10 @@ if is_torch_available():
     ]
 
 if TYPE_CHECKING:
-    from .configuration_megatron_bert import MEGATRON_BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, MegatronBertConfig
+    from .configuration_megatron_bert import (
+        MEGATRON_BERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        MegatronBertConfig,
+    )
 
     if is_torch_available():
         from .modeling_megatron_bert import (
@@ -60,4 +66,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

@@ -337,14 +337,24 @@ TF_MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING_NAMES = OrderedDict(
 
 
 TF_MODEL_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, TF_MODEL_MAPPING_NAMES)
-TF_MODEL_FOR_PRETRAINING_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, TF_MODEL_FOR_PRETRAINING_MAPPING_NAMES)
-TF_MODEL_WITH_LM_HEAD_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, TF_MODEL_WITH_LM_HEAD_MAPPING_NAMES)
-TF_MODEL_FOR_CAUSAL_LM_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, TF_MODEL_FOR_CAUSAL_LM_MAPPING_NAMES)
+TF_MODEL_FOR_PRETRAINING_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, TF_MODEL_FOR_PRETRAINING_MAPPING_NAMES
+)
+TF_MODEL_WITH_LM_HEAD_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, TF_MODEL_WITH_LM_HEAD_MAPPING_NAMES
+)
+TF_MODEL_FOR_CAUSAL_LM_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, TF_MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
+)
 TF_MODEL_FOR_IMAGE_CLASSIFICATION_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, TF_MODEL_FOR_IMAGE_CLASSIFICATION_MAPPING_NAMES
 )
-TF_MODEL_FOR_VISION_2_SEQ_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, TF_MODEL_FOR_VISION_2_SEQ_MAPPING_NAMES)
-TF_MODEL_FOR_MASKED_LM_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, TF_MODEL_FOR_MASKED_LM_MAPPING_NAMES)
+TF_MODEL_FOR_VISION_2_SEQ_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, TF_MODEL_FOR_VISION_2_SEQ_MAPPING_NAMES
+)
+TF_MODEL_FOR_MASKED_LM_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, TF_MODEL_FOR_MASKED_LM_MAPPING_NAMES
+)
 TF_MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, TF_MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING_NAMES
 )
@@ -382,7 +392,9 @@ class TFAutoModelForPreTraining(_BaseAutoModelClass):
     _model_mapping = TF_MODEL_FOR_PRETRAINING_MAPPING
 
 
-TFAutoModelForPreTraining = auto_class_update(TFAutoModelForPreTraining, head_doc="pretraining")
+TFAutoModelForPreTraining = auto_class_update(
+    TFAutoModelForPreTraining, head_doc="pretraining"
+)
 
 
 # Private on purpose, the public class will add the deprecation warnings.
@@ -390,35 +402,45 @@ class _TFAutoModelWithLMHead(_BaseAutoModelClass):
     _model_mapping = TF_MODEL_WITH_LM_HEAD_MAPPING
 
 
-_TFAutoModelWithLMHead = auto_class_update(_TFAutoModelWithLMHead, head_doc="language modeling")
+_TFAutoModelWithLMHead = auto_class_update(
+    _TFAutoModelWithLMHead, head_doc="language modeling"
+)
 
 
 class TFAutoModelForCausalLM(_BaseAutoModelClass):
     _model_mapping = TF_MODEL_FOR_CAUSAL_LM_MAPPING
 
 
-TFAutoModelForCausalLM = auto_class_update(TFAutoModelForCausalLM, head_doc="causal language modeling")
+TFAutoModelForCausalLM = auto_class_update(
+    TFAutoModelForCausalLM, head_doc="causal language modeling"
+)
 
 
 class TFAutoModelForImageClassification(_BaseAutoModelClass):
     _model_mapping = TF_MODEL_FOR_IMAGE_CLASSIFICATION_MAPPING
 
 
-AutoModelForImageClassification = auto_class_update(TFAutoModelForImageClassification, head_doc="image classification")
+AutoModelForImageClassification = auto_class_update(
+    TFAutoModelForImageClassification, head_doc="image classification"
+)
 
 
 class TFAutoModelForVision2Seq(_BaseAutoModelClass):
     _model_mapping = TF_MODEL_FOR_VISION_2_SEQ_MAPPING
 
 
-TFAutoModelForVision2Seq = auto_class_update(TFAutoModelForVision2Seq, head_doc="vision-to-text modeling")
+TFAutoModelForVision2Seq = auto_class_update(
+    TFAutoModelForVision2Seq, head_doc="vision-to-text modeling"
+)
 
 
 class TFAutoModelForMaskedLM(_BaseAutoModelClass):
     _model_mapping = TF_MODEL_FOR_MASKED_LM_MAPPING
 
 
-TFAutoModelForMaskedLM = auto_class_update(TFAutoModelForMaskedLM, head_doc="masked language modeling")
+TFAutoModelForMaskedLM = auto_class_update(
+    TFAutoModelForMaskedLM, head_doc="masked language modeling"
+)
 
 
 class TFAutoModelForSeq2SeqLM(_BaseAutoModelClass):
@@ -426,7 +448,9 @@ class TFAutoModelForSeq2SeqLM(_BaseAutoModelClass):
 
 
 TFAutoModelForSeq2SeqLM = auto_class_update(
-    TFAutoModelForSeq2SeqLM, head_doc="sequence-to-sequence language modeling", checkpoint_for_example="t5-base"
+    TFAutoModelForSeq2SeqLM,
+    head_doc="sequence-to-sequence language modeling",
+    checkpoint_for_example="t5-base",
 )
 
 
@@ -443,7 +467,9 @@ class TFAutoModelForQuestionAnswering(_BaseAutoModelClass):
     _model_mapping = TF_MODEL_FOR_QUESTION_ANSWERING_MAPPING
 
 
-TFAutoModelForQuestionAnswering = auto_class_update(TFAutoModelForQuestionAnswering, head_doc="question answering")
+TFAutoModelForQuestionAnswering = auto_class_update(
+    TFAutoModelForQuestionAnswering, head_doc="question answering"
+)
 
 
 class TFAutoModelForTableQuestionAnswering(_BaseAutoModelClass):
@@ -470,7 +496,9 @@ class TFAutoModelForMultipleChoice(_BaseAutoModelClass):
     _model_mapping = TF_MODEL_FOR_MULTIPLE_CHOICE_MAPPING
 
 
-TFAutoModelForMultipleChoice = auto_class_update(TFAutoModelForMultipleChoice, head_doc="multiple choice")
+TFAutoModelForMultipleChoice = auto_class_update(
+    TFAutoModelForMultipleChoice, head_doc="multiple choice"
+)
 
 
 class TFAutoModelForNextSentencePrediction(_BaseAutoModelClass):
@@ -510,4 +538,6 @@ class TFAutoModelWithLMHead(_TFAutoModelWithLMHead):
             "`TFAutoModelForSeq2SeqLM` for encoder-decoder models.",
             FutureWarning,
         )
-        return super().from_pretrained(pretrained_model_name_or_path, *model_args, **kwargs)
+        return super().from_pretrained(
+            pretrained_model_name_or_path, *model_args, **kwargs
+        )

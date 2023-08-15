@@ -33,7 +33,12 @@ from ...modeling_flax_outputs import (
     FlaxSequenceClassifierOutput,
     FlaxTokenClassifierOutput,
 )
-from ...modeling_flax_utils import ACT2FN, FlaxPreTrainedModel, append_call_sample_docstring, overwrite_call_docstring
+from ...modeling_flax_utils import (
+    ACT2FN,
+    FlaxPreTrainedModel,
+    append_call_sample_docstring,
+    overwrite_call_docstring,
+)
 from ...utils import logging
 from .configuration_distilbert import DistilBertConfig
 
@@ -101,7 +106,9 @@ def get_angles(pos, i, d_model):
 
 def positional_encoding(position, d_model):
     # create the sinusoidal pattern for the positional encoding
-    angle_rads = get_angles(np.arange(position)[:, np.newaxis], np.arange(d_model)[np.newaxis, :], d_model)
+    angle_rads = get_angles(
+        np.arange(position)[:, np.newaxis], np.arange(d_model)[np.newaxis, :], d_model
+    )
 
     # apply sin to even indices in the array; 2i
     angle_rads[:, 0::2] = np.sin(angle_rads[:, 0::2])
@@ -124,16 +131,22 @@ class FlaxEmbeddings(nn.Module):
         self.word_embeddings = nn.Embed(
             self.config.vocab_size,
             self.config.dim,
-            embedding_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            embedding_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
         if not self.config.sinusoidal_pos_embds:
             self.position_embeddings = nn.Embed(
                 self.config.max_position_embeddings,
                 self.config.dim,
-                embedding_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+                embedding_init=jax.nn.initializers.normal(
+                    stddev=self.config.initializer_range
+                ),
             )
         else:
-            self.pos_encoding = positional_encoding(self.config.max_position_embeddings, self.config.dim)
+            self.pos_encoding = positional_encoding(
+                self.config.max_position_embeddings, self.config.dim
+            )
         self.LayerNorm = nn.LayerNorm(epsilon=1e-12, dtype=self.dtype)
         self.dropout = nn.Dropout(rate=self.config.dropout)
 
@@ -143,7 +156,9 @@ class FlaxEmbeddings(nn.Module):
         inputs_embeds = self.word_embeddings(input_ids.astype("i4"))
         if not self.config.sinusoidal_pos_embds:
             position_ids = jnp.arange(seq_length).astype("i4")
-            position_ids = jnp.broadcast_to(position_ids, shape=(batch_size, seq_length))
+            position_ids = jnp.broadcast_to(
+                position_ids, shape=(batch_size, seq_length)
+            )
             position_embeds = self.position_embeddings(position_ids.astype("i4"))
         else:
             position_embeds = self.pos_encoding[:, :seq_length, :]
@@ -169,27 +184,37 @@ class FlaxMultiHeadSelfAttention(nn.Module):
         self.dropout = nn.Dropout(rate=self.config.attention_dropout)
 
         if not (self.dim % self.n_heads == 0):
-            raise ValueError(f"Hidden size {self.dim} not dividable by number of heads {self.n_heads}")
+            raise ValueError(
+                f"Hidden size {self.dim} not dividable by number of heads {self.n_heads}"
+            )
 
         self.q_lin = nn.Dense(
             self.dim,
             dtype=self.dtype,
-            kernel_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            kernel_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
         self.k_lin = nn.Dense(
             self.dim,
             dtype=self.dtype,
-            kernel_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            kernel_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
         self.v_lin = nn.Dense(
             self.dim,
             dtype=self.dtype,
-            kernel_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            kernel_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
         self.out_lin = nn.Dense(
             self.dim,
             dtype=self.dtype,
-            kernel_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            kernel_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
 
     def __call__(
@@ -201,7 +226,6 @@ class FlaxMultiHeadSelfAttention(nn.Module):
         deterministic: bool = True,
         output_attentions: bool = False,
     ):
-
         bs, q_len, dim = query.shape
         k_len = key.shape[1]
         # assert dim == self.dim, f'Dimensions do not match: {dim} input vs {self.dim} configured'
@@ -254,12 +278,16 @@ class FlaxFFN(nn.Module):
         self.lin1 = nn.Dense(
             self.config.hidden_dim,
             dtype=self.dtype,
-            kernel_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            kernel_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
         self.lin2 = nn.Dense(
             self.config.dim,
             dtype=self.dtype,
-            kernel_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            kernel_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
 
         self.activation = ACT2FN[self.config.activation]
@@ -325,7 +353,8 @@ class FlaxTransformer(nn.Module):
 
     def setup(self):
         self.layers = [
-            FlaxTransformerBlock(self.config, name=str(i), dtype=self.dtype) for i in range(self.config.n_layers)
+            FlaxTransformerBlock(self.config, name=str(i), dtype=self.dtype)
+            for i in range(self.config.n_layers)
         ]
 
     def __call__(
@@ -364,9 +393,15 @@ class FlaxTransformer(nn.Module):
             all_hidden_states = all_hidden_states + (hidden_states,)
 
         if not return_dict:
-            return tuple(v for v in [hidden_states, all_attentions, all_hidden_states] if v is not None)
+            return tuple(
+                v
+                for v in [hidden_states, all_attentions, all_hidden_states]
+                if v is not None
+            )
         return FlaxBaseModelOutput(
-            last_hidden_state=hidden_states, hidden_states=all_hidden_states, attentions=all_attentions
+            last_hidden_state=hidden_states,
+            hidden_states=all_hidden_states,
+            attentions=all_attentions,
         )
 
 
@@ -429,10 +464,12 @@ class FlaxDistilBertPreTrainedModel(FlaxPreTrainedModel):
         input_shape: Tuple = (1, 1),
         seed: int = 0,
         dtype: jnp.dtype = jnp.float32,
-        **kwargs
+        **kwargs,
     ):
         module = self.module_class(config=config, dtype=dtype, **kwargs)
-        super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+        super().__init__(
+            config, module, input_shape=input_shape, seed=seed, dtype=dtype
+        )
 
     def init_weights(self, rng: jax.random.PRNGKey, input_shape: Tuple) -> FrozenDict:
         # init input tensors
@@ -442,9 +479,13 @@ class FlaxDistilBertPreTrainedModel(FlaxPreTrainedModel):
         params_rng, dropout_rng = jax.random.split(rng)
         rngs = {"params": params_rng, "dropout": dropout_rng}
 
-        return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+        return self.module.init(rngs, input_ids, attention_mask, return_dict=False)[
+            "params"
+        ]
 
-    @add_start_docstrings_to_model_forward(DISTILBERT_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
+    @add_start_docstrings_to_model_forward(
+        DISTILBERT_INPUTS_DOCSTRING.format("batch_size, sequence_length")
+    )
     def __call__(
         self,
         input_ids,
@@ -457,11 +498,19 @@ class FlaxDistilBertPreTrainedModel(FlaxPreTrainedModel):
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
     ):
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
-        return_dict = return_dict if return_dict is not None else self.config.return_dict
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
+        return_dict = (
+            return_dict if return_dict is not None else self.config.return_dict
+        )
 
         if attention_mask is None:
             attention_mask = jnp.ones_like(input_ids)
@@ -500,11 +549,19 @@ class FlaxDistilBertModule(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
-        return_dict = return_dict if return_dict is not None else self.config.return_dict
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
+        return_dict = (
+            return_dict if return_dict is not None else self.config.return_dict
+        )
 
         input_embeds = self.embeddings(input_ids, deterministic=deterministic)
         return self.transformer(
@@ -525,7 +582,9 @@ class FlaxDistilBertModel(FlaxDistilBertPreTrainedModel):
     module_class = FlaxDistilBertModule
 
 
-append_call_sample_docstring(FlaxDistilBertModel, _TOKENIZER_FOR_DOC, _CHECKPOINT_FOR_DOC, None, _CONFIG_FOR_DOC)
+append_call_sample_docstring(
+    FlaxDistilBertModel, _TOKENIZER_FOR_DOC, _CHECKPOINT_FOR_DOC, None, _CONFIG_FOR_DOC
+)
 
 
 class FlaxDistilBertForMaskedLMModule(nn.Module):
@@ -537,7 +596,9 @@ class FlaxDistilBertForMaskedLMModule(nn.Module):
         self.vocab_transform = nn.Dense(
             self.config.dim,
             dtype=self.dtype,
-            kernel_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            kernel_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
         self.vocab_layer_norm = nn.LayerNorm(epsilon=1e-12, dtype=self.dtype)
         if self.config.tie_word_embeddings:
@@ -549,7 +610,9 @@ class FlaxDistilBertForMaskedLMModule(nn.Module):
             self.vocab_projector = nn.Dense(
                 self.config.vocab_size,
                 dtype=self.dtype,
-                kernel_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+                kernel_init=jax.nn.initializers.normal(
+                    stddev=self.config.initializer_range
+                ),
             )
 
     def __call__(
@@ -561,7 +624,9 @@ class FlaxDistilBertForMaskedLMModule(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         dlbrt_output = self.distilbert(
             input_ids=input_ids,
@@ -577,8 +642,12 @@ class FlaxDistilBertForMaskedLMModule(nn.Module):
         prediction_logits = self.vocab_layer_norm(prediction_logits)
 
         if self.config.tie_word_embeddings:
-            shared_embedding = self.distilbert.variables["params"]["embeddings"]["word_embeddings"]["embedding"]
-            prediction_logits = self.vocab_projector(prediction_logits, shared_embedding.T)
+            shared_embedding = self.distilbert.variables["params"]["embeddings"][
+                "word_embeddings"
+            ]["embedding"]
+            prediction_logits = self.vocab_projector(
+                prediction_logits, shared_embedding.T
+            )
         else:
             prediction_logits = self.vocab_projector(prediction_logits)
 
@@ -593,13 +662,20 @@ class FlaxDistilBertForMaskedLMModule(nn.Module):
         )
 
 
-@add_start_docstrings("""DistilBert Model with a `language modeling` head on top.""", FLAX_DISTILBERT_START_DOCSTRING)
+@add_start_docstrings(
+    """DistilBert Model with a `language modeling` head on top.""",
+    FLAX_DISTILBERT_START_DOCSTRING,
+)
 class FlaxDistilBertForMaskedLM(FlaxDistilBertPreTrainedModel):
     module_class = FlaxDistilBertForMaskedLMModule
 
 
 append_call_sample_docstring(
-    FlaxDistilBertForMaskedLM, _TOKENIZER_FOR_DOC, _CHECKPOINT_FOR_DOC, FlaxMaskedLMOutput, _CONFIG_FOR_DOC
+    FlaxDistilBertForMaskedLM,
+    _TOKENIZER_FOR_DOC,
+    _CHECKPOINT_FOR_DOC,
+    FlaxMaskedLMOutput,
+    _CONFIG_FOR_DOC,
 )
 
 
@@ -612,7 +688,9 @@ class FlaxDistilBertForSequenceClassificationModule(nn.Module):
         self.pre_classifier = nn.Dense(
             self.config.dim,
             dtype=self.dtype,
-            kernel_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            kernel_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
         self.dropout = nn.Dropout(rate=self.config.seq_classif_dropout)
         self.classifier = nn.Dense(
@@ -629,7 +707,9 @@ class FlaxDistilBertForSequenceClassificationModule(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
         # Model
         distilbert_output = self.distilbert(
             input_ids,
@@ -685,7 +765,9 @@ class FlaxDistilBertForMultipleChoiceModule(nn.Module):
         self.pre_classifier = nn.Dense(
             self.config.dim,
             dtype=self.dtype,
-            kernel_init=jax.nn.initializers.normal(stddev=self.config.initializer_range),
+            kernel_init=jax.nn.initializers.normal(
+                stddev=self.config.initializer_range
+            ),
         )
         self.dropout = nn.Dropout(rate=self.config.seq_classif_dropout)
         self.classifier = nn.Dense(
@@ -702,10 +784,20 @@ class FlaxDistilBertForMultipleChoiceModule(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
         num_choices = input_ids.shape[1]
-        input_ids = input_ids.reshape(-1, input_ids.shape[-1]) if input_ids is not None else None
-        attention_mask = attention_mask.reshape(-1, attention_mask.shape[-1]) if attention_mask is not None else None
+        input_ids = (
+            input_ids.reshape(-1, input_ids.shape[-1])
+            if input_ids is not None
+            else None
+        )
+        attention_mask = (
+            attention_mask.reshape(-1, attention_mask.shape[-1])
+            if attention_mask is not None
+            else None
+        )
 
         # Model
         outputs = self.distilbert(
@@ -748,7 +840,8 @@ class FlaxDistilBertForMultipleChoice(FlaxDistilBertPreTrainedModel):
 
 
 overwrite_call_docstring(
-    FlaxDistilBertForMultipleChoice, DISTILBERT_INPUTS_DOCSTRING.format("batch_size, num_choices, sequence_length")
+    FlaxDistilBertForMultipleChoice,
+    DISTILBERT_INPUTS_DOCSTRING.format("batch_size, num_choices, sequence_length"),
 )
 append_call_sample_docstring(
     FlaxDistilBertForMultipleChoice,
@@ -777,7 +870,9 @@ class FlaxDistilBertForTokenClassificationModule(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
         # Model
         outputs = self.distilbert(
             input_ids,
@@ -841,7 +936,9 @@ class FlaxDistilBertForQuestionAnsweringModule(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ):
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         # Model
         distilbert_output = self.distilbert(

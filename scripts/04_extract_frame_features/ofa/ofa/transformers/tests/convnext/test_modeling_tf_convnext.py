@@ -19,7 +19,11 @@ import unittest
 from typing import List, Tuple
 
 from transformers import ConvNextConfig
-from transformers.file_utils import cached_property, is_tf_available, is_vision_available
+from transformers.file_utils import (
+    cached_property,
+    is_tf_available,
+    is_vision_available,
+)
 from transformers.testing_utils import require_tf, require_vision, slow
 
 from ..test_configuration_common import ConfigTester
@@ -73,7 +77,9 @@ class TFConvNextModelTester:
         self.scope = scope
 
     def prepare_config_and_inputs(self):
-        pixel_values = floats_tensor([self.batch_size, self.num_channels, self.image_size, self.image_size])
+        pixel_values = floats_tensor(
+            [self.batch_size, self.num_channels, self.image_size, self.image_size]
+        )
 
         labels = None
         if self.use_labels:
@@ -100,14 +106,21 @@ class TFConvNextModelTester:
         # expected last hidden states: B, C, H // 32, W // 32
         self.parent.assertEqual(
             result.last_hidden_state.shape,
-            (self.batch_size, self.hidden_sizes[-1], self.image_size // 32, self.image_size // 32),
+            (
+                self.batch_size,
+                self.hidden_sizes[-1],
+                self.image_size // 32,
+                self.image_size // 32,
+            ),
         )
 
     def create_and_check_for_image_classification(self, config, pixel_values, labels):
         config.num_labels = self.type_sequence_label_size
         model = TFConvNextForImageClassification(config)
         result = model(pixel_values, labels=labels, training=False)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.type_sequence_label_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.type_sequence_label_size)
+        )
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -123,7 +136,9 @@ class TFConvNextModelTest(TFModelTesterMixin, unittest.TestCase):
     attention_mask and seq_length.
     """
 
-    all_model_classes = (TFConvNextModel, TFConvNextForImageClassification) if is_tf_available() else ()
+    all_model_classes = (
+        (TFConvNextModel, TFConvNextForImageClassification) if is_tf_available() else ()
+    )
 
     test_pruning = False
     test_onnx = False
@@ -172,7 +187,11 @@ class TFConvNextModelTest(TFModelTesterMixin, unittest.TestCase):
             model = model_class(config)
 
             outputs = model(**self._prepare_for_class(inputs_dict, model_class))
-            hidden_states = outputs.encoder_hidden_states if config.is_encoder_decoder else outputs.hidden_states
+            hidden_states = (
+                outputs.encoder_hidden_states
+                if config.is_encoder_decoder
+                else outputs.hidden_states
+            )
 
             expected_num_stages = self.model_tester.num_stages
             self.assertEqual(len(hidden_states), expected_num_stages + 1)
@@ -201,11 +220,15 @@ class TFConvNextModelTest(TFModelTesterMixin, unittest.TestCase):
 
         def check_equivalence(model, tuple_inputs, dict_inputs, additional_kwargs={}):
             tuple_output = model(tuple_inputs, return_dict=False, **additional_kwargs)
-            dict_output = model(dict_inputs, return_dict=True, **additional_kwargs).to_tuple()
+            dict_output = model(
+                dict_inputs, return_dict=True, **additional_kwargs
+            ).to_tuple()
 
             def recursive_check(tuple_object, dict_object):
                 if isinstance(tuple_object, (List, Tuple)):
-                    for tuple_iterable_value, dict_iterable_value in zip(tuple_object, dict_object):
+                    for tuple_iterable_value, dict_iterable_value in zip(
+                        tuple_object, dict_object
+                    ):
                         recursive_check(tuple_iterable_value, dict_iterable_value)
                 elif tuple_object is None:
                     return
@@ -224,17 +247,29 @@ class TFConvNextModelTest(TFModelTesterMixin, unittest.TestCase):
             dict_inputs = self._prepare_for_class(inputs_dict, model_class)
             check_equivalence(model, tuple_inputs, dict_inputs)
 
-            tuple_inputs = self._prepare_for_class(inputs_dict, model_class, return_labels=True)
-            dict_inputs = self._prepare_for_class(inputs_dict, model_class, return_labels=True)
+            tuple_inputs = self._prepare_for_class(
+                inputs_dict, model_class, return_labels=True
+            )
+            dict_inputs = self._prepare_for_class(
+                inputs_dict, model_class, return_labels=True
+            )
             check_equivalence(model, tuple_inputs, dict_inputs)
 
             tuple_inputs = self._prepare_for_class(inputs_dict, model_class)
             dict_inputs = self._prepare_for_class(inputs_dict, model_class)
-            check_equivalence(model, tuple_inputs, dict_inputs, {"output_hidden_states": True})
+            check_equivalence(
+                model, tuple_inputs, dict_inputs, {"output_hidden_states": True}
+            )
 
-            tuple_inputs = self._prepare_for_class(inputs_dict, model_class, return_labels=True)
-            dict_inputs = self._prepare_for_class(inputs_dict, model_class, return_labels=True)
-            check_equivalence(model, tuple_inputs, dict_inputs, {"output_hidden_states": True})
+            tuple_inputs = self._prepare_for_class(
+                inputs_dict, model_class, return_labels=True
+            )
+            dict_inputs = self._prepare_for_class(
+                inputs_dict, model_class, return_labels=True
+            )
+            check_equivalence(
+                model, tuple_inputs, dict_inputs, {"output_hidden_states": True}
+            )
 
     def test_for_image_classification(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
@@ -258,12 +293,16 @@ class TFConvNextModelIntegrationTest(unittest.TestCase):
     @cached_property
     def default_feature_extractor(self):
         return (
-            ConvNextFeatureExtractor.from_pretrained("facebook/convnext-tiny-224") if is_vision_available() else None
+            ConvNextFeatureExtractor.from_pretrained("facebook/convnext-tiny-224")
+            if is_vision_available()
+            else None
         )
 
     @slow
     def test_inference_image_classification_head(self):
-        model = TFConvNextForImageClassification.from_pretrained("facebook/convnext-tiny-224")
+        model = TFConvNextForImageClassification.from_pretrained(
+            "facebook/convnext-tiny-224"
+        )
 
         feature_extractor = self.default_feature_extractor
         image = prepare_img()

@@ -29,7 +29,9 @@ if is_torch_available():
     _import_structure["modeling_speech_encoder_decoder"] = ["SpeechEncoderDecoderModel"]
 
 if is_flax_available():
-    _import_structure["modeling_flax_speech_encoder_decoder"] = ["FlaxSpeechEncoderDecoderModel"]
+    _import_structure["modeling_flax_speech_encoder_decoder"] = [
+        "FlaxSpeechEncoderDecoderModel"
+    ]
 
 if TYPE_CHECKING:
     from .configuration_speech_encoder_decoder import SpeechEncoderDecoderConfig
@@ -43,4 +45,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

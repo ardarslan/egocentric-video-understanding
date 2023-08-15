@@ -590,9 +590,11 @@ class TestPrefixBeamSearch(TestSequenceGeneratorBase):
             # prefix step 0:
             torch.FloatTensor(
                 [
-                    # eos      
-                    [0.0, unk] + [1.0 / vocab_size] * vocab_size  # beam 1
-                ] * self.beam_size
+                    # eos
+                    [0.0, unk]
+                    + [1.0 / vocab_size] * vocab_size  # beam 1
+                ]
+                * self.beam_size
             ),
         ] * vocab_size
 
@@ -616,6 +618,7 @@ class TestPrefixBeamSearch(TestSequenceGeneratorBase):
         }
         # make sure test sample doesn't break any assertion
         generator.forward(sample, prefix_tokens=self.tokens[:, :-1])
+
 
 class TestTopPSamplingSearch(TestSequenceGeneratorBase):
     def setUp(self):

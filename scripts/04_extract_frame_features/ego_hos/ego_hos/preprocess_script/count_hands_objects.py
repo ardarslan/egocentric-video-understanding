@@ -1,20 +1,20 @@
 from PIL import Image
-import numpy as np 
+import numpy as np
 import glob
 import pdb
 import os
 from tqdm import tqdm
 
-train_dir = '../data/train/label'
-val_dir = '../data/val/label'
-test_dir = '../data/test_indomain/label'
+train_dir = "../data/train/label"
+val_dir = "../data/val/label"
+test_dir = "../data/test_indomain/label"
 
 dir_list = [train_dir, val_dir, test_dir]
 
-hand_cnt = 0; obj_cnt = 0
+hand_cnt = 0
+obj_cnt = 0
 for dir in dir_list:
-    for file in tqdm(glob.glob(dir + '/*')):
-
+    for file in tqdm(glob.glob(dir + "/*")):
         lbl = np.array(Image.open(file))
         unique_vals = np.unique(lbl)
 
@@ -26,4 +26,3 @@ for dir in dir_list:
 
 print(hand_cnt, obj_cnt)
 pdb.set_trace()
-

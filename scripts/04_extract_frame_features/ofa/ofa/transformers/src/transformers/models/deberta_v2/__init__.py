@@ -22,7 +22,10 @@ from ...file_utils import _LazyModule, is_tf_available, is_torch_available
 
 
 _import_structure = {
-    "configuration_deberta_v2": ["DEBERTA_V2_PRETRAINED_CONFIG_ARCHIVE_MAP", "DebertaV2Config"],
+    "configuration_deberta_v2": [
+        "DEBERTA_V2_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "DebertaV2Config",
+    ],
     "tokenization_deberta_v2": ["DebertaV2Tokenizer"],
 }
 
@@ -50,7 +53,10 @@ if is_torch_available():
 
 
 if TYPE_CHECKING:
-    from .configuration_deberta_v2 import DEBERTA_V2_PRETRAINED_CONFIG_ARCHIVE_MAP, DebertaV2Config
+    from .configuration_deberta_v2 import (
+        DEBERTA_V2_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        DebertaV2Config,
+    )
     from .tokenization_deberta_v2 import DebertaV2Tokenizer
 
     if is_tf_available():
@@ -78,4 +84,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

@@ -16,7 +16,12 @@
 import unittest
 
 from transformers import BarthezTokenizer, BarthezTokenizerFast, BatchEncoding
-from transformers.testing_utils import require_sentencepiece, require_tokenizers, require_torch, slow
+from transformers.testing_utils import (
+    require_sentencepiece,
+    require_tokenizers,
+    require_torch,
+    slow,
+)
 
 from ..test_tokenization_common import TokenizerTesterMixin
 
@@ -25,7 +30,6 @@ from ..test_tokenization_common import TokenizerTesterMixin
 @require_sentencepiece
 @slow  # see https://github.com/huggingface/transformers/issues/11457
 class BarthezTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
-
     tokenizer_class = BarthezTokenizer
     rust_tokenizer_class = BarthezTokenizerFast
     test_rust_tokenizer = True
@@ -60,11 +64,18 @@ class BarthezTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
     @require_torch
     def test_prepare_batch(self):
-        src_text = ["A long paragraph for summarization.", "Another paragraph for summarization."]
+        src_text = [
+            "A long paragraph for summarization.",
+            "Another paragraph for summarization.",
+        ]
         expected_src_tokens = [0, 57, 3018, 70307, 91, 2]
 
         batch = self.tokenizer(
-            src_text, max_length=len(expected_src_tokens), padding=True, truncation=True, return_tensors="pt"
+            src_text,
+            max_length=len(expected_src_tokens),
+            padding=True,
+            truncation=True,
+            return_tensors="pt",
         )
         self.assertIsInstance(batch, BatchEncoding)
 

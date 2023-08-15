@@ -17,16 +17,27 @@
 # limitations under the License.
 from typing import TYPE_CHECKING
 
-from ...file_utils import _LazyModule, is_flax_available, is_tf_available, is_tokenizers_available, is_torch_available
+from ...file_utils import (
+    _LazyModule,
+    is_flax_available,
+    is_tf_available,
+    is_tokenizers_available,
+    is_torch_available,
+)
 
 
 _import_structure = {
-    "configuration_blenderbot_small": ["BLENDERBOT_SMALL_PRETRAINED_CONFIG_ARCHIVE_MAP", "BlenderbotSmallConfig"],
+    "configuration_blenderbot_small": [
+        "BLENDERBOT_SMALL_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "BlenderbotSmallConfig",
+    ],
     "tokenization_blenderbot_small": ["BlenderbotSmallTokenizer"],
 }
 
 if is_tokenizers_available():
-    _import_structure["tokenization_blenderbot_small_fast"] = ["BlenderbotSmallTokenizerFast"]
+    _import_structure["tokenization_blenderbot_small_fast"] = [
+        "BlenderbotSmallTokenizerFast"
+    ]
 
 if is_torch_available():
     _import_structure["modeling_blenderbot_small"] = [
@@ -52,7 +63,10 @@ if is_flax_available():
     ]
 
 if TYPE_CHECKING:
-    from .configuration_blenderbot_small import BLENDERBOT_SMALL_PRETRAINED_CONFIG_ARCHIVE_MAP, BlenderbotSmallConfig
+    from .configuration_blenderbot_small import (
+        BLENDERBOT_SMALL_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        BlenderbotSmallConfig,
+    )
     from .tokenization_blenderbot_small import BlenderbotSmallTokenizer
 
     if is_tokenizers_available():
@@ -84,4 +98,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )

@@ -18,12 +18,22 @@
 
 from typing import TYPE_CHECKING
 
-from ...file_utils import _LazyModule, is_flax_available, is_tf_available, is_torch_available
+from ...file_utils import (
+    _LazyModule,
+    is_flax_available,
+    is_tf_available,
+    is_torch_available,
+)
 
 
 _import_structure = {
     "auto_factory": ["get_values"],
-    "configuration_auto": ["ALL_PRETRAINED_CONFIG_ARCHIVE_MAP", "CONFIG_MAPPING", "MODEL_NAMES_MAPPING", "AutoConfig"],
+    "configuration_auto": [
+        "ALL_PRETRAINED_CONFIG_ARCHIVE_MAP",
+        "CONFIG_MAPPING",
+        "MODEL_NAMES_MAPPING",
+        "AutoConfig",
+    ],
     "feature_extraction_auto": ["FEATURE_EXTRACTOR_MAPPING", "AutoFeatureExtractor"],
     "processing_auto": ["PROCESSOR_MAPPING", "AutoProcessor"],
     "tokenization_auto": ["TOKENIZER_MAPPING", "AutoTokenizer"],
@@ -145,7 +155,12 @@ if is_flax_available():
 
 if TYPE_CHECKING:
     from .auto_factory import get_values
-    from .configuration_auto import ALL_PRETRAINED_CONFIG_ARCHIVE_MAP, CONFIG_MAPPING, MODEL_NAMES_MAPPING, AutoConfig
+    from .configuration_auto import (
+        ALL_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        CONFIG_MAPPING,
+        MODEL_NAMES_MAPPING,
+        AutoConfig,
+    )
     from .feature_extraction_auto import FEATURE_EXTRACTOR_MAPPING, AutoFeatureExtractor
     from .processing_auto import PROCESSOR_MAPPING, AutoProcessor
     from .tokenization_auto import TOKENIZER_MAPPING, AutoTokenizer
@@ -266,4 +281,6 @@ if TYPE_CHECKING:
 else:
     import sys
 
-    sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
+    sys.modules[__name__] = _LazyModule(
+        __name__, globals()["__file__"], _import_structure, module_spec=__spec__
+    )
