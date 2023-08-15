@@ -380,7 +380,7 @@ Implemented in $CODE/scripts/03_analyze_data/check_annotation_distribution.ipynb
 
 # 04 - Extract frame features
 
-CVL and Euler:
+CVL:
 
 ```
 cd $CODE/scripts/04_extract_frame_features
@@ -390,6 +390,20 @@ mamba deactivate
 mamba activate mq_data
 
 sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
+```
+
+Euler:
+
+```
+cd $CODE/scripts/04_extract_frame_features
+
+mamba deactivate
+
+module load eth_proxy
+
+mamba activate mq_data
+
+sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip_vqa\" -q \"1\" -c \"0\""
 ```
 
 AIT:
@@ -409,8 +423,6 @@ chmod +x main.sh
 
 ./main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
 ```
-
-./main.sh -f "visor_hos" -q "0" -c "2,3,5,6"
 
 # 05 - Visualize frame features
 
