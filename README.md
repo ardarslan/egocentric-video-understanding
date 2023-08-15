@@ -313,7 +313,7 @@ export PIP_CACHE_DIR=$SCRATCH/pip_cache
 mamba create -n mq_model python=3.8
 
 (
-For CVL:
+For CVL and Euler:
 
 mamba deactivate
 
@@ -380,7 +380,7 @@ Implemented in $CODE/scripts/03_analyze_data/check_annotation_distribution.ipynb
 
 # 04 - Extract frame features
 
-CVL Server:
+CVL and Euler:
 
 ```
 cd $CODE/scripts/04_extract_frame_features
@@ -389,7 +389,21 @@ mamba deactivate
 
 mamba activate mq_data
 
-sbatch --nodelist=biwirender17 --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
+sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
+```
+
+AIT:
+
+```
+cd $CODE/scripts/04_extract_frame_features
+
+mamba deactivate
+
+mamba activate mq_data
+
+chmod +x main.sh
+
+./main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
 ```
 
 # 05 - Visualize frame features
