@@ -86,6 +86,4 @@ mv egovlp_egonce/* .
 
 rm -rf egovlp_egonce
 
-# python3 $CODE/scripts/02_download_data/extra_clip_remover.py --annotations_json_file_path $CODE/scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json --updated_annotations_json_file_path $CODE/scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json --clips_folder_path $SCRATCH/ego4d_data/v2/clips --egovlp_egonce_features_folder_path $SCRATCH/ego4d_data/v2/egovlp_egonce --internvideo_features_folder_path $SCRATCH/ego4d_data/v2/internvideo --omnivore_features_folder_path $SCRATCH/ego4d_data/v2/omnivore_clip --slowfast_features_folder_path $SCRATCH/ego4d_data/v2/slowfast_clip
-
 ```
