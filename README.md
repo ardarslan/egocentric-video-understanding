@@ -395,9 +395,13 @@ sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FE
 AIT:
 
 ```
+screen
+
 cd $CODE/scripts/04_extract_frame_features
 
 mamba deactivate
+
+module load cuda/11.3
 
 mamba activate mq_data
 
@@ -405,6 +409,8 @@ chmod +x main.sh
 
 ./main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
 ```
+
+./main.sh -f "visor_hos" -q "0" -c "2,3,5,6"
 
 # 05 - Visualize frame features
 
