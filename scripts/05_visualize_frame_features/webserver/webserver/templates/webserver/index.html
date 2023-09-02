@@ -1,0 +1,879 @@
+{% load static %}
+{% with border_color="#bbb" %}
+{% with lighter_border_color="#ccc" %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Visualization</title>
+    <link rel="shortcut icon" href="{% static "img/favicon.ico" %}" type="image/x-icon" />
+    <meta name="csrf_token" content="{{ csrf_token }}">
+
+    <style type="text/css">
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background-color: #fafafa;
+        color: #111;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: sans-serif;
+        height: fit-content;
+      }
+      .main-container {
+        border-radius: 5px;
+        border: solid 1px {{border_color}};
+        background: #fcfcfc;
+        width: 800px;
+        display: flex;
+        flex-direction: row;
+        padding: 10px;
+        gap: 10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+      }
+      .frame-container {
+        display: flex;
+        flex-direction: row;
+        min-height: 400px;
+        gap: 10px;
+      }
+      .active-video-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .navigation-container {
+        margin-top: 40px;
+        background: #fff;
+        border-radius: 5px;
+        border: solid 1px {{border_color}};
+        positi
+        width: 200px;
+        overflow-y: scroll;
+        max-height: 598px;
+      }
+      .video-entry {
+        padding-left: 5px;
+        padding-right: 5px;
+        padding-top: 10px;
+        padding-bottom: 5px;
+        cursor: pointer;
+      }
+      .video-entry.selected {
+        background: #e1e1e1;
+        border-top: solid 1px #ccc;
+        border-bottom: solid 1px #ccc;
+      }
+      .video-thumbnail {
+        width: 150px;
+      }
+      .video-name {
+        text-align: center;
+        font-size: 80%;
+      }
+      #selected-video-name {
+        font-size: 120%;
+        border-bottom: solid 1px {{border_color}};
+        padding-bottom: 5px;
+      }
+      #active-frame-container {
+        width: 600px;
+        height: 600px;
+        background-color: #333;
+        border-radius: 5px;
+      }
+      #active-frame-container td {
+        text-align: center;
+        vertical-align: middle;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+      }
+      .active-frame-tools {
+        font-size: 80%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+      }
+      .video-position-info {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+      .video-position-separator {
+        margin-left: 2px;
+        margin-right: 2px;
+      }
+      .video-position-info-label {
+        margin-right: 5px;
+        font-size: 120%;
+      }
+      #seeker, .layer-seeker {
+        border-radius: 5px;
+        height: 10px;
+        width: 100%;
+        background-color: #333;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        position: relative;
+      }
+      .layer-seeker {
+        overflow: hidden;
+      }
+      #seeker-filling {
+        border-radius: 5px;
+        position: absolute;
+        background: #777;
+        height: 10px;
+        width: 0px;
+      }
+      #seeker-button {
+        width: 16px;
+        height: 16px;
+        border-radius: 50px;
+        border: solid 2px #555;
+        background-color: #777;
+        cursor: grab;
+        z-index: 9999;
+        position: absolute;
+      }
+      .seeker-nav-button {
+        font-size: 120%;
+        cursor: pointer;
+        user-select: none;
+      }
+      .control-container {
+        font-size: 80%;
+      }
+      .layers-label, .grid-label, .threed-visualization-label, .comments-label {
+        border-bottom: solid 1px {{border_color}};
+        padding-bottom: 2px;
+        margin-bottom: 5px;
+      }
+      .layer-selection {
+        display: flex;
+        flex-direction: column;
+      }
+      .layer-selection>div {
+        padding-top: 2px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+      .layer-selection>div input[type="checkbox"] {
+        margin-right: 4px;
+      }
+      .layer-selection>div:not(.indented-layer-div)>label:first-of-type {
+        width: 250px;
+      }
+      .seeker-range-indicator {
+        background: #0f0;
+        position: absolute;
+        z-index: 99999;
+        height: 10px;
+      }
+      .layer-seeker-indicator {
+        background: #f00;
+        position: absolute;
+        z-index: 999999999;
+        height: 10px;
+        width: 2px;
+      }
+      .layer-seeker-mouse-indicator {
+        background: #fff;
+        position: absolute;
+        z-index: 999999999;
+        height: 10px;
+        width: 2px;
+      }
+      .indented-layer-div {
+        margin-left: 39px;
+      }
+      #ground_truth_action_category {
+        margin-left: 3px;
+      }
+      .active-frame {
+        user-select: none;
+        object-fit: cover;
+      }
+      .threed-visualization-label {
+        width: 100%;
+      }
+      #threed-visualization-container {
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+      }
+      #threed-visualization-url-box {
+        width: 200px;
+      }
+      .grid-label, .comments-label, .threed-visualization-label {
+        margin-top: 7px;
+      }
+      .threed-visualization-control {
+        margin-top: 5px;
+        margin-bottom: 5px;
+        display: flex;
+        flex-direction: row;
+        gap: 7px;
+        align-items: center;
+      }
+      input[type="number"] {
+        width: 30px;
+      }
+      .grid-control {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .grid-configurator-text-input {
+        text-align: center;
+      }
+      .grid-history-button {
+        margin-left: 3px;
+      }
+      .hand-mesh-track-history-container, .hand-mesh-filtering-container, .object-bbox-filtering-container, .segmentation-mask-filtering-container , .hos-filtering-container, .image-filtering-container, .tracking-bbox-filtering-container, .tracking-mask-filtering-container {
+        display: flex;
+        flex-direction: row;
+        gap: 7px;
+      }
+      .hand-mesh-track-history-container input[type="number"] {
+        width: 35px;
+      }
+      #filter-hand-border-clearance-box,
+      #filter-object-confidence-box,
+      #filter-tracking-mask-max-tortuosity-box,
+      #filter-tracking-mask-merging-min-iou-box,
+      #filter-tracking-mask-merging-min-ioa-box,
+      #filter-tracking-mask-merging-min-fraction-box {
+        width: 45px;
+      }
+      #filter-tracking-mask-max-cd-box, #filter-tracking-mask-max-hand-ioa-box {
+        width: 55px;
+      }
+      #filter-hos-version-box {
+        width: 140px;
+      }
+      #filter-segmentation-mask-area-box {
+        width: 55px;
+      }
+      .hand-mesh-track-label {
+        width: auto !important;
+      }
+      .hand-mesh-track-box {
+        margin-right: -2px !important;
+      }
+      label[for="hand-mesh-track-left-box"] {
+        color: #00f;
+      }
+      label[for="hand-mesh-track-right-box"] {
+        color: #f00;
+      }
+      .separator {
+        height: 1px;
+        margin-top: 3px;
+        padding: 0 !important;
+        padding-top: 0 !important;
+        width: 100%;
+        align-self: center;
+        background: {{lighter_border_color}};
+      }
+      .tracking-control-container>label {
+        width: auto !important;
+      }
+      .tracking-control-container {
+        gap: 5px;
+      }
+      .tracking-control-container input[type="checkbox"] {
+        margin-right: 2px !important;
+      }
+      #filter-tracking-mask-ids, #filter-tracking-bbox-ids {
+        width: 75px;
+      }
+      #seeker-speed-select {
+        width: 60px;
+      }
+      #frame-detail-box-contents {
+        display: flex;
+        flex-direction: column;
+      }
+      #frame-detail-box-loading-label, #frame-detail-box-not-processed-label,
+      .frame-detail-box-contents-no-detection-label, #no-comments-label {
+        color: #777;
+      }
+      #comment-list {
+        margin-top: 7px;
+        margin-bottom: 5px;
+        display: flex;
+        flex-direction: column;
+      }
+      #comment-list .comment {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        padding: 5px;
+        /*justify-content: center;*/
+      }
+      #comment-list .comment-frame-id, #comment-list .comment-image {
+        text-align: center;
+        cursor: pointer;
+      }
+      #comment-list textarea {
+        width: 300px;
+        height: 52px;
+        padding: 6px;
+      }
+      #webrtc-container video {
+        max-width: 645px;
+      }
+      #frame-detail-box {
+        position: absolute;
+        width: 300px;
+        display: flex;
+        flex-direction: column;
+        background: #fafafa;
+        padding: 5px;
+        border-radius: 5px;
+        z-index: 9999999999;
+        border: solid 1px {{border_color}};
+      }
+      #frame-detail-box-title {
+        padding-bottom: 2px;
+        border-bottom: solid 1px {{border_color}};
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      #frame-detail-box-header {
+        margin-bottom: 5px;
+      }
+      #frame-detail-box-header-intern {
+        padding-bottom: 2px;
+        border-bottom: solid 1px {{border_color}};
+        display: inline-block;
+      }
+    </style>
+
+    <script type="text/javascript">
+      let byId = (id) => document.getElementById(id);
+
+      window.seekerButtonMouseDownCoords = null;
+
+      window.all_bounding_box_feature_names = ["visor_hos",
+                                               "unidet",
+                                               "unidet_visor_hos"];
+      window.enabled_bounding_box_feature_names = ["visor_hos",
+                                                   "unidet",
+                                                   "unidet_visor_hos"];
+      window.all_blip_feature_names = ["blip_describe", "blip_do", "blip_happen"]
+      window.enabled_blip_feature_names = ["blip_describe", "blip_do", "blip_happen"]
+      window.all_action_category_names = ["ground_truth_action_category", "asl_baseline_predicted_action_category"]
+      window.enabled_action_category_names = ["ground_truth_action_category", "asl_baseline_predicted_action_category"]
+
+      {% autoescape off %}window.palette = [{{PALETTE_STR}}];{% endautoescape %}
+
+      function debounce(func, timeout=300) {
+        // from https://www.freecodecamp.org/news/javascript-debounce-example/
+        let timer;
+        return (...args) => {
+          clearTimeout(timer);
+          timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        };
+      }
+
+      async function selectVideo(videoId) {
+        if(!!window.activeVideo) {
+          if(window.activeVideo == videoId)
+            return;
+
+          byId("video-position-frames").innerHTML = ".....";
+          byId("video-duration-frames").innerHTML = ".....";
+
+          byId("video-position-time").innerHTML = "..:..:..";
+          byId("video-duration-time").innerHTML = "..:..:..";
+
+          byId("video-entry-" + window.activeVideo).classList.remove("selected");
+
+          byId("seeker-filling").style.width = "0px";
+          byId("seeker-button").style.marginLeft = "0px";
+
+          for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
+            let seekerParent = byId("layer-seeker-" + bounding_box_feature_name.replace("_", "-"));
+            if(!seekerParent)
+              continue;
+            let toRemove = [];
+            for(child of seekerParent.children) {
+              if([...child.classList].indexOf("seeker-range-indicator") > -1) {
+                toRemove.push(child);
+              }
+            }
+            for(remove of toRemove) {
+              remove.parentElement.removeChild(remove);
+            }
+          }
+        }
+
+        for(let el of document.getElementsByClassName("active-frame"))
+          el.src = "{% static "img/loading.png" %}";
+
+        for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
+          let seekerIndicator = byId("layer-seeker-indicator-" + bounding_box_feature_name.replace("_", "-"))
+          if(!seekerIndicator)
+            continue;
+          seekerIndicator.style.left = "0px";
+        }
+
+        window.activeVideo = videoId;
+        if(!!window.animationTimer)
+          window.clearInterval(window.animationTimer);
+        byId("video-entry-" + videoId).classList.add("selected");
+        byId("selected-video-name").innerHTML = "🎥 " + videoId;
+
+        response = await fetch("/get_video_data/" + videoId + "/", {
+          method: "GET",
+          mode: "cors",
+          cache: "no-cache",
+          creditals: "same-origin"
+        });
+
+        let responseData = await response.json();
+        window.videoData = responseData;
+        window.numFrames = responseData["num_real_frames"];
+        let dur = window.numFrames / window.videoData["virtual_fps"];
+        window.videoDuration = dur;
+
+        let vdfEl = byId("video-duration-frames");
+        vdfEl.innerHTML = (window.numFrames-1).toString().padStart(5, "0");
+        let vdtEl = byId("video-duration-time");
+        vdtEl.innerHTML = Math.floor(dur / 3600).toFixed(0) +":"+ Math.floor((dur % 3600) / 60).toFixed(0).padStart(2, "0") +":"+ (dur % 60).toFixed(0).padStart(2, "0");
+
+        selectFrame(0);
+      }
+
+      function selectFrame(frameIdx, doFetch = true) {
+        if(frameIdx < 0)
+          frameIdx = 0;
+        if(frameIdx >= window.numFrames)
+          frameIdx = window.numFrames-1;
+        window.activeFrame = frameIdx;
+        if(doFetch)
+          fetchFrame();
+
+        setSeekerPos(frameIdx);
+        fetchBLIPAnswers();
+        fetchActionCategories();
+      }
+
+      function setSeekerPos(frameIdx) {
+        let ratio = Math.min(1, Math.max(0, (frameIdx+1) / window.videoData["num_real_frames"]));
+        let seekerEl = byId("seeker");
+        let rect = seekerEl.getBoundingClientRect();
+        let filling = byId("seeker-filling");
+        let btnEl = byId("seeker-button");
+        btnEl.style.marginLeft = (ratio * rect.width - btnEl.getBoundingClientRect().width / 2) + "px";
+        filling.style.width = (ratio * rect.width) + "px";
+        let vpfEl = byId("video-position-frames");
+        vpfEl.innerHTML = frameIdx.toString().padStart(5, "0");
+
+        let posTime = ratio * window.videoDuration;
+        let vptEl = byId("video-position-time");
+        vptEl.innerHTML = Math.floor(posTime / 3600).toFixed(0) +":"+ Math.floor((posTime % 3600) / 60).toFixed(0).padStart(2, "0") +":"+ (posTime % 60).toFixed(0).padStart(2, "0");
+
+        for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
+          let seekerParent = byId("layer-seeker-" + bounding_box_feature_name.replace("_", "-"));
+          if(!seekerParent)
+            continue;
+          let seekerIndicator = byId("layer-seeker-indicator-" + bounding_box_feature_name.replace("_", "-"))
+          if(!seekerIndicator)
+            continue;
+          seekerIndicator.style.left = (ratio * seekerParent.getBoundingClientRect().width) + "px";
+        }
+      }
+
+      function toggleBoundingBoxFeature(bounding_box_feature_name, enable) {
+        if (!window.enabled_bounding_box_feature_names)
+          window.enabled_bounding_box_feature_names = [];
+
+        if (enable)
+          window.enabled_bounding_box_feature_names.push(bounding_box_feature_name);
+        else
+          window.enabled_bounding_box_feature_names = window.enabled_bounding_box_feature_names.filter((str) => str != bounding_box_feature_name);
+
+        fetchFrame();
+      }
+
+      function toggleBLIPFeature(blip_feature_name, enable) {
+        if (!window.enabled_blip_feature_names)
+            window.enabled_blip_feature_names = [];
+
+        if (enable)
+            window.enabled_blip_feature_names.push(blip_feature_name);
+        else
+            window.enabled_blip_feature_names = window.enabled_blip_feature_names.filter ((str) => str != blip_feature_name);
+
+        fetchBLIPAnswers();
+      }
+
+      async function fetchBLIPAnswers() {
+        response = await fetch("/get_blip_answers/" + window.activeVideo + "/" + window.activeFrame + "/?blip_feature_names=" + window.enabled_blip_feature_names.join(","), {
+          method: "GET",
+          mode: "cors",
+          cache: "no-cache",
+          creditals: "same-origin"
+        });
+
+        let responseData = await response.json();
+
+        for (let i=0; i<window.all_blip_feature_names.length; i++) {
+          if (window.enabled_blip_feature_names.includes(window.all_blip_feature_names[i])) {
+            byId("current-" + window.all_blip_feature_names[i].replaceAll("_", "-") + "-answer").innerHTML = responseData[window.enabled_blip_feature_names[i]];
+          } else {
+            byId("current-" + window.all_blip_feature_names[i].replaceAll("_", "-") + "-answer").innerHTML = "?";
+          }
+        }
+      }
+
+      function toggleActionCategory(action_category_name, enable) {
+        if (!window.enabled_action_category_names)
+          window.enabled_action_category_names = [];
+
+        if (enable)
+          window.enabled_action_category_names.push(action_category_name);
+        else
+          window.enabled_action_category_names = window.enabled_action_category_names.filter((str) => str != action_category_name);
+
+        fetchActionCategories();
+      }
+
+      async function fetchActionCategories() {
+        response = await fetch("/get_action_categories/" + window.activeVideo + "/" + window.activeFrame + "/?action_category_names=" + window.enabled_action_category_names.join(","), {
+          method: "GET",
+          mode: "cors",
+          cache: "no-cache",
+          creditals: "same-origin"
+        });
+
+        let responseData = await response.json();
+
+        for (let i=0; i<window.all_action_category_names.length; i++) {
+          if (window.enabled_action_category_names.includes(window.all_action_category_names[i])) {
+            byId("current-" + window.all_action_category_names[i].replaceAll("_", "-")).innerHTML = responseData[window.all_action_category_names[i]];
+          } else {
+            byId("current-" + window.all_action_category_names[i].replaceAll("_", "-")).innerHTML = "?";
+          }
+        }
+      }
+
+      function fetchFrame() {
+        let frameLink = (frameIdx, delta) => ("/get_video_frame/" + window.activeVideo + "/" + frameIdx + "/?bounding_box_feature_names=" + window.enabled_bounding_box_feature_names.join(","));
+        let activeFrameContainer = byId("active-frame-container");
+        let configInputs = byId("grid-configurator").querySelectorAll("input");
+        let imgChildren = activeFrameContainer.querySelectorAll("img");
+        for (let childIdx = imgChildren.length - 1; childIdx >= 0; childIdx--) {
+          let childEl = imgChildren[childIdx];
+          let val = configInputs[childIdx].value.trim();
+          let delta = parseInt(val);
+          let targetFrameIdx = window.activeFrame + delta;
+          childEl.src = frameLink(targetFrameIdx, delta);
+        }
+      }
+
+      function seekerMouseUp(event) {
+        if(!!window.seekerButtonMouseDownCoords) {
+          endSeekerBtnDrag(event);
+        }
+        else {
+          let el = event.target;
+          let rect = el.getBoundingClientRect();
+          let maxWidth = rect.width;
+          let ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / maxWidth));
+          selectFrame(Math.floor(ratio * window.videoData["num_real_frames"]));
+        }
+      }
+
+      function seekerButtonMouseDown(event) {
+        event.stopPropagation();
+        let coords = [event.clientX, event.clientY];
+        window.seekerButtonMouseDownCoords = coords;
+        console.log(event);
+      }
+
+      function windowMouseMove(event) {
+        if(!!window.seekerButtonMouseDownCoords) {
+          let el = byId("seeker");
+          let seekerRect = el.getBoundingClientRect();
+          let targetRect = event.target.getBoundingClientRect();
+          let translatedX = event.clientX - seekerRect.left;
+
+          // translate to seeker coordinates
+          selectFrame(Math.floor((translatedX / seekerRect.width) * window.numFrames), false);
+        }
+      }
+
+      function endSeekerBtnDrag(event) {
+        if(!!window.seekerButtonMouseDownCoords) {
+          window.seekerButtonMouseDownCoords = null;
+          selectFrame(window.activeFrame, true);
+        }
+      }
+
+      function windowLeave(event) {
+        endSeekerBtnDrag();
+      }
+
+      function windowMouseUp(event) {
+        endSeekerBtnDrag();
+      }
+
+      function animationStep() {
+        if(window.activeFrame >= window.numFrames - 1) {
+          toggleAnimation(false);
+        }
+        else {
+          if([...document.getElementsByClassName("active-frame")].reduce(((acc,val) => acc && val.complete), true))
+            window.selectFrame(window.activeFrame + parseInt(byId("seeker-speed-select").value));
+        }
+      }
+
+      function toggleAnimation(enable) {
+        if(enable) {
+          if(!window.animationTimer) {
+            window.animationTimer = window.setInterval(window.animationStep, 200);
+            byId("seeker-play-pause-button").innerHTML = "⏸️";
+            byId("seeker-play-pause-button").title = "Pause";
+          }
+        }
+        else {
+          if(!!window.animationTimer) {
+            window.clearInterval(window.animationTimer);
+            window.animationTimer = null;
+            byId("seeker-play-pause-button").innerHTML = "▶️";
+            byId("seeker-play-pause-button").title = "Play";
+          }
+        }
+      }
+
+      function recomputeGrid() {
+        let gridRows = 1;
+        let gridCols = 1;
+
+        let currentGridRows = window.gridRows || 0;
+        let currentGridCols = window.gridCols || 0;
+
+        let gcEl = byId("grid-configurator");
+        let contEl = byId("active-frame-container");
+
+        // remove "oldest" first
+
+        while (gcEl.children.length > gridRows) {
+          gcEl.removeChild(gcEl.children[0]);
+        }
+
+        while (contEl.children.length > gridRows) {
+          contEl.removeChild(contEl.children[0]);
+        }
+
+        while (gcEl.children.length > 0 && gcEl.children[0].children.length > gridCols) {
+          for (let child of gcEl.children) {
+            while (child.children.length > gridCols) {
+              child.removeChild(child.children[0]);
+            }
+          }
+        }
+
+        while (contEl.children.length > 0 && contEl.children[0].children.length > gridCols) {
+          for (let child of contEl.children) {
+            while (child.children.length > gridCols) {
+              child.removeChild(child.children[0]);
+            }
+          }
+        }
+
+        while (gcEl.children.length < gridRows) {
+          let trEl = document.createElement("tr");
+          gcEl.insertBefore(trEl, gcEl.firstChild);
+        }
+
+        while (contEl.children.length < gridRows) {
+          let trEl = document.createElement("tr");
+          contEl.insertBefore(trEl, contEl.firstChild);
+        }
+
+        for (let rowIdx = 0; rowIdx < gridRows; rowIdx++) {
+          let trEl = gcEl.children[rowIdx];
+          while (trEl.children.length < gridCols) {
+            let tdEl = document.createElement("td");
+
+            let textInput = document.createElement("input");
+            textInput.className = "grid-configurator-text-input";
+            textInput.type = "text";
+            textInput.value = rowIdx == gridRows - 1 && trEl.children.length == 0 ? "0" : "?";
+            textInput.size = 3;
+            tdEl.appendChild(textInput);
+
+            trEl.insertBefore(tdEl, trEl.firstChild);
+          }
+        }
+
+        for (let rowIdx = 0; rowIdx < gridRows; rowIdx++) {
+          let trEl = contEl.children[rowIdx];
+          while(trEl.children.length < gridCols) {
+            let tdEl = document.createElement("td");
+
+            let imgEl = document.createElement("img");
+            imgEl.className = "active-frame";
+            imgEl.src = "{% static "img/no_image.png" %}";
+            tdEl.appendChild(imgEl);
+
+            trEl.insertBefore(tdEl, trEl.firstChild);
+          }
+        }
+
+        window.gridRows = gridRows;
+        window.gridCols = gridCols;
+
+        fetchFrame();
+      }
+
+      let selectPrevFrame = debounce(() => selectFrame(window.activeFrame - parseInt(byId("seeker-speed-select").value)));
+      let selectNextFrame = debounce(() => selectFrame(window.activeFrame + parseInt(byId("seeker-speed-select").value)));
+    </script>
+
+    <script src="/static/scripts/webrtcstreamer.js"></script>
+  </head>
+  <body onmousemove="javascript:windowMouseMove(event);" onmouseup="javascript:windowMouseUp(event)" onmouseleave="javascript:windowLeave(event)">
+    <div class="main-container">
+      <div class="frame-container">
+        <div class="active-video-container">
+
+          <div id="frame-detail-box" style="display: none;">
+            <div id="frame-detail-box-title">🖼️ P09_07_0000032</div>
+            <div id="frame-detail-box-header"><span id="frame-detail-box-header-intern">Available HOS data:</span></div>
+            <!--<div><span class="frame-detail-box-frame-id">42e4</span>: 0 to 1000 seg.; 0 to 3312 total</div>-->
+            <span id="frame-detail-box-loading-label">Loading...</span>
+            <span id="frame-detail-box-not-processed-label">Frame not processed</span>
+            <div id="frame-detail-box-contents" style="display: none;">
+            </div>
+          </div>
+
+          <div id="selected-video-name"></div>
+          <table id="active-frame-container">
+          </table>
+          <div class="active-frame-tools">
+            <div class="seeker-nav-button" id="seeker-play-pause-button" onclick="javascript:toggleAnimation(!window.animationTimer);" title="Play">▶️</div>
+            <div class="seeker-nav-button" id="seeker-prev-button" onclick="javascript:selectPrevFrame();" title="Previous frame">⬅️</div>
+            <div id="seeker" onmouseup="javascript:seekerMouseUp(event);"><div id="seeker-filling"></div> <div id="seeker-button" onmousedown="javascript:seekerButtonMouseDown(event);"></div></div>
+            <div class="seeker-nav-button" id="seeker-next-button" onclick="javascript:selectNextFrame();" title="Next frame">➡️</div>
+            <select id="seeker-speed-select">
+              <option value="1">1x</option>
+              <option value="2">2x</option>
+              <option value="3">3x</option>
+              <option value="5">5x</option>
+              <option value="7">7x</option>
+              <option value="10">10x</option>
+              <option value="15">15x</option>
+              <option value="30">30x</option>
+              <option value="60">60x</option>
+              <option value="120">120x</option>
+              <option value="180">180x</option>
+              <option value="240">240x</option>
+              <option value="300">300x</option>
+              <option value="600">600x</option>
+            </select>
+            <div class="video-position-info">
+              <div class="video-position-info-label" title="Frame number">#️⃣</div>
+              <div id="video-position-frames" title="Frame number">.....</div>
+              <div class="video-position-separator">/</div>
+              <div id="video-duration-frames" title="Number of frames in video"> .....</div>
+            </div>
+            <div class="video-position-info">
+              <div class="video-position-info-label" title="Frame timestamp">⏱️</div>
+              <div id="video-position-time"title="Frame timestamp">..:..:..</div>
+              <div class="video-position-separator">/</div>
+              <div id="video-duration-time"title="Duration of video">..:..:..</div>
+            </div>
+          </div>
+          <div class="control-container">
+            <div class="layers-label">🧩 Layers</div>
+            <div class="layer-selection">
+              <div>
+                <input type="checkbox" id="layer-selection-box-ground-truth-action-category" onclick="javascript:toggleActionCategory('ground_truth_action_category', this.checked);" checked="true" />
+                <label for="layer-selection-box-ground-truth-action-category"> 📄 Ground truth action category: </label> <span id="current-ground-truth-action-category">?</span>
+              </div>
+
+              <div>
+                <input type="checkbox" id="layer-selection-box-asl-baseline-predicted-action-category" onclick="javascript:toggleActionCategory('asl_baseline_predicted_action_category', this.checked);" checked="true" />
+                <label for="layer-selection-box-asl-baseline-predicted-action-category"> 📄 ASL baseline predicted action category: </label> <span id="current-asl-baseline-predicted-action-category">?</span>
+              </div>
+
+              <div>
+                <input type="checkbox" id="layer-selection-box-blip-describe" onclick="javascript:toggleBLIPFeature('blip_describe', this.checked);" checked="true" />
+                <label for="layer-selection-box-blip-describe"> 🖼️ BLIP (What does the image describe?): </label> <span id="current-blip-describe-answer">?</span>
+              </div>
+
+              <div>
+                <input type="checkbox" id="layer-selection-box-blip-do" onclick="javascript:toggleBLIPFeature('blip_do', this.checked);" checked="true" />
+                <label for="layer-selection-box-blip-do"> 🖼️ BLIP (What is the person in this picture doing?): </label> <span id="current-blip-do-answer">?</span>
+              </div>
+
+              <div>
+                <input type="checkbox" id="layer-selection-box-blip-happen" onclick="javascript:toggleBLIPFeature('blip_happen', this.checked);" checked="true" />
+                <label for="layer-selection-box-blip-happen"> 🖼️ BLIP (What is happening in this picture?): </label> <span id="current-blip-happen-answer">?</span>
+              </div>
+
+              <div>
+                <input type="checkbox" id="layer-selection-box-visor-hos-bounding-boxes" onclick="javascript:toggleBoundingBoxFeature('visor_hos', this.checked);" checked="true" />
+                <label for="layer-selection-box-visor-hos-bounding-boxes"> <div style="border: dashed 1.75px #007; float: left; width: 11px; height: 11px; margin-right: 3.5px"></div> VisorHOS bounding boxes</label>
+              </div>
+
+              <div>
+                <input type="checkbox" id="layer-selection-box-unidet-bounding-boxes" onclick="javascript:toggleBoundingBoxFeature('unidet', this.checked);" checked="true" />
+                <label for="layer-selection-box-unidet-bounding-boxes"><div style="border: dashed 1.75px #007; float: left; width: 11px; height: 11px; margin-right: 3.5px"> </div> Unidet bounding boxes </label>
+              </div>
+
+              <div>
+                <input type="checkbox" id="layer-selection-box-unidet-visor-hos-bounding-boxes" onclick="javascript:toggleBoundingBoxFeature('unidet_visor_hos', this.checked);" checked="true" />
+                <label for="layer-selection-box-unidet-visor-hos-bounding-boxes"><div style="border: dashed 1.75px #007; float: left; width: 11px; height: 11px; margin-right: 3.5px"> </div> Unidet-VisorHOS bounding boxes </label>
+              </div>
+            <div class="grid-control">
+            </div>
+            <table id="grid-configurator">
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="navigation-container">
+        {% for video in videos %}
+        <div class="video-entry" id="video-entry-{{video.name}}" onclick="javascript:selectVideo('{{video.name}}');">
+          <img class="video-thumbnail" src="{% static "img/video_thumbnails/mini/"|add:video.name|add:".jpg" %}" />
+          <div class="video-name">{{video.name}}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <script>
+      byId('seeker-speed-select').value = "1";
+      byId('layer-selection-box-unidet-bounding-boxes').checked = true;
+      byId('layer-selection-box-visor-hos-bounding-boxes').checked = true;
+      byId('layer-selection-box-unidet-visor-hos-bounding-boxes').checked = true;
+      byId('layer-selection-box-ground-truth-action-category').checked = true;
+      byId('layer-selection-box-asl-baseline-predicted-action-category').checked = true;
+      byId('layer-selection-box-blip-describe').checked = true;
+      byId('layer-selection-box-blip-happen').checked = true;
+
+      recomputeGrid();
+      selectVideo("00182baf-e3fe-4bee-9416-825555bc4506");
+    </script>
+  </body>
+</html>
+{% endwith %}
+{% endwith %}

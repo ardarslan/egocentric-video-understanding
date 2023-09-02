@@ -46,6 +46,9 @@ ego4d --output_directory="$SCRATCH/ego4d_data" --datasets slowfast8x8_r101_k400 
 
 python3 $CODE/scripts/02_download_data/clip_feature_extractor.py --annotations_folder_path $SCRATCH/ego4d_data/v2/annotations --all_clip_names_file_path $SCRATCH/ego4d_data/v2/all_clip_names.txt --slowfast_video_features_folder_path $SCRATCH/ego4d_data/v2/slowfast8x8_r101_k400 --omnivore_video_features_folder_path $SCRATCH/ego4d_data/v2/omnivore_video_swinl --slowfast_clip_features_folder_path $SCRATCH/ego4d_data/v2/slowfast_clip --omnivore_clip_features_folder_path $SCRATCH/ego4d_data/v2/omnivore_clip
 
+python3 $CODE/scripts/02_download_data/extract_clip_thumbnails.py --input_folder_path $SCRATCH/ego4d_data/v2/clips/ --output_folder_path $CODE/scripts/05_visualize_frame_features/webserver/static/img/video_thumbnails/mini --max_width 320 --max_height 240
+
+
 python3 $CODE/scripts/07_reproduce_baseline_results/convert_annotation.py --input_annotation_folder_path $SCRATCH/ego4d_data/v2/annotations/ --video_features_folder_path $SCRATCH/ego4d_data/v2/ --ego4d_json_path $SCRATCH/ego4d_data/ego4d.json --output_annotation_file_path $CODE/scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json
 
 rm -rf omnivore_video_swinl

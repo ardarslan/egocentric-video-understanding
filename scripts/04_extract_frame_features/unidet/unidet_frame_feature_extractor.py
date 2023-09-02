@@ -21,7 +21,12 @@ class UnidetFrameFeatureExtractor(FrameFeatureExtractor):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.cfg = self._setup_cfg(args=args)
+        self.cfg = self._setup_cfg(
+            config_file_path=args.unidet_config_file_path,
+            confidence_threshold=args.unidet_confidence_threshold,
+            model_file_path=args.unidet_model_file_path,
+            device=args.device,
+        )
         unified_label_file = json.load(
             open(self.cfg.MULTI_DATASET.UNIFIED_LABEL_FILE, "r")
         )
@@ -51,23 +56,29 @@ class UnidetFrameFeatureExtractor(FrameFeatureExtractor):
             "detection_score",
         ]
 
-    def _setup_cfg(self, args):
+    def _setup_cfg(
+        self,
+        config_file_path,
+        confidence_threshold,
+        model_file_path,
+        device,
+    ):
         # load config from file and command-line arguments
         cfg = get_cfg()
         add_unidet_config(cfg)
-        cfg.merge_from_file(args.unidet_config_file_path)
-        cfg.MODEL.DEVICE = args.device
-        cfg.MODEL.WEIGHTS = args.unidet_model_file_path
+        cfg.merge_from_file(config_file_path)
+        cfg.MODEL.DEVICE = device
+        cfg.MODEL.WEIGHTS = model_file_path
         # Set score_threshold for builtin models
         cfg.MULTI_DATASET.UNIFIED_LABEL_FILE = os.path.join(
             os.environ["CODE"],
             "scripts/04_extract_frame_features/unidet/datasets/label_spaces",
             cfg.MULTI_DATASET.UNIFIED_LABEL_FILE,
         )
-        cfg.MODEL.RETINANET.SCORE_THRESH_TEST = args.unidet_confidence_threshold
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = args.unidet_confidence_threshold
+        cfg.MODEL.RETINANET.SCORE_THRESH_TEST = confidence_threshold
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = confidence_threshold
         cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = (
-            args.unidet_confidence_threshold
+            confidence_threshold
         )
         cfg.freeze()
         return cfg

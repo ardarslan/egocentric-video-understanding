@@ -9,4 +9,6 @@ tmp
 scripts/07_reproduce_baseline_results/libs/utils/nms_1d_cpu.egg-info
 scripts/07_reproduce_baseline_results/libs/utils/dist
 scripts/07_reproduce_baseline_results/libs/utils/build
+scripts/07_reproduce_baseline_results/submission_final.json
 scripts/04_extract_frame_features/gsam/gsam
+nbs*

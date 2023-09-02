@@ -12,7 +12,7 @@ from detectron2.structures import Instances
 
 from frame_feature_extractor import FrameFeatureExtractor
 
-from typing import List
+from typing import List, Tuple
 
 
 @ray.remote(num_gpus=1)
@@ -20,7 +20,6 @@ class VisorHOSFrameFeatureExtractor(FrameFeatureExtractor):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.cfg = self._setup_cfg(args=args)
         version = "datasets/epick_visor_coco_hos"
         register_epick_instances(
             "epick_visor_2022_val_hos",
@@ -30,14 +29,16 @@ class VisorHOSFrameFeatureExtractor(FrameFeatureExtractor):
         )
         self.classes = ["hand", "object"]
 
-        self.args = args
-        self.cfg = self._setup_cfg(args=args)
+        self.cfg = self._setup_cfg(
+            config_file_path=args.visor_hos_config_file_path,
+            confidence_threshold=args.visor_hos_confidence_threshold,
+            model_file_path=args.visor_hos_model_file_path,
+            device=args.device,
+        )
         self.model = build_model(self.cfg)
         self.model.eval()
         checkpointer = DetectionCheckpointer(self.model)
         checkpointer.load(self.cfg.MODEL.WEIGHTS)
-        # self.model.share_memory()
-
         self.aug = T.ResizeShortestEdge(
             [self.cfg.INPUT.MIN_SIZE_TEST, self.cfg.INPUT.MIN_SIZE_TEST],
             self.cfg.INPUT.MAX_SIZE_TEST,
@@ -56,16 +57,21 @@ class VisorHOSFrameFeatureExtractor(FrameFeatureExtractor):
             "detection_score",
         ]
 
-    def _setup_cfg(self, args):
-        # load config from file and command-line arguments
+    def _setup_cfg(
+        self,
+        config_file_path,
+        confidence_threshold,
+        model_file_path,
+        device,
+    ):
         cfg = get_cfg()
         point_rend.add_pointrend_config(cfg)
-        cfg.merge_from_file(args.visor_hos_config_file_path)
+        cfg.merge_from_file(config_file_path)
         cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
         cfg.MODEL.POINT_HEAD.NUM_CLASSES = 2
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = args.visor_hos_confidence_threshold
-        cfg.MODEL.WEIGHTS = args.visor_hos_model_file_path
-        cfg.MODEL.DEVICE = args.device
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = confidence_threshold
+        cfg.MODEL.WEIGHTS = model_file_path
+        cfg.MODEL.DEVICE = device
         return cfg
 
     def _get_offset(self, h_bbox_xyxy, o_bbox_xyxy):
