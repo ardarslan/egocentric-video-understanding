@@ -124,7 +124,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ckpt",
         type=str,
-        default="baseline_outputs/baseline/epoch_014.pth.tar",
+        default="baseline_outputs/baseline/epoch_011.pth.tar",
         help="path to a checkpoint",
     )
     parser.add_argument(
