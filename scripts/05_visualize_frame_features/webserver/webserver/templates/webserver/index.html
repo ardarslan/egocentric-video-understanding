@@ -367,16 +367,16 @@
 
       window.seekerButtonMouseDownCoords = null;
 
-      window.all_feature_names = ["visor_hos",
-                                  "unidet",
-                                  "unidet_visor_hos"];
-      window.enabled_feature_names = ["visor_hos",
-                                      "unidet",
-                                      "unidet_visor_hos"];
-      window.all_action_categories = ["ground_truth_action_category",
-                                      "asl_baseline_predicted_action_category"]
-      window.enabled_action_categories = ["ground_truth_action_category",
-                                          "asl_baseline_predicted_action_category"]
+      window.all_bounding_box_feature_names = ["visor_hos",
+                                               "unidet",
+                                               "unidet_visor_hos"];
+      window.enabled_bounding_box_feature_names = ["visor_hos",
+                                                   "unidet",
+                                                   "unidet_visor_hos"];
+      window.all_blip_feature_names = ["blip_describe", "blip_do", "blip_happen"]
+      window.enabled_blip_feature_names = ["blip_describe", "blip_do", "blip_happen"]
+      window.all_action_category_names = ["ground_truth_action_category", "asl_baseline_predicted_action_category"]
+      window.enabled_action_category_names = ["ground_truth_action_category", "asl_baseline_predicted_action_category"]
 
       {% autoescape off %}window.palette = [{{PALETTE_STR}}];{% endautoescape %}
 
@@ -405,8 +405,8 @@
           byId("seeker-filling").style.width = "0px";
           byId("seeker-button").style.marginLeft = "0px";
 
-          for(const feature_name of window.all_feature_names) {
-            let seekerParent = byId("layer-seeker-" + feature_name.replace("_", "-"));
+          for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
+            let seekerParent = byId("layer-seeker-" + bounding_box_feature_name.replace("_", "-"));
             if(!seekerParent)
               continue;
             let toRemove = [];
@@ -424,8 +424,8 @@
         for(let el of document.getElementsByClassName("active-frame"))
           el.src = "{% static "img/loading.png" %}";
 
-        for(const feature_name of window.all_feature_names) {
-          let seekerIndicator = byId("layer-seeker-indicator-" + feature_name.replace("_", "-"))
+        for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
+          let seekerIndicator = byId("layer-seeker-indicator-" + bounding_box_feature_name.replace("_", "-"))
           if(!seekerIndicator)
             continue;
           seekerIndicator.style.left = "0px";
@@ -437,7 +437,7 @@
         byId("video-entry-" + videoId).classList.add("selected");
         byId("selected-video-name").innerHTML = "🎥 " + videoId;
 
-        response = await fetch("/get_video_data/"+ videoId +"/", {
+        response = await fetch("/get_video_data/" + videoId + "/", {
           method: "GET",
           mode: "cors",
           cache: "no-cache",
@@ -468,29 +468,8 @@
           fetchFrame();
 
         setSeekerPos(frameIdx);
-      }
-
-      function updateActionCategories() {
-        let cgtacSpan = byId("current-ground-truth-action-category");
-          if (!!cgtacSpan) {
-            let foundActivity = false;
-            if (!!window.videoData && "virtual_availability" in window.videoData && "gt_activity" in window.videoData["virtual_availability"]) {
-              for (region of window.videoData["virtual_availability"]["gt_activity"]) {
-                if (region[0] > window.activeFrame)
-                  break;
-
-                if (region[0] <= window.activeFrame && window.activeFrame < region[1]) {
-                  cgtacSpan.innerHTML = region[2] + " " + region[3];
-                  foundActivity = true;
-                  break;
-                }
-              }
-            }
-
-            if (!foundActivity) {
-              cgtacSpan.innerHTML = "?";
-            }
-        }
+        fetchBLIPAnswers();
+        fetchActionCategories();
       }
 
       function setSeekerPos(frameIdx) {
@@ -508,84 +487,103 @@
         let vptEl = byId("video-position-time");
         vptEl.innerHTML = Math.floor(posTime / 3600).toFixed(0) +":"+ Math.floor((posTime % 3600) / 60).toFixed(0).padStart(2, "0") +":"+ (posTime % 60).toFixed(0).padStart(2, "0");
 
-        for(const feature_name of window.all_feature_names) {
-          console.log(feature_name);
-          let seekerParent = byId("layer-seeker-" + feature_name.replace("_", "-"));
+        for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
+          let seekerParent = byId("layer-seeker-" + bounding_box_feature_name.replace("_", "-"));
           if(!seekerParent)
             continue;
-          let seekerIndicator = byId("layer-seeker-indicator-" + feature_name.replace("_", "-"))
+          let seekerIndicator = byId("layer-seeker-indicator-" + bounding_box_feature_name.replace("_", "-"))
           if(!seekerIndicator)
             continue;
           seekerIndicator.style.left = (ratio * seekerParent.getBoundingClientRect().width) + "px";
         }
-
-        updateCurrentActionCategories();
       }
 
-      function toggleFeature(feature_name, enable) {
-        if(!window.enabled_feature_names)
-          window.enabled_feature_names = [];
+      function toggleBoundingBoxFeature(bounding_box_feature_name, enable) {
+        if (!window.enabled_bounding_box_feature_names)
+          window.enabled_bounding_box_feature_names = [];
 
-        if(enable)
-          window.enabled_feature_names.push(feature_name);
+        if (enable)
+          window.enabled_bounding_box_feature_names.push(bounding_box_feature_name);
         else
-          window.enabled_feature_names = window.enabled_feature_names.filter((str) => str != feature_name);
+          window.enabled_bounding_box_feature_names = window.enabled_bounding_box_feature_names.filter((str) => str != bounding_box_feature_name);
 
         fetchFrame();
       }
 
-      function toggleActionCategory(action_category_name, enable) {
-        if(!window.enabled_action_categories)
-          window.enabled_action_categories = [];
+      function toggleBLIPFeature(blip_feature_name, enable) {
+        if (!window.enabled_blip_feature_names)
+            window.enabled_blip_feature_names = [];
 
-        if(enable)
-          window.enabled_action_categories.push(action_category_name);
+        if (enable)
+            window.enabled_blip_feature_names.push(blip_feature_name);
         else
-          window.enabled_action_categories = window.enabled_action_categories.filter((str) => str != action_category_name);
+            window.enabled_blip_feature_names = window.enabled_blip_feature_names.filter ((str) => str != blip_feature_name);
+
+        fetchBLIPAnswers();
+      }
+
+      async function fetchBLIPAnswers() {
+        response = await fetch("/get_blip_answers/" + window.activeVideo + "/" + window.activeFrame + "/?blip_feature_names=" + window.enabled_blip_feature_names.join(","), {
+          method: "GET",
+          mode: "cors",
+          cache: "no-cache",
+          creditals: "same-origin"
+        });
+
+        let responseData = await response.json();
+
+        for (let i=0; i<window.all_blip_feature_names.length; i++) {
+          if (window.enabled_blip_feature_names.includes(window.all_blip_feature_names[i])) {
+            byId("current-" + window.all_blip_feature_names[i].replaceAll("_", "-") + "-answer").innerHTML = responseData[window.enabled_blip_feature_names[i]];
+          } else {
+            byId("current-" + window.all_blip_feature_names[i].replaceAll("_", "-") + "-answer").innerHTML = "?";
+          }
+        }
+      }
+
+      function toggleActionCategory(action_category_name, enable) {
+        if (!window.enabled_action_category_names)
+          window.enabled_action_category_names = [];
+
+        if (enable)
+          window.enabled_action_category_names.push(action_category_name);
+        else
+          window.enabled_action_category_names = window.enabled_action_category_names.filter((str) => str != action_category_name);
 
         fetchActionCategories();
       }
 
+      async function fetchActionCategories() {
+        response = await fetch("/get_action_categories/" + window.activeVideo + "/" + window.activeFrame + "/?action_category_names=" + window.enabled_action_category_names.join(","), {
+          method: "GET",
+          mode: "cors",
+          cache: "no-cache",
+          creditals: "same-origin"
+        });
+
+        let responseData = await response.json();
+
+        for (let i=0; i<window.all_action_category_names.length; i++) {
+          if (window.enabled_action_category_names.includes(window.all_action_category_names[i])) {
+            byId("current-" + window.all_action_category_names[i].replaceAll("_", "-")).innerHTML = responseData[window.all_action_category_names[i]];
+          } else {
+            byId("current-" + window.all_action_category_names[i].replaceAll("_", "-")).innerHTML = "?";
+          }
+        }
+      }
+
       function fetchFrame() {
-        let frameLink = (frameIdx, delta) => ("/get_video_frame/"+ window.activeVideo +"/"+ frameIdx + "/?feature_names="+ window.enabled_feature_names.join(","));
+        let frameLink = (frameIdx, delta) => ("/get_video_frame/" + window.activeVideo + "/" + frameIdx + "/?bounding_box_feature_names=" + window.enabled_bounding_box_feature_names.join(","));
         let activeFrameContainer = byId("active-frame-container");
         let configInputs = byId("grid-configurator").querySelectorAll("input");
         let imgChildren = activeFrameContainer.querySelectorAll("img");
-        for(let childIdx = imgChildren.length - 1; childIdx >= 0; childIdx--) {
+        for (let childIdx = imgChildren.length - 1; childIdx >= 0; childIdx--) {
           let childEl = imgChildren[childIdx];
-
           let val = configInputs[childIdx].value.trim();
-
-          //try {
-            if(val == "0" || val[0] == "-" || val[0] == "+") {
-              let delta = parseInt(val);
-              if(isNaN(delta)) {
-                throw Error();
-              }
-              let targetFrameIdx = window.activeFrame + delta;
-              if(targetFrameIdx < 0 || targetFrameIdx >= window.numFrames) {
-                throw Error();
-              }
-              childEl.src = frameLink(targetFrameIdx, delta);
-            }
-            else if(!isNaN(parseInt(val))) {
-              childEl.src = frameLink(parseInt(val), NaN);
-            }
-            else if(val.indexOf("_") > -1) {
-              let spl = val.split("_");
-              childEl.src = "/get_video_frame/"+ spl.slice(0, -1).join("_") +"/"+ parseInt(spl[spl.length-1]).toString() + "/?feature_names="+ window.enabled_feature_names.join(",");
-            }
-            else {
-              throw Error();
-            }
-          /*}
-          catch {
-            childEl.src = "{% static "img/no_image.png" %}";
-          }*/
+          let delta = parseInt(val);
+          let targetFrameIdx = window.activeFrame + delta;
+          childEl.src = frameLink(targetFrameIdx, delta);
         }
-
-        if(!!webRtcServerList && !!webRtcServerList["video_window_0"])
-          webRtcServerList["video_window_0"].dataFeature.send(JSON.stringify({"class_name": "webapp/input", "frame_idx": window.activeFrame, "video_id": window.activeVideo}))
       }
 
       function seekerMouseUp(event) {
@@ -675,43 +673,43 @@
 
         // remove "oldest" first
 
-        while(gcEl.children.length > gridRows) {
+        while (gcEl.children.length > gridRows) {
           gcEl.removeChild(gcEl.children[0]);
         }
 
-        while(contEl.children.length > gridRows) {
+        while (contEl.children.length > gridRows) {
           contEl.removeChild(contEl.children[0]);
         }
 
-        while(gcEl.children.length > 0 && gcEl.children[0].children.length > gridCols) {
-          for(let child of gcEl.children) {
-            while(child.children.length > gridCols) {
+        while (gcEl.children.length > 0 && gcEl.children[0].children.length > gridCols) {
+          for (let child of gcEl.children) {
+            while (child.children.length > gridCols) {
               child.removeChild(child.children[0]);
             }
           }
         }
 
-        while(contEl.children.length > 0 && contEl.children[0].children.length > gridCols) {
-          for(let child of contEl.children) {
-            while(child.children.length > gridCols) {
+        while (contEl.children.length > 0 && contEl.children[0].children.length > gridCols) {
+          for (let child of contEl.children) {
+            while (child.children.length > gridCols) {
               child.removeChild(child.children[0]);
             }
           }
         }
 
-        while(gcEl.children.length < gridRows) {
+        while (gcEl.children.length < gridRows) {
           let trEl = document.createElement("tr");
           gcEl.insertBefore(trEl, gcEl.firstChild);
         }
 
-        while(contEl.children.length < gridRows) {
+        while (contEl.children.length < gridRows) {
           let trEl = document.createElement("tr");
           contEl.insertBefore(trEl, contEl.firstChild);
         }
 
-        for(let rowIdx = 0; rowIdx < gridRows; rowIdx++) {
+        for (let rowIdx = 0; rowIdx < gridRows; rowIdx++) {
           let trEl = gcEl.children[rowIdx];
-          while(trEl.children.length < gridCols) {
+          while (trEl.children.length < gridCols) {
             let tdEl = document.createElement("td");
 
             let textInput = document.createElement("input");
@@ -748,7 +746,6 @@
       let selectPrevFrame = debounce(() => selectFrame(window.activeFrame - parseInt(byId("seeker-speed-select").value)));
       let selectNextFrame = debounce(() => selectFrame(window.activeFrame + parseInt(byId("seeker-speed-select").value)));
     </script>
-
 
     <script src="/static/scripts/webrtcstreamer.js"></script>
   </head>
@@ -808,45 +805,44 @@
             <div class="layers-label">🧩 Layers</div>
             <div class="layer-selection">
               <div>
-                <input type="checkbox" id="layer-selection-box-ground-truth-action-category" onclick="javascript:toggleFeature('ground_truth_action_category', this.checked);" checked="true" />
-                <label for="layer-selection-box-ground-truth-action-category"> 📄 Ground truth action category </label>: <span id="current-ground-truth-action-category">?</span>
+                <input type="checkbox" id="layer-selection-box-ground-truth-action-category" onclick="javascript:toggleActionCategory('ground_truth_action_category', this.checked);" checked="true" />
+                <label for="layer-selection-box-ground-truth-action-category"> 📄 Ground truth action category: </label> <span id="current-ground-truth-action-category">?</span>
               </div>
 
               <div>
-                <input type="checkbox" id="layer-selection-box-asl-baseline-predicted-action-category" onclick="javascript:toggleFeature('asl_baseline_predicted_action_category', this.checked);" checked="true" />
-                <label for="layer-selection-box-asl-baseline-predicted-action-category"> 📄 ASL baseline predicted action category </label>: <span id="current-asl-baseline-predicted-action-category">?</span>
+                <input type="checkbox" id="layer-selection-box-asl-baseline-predicted-action-category" onclick="javascript:toggleActionCategory('asl_baseline_predicted_action_category', this.checked);" checked="true" />
+                <label for="layer-selection-box-asl-baseline-predicted-action-category"> 📄 ASL baseline predicted action category: </label> <span id="current-asl-baseline-predicted-action-category">?</span>
               </div>
 
               <div>
-                <input type="checkbox" id="layer-selection-box-blip-do" onclick="javascript:toggleActionCategory('blip_do', this.checked);" checked="true" />
-                <label for="layer-selection-box-blip-do"> BLIP (What is the person in this picture doing?) </label>: <span id="current-blip-do-answer">?</span>
+                <input type="checkbox" id="layer-selection-box-blip-describe" onclick="javascript:toggleBLIPFeature('blip_describe', this.checked);" checked="true" />
+                <label for="layer-selection-box-blip-describe"> 🖼️ BLIP (What does the image describe?): </label> <span id="current-blip-describe-answer">?</span>
               </div>
 
               <div>
-                <input type="checkbox" id="layer-selection-box-blip-happen" onclick="javascript:toggleActionCategory('blip_happen', this.checked);" checked="true" />
-                <label for="layer-selection-box-blip-happen"> BLIP (What is happening in this picture?) </label>: <span id="current-blip-happen-answer">?</span>
+                <input type="checkbox" id="layer-selection-box-blip-do" onclick="javascript:toggleBLIPFeature('blip_do', this.checked);" checked="true" />
+                <label for="layer-selection-box-blip-do"> 🖼️ BLIP (What is the person in this picture doing?): </label> <span id="current-blip-do-answer">?</span>
               </div>
 
               <div>
-                <input type="checkbox" id="layer-selection-box-blip-describe" onclick="javascript:toggleActionCategory('blip_describe', this.checked);" checked="true" />
-                <label for="layer-selection-box-blip-describe"> BLIP (What does the image describe?) </label>: <span id="current-blip-describe-answer">?</span>
+                <input type="checkbox" id="layer-selection-box-blip-happen" onclick="javascript:toggleBLIPFeature('blip_happen', this.checked);" checked="true" />
+                <label for="layer-selection-box-blip-happen"> 🖼️ BLIP (What is happening in this picture?): </label> <span id="current-blip-happen-answer">?</span>
               </div>
 
               <div>
-                <input type="checkbox" id="layer-selection-box-visor-hos-bounding-boxes" onclick="javascript:toggleFeature('visor_hos', this.checked);" checked="true" />
+                <input type="checkbox" id="layer-selection-box-visor-hos-bounding-boxes" onclick="javascript:toggleBoundingBoxFeature('visor_hos', this.checked);" checked="true" />
                 <label for="layer-selection-box-visor-hos-bounding-boxes"> <div style="border: dashed 1.75px #007; float: left; width: 11px; height: 11px; margin-right: 3.5px"></div> VisorHOS bounding boxes</label>
               </div>
 
               <div>
-                <input type="checkbox" id="layer-selection-box-unidet-bounding-boxes" onclick="javascript:toggleFeature('unidet', this.checked);" checked="true" />
+                <input type="checkbox" id="layer-selection-box-unidet-bounding-boxes" onclick="javascript:toggleBoundingBoxFeature('unidet', this.checked);" checked="true" />
                 <label for="layer-selection-box-unidet-bounding-boxes"><div style="border: dashed 1.75px #007; float: left; width: 11px; height: 11px; margin-right: 3.5px"> </div> Unidet bounding boxes </label>
               </div>
 
               <div>
-                <input type="checkbox" id="layer-selection-box-unidet-visor-hos-bounding-boxes" onclick="javascript:toggleFeature('unidet_visor_hos', this.checked);" checked="true" />
+                <input type="checkbox" id="layer-selection-box-unidet-visor-hos-bounding-boxes" onclick="javascript:toggleBoundingBoxFeature('unidet_visor_hos', this.checked);" checked="true" />
                 <label for="layer-selection-box-unidet-visor-hos-bounding-boxes"><div style="border: dashed 1.75px #007; float: left; width: 11px; height: 11px; margin-right: 3.5px"> </div> Unidet-VisorHOS bounding boxes </label>
               </div>
-
             <div class="grid-control">
             </div>
             <table id="grid-configurator">
@@ -869,11 +865,11 @@
       byId('layer-selection-box-unidet-bounding-boxes').checked = true;
       byId('layer-selection-box-visor-hos-bounding-boxes').checked = true;
       byId('layer-selection-box-unidet-visor-hos-bounding-boxes').checked = true;
-      byId('layer-selection-box-blip-do').checked = true;
-      byId('layer-selection-box-blip-happen').checked = true;
-      byId('layer-selection-box-blip-describe').checked = true;
       byId('layer-selection-box-ground-truth-action-category').checked = true;
       byId('layer-selection-box-asl-baseline-predicted-action-category').checked = true;
+      byId('layer-selection-box-blip-describe').checked = true;
+      byId('layer-selection-box-blip-happen').checked = true;
+
       recomputeGrid();
       selectVideo("00182baf-e3fe-4bee-9416-825555bc4506");
     </script>

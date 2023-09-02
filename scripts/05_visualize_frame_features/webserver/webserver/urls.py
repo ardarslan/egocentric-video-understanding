@@ -24,19 +24,24 @@ from . import views
 urlpatterns = [
     path("", views.index, name="index"),
     path(
-        "get_video_data/<str:video_id>/",
+        "get_video_data/<str:clip_id>/",
         views.VideoDataReader.as_view({"get": "get_video_data"}),
         name="get_video_data",
     ),
     path(
-        "get_video_frame/<str:video_id>/<int:frame_id>/",
+        "get_video_frame/<str:clip_id>/<int:frame_id>/",
         views.VideoDataReader.as_view({"get": "get_video_frame"}),
         name="get_video_frame",
     ),
     path(
-        "get_video_frame_action_categories/<str:video_id>/<int:frame_id>/",
-        views.VideoDataReader.as_view({"get": "get_video_frame_action_categories"}),
-        name="get_video_frame_action_categories",
+        "get_action_categories/<str:clip_id>/<int:frame_id>/",
+        views.VideoDataReader.as_view({"get": "get_action_categories"}),
+        name="get_action_categories",
+    ),
+    path(
+        "get_blip_answers/<str:clip_id>/<int:frame_id>/",
+        views.VideoDataReader.as_view({"get": "get_blip_answers"}),
+        name="get_blip_answers",
     ),
     path("admin/", admin.site.urls),
 ]

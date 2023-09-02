@@ -36,6 +36,8 @@ if __name__ == "__main__":
             "ofa",
             "blip_captioning",
             "blip_vqa",
+            "blip2_captioning",
+            "blip2_vqa",
         ],
         required=True,
     )
@@ -91,6 +93,12 @@ if __name__ == "__main__":
         "--blip_vqa_model_file_path",
         type=str,
         default=f"{os.environ['SCRATCH']}/mq_libs/blip/model_base_vqa_capfilt_large.pth",
+    )
+
+    parser.add_argument(
+        "--blip2_model_folder_path",
+        type=str,
+        default=f"{os.environ['SCRATCH']}/mq_libs/blip2"
     )
 
     parser.add_argument(

@@ -272,17 +272,15 @@ mkdir $SCRATCH/mq_libs
 
 cd $SCRATCH/mq_libs
 
-git clone https://github.com/facebookresearch/detectron2.git
+git clone https://huggingface.co/Salesforce/blip2-opt-2.7b -O blip2
 
-pip install -e detectron2
+wget https://huggingface.co/Salesforce/blip2-opt-2.7b/resolve/main/pytorch_model-00001-of-00002.bin -O blip2/pytorch_model-00001-of-00002.bin
 
-sed -i 's/(point_indices \/\/ W)/torch.div(point_indices, W, rounding_mode="floor")/g' $SCRATCH/mq_libs/detectron2/projects/PointRend/point_rend/point_features.py
+wget https://huggingface.co/Salesforce/blip2-opt-2.7b/resolve/main/pytorch_model-00002-of-00002.bin -O blip2/pytorch_model-00002-of-00002.bin
 
 cd $CODE/scripts/01_setup_environment
 
 pip install -r mq_data_requirements.txt
-
-pip install $CODE/scripts/04_extract_frame_features/ofa/ofa/transformers
 
 python3 -m ipykernel install --user --name=mq
 
@@ -360,6 +358,10 @@ cd $CODE/scripts/01_setup_environment
 
 pip install -r mq_visualization_requirements.txt
 
+mkdir $SCRATCH/mq_libs
+
+cd $SCRATCH/mq_libs
+
 # 02_01 - Download Ego4D dataset and pre-extracted features
 
 Follow the instructions in scripts/02_download_data/01_download_ego4d_dataset_and_clip_features.txt
@@ -383,18 +385,32 @@ Implemented in $CODE/scripts/03_analyze_data/check_annotation_distribution.ipynb
 CVL:
 
 ```
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+
 cd $CODE/scripts/04_extract_frame_features
 
 mamba deactivate
 
-mamba activate mq_data
+mamba activate mq
 
-sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
+sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "blip_vqa" -q "0" -c "0,1,2,3"
+
+sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "unidet" -q "1" -c "0,1,2,3"
 ```
 
 Euler:
 
 ```
+export CODE=/cluster/home/aarslan/mq
+
+export SCRATCH=/cluster/scratch/aarslan
+
 cd $CODE/scripts/04_extract_frame_features
 
 mamba deactivate
@@ -411,6 +427,12 @@ AIT:
 ```
 screen
 
+export CODE=/local/home/aarslan/mq
+
+export SCRATCH=/data/aarslan
+
+export CUDA_HOME=/usr/local/cuda
+
 cd $CODE/scripts/04_extract_frame_features
 
 mamba deactivate
@@ -421,27 +443,16 @@ mamba activate mq_data
 
 chmod +x main.sh
 
-./main.sh -f "<FRAME_FEATURE_NAME>" -q "<QUARTER_INDEX>" -c "<CUDA_VISIBLE_DEVICES>"
+./main.sh -f "blip2_vqa" -q "0" -c "1,4"
 ```
 
 # 05 - Visualize frame features
 
-cd ~/mq/scripts/05_visualize_frame_features
-
-django-admin startproject djangoproject .
-
-python manage.py migrate
+cd ~/mq/scripts/05_visualize_frame_features/webserver
 
 python manage.py runserver 5960
 
-Go to http://bmiccomp01.ee.ethz.ch:5960/ in your browser.
-
-<!-- (NOT IMPLEMENTED YET)
-
-cd scripts/05_visualize_frame_features/ag_thesis_230716/webserver
-
-python3 manage.py migrate
-python3 manage.py runserver 5999 -->
+Go to http://127.0.0.1:5960/ in your browser.
 
 # 06 - Analyze frame features
 
@@ -455,9 +466,9 @@ mamba activate mq_model
 
 cd $CODE/scripts/07_reproduce_baseline_results
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender07 train.sh
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 train.sh
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender07 test.sh
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 test.sh
 
 python merge_submission.py
 
