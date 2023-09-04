@@ -1,12 +1,10 @@
 import os
 import gc
 import json
-import math
 import argparse
 import traceback
 from datetime import datetime
 
-import cv2
 import ray
 import torch
 from tqdm import tqdm
