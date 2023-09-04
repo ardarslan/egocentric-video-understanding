@@ -60,10 +60,18 @@ Use remote-ssh extension of your local VS Code.
 
 # Start a Jupyter Notebook
 
+CVL
+
 ```
 cd $CODE
 
 jupyter notebook --no-browser --port 5998 --ip $(hostname -f)
+```
+
+AIT
+
+```
+http://127.0.0.1:5961/tree?token=bd667dd4f417482951fa1ec99fcc9521adc4e6ea26f4a9c7
 ```
 
 # Debug Baseline Repository
@@ -169,7 +177,6 @@ mamba activate mq_data
 
 cd $CODE/scripts/01_setup_environment/
 
-
 rm -rf ~/.cache
 
 rm -rf $SCRATCH/pip_cache
@@ -187,7 +194,21 @@ export PIP_CACHE_DIR=$SCRATCH/pip_cache
 pip install --upgrade pip
 
 (
-For CVL and Euler:
+For CVL:
+
+mamba deactivate
+
+mamba activate mq_data
+
+cd $CODE/scripts/01_setup_environment
+
+chmod +x install_torch_torchvision.sh
+
+sbatch --gres=gpu:1 install_torch_torchvision.sh
+)
+
+(
+For Euler:
 
 mamba deactivate
 
@@ -268,16 +289,6 @@ rm -rf $CODE/scripts/04_extract_frame_features/gsam/VISAM
 
 rm -rf $CODE/scripts/04_extract_frame_features/gsam/grounded-sam-osx
 
-mkdir $SCRATCH/mq_libs
-
-cd $SCRATCH/mq_libs
-
-git clone https://huggingface.co/Salesforce/blip2-opt-2.7b -O blip2
-
-wget https://huggingface.co/Salesforce/blip2-opt-2.7b/resolve/main/pytorch_model-00001-of-00002.bin -O blip2/pytorch_model-00001-of-00002.bin
-
-wget https://huggingface.co/Salesforce/blip2-opt-2.7b/resolve/main/pytorch_model-00002-of-00002.bin -O blip2/pytorch_model-00002-of-00002.bin
-
 cd $CODE/scripts/01_setup_environment
 
 pip install -r mq_data_requirements.txt
@@ -354,13 +365,15 @@ python3 setup.py install
 
 # 01_05 - Install MQ visualization packages
 
+mamba deactivate
+
+mamba create -n mq_visualization python=3.9.9
+
+mamba activate mq_visualization
+
 cd $CODE/scripts/01_setup_environment
 
-pip install -r mq_visualization_requirements.txt
-
-mkdir $SCRATCH/mq_libs
-
-cd $SCRATCH/mq_libs
+python3 -m pip install -r mq_visualization_requirements.txt
 
 # 02_01 - Download Ego4D dataset and pre-extracted features
 
@@ -397,11 +410,11 @@ cd $CODE/scripts/04_extract_frame_features
 
 mamba deactivate
 
-mamba activate mq
+mamba activate mq_data
 
-sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "blip_vqa" -q "0" -c "0,1,2,3"
+sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "blip2_vqa" -q "1" -c "0,1,2,3"
 
-sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "unidet" -q "1" -c "0,1,2,3"
+sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "blip2_vqa" -q "2" -c "0,1,2,3"
 ```
 
 Euler:
@@ -419,7 +432,7 @@ module load eth_proxy
 
 mamba activate mq_data
 
-sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip_vqa\" -q \"1\" -c \"0\""
+sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip2_vqa\" -q \"3\" -c \"0\""
 ```
 
 AIT:
@@ -443,7 +456,7 @@ mamba activate mq_data
 
 chmod +x main.sh
 
-./main.sh -f "blip2_vqa" -q "0" -c "1,4"
+./main.sh -f "blip2_vqa" -q "0" -c "0,1,4"
 ```
 
 # 05 - Visualize frame features

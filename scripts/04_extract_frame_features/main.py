@@ -46,7 +46,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--num_devices", type=int, default=torch.cuda.device_count())
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
-    parser.add_argument("--batch_size", type=int, default=2)
+    parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--num_frames_per_processing_split", type=int, default=3000)
     parser.add_argument(
         "--annotations_json_file_path",
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--blip2_model_folder_path",
         type=str,
-        default=f"{os.environ['SCRATCH']}/mq_libs/blip2"
+        default=f"{os.environ['SCRATCH']}/mq_libs/blip2",
     )
 
     parser.add_argument(
@@ -180,7 +180,7 @@ if __name__ == "__main__":
 
     os.makedirs(args.error_folder_path, exist_ok=True)
 
-    ray.init(num_gpus=args.num_devices, num_cpus=args.num_devices)
+    ray.init(num_gpus=args.num_devices, num_cpus=args.num_devices * 2)
 
     frame_feature_extractor_pool = ray.util.ActorPool(
         [get_frame_feature_extractor(args=args) for _ in range(args.num_devices)]

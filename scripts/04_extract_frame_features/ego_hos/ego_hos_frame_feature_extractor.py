@@ -14,7 +14,7 @@ from typing import List, Dict, Any
 from PIL import Image
 
 
-@ray.remote(num_gpus=1)
+@ray.remote(num_gpus=1, num_cpus=1)
 class EgoHOSFrameFeatureExtractor(FrameFeatureExtractor):
     def __init__(self, args):
         super().__init__()

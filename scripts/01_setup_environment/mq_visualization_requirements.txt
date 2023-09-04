@@ -2,3 +2,7 @@ django
 numpy
 pandas
 djangorestframework
+opencv_python
+Pillow
+plotly
+dash
