@@ -367,12 +367,12 @@
 
       window.seekerButtonMouseDownCoords = null;
 
-      window.all_bounding_box_feature_names = ["visor_hos",
+      /* window.all_bounding_box_feature_names = ["visor_hos",
                                                "unidet",
-                                               "unidet_visor_hos"];
-      window.enabled_bounding_box_feature_names = ["visor_hos",
+                                               "unidet_visor_hos"]; */
+      /* window.enabled_bounding_box_feature_names = ["visor_hos",
                                                    "unidet",
-                                                   "unidet_visor_hos"];
+                                                   "unidet_visor_hos"]; */
       window.all_blip2_feature_names = ["blip2_describe", "blip2_do", "blip2_happen", "blip2_captioning"]
       window.enabled_blip2_feature_names = ["blip2_describe", "blip2_do", "blip2_happen", "blip2_captioning"]
       window.all_action_category_names = ["ground_truth_action_category", "asl_baseline_predicted_action_category"]
@@ -405,7 +405,7 @@
           byId("seeker-filling").style.width = "0px";
           byId("seeker-button").style.marginLeft = "0px";
 
-          for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
+          /* for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
             let seekerParent = byId("layer-seeker-" + bounding_box_feature_name.replace("_", "-"));
             if(!seekerParent)
               continue;
@@ -418,18 +418,18 @@
             for(remove of toRemove) {
               remove.parentElement.removeChild(remove);
             }
-          }
+          } */
         }
 
         for(let el of document.getElementsByClassName("active-frame"))
           el.src = "{% static "img/loading.png" %}";
 
-        for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
+        /* for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
           let seekerIndicator = byId("layer-seeker-indicator-" + bounding_box_feature_name.replace("_", "-"))
           if(!seekerIndicator)
             continue;
           seekerIndicator.style.left = "0px";
-        }
+        } */
 
         window.activeVideo = videoId;
         if(!!window.animationTimer)
@@ -487,7 +487,7 @@
         let vptEl = byId("video-position-time");
         vptEl.innerHTML = Math.floor(posTime / 3600).toFixed(0) +":"+ Math.floor((posTime % 3600) / 60).toFixed(0).padStart(2, "0") +":"+ (posTime % 60).toFixed(0).padStart(2, "0");
 
-        for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
+        /* for(const bounding_box_feature_name of window.all_bounding_box_feature_names) {
           let seekerParent = byId("layer-seeker-" + bounding_box_feature_name.replace("_", "-"));
           if(!seekerParent)
             continue;
@@ -495,7 +495,7 @@
           if(!seekerIndicator)
             continue;
           seekerIndicator.style.left = (ratio * seekerParent.getBoundingClientRect().width) + "px";
-        }
+        } */
       }
 
       function toggleBoundingBoxFeature(bounding_box_feature_name, enable) {
@@ -573,7 +573,7 @@
       }
 
       function fetchFrame() {
-        let frameLink = (frameIdx, delta) => ("/get_video_frame/" + window.activeVideo + "/" + frameIdx + "/?bounding_box_feature_names=" + window.enabled_bounding_box_feature_names.join(","));
+        let frameLink = (frameIdx, delta) => ("/get_video_frame/" + window.activeVideo + "/" + frameIdx); // + "/?bounding_box_feature_names=" + window.enabled_bounding_box_feature_names.join(","));
         let activeFrameContainer = byId("active-frame-container");
         let configInputs = byId("grid-configurator").querySelectorAll("input");
         let imgChildren = activeFrameContainer.querySelectorAll("img");
