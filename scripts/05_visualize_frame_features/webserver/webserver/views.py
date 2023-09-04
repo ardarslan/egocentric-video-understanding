@@ -118,10 +118,11 @@ class VideoDataReader(viewsets.ViewSet):
     feature_name_feature_df_mapping = {}
     feature_name_clip_id_mapping = {}
 
-    blip_vqa_feature_name_question_mapping = {
-        "blip_describe": "What does the image describe?",
-        "blip_do": "What is the person in this picture doing?",
-        "blip_happen": "What is happening in this picture?",
+    blip2_vqa_feature_name_question_mapping = {
+        "blip2_describe": "What does the image describe?",
+        "blip2_do": "What is the person in this picture doing?",
+        "blip2_happen": "What is happening in this picture?",
+        "blip2_captioning": "Image Caption",
     }
 
     # @classmethod
@@ -199,7 +200,7 @@ class VideoDataReader(viewsets.ViewSet):
     #     visor_hos_feature_df = cls.feature_name_feature_df_mapping["visor_hos"]
 
     #     visor_hos_feature_rows = visor_hos_feature_df[
-    #         visor_hos_feature_df["frame_index"] == int(frame_id)
+    #         visor_hos_feature_df["frame_index"] == int(frame_id // FRAME_FEATURE_EXTRACTION_STRIDE * FRAME_FEATURE_EXTRACTION_STRIDE)
     #     ]
 
     #     visor_hos_multiplicative_coordinate_correction_factors = cls.get_multiplicative_coordinate_correction_factors(
@@ -287,7 +288,7 @@ class VideoDataReader(viewsets.ViewSet):
     #     unidet_feature_df = cls.feature_name_feature_df_mapping["unidet"]
 
     #     unidet_feature_rows = unidet_feature_df[
-    #         unidet_feature_df["frame_index"] == int(frame_id)
+    #         unidet_feature_df["frame_index"] == int(frame_id // FRAME_FEATURE_EXTRACTION_STRIDE * FRAME_FEATURE_EXTRACTION_STRIDE)
     #     ]
 
     #     unidet_multiplicative_coordinate_correction_factors = cls.get_multiplicative_coordinate_correction_factors(
@@ -432,13 +433,13 @@ class VideoDataReader(viewsets.ViewSet):
     #     unidet_feature_df = cls.feature_name_feature_df_mapping["unidet"]
 
     #     unidet_feature_rows = unidet_feature_df[
-    #         unidet_feature_df["frame_index"] == int(frame_id)
+    #         unidet_feature_df["frame_index"] == int(frame_id // FRAME_FEATURE_EXTRACTION_STRIDE * FRAME_FEATURE_EXTRACTION_STRIDE)
     #     ]
 
     #     visor_hos_feature_df = cls.feature_name_feature_df_mapping["visor_hos"]
 
     #     visor_hos_feature_rows = visor_hos_feature_df[
-    #         visor_hos_feature_df["frame_index"] == int(frame_id)
+    #         visor_hos_feature_df["frame_index"] == int(frame_id // FRAME_FEATURE_EXTRACTION_STRIDE * FRAME_FEATURE_EXTRACTION_STRIDE)
     #     ]
 
     #     unidet_visor_hos_feature_rows = pd.merge(
@@ -643,38 +644,11 @@ class VideoDataReader(viewsets.ViewSet):
         return response
 
     @classmethod
-    def get_blip_answers(cls, request, clip_id, frame_id):
+    def get_blip2_answers(cls, request, clip_id, frame_id):
         if (
-            "blip" not in cls.feature_name_clip_id_mapping.keys()
-            or cls.feature_name_clip_id_mapping["blip"] != clip_id
+            "blip2" not in cls.feature_name_clip_id_mapping.keys()
+            or cls.feature_name_clip_id_mapping["blip2"] != clip_id
         ):
-            existing_blip_feature_file_paths = [
-                os.path.join(
-                    os.environ["SCRATCH"],
-                    f"ego4d_data/v2/frame_features/{clip_id}",
-                    file_name,
-                )
-                for file_name in os.listdir(
-                    os.path.join(
-                        os.environ["SCRATCH"],
-                        f"ego4d_data/v2/frame_features/{clip_id}",
-                    )
-                )
-                if file_name.startswith("blip_")
-            ]
-            blip_feature_dfs = pd.concat(
-                [
-                    pd.read_csv(
-                        existing_blip_feature_file_path,
-                        sep="\t",
-                    )
-                    for existing_blip_feature_file_path in existing_blip_feature_file_paths
-                ],
-                axis=0,
-            )
-            if len(blip_feature_dfs) > 0:
-                blip_feature_dfs["blip_version"] = 1
-
             existing_blip2_feature_file_paths = [
                 os.path.join(
                     os.environ["SCRATCH"],
@@ -699,51 +673,44 @@ class VideoDataReader(viewsets.ViewSet):
                 ],
                 axis=0,
             )
-            if len(blip2_feature_dfs) > 0:
-                blip2_feature_dfs["blip_version"] = 2
 
-            cls.feature_name_feature_df_mapping["blip"] = pd.concat(
-                [blip_feature_dfs, blip2_feature_dfs], axis=0
-            )
+            cls.feature_name_feature_df_mapping["blip2"] = blip2_feature_dfs
+            cls.feature_name_clip_id_mapping["blip2"] = clip_id
 
-            cls.feature_name_clip_id_mapping["blip"] = clip_id
-
-        current_clip_frame_rows = cls.feature_name_feature_df_mapping["blip"]
+        current_clip_frame_rows = cls.feature_name_feature_df_mapping["blip2"]
         current_clip_frame_rows = current_clip_frame_rows[
-            current_clip_frame_rows["frame_index"] == frame_id
+            current_clip_frame_rows["frame_index"]
+            == int(
+                (frame_id // FRAME_FEATURE_EXTRACTION_STRIDE)
+                * FRAME_FEATURE_EXTRACTION_STRIDE
+            )
         ]
 
-        blip_answers = (
+        blip2_answers = (
             [
                 strp
-                for s in request.GET["blip_feature_names"].split(",")
+                for s in request.GET["blip2_feature_names"].split(",")
                 if len(strp := s.strip()) > 0
             ]
-            if "blip_feature_names" in request.GET
+            if "blip2_feature_names" in request.GET
             else []
         )
 
-        blip_answers_dict = {}
-        for blip_answer in blip_answers:
-            if "2" in blip_answer:
-                blip_version = 2
-            else:
-                blip_version = 1
+        blip2_answers_dict = {}
+        for blip2_answer in blip2_answers:
             current_answer = current_clip_frame_rows.loc[
                 (
-                    (
-                        current_clip_frame_rows["question"]
-                        == cls.blip_vqa_feature_name_question_mapping[
-                            blip_answer.replace("2", "")
-                        ]
-                    )
-                    & (current_clip_frame_rows["blip_version"] == blip_version)
+                    current_clip_frame_rows["question"]
+                    == cls.blip2_vqa_feature_name_question_mapping[blip2_answer]
                 ),
                 "answer",
-            ].values[0]
-            blip_answers_dict[blip_answer] = current_answer
+            ]
+            if len(current_answer) == 0:
+                blip2_answers_dict[blip2_answer] = "NaN"
+            else:
+                blip2_answers_dict[blip2_answer] = current_answer.values[0]
 
-        return HttpResponse(json.dumps(blip_answers_dict))
+        return HttpResponse(json.dumps(blip2_answers_dict))
 
     @classmethod
     def get_action_categories(cls, request, clip_id, frame_id):
@@ -773,6 +740,11 @@ class VideoDataReader(viewsets.ViewSet):
                 try:
                     current_ground_truths_dict = cls.ground_truths_dict[clip_id]
                 except KeyError:
+                    action_categories_dict[
+                        action_category_name
+                    ] = "Annotations are not available for this clip."
+                    continue
+                if len(current_ground_truths_dict["annotations"]) == 0:
                     action_categories_dict[
                         action_category_name
                     ] = "Annotations are not available for this clip."

@@ -47,7 +47,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_devices", type=int, default=torch.cuda.device_count())
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
     parser.add_argument("--batch_size", type=int, default=16)
-    parser.add_argument("--num_frames_per_processing_split", type=int, default=3000)
+    parser.add_argument("--frame_feature_extraction_stride", type=int, default=6)
     parser.add_argument(
         "--annotations_json_file_path",
         type=str,
@@ -220,33 +220,23 @@ if __name__ == "__main__":
 
             global_frame_index = GlobalFrameIndex()
 
-            results_list = []
-            for _ in range(
-                int(
-                    math.ceil(
-                        cap.stream.get(cv2.CAP_PROP_FRAME_COUNT)
-                        / float(args.num_frames_per_processing_split)
-                    )
-                )
-            ):
-                inputs = FrameFeatureExtractor.get_inputs(
-                    cap=cap,
-                    batch_size=args.batch_size,
-                    frame_feature_name=args.frame_feature_name,
-                    output_subfolder_path=output_subfolder_path,
-                    num_frames_per_processing_split=args.num_frames_per_processing_split,
-                    global_frame_index=global_frame_index,
-                )
-                current_results_list = frame_feature_extractor_pool.map(
-                    lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(
-                        *current_input
-                    ),
-                    inputs,
-                )
-                del inputs
-                gc.collect()
-                torch.cuda.empty_cache()
-                results_list.extend(current_results_list)
+            inputs = FrameFeatureExtractor.get_inputs(
+                cap=cap,
+                batch_size=args.batch_size,
+                frame_feature_name=args.frame_feature_name,
+                output_subfolder_path=output_subfolder_path,
+                frame_feature_extraction_stride=args.frame_feature_extraction_stride,
+                global_frame_index=global_frame_index,
+            )
+            results_list = frame_feature_extractor_pool.map(
+                lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(
+                    *current_input
+                ),
+                inputs,
+            )
+            del inputs
+            gc.collect()
+            torch.cuda.empty_cache()
             cap.stop()
 
             FrameFeatureExtractor.save_results(

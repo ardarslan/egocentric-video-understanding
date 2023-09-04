@@ -412,9 +412,13 @@ mamba deactivate
 
 mamba activate mq_data
 
-sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "blip2_vqa" -q "1" -c "0,1,2,3"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 4 --mem 50G main.sh -f "blip2_vqa" -q "1" -c "0,1"
 
-sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem 50G main.sh -f "blip2_vqa" -q "2" -c "0,1,2,3"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 4 --mem 50G main.sh -f "blip2_vqa" -q "2" -c "0,1"
+
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 4 --mem 50G main.sh -f "blip2_captioning" -q "1" -c "0,1"
+
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 4 --mem 50G main.sh -f "blip2_captioning" -q "2" -c "0,1"
 ```
 
 Euler:
@@ -432,7 +436,7 @@ module load eth_proxy
 
 mamba activate mq_data
 
-sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip2_vqa\" -q \"3\" -c \"0\""
+sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip2_captioning\" -q \"3\" -c \"0\""
 ```
 
 AIT:
@@ -456,7 +460,7 @@ mamba activate mq_data
 
 chmod +x main.sh
 
-./main.sh -f "blip2_vqa" -q "0" -c "0,1,4"
+./main.sh -f "blip2_vqa" -q "0" -c "0,1,3,4"
 ```
 
 # 05 - Visualize frame features

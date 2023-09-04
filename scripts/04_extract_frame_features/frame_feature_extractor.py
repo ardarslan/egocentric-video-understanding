@@ -17,7 +17,7 @@ class FrameFeatureExtractor(ABC):
         batch_size: int,
         frame_feature_name: str,
         output_subfolder_path: str,
-        num_frames_per_processing_split: int,
+        frame_feature_extraction_stride: int,
         global_frame_index,
     ):
         if frame_feature_name == "ego_hos":
@@ -47,25 +47,27 @@ class FrameFeatureExtractor(ABC):
         frame_indices_batches = []
         frames_batches = []
 
-        current_processing_split_frame_index = 0
-
         while cap_is_opened:
             frame_indices_batch, frames_batch = [], []
             if frame_feature_name == "ego_hos":
                 unidet_features_batch, gsam_features_batch = [], []
 
             for i in range(batch_size):
-                frame = cap.read()
+                for j in range(frame_feature_extraction_stride):
+                    frame = cap.read()
+                    if frame is None:
+                        cap_is_opened = False
+                        break
 
-                if frame is None:  # Reached the end of the video.
-                    cap_is_opened = False
-                    break
-                else:  # We got a valid frame. The current frame will be added to the current batch.
+                if (
+                    frame is not None
+                ):  # We got a valid frame. The current frame will be added to the current batch.
                     frames_batch.append(frame)
                     current_global_frame_index = global_frame_index.get_value()
                     frame_indices_batch.append(current_global_frame_index)
-                    global_frame_index.increment_value()
-                    current_processing_split_frame_index += 1
+                    for j in range(frame_feature_extraction_stride):
+                        global_frame_index.increment_value()
+
                     if frame_feature_name == "ego_hos":
                         relevant_unidet_feature_rows = [
                             dict(row)
@@ -84,19 +86,12 @@ class FrameFeatureExtractor(ABC):
                         unidet_features_batch.append(relevant_unidet_feature_rows)
                         gsam_features_batch.append(relevant_gsam_feature_rows)
 
-                    if (
-                        current_processing_split_frame_index
-                        == num_frames_per_processing_split
-                    ):
-                        cap_is_opened = False
-                        break
-
-            if len(frames_batch) > 0:
-                frame_indices_batches.append(frame_indices_batch)
-                frames_batches.append(frames_batch)
-                if frame_feature_name == "ego_hos":
-                    unidet_features_batches.append(unidet_features_batch)
-                    gsam_features_batches.append(gsam_features_batch)
+                if len(frames_batch) > 0:
+                    frame_indices_batches.append(frame_indices_batch)
+                    frames_batches.append(frames_batch)
+                    if frame_feature_name == "ego_hos":
+                        unidet_features_batches.append(unidet_features_batch)
+                        gsam_features_batches.append(gsam_features_batch)
 
         if frame_feature_name == "ego_hos":
             inputs = zip(

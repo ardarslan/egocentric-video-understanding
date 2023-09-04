@@ -37,9 +37,9 @@ urlpatterns = [
         name="get_action_categories",
     ),
     path(
-        "get_blip_answers/<str:clip_id>/<int:frame_id>/",
-        views.VideoDataReader.as_view({"get": "get_blip_answers"}),
-        name="get_blip_answers",
+        "get_blip2_answers/<str:clip_id>/<int:frame_id>/",
+        views.VideoDataReader.as_view({"get": "get_blip2_answers"}),
+        name="get_blip2_answers",
     ),
     path("admin/", admin.site.urls),
 ]
