@@ -13,7 +13,7 @@ from frame_feature_extractor import FrameFeatureExtractor
 from typing import List
 
 
-@ray.remote(num_gpus=1)
+@ray.remote(num_gpus=1, num_cpus=1)
 class OFAFrameFeatureExtractor(FrameFeatureExtractor):
     def __init__(self, args):
         super().__init__()
