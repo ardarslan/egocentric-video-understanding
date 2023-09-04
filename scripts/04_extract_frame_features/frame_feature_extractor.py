@@ -53,6 +53,8 @@ class FrameFeatureExtractor(ABC):
                 unidet_features_batch, gsam_features_batch = [], []
 
             for i in range(batch_size):
+                if not cap_is_opened:
+                    break
                 for j in range(frame_feature_extraction_stride):
                     frame = cap.read()
                     if frame is None:
