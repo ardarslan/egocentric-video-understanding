@@ -46,7 +46,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--num_devices", type=int, default=torch.cuda.device_count())
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
-    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--frame_feature_extraction_stride", type=int, default=6)
     parser.add_argument(
         "--annotations_json_file_path",
