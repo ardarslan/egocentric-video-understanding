@@ -8,8 +8,7 @@ from datetime import datetime
 import ray
 import torch
 from tqdm import tqdm
-from imutils.video import FileVideoStream
-
+import cv2
 from utils import (
     get_frame_feature_extractor,
     get_column_names,
@@ -214,7 +213,7 @@ if __name__ == "__main__":
             )
             output_subfolder_path = os.path.join(args.output_folder_path, clip_uid)
 
-            cap = FileVideoStream(input_video_file_path).start()
+            cap = cv2.VideoCapture(input_video_file_path)
 
             global_frame_index = GlobalFrameIndex()
 
@@ -235,7 +234,7 @@ if __name__ == "__main__":
             del inputs
             gc.collect()
             torch.cuda.empty_cache()
-            cap.stop()
+            cap.release()
 
             FrameFeatureExtractor.save_results(
                 input_video_file_path=input_video_file_path,

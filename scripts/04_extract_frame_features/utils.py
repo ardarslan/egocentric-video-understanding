@@ -6,7 +6,7 @@
 # )
 # from blip.blip_vqa_frame_feature_extractor import BLIPVQAFrameFeatureExtractor
 from blip2.blip2_captioning_frame_feature_extractor import (
-    BLIP2CaptioningFrameFeatureExtractor
+    BLIP2CaptioningFrameFeatureExtractor,
 )
 from blip2.blip2_vqa_frame_feature_extractor import BLIP2VQAFrameFeatureExtractor
 from gsam.gsam_frame_feature_extractor import GSAMFrameFeatureExtractor
@@ -76,5 +76,5 @@ class GlobalFrameIndex(object):
     def get_value(self):
         return self.value
 
-    def increment_value(self):
-        self.value += 1
+    def increment_value(self, global_frame_index):
+        self.value += global_frame_index

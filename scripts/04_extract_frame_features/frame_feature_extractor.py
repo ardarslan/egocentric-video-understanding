@@ -1,4 +1,5 @@
 import os
+import cv2
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -42,24 +43,24 @@ class FrameFeatureExtractor(ABC):
             unidet_features_batches = []
             gsam_features_batches = []
 
-        cap_is_opened = True
+        success = True
 
         frame_indices_batches = []
         frames_batches = []
 
-        while cap_is_opened:
+        current_frame_pos = 0
+
+        while success:
             frame_indices_batch, frames_batch = [], []
             if frame_feature_name == "ego_hos":
                 unidet_features_batch, gsam_features_batch = [], []
 
             for i in range(batch_size):
-                if not cap_is_opened:
+                if not success:
                     break
-                for j in range(frame_feature_extraction_stride):
-                    frame = cap.read()
-                    if frame is None:
-                        cap_is_opened = False
-                        break
+                cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame_pos - 1)
+                success, frame = cap.read()
+                current_frame_pos += frame_feature_extraction_stride
 
                 if (
                     frame is not None
@@ -67,8 +68,7 @@ class FrameFeatureExtractor(ABC):
                     frames_batch.append(frame)
                     current_global_frame_index = global_frame_index.get_value()
                     frame_indices_batch.append(current_global_frame_index)
-                    for j in range(frame_feature_extraction_stride):
-                        global_frame_index.increment_value()
+                    global_frame_index.increment_value(frame_feature_extraction_stride)
 
                     if frame_feature_name == "ego_hos":
                         relevant_unidet_feature_rows = [

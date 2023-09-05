@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import plotly.express as px
 
+
 clip_ids_with_blip2_vqa_features = [
     clip_id
     for clip_id in os.listdir(
