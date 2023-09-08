@@ -117,6 +117,7 @@ class VideoDataReader(viewsets.ViewSet):
 
     feature_name_feature_df_mapping = {}
     feature_name_clip_id_mapping = {}
+    clip_id_fps_mapping = {}
 
     blip2_vqa_feature_name_question_mapping = {
         "blip2_describe": "What does the image describe?",
@@ -200,7 +201,7 @@ class VideoDataReader(viewsets.ViewSet):
     #     visor_hos_feature_df = cls.feature_name_feature_df_mapping["visor_hos"]
 
     #     visor_hos_feature_rows = visor_hos_feature_df[
-    #         visor_hos_feature_df["frame_index"] == int(frame_id // FRAME_FEATURE_EXTRACTION_STRIDE * FRAME_FEATURE_EXTRACTION_STRIDE)
+    #         visor_hos_feature_df["frame_index"] == int(frame_id // utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE * utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE)
     #     ]
 
     #     visor_hos_multiplicative_coordinate_correction_factors = cls.get_multiplicative_coordinate_correction_factors(
@@ -288,7 +289,7 @@ class VideoDataReader(viewsets.ViewSet):
     #     unidet_feature_df = cls.feature_name_feature_df_mapping["unidet"]
 
     #     unidet_feature_rows = unidet_feature_df[
-    #         unidet_feature_df["frame_index"] == int(frame_id // FRAME_FEATURE_EXTRACTION_STRIDE * FRAME_FEATURE_EXTRACTION_STRIDE)
+    #         unidet_feature_df["frame_index"] == int(frame_id // utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE * utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE)
     #     ]
 
     #     unidet_multiplicative_coordinate_correction_factors = cls.get_multiplicative_coordinate_correction_factors(
@@ -433,13 +434,13 @@ class VideoDataReader(viewsets.ViewSet):
     #     unidet_feature_df = cls.feature_name_feature_df_mapping["unidet"]
 
     #     unidet_feature_rows = unidet_feature_df[
-    #         unidet_feature_df["frame_index"] == int(frame_id // FRAME_FEATURE_EXTRACTION_STRIDE * FRAME_FEATURE_EXTRACTION_STRIDE)
+    #         unidet_feature_df["frame_index"] == int(frame_id // utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE * utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE)
     #     ]
 
     #     visor_hos_feature_df = cls.feature_name_feature_df_mapping["visor_hos"]
 
     #     visor_hos_feature_rows = visor_hos_feature_df[
-    #         visor_hos_feature_df["frame_index"] == int(frame_id // FRAME_FEATURE_EXTRACTION_STRIDE * FRAME_FEATURE_EXTRACTION_STRIDE)
+    #         visor_hos_feature_df["frame_index"] == int(frame_id // utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE * utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE)
     #     ]
 
     #     unidet_visor_hos_feature_rows = pd.merge(
@@ -571,6 +572,7 @@ class VideoDataReader(viewsets.ViewSet):
         cls.frame_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
         video_data["virtual_fps"] = cap.get(cv2.CAP_PROP_FPS)
+        cls.clip_id_fps_mapping[clip_id] = video_data["virtual_fps"]
         frames_folder_path = os.path.join(
             os.environ["SCRATCH"], "ego4d_data/v2/frames", clip_id
         )
@@ -586,9 +588,13 @@ class VideoDataReader(viewsets.ViewSet):
                     frame = frame[:, :, ::-1]
                     cv2.imwrite(
                         os.path.join(
-                            frames_folder_path, str(frame_id).zfill(6) + ".png"
+                            frames_folder_path, str(frame_id).zfill(6) + ".jpg"
                         ),
                         frame,
+                        [
+                            int(cv2.IMWRITE_JPEG_QUALITY),
+                            utils.globals.VISUALIZATION_JPG_QUALITY,
+                        ],
                     )
                     frame_id += 1
                     video_data["num_real_frames"] += 1
@@ -601,7 +607,7 @@ class VideoDataReader(viewsets.ViewSet):
                 [
                     file_name
                     for file_name in os.listdir(os.path.join(frames_folder_path))
-                    if file_name[-4:] == ".png"
+                    if file_name[-4:] == ".jpg"
                 ]
             )
 
@@ -617,7 +623,7 @@ class VideoDataReader(viewsets.ViewSet):
             os.environ["SCRATCH"], "ego4d_data/v2/frames", clip_id
         )
         frame = cv2.imread(
-            os.path.join(frames_folder_path, str(frame_id).zfill(6) + ".png")
+            os.path.join(frames_folder_path, str(frame_id).zfill(6) + ".jpg")
         )
 
         # bounding_boxes = (
@@ -681,8 +687,8 @@ class VideoDataReader(viewsets.ViewSet):
         current_clip_frame_rows = current_clip_frame_rows[
             current_clip_frame_rows["frame_index"]
             == int(
-                (frame_id // FRAME_FEATURE_EXTRACTION_STRIDE)
-                * FRAME_FEATURE_EXTRACTION_STRIDE
+                (frame_id // utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE)
+                * utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE
             )
         ]
 
@@ -752,7 +758,7 @@ class VideoDataReader(viewsets.ViewSet):
 
                 frame_is_in_an_action_instance = False
                 for current_ground_truth in current_ground_truths_dict["annotations"]:
-                    frame_time = frame_id / current_ground_truths_dict["fps"]
+                    frame_time = frame_id / cls.clip_id_fps_mapping[clip_id]
                     if (
                         frame_time >= current_ground_truth["segment"][0]
                         and frame_time <= current_ground_truth["segment"][1]
@@ -793,12 +799,7 @@ class VideoDataReader(viewsets.ViewSet):
                             ground_truth_json_file_reader
                         )
 
-                try:
-                    current_ground_truths_dict = cls.ground_truths_dict[clip_id]
-                    fps = current_ground_truths_dict["fps"]
-                except KeyError:
-                    fps = 1.8747535482436755
-                frame_time = frame_id / fps
+                frame_time = frame_id / cls.clip_id_fps_mapping[clip_id]
                 for prediction_dict in cls.asl_baseline_predictions_dict[clip_id]:
                     if (
                         frame_time >= prediction_dict["segment"][0]

@@ -8,7 +8,7 @@
             "name": "Python: Django",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/05_visualize_frame_features/webserver/manage.py",
+            "program": "${workspaceFolder}/scripts/06_analyze_frame_features/dash_app.py",
             "args": [
                 "runserver",
                 "5950"

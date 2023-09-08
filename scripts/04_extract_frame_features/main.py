@@ -177,7 +177,7 @@ if __name__ == "__main__":
 
     os.makedirs(args.error_folder_path, exist_ok=True)
 
-    ray.init(num_gpus=args.num_devices, num_cpus=args.num_devices * 2)
+    ray.init(num_gpus=args.num_devices, num_cpus=args.num_devices)
 
     frame_feature_extractor_pool = ray.util.ActorPool(
         [get_frame_feature_extractor(args=args) for _ in range(args.num_devices)]

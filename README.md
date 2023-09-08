@@ -412,13 +412,15 @@ mamba deactivate
 
 mamba activate mq_data
 
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 4 --mem 50G main.sh -f "blip2_vqa" -q "1" -c "0,1"
+RUNNING
+sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "1" -c "0,1,2"
 
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 4 --mem 50G main.sh -f "blip2_vqa" -q "2" -c "0,1"
+RUNNING
+sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "2" -c "0,1,2"
 
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 4 --mem 50G main.sh -f "blip2_captioning" -q "1" -c "0,1"
+RUNNING
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "1" -c "0,1"
 
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 4 --mem 50G main.sh -f "blip2_captioning" -q "2" -c "0,1"
 ```
 
 Euler:
@@ -436,7 +438,17 @@ module load eth_proxy
 
 mamba activate mq_data
 
+DONE:
+sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip2_vqa\" -q \"3\" -c \"0\""
+
+DONE:
 sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip2_captioning\" -q \"3\" -c \"0\""
+
+DONE:
+sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip2_captioning\" -q \"0\" -c \"0\""
+
+RUNNING:
+sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip2_captioning\" -q \"2\" -c \"0\""
 ```
 
 AIT:

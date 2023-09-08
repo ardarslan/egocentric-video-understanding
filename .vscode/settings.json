@@ -1,5 +1,5 @@
 {
-    "python.languageServer": "Jedi",
+    "python.languageServer": "Pylance",
     "editor.formatOnSave": true,
     "python.linting.lintOnSave": true,
     "python.defaultInterpreterPath": "${SCRATCH}/mambaforge/envs/mq_visualization/bin/python3",
@@ -12,5 +12,6 @@
     ],
     "python.formatting.blackArgs": [
         "--line-length=200"
-    ]
+    ],
+    "git.ignoreLimitWarning": true
 }

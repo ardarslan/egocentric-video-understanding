@@ -11,4 +11,5 @@ scripts/07_reproduce_baseline_results/libs/utils/dist
 scripts/07_reproduce_baseline_results/libs/utils/build
 scripts/07_reproduce_baseline_results/submission_final.json
 scripts/04_extract_frame_features/gsam/gsam
+scripts/06_analyze_frame_features/assets
 nbs*

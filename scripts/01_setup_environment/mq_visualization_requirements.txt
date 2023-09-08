@@ -6,3 +6,5 @@ opencv_python
 Pillow
 plotly
 dash
+flake8
+black
