@@ -34,7 +34,7 @@ class BLIP2CaptioningFrameFeatureExtractor(FrameFeatureExtractor):
     ):
         with torch.no_grad():
             preprocessed_frames_batch_dict = self.processor(
-                images=[Image.fromarray(frame) for frame in frames_batch],
+                images=[Image.fromarray(frame[:, :, ::-1]) for frame in frames_batch],
                 return_tensors="pt",
             ).to(self.args.device, torch.float16)
             generated_ids = self.model.generate(**preprocessed_frames_batch_dict)

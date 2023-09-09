@@ -5,15 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Django",
+            "name": "Python",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/06_analyze_frame_features/dash_app.py",
+            "program": "${workspaceFolder}/scripts/05_visualize_frame_features/frame_extractor/frame_extractor.py",
             "args": [
                 "runserver",
                 "5950"
             ],
-            "django": true,
             "justMyCode": true,
             "cwd": "${fileDirname}"
         }

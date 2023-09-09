@@ -40,7 +40,9 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
             all_generated_texts = []
             for question in self.questions:
                 preprocessed_frames_batch_dict = self.processor(
-                    images=[Image.fromarray(frame) for frame in frames_batch],
+                    images=[
+                        Image.fromarray(frame[:, :, ::-1]) for frame in frames_batch
+                    ],
                     text=["Question: " + question + " Answer:"] * len(frames_batch),
                     return_tensors="pt",
                 ).to(self.args.device, torch.float16)

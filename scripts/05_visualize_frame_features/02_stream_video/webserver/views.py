@@ -8,10 +8,6 @@ from django.template import loader
 from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets
 from PIL import Image
-import sys
-
-sys.path.append("../")
-import utils.globals
 
 # from detectron2.config import get_cfg
 # from detectron2.projects import point_rend
@@ -86,20 +82,47 @@ import utils.globals
 
 
 def index(request):
+    with open(
+        os.path.join(
+            os.environ["CODE"],
+            "scripts/07_reproduce_baseline_results/data/ego4d",
+            "ego4d_clip_annotations_v3.json",
+        ),
+        "r",
+    ) as annotations_reader:
+        annotations_dict = json.load(annotations_reader)
+
     template = loader.get_template("webserver/index.html")
     context = {}
     context["videos"] = [
-        {"name": video_name.split(".")[0]}
-        for video_name in sorted(
+        {"name": clip_file_name.split(".")[0]}
+        for clip_file_name in sorted(
             os.listdir(os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips"))
-        )[:20]
-        if video_name.split(".")[-1] == "mp4"
-    ]
+        )
+        if clip_file_name.split(".")[-1] == "mp4"
+        and os.path.exists(
+            os.path.join(
+                os.environ["SCRATCH"],
+                "ego4d_data/v2/frames",
+                clip_file_name.split(".")[0],
+                "end.txt",
+            )
+        )
+        and len(annotations_dict[clip_file_name.split(".")[0]]["annotations"]) > 0
+        and os.path.exists(
+            os.path.join(
+                os.environ["SCRATCH"],
+                "ego4d_data/v2/frame_features",
+                clip_file_name.split(".")[0],
+                "blip2_vqa_features.tsv",
+            )
+        )
+    ][:20]
 
-    for global_name in dir(utils.globals):
-        if global_name.startswith("__"):
-            continue
-        context[global_name] = getattr(utils.globals, global_name)
+    # for global_name in dir(utils.globals):
+    #     if global_name.startswith("__"):
+    #         continue
+    #     context[global_name] = getattr(utils.globals, global_name)
 
     return HttpResponse(template.render(context, request))
 
@@ -593,7 +616,7 @@ class VideoDataReader(viewsets.ViewSet):
                         frame,
                         [
                             int(cv2.IMWRITE_JPEG_QUALITY),
-                            utils.globals.VISUALIZATION_JPG_QUALITY,
+                            80,
                         ],
                     )
                     frame_id += 1
@@ -624,7 +647,7 @@ class VideoDataReader(viewsets.ViewSet):
         )
         frame = cv2.imread(
             os.path.join(frames_folder_path, str(frame_id).zfill(6) + ".jpg")
-        )
+        )[:, :, ::-1]
 
         # bounding_boxes = (
         #     [
@@ -685,11 +708,7 @@ class VideoDataReader(viewsets.ViewSet):
 
         current_clip_frame_rows = cls.feature_name_feature_df_mapping["blip2"]
         current_clip_frame_rows = current_clip_frame_rows[
-            current_clip_frame_rows["frame_index"]
-            == int(
-                (frame_id // utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE)
-                * utils.globals.FRAME_FEATURE_EXTRACTION_STRIDE
-            )
+            current_clip_frame_rows["frame_index"] == int((frame_id // 6) * 6)
         ]
 
         blip2_answers = (

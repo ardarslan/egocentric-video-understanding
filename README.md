@@ -12,12 +12,6 @@ AIT:
 ssh aarslan@ait-server-03
 ```
 
-Euler:
-
-```
-ssh aarslan@euler.ethz.ch
-```
-
 # Clone this repository
 
 ```
@@ -49,10 +43,6 @@ srun --time 720 --gres=gpu:1 --cpus-per-task=1 --mem=10G --pty bash -i
 
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```
-
-Euler:
-
-Go to https://jupyter.euler.hpc.ethz.ch in your browser.
 
 AIT:
 
@@ -129,13 +119,6 @@ export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 ```
 
-Euler:
-
-```
-export CODE=/cluster/home/aarslan/mq
-
-export SCRATCH=/cluster/scratch/aarslan
-```
 
 AIT:
 
@@ -205,22 +188,6 @@ cd $CODE/scripts/01_setup_environment
 chmod +x install_torch_torchvision.sh
 
 sbatch --gres=gpu:1 install_torch_torchvision.sh
-)
-
-(
-For Euler:
-
-mamba deactivate
-
-module load gcc/8.2.0 python_gpu/3.9.9 eth_proxy
-
-mamba activate mq_data
-
-cd $CODE/scripts/01_setup_environment
-
-chmod +x install_torch_torchvision.sh
-
-sbatch --gpus=1 --cpus-per-task=2 --mem-per-cpu=16G --gres=gpumem:10g install_torch_torchvision.sh
 )
 
 (
@@ -322,7 +289,7 @@ export PIP_CACHE_DIR=$SCRATCH/pip_cache
 mamba create -n mq_model python=3.8
 
 (
-For CVL and Euler:
+For CVL:
 
 mamba deactivate
 
@@ -413,43 +380,25 @@ mamba deactivate
 mamba activate mq_data
 
 RUNNING
-sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "1" -c "0,1,2"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "1" -c "0,1"
 
 RUNNING
-sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "2" -c "0,1,2"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "2" -c "0,1"
 
 RUNNING
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "1" -c "0,1"
 
+RUNNING
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "2" -c "0,1"
+
+NOT DONE
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "3" -c "0,1"
+
+NOT DONE
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "3" -c "0,1"
+
 ```
 
-Euler:
-
-```
-export CODE=/cluster/home/aarslan/mq
-
-export SCRATCH=/cluster/scratch/aarslan
-
-cd $CODE/scripts/04_extract_frame_features
-
-mamba deactivate
-
-module load eth_proxy
-
-mamba activate mq_data
-
-DONE:
-sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip2_vqa\" -q \"3\" -c \"0\""
-
-DONE:
-sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip2_captioning\" -q \"3\" -c \"0\""
-
-DONE:
-sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip2_captioning\" -q \"0\" -c \"0\""
-
-RUNNING:
-sbatch --time=1440 --gpus=1 --cpus-per-task=2 --mem-per-cpu=50G --wrap="./main.sh -f \"blip2_captioning\" -q \"2\" -c \"0\""
-```
 
 AIT:
 
@@ -472,20 +421,34 @@ mamba activate mq_data
 
 chmod +x main.sh
 
+RUNNING
 ./main.sh -f "blip2_vqa" -q "0" -c "0,1,3,4"
+
+NOT DONE
+./main.sh -f "blip2_captioning" -q "0" -c "0,1,3,4"
 ```
 
 # 05 - Visualize frame features
 
 cd ~/mq/scripts/05_visualize_frame_features/webserver
 
-python manage.py runserver 5960
+mamba deactivate
+
+mamba activate mq_visualization
+
+python3 manage.py runserver 5960
 
 Go to http://127.0.0.1:5960/ in your browser.
 
 # 06 - Analyze frame features
 
-(NOT IMPLEMENTED YET)
+cd $CODE/scripts/06_analyze_frame_features
+
+mamba deactivate
+
+mamba activate mq_visualization
+
+python3 analyze_frame_features.py --clip_id
 
 # 07 - Reproduce baseline results (Works in CVL Server)
 

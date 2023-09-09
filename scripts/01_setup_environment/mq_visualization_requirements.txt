@@ -8,3 +8,5 @@ plotly
 dash
 flake8
 black
+tqdm
+joblib
