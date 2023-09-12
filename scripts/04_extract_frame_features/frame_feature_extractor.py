@@ -88,22 +88,24 @@ class FrameFeatureExtractor(ABC):
                         unidet_features_batch.append(relevant_unidet_feature_rows)
                         gsam_features_batch.append(relevant_gsam_feature_rows)
 
-                if len(frames_batch) > 0:
-                    frame_indices_batches.append(frame_indices_batch)
-                    frames_batches.append(frames_batch)
-                    if frame_feature_name == "ego_hos":
-                        unidet_features_batches.append(unidet_features_batch)
-                        gsam_features_batches.append(gsam_features_batch)
+            if len(frames_batch) > 0:
+                frame_indices_batches.append(frame_indices_batch)
+                frames_batches.append(frames_batch)
+                if frame_feature_name == "ego_hos":
+                    unidet_features_batches.append(unidet_features_batch)
+                    gsam_features_batches.append(gsam_features_batch)
 
         if frame_feature_name == "ego_hos":
-            inputs = zip(
-                frame_indices_batches,
-                frames_batches,
-                unidet_features_batches,
-                gsam_features_batches,
+            inputs = list(
+                zip(
+                    frame_indices_batches,
+                    frames_batches,
+                    unidet_features_batches,
+                    gsam_features_batches,
+                )
             )
         else:
-            inputs = zip(frame_indices_batches, frames_batches)
+            inputs = list(zip(frame_indices_batches, frames_batches))
         return inputs
 
     @abstractmethod

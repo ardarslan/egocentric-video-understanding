@@ -342,6 +342,22 @@ cd $CODE/scripts/01_setup_environment
 
 python3 -m pip install -r mq_visualization_requirements.txt
 
+# 01_06 - Install MQ analysis packages
+
+mamba deactivate
+
+mamba create -n mq_analysis python=3.9.9
+
+mamba activate mq_analysis
+
+cd $CODE/scripts/01_setup_environment
+
+python3 -m pip install -r mq_analysis_requirements.txt
+
+python3 -m spacy download en_core_web_lg
+
+python3 -m ipykernel install --user --name=mq
+
 # 02_01 - Download Ego4D dataset and pre-extracted features
 
 Follow the instructions in scripts/02_download_data/01_download_ego4d_dataset_and_clip_features.txt
@@ -386,13 +402,13 @@ RUNNING
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "2" -c "0,1"
 
 RUNNING
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "1" -c "0,1"
-
-RUNNING
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "2" -c "0,1"
+sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "3" -c "0,1,2"
 
 NOT DONE
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "3" -c "0,1"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "1" -c "0,1"
+
+NOT DONE
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "2" -c "0,1"
 
 NOT DONE
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "3" -c "0,1"
@@ -422,23 +438,43 @@ mamba activate mq_data
 chmod +x main.sh
 
 RUNNING
-./main.sh -f "blip2_vqa" -q "0" -c "0,1,3,4"
+./main.sh -f "blip2_vqa" -q "0" -c "3,5,6,7"
 
 NOT DONE
-./main.sh -f "blip2_captioning" -q "0" -c "0,1,3,4"
+./main.sh -f "blip2_captioning" -q "0" -c "3,5,6,7"
 ```
 
-# 05 - Visualize frame features
+# 05_01 - Extract Frames
 
-cd ~/mq/scripts/05_visualize_frame_features/webserver
+cd $CODE/scripts/05_visualize_frame_features/01_extract_frames
 
-mamba deactivate
+mamba activate mq_visualization
+
+python3 frame_extractor.py
+
+# 05_02 - Stream Video
+
+cd $CODE/scripts/05_visualize_frame_features/02_stream_video
 
 mamba activate mq_visualization
 
 python3 manage.py runserver 5960
 
-Go to http://127.0.0.1:5960/ in your browser.
+# 05_03 - Horizontal Bar Plots
+
+cd $CODE/scripts/05_visualize_frame_features/03_horizontal_bar_plots
+
+mamba activate mq_visualization
+
+python3 horizontal_bar_plots.py --clip_id 02246bfe-dcef-465d-9aa5-47a2e71460dd --port 8050
+
+python3 horizontal_bar_plots.py --clip_id 0076e425-bdb6-48b3-b4d3-695089ac9800 --port 8051
+
+python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe --port 8052
+
+python3 horizontal_bar_plots.py --clip_id 013559ff-eab2-4c25-a475-90bf56f5ae9e --port 8053
+
+python3 horizontal_bar_plots.py --clip_id 00e4af86-adca-479f-a20a-402f1bc933a0 --port 8054
 
 # 06 - Analyze frame features
 

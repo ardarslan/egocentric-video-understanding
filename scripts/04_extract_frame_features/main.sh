@@ -29,4 +29,4 @@ fi
 
 export TMPDIR="$CODE/tmp"
 cd $CODE/scripts/04_extract_frame_features
-CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES python3 main.py --frame_feature_name $FRAME_FEATURE_NAME --quarter_index $QUARTER_INDEX
+CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES RAY_DEDUP_LOGS=0 python3 main.py --frame_feature_name $FRAME_FEATURE_NAME --quarter_index $QUARTER_INDEX

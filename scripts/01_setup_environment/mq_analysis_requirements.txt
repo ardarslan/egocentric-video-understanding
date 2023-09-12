@@ -1,0 +1,4 @@
+spacy
+pandas
+opencv_python
+ipykernel

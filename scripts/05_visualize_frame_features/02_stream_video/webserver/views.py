@@ -108,7 +108,6 @@ def index(request):
                 "end.txt",
             )
         )
-        and len(annotations_dict[clip_file_name.split(".")[0]]["annotations"]) > 0
         and os.path.exists(
             os.path.join(
                 os.environ["SCRATCH"],
@@ -117,6 +116,7 @@ def index(request):
                 "blip2_vqa_features.tsv",
             )
         )
+        and (len(annotations_dict[clip_file_name.split(".")[0]]["annotations"]) > 0)
     ][:20]
 
     # for global_name in dir(utils.globals):
