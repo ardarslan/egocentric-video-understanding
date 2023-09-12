@@ -438,10 +438,10 @@ mamba activate mq_data
 chmod +x main.sh
 
 RUNNING
-./main.sh -f "blip2_vqa" -q "0" -c "3,5,6,7"
+./main.sh -f "blip2_vqa" -q "0" -c "4,5,6,7"
 
 NOT DONE
-./main.sh -f "blip2_captioning" -q "0" -c "3,5,6,7"
+./main.sh -f "blip2_captioning" -q "0" -c "4,5,6,7"
 ```
 
 # 05_01 - Extract Frames
