@@ -2,3 +2,10 @@ spacy
 pandas
 opencv_python
 ipykernel
+torchtext
+gdown
+gensim
+pqdm
+sentence_transformers
+tensorflow
+tensorflow_hub

@@ -210,7 +210,7 @@ class EgoHOSFrameFeatureExtractor(FrameFeatureExtractor):
                                 float(number_of_object_pixels_outside_the_bounding_box)
                                 + 1e-6
                             )
-                            >= 0.75
+                            >= 0.60
                         ):
                             predictions.append(
                                 (

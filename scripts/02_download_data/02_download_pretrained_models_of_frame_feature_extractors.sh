@@ -32,3 +32,15 @@ mv blip2-opt-2.7b blip2
 wget https://huggingface.co/Salesforce/blip2-opt-2.7b/resolve/main/pytorch_model-00001-of-00002.bin -O blip2/pytorch_model-00001-of-00002.bin
 
 wget https://huggingface.co/Salesforce/blip2-opt-2.7b/resolve/main/pytorch_model-00002-of-00002.bin -O blip2/pytorch_model-00002-of-00002.bin
+
+# word2vec
+
+mkdir word2vec
+
+cd word2vec
+
+gdown 0B7XkCwpI5KDYNlNUTTlSS21pQmM -O GoogleNews-vectors-negative300.bin.gz
+
+gunzip -k GoogleNews-vectors-negative300.bin.gz
+
+rm -rf GoogleNews-vectors-negative300.bin.gz

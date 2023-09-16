@@ -399,7 +399,7 @@ RUNNING
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "1" -c "0,1"
 
 RUNNING
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "2" -c "0,1"
+sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "2" -c "0,1,2"
 
 RUNNING
 sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "3" -c "0,1,2"
@@ -437,6 +437,9 @@ mamba activate mq_data
 
 chmod +x main.sh
 
+
+./main.sh -f "gsam" -q "0" -c "4,5,6,7"
+
 RUNNING
 ./main.sh -f "blip2_vqa" -q "0" -c "4,5,6,7"
 
@@ -470,11 +473,11 @@ python3 horizontal_bar_plots.py --clip_id 02246bfe-dcef-465d-9aa5-47a2e71460dd -
 
 python3 horizontal_bar_plots.py --clip_id 0076e425-bdb6-48b3-b4d3-695089ac9800 --port 8051
 
-python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe --port 8052
-
 python3 horizontal_bar_plots.py --clip_id 013559ff-eab2-4c25-a475-90bf56f5ae9e --port 8053
 
 python3 horizontal_bar_plots.py --clip_id 00e4af86-adca-479f-a20a-402f1bc933a0 --port 8054
+
+python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe --port 8055
 
 # 06 - Analyze frame features
 
