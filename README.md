@@ -481,13 +481,21 @@ python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe -
 
 # 06 - Analyze frame features
 
+screen
+
 cd $CODE/scripts/06_analyze_frame_features
 
 mamba deactivate
 
-mamba activate mq_visualization
+mamba activate mq_analysis
 
-python3 analyze_frame_features.py --clip_id
+python3 main.py --frame_embedder word2vec --train_blip2_answer_word_weight_type idf --device cuda:4
+
+python3 main.py --frame_embedder one_hot --train_blip2_answer_word_weight_type idf --device cuda:5
+
+python3 main.py --frame_embedder sentence_transformer --train_blip2_answer_word_weight_type uniform --device cuda:6
+
+python3 main.py --frame_embedder universal_sentence_encoder --train_blip2_answer_word_weight_type uniform --device cuda:7
 
 # 07 - Reproduce baseline results (Works in CVL Server)
 
