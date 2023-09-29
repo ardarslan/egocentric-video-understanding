@@ -1,7 +1,13 @@
+import os
+import json
 import torch.nn as nn
 
+from utils import get_frame_embedder
 
-class Model(nn.Module):
+from typing import List
+
+
+class FCNNModel(nn.Module):
     def __init__(
         self,
         num_activations: int,
@@ -21,8 +27,8 @@ class Model(nn.Module):
         elif hidden_layer_size == "max":
             self.hidden_layer_size = max(self.input_size, self.output_size)
 
-        self.linear_layers = []
-        self.batch_norms = []
+        self.linear_layers = nn.ModuleList()
+        self.batch_norms = nn.ModuleList()
 
         for i in range(self.num_activations):
             if i == 0:
@@ -42,4 +48,26 @@ class Model(nn.Module):
             X = self.batch_norms[i](X)
             X = nn.LeakyReLU()(X)
         X = self.linear_layers[-1](X)
+        return X
+
+
+class RetrievalModel(object):
+    def __init__(
+        self, frame_embedder: str, word_weight_type: str, train_labels: List[str]
+    ):
+        super().__init__()
+        with open(
+            os.path.join(
+                os.environ["CODE"],
+                "scripts/06_analyze_frame_features",
+                frame_embedder,
+                word_weight_type,
+                "train_label_embedding_mapping.json",
+            ),
+            "r",
+        ) as reader:
+            self.train_label_embedding_mapping = json.load(reader)
+
+    def __call__(self, X):
+
         return X

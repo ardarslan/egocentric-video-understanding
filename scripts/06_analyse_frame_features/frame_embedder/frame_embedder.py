@@ -2,10 +2,10 @@ import spacy
 
 from typing import Dict, List
 
-from abc import ABC
 
+class FrameEmbedder(object):
+    nlp = spacy.load("en_core_web_lg")
 
-class FrameEmbedder(ABC):
     @classmethod
     def __init__(
         cls, train_blip2_answer_word_label_mapping: Dict[str, float], unify_words: bool
@@ -14,12 +14,11 @@ class FrameEmbedder(ABC):
             train_blip2_answer_word_label_mapping
         )
         cls.unify_words = unify_words
-        cls.nlp = spacy.load("en_core_web_lg")
 
     @classmethod
-    def process_per_frame_blip2_answers(cls, blip2_answers: List[str]):
+    def process_per_frame_blip2_answers(cls, blip2_answers: Dict[str, str]):
         words = []
-        docs = [cls.nlp(blip2_answer) for blip2_answer in blip2_answers]
+        docs = [cls.nlp(blip2_answer) for blip2_answer in blip2_answers.values()]
         for doc in docs:
             words.extend(
                 [
@@ -33,14 +32,14 @@ class FrameEmbedder(ABC):
         return words
 
     @classmethod
-    def process_per_clip_blip2_answers(cls, clip_id, frame_id_blip2_answers_mapping):
+    def process_per_clip_blip2_answers(
+        cls, clip_id: str, frame_id_blip2_answers_mapping: Dict[int, Dict[str, str]]
+    ):
         frame_id_words_mapping = {}
         for frame_id, blip2_answers_mapping in frame_id_blip2_answers_mapping.items():
             frame_id_words_mapping[
                 frame_id
-            ] = FrameEmbedder.process_per_frame_blip2_answers(
-                blip2_answers_mapping.values()
-            )
+            ] = FrameEmbedder.process_per_frame_blip2_answers(blip2_answers_mapping)
         return clip_id, frame_id_words_mapping
 
     @classmethod
@@ -50,9 +49,9 @@ class FrameEmbedder(ABC):
     @classmethod
     def get_embedding_per_clip(
         cls,
-        clip_id,
-        frame_id_blip2_answers_mapping: Dict[str, List[str]],
-        frame_id_blip2_words_mapping: Dict[str, List[str]],
+        clip_id: str,
+        frame_id_blip2_answers_mapping: Dict[int, List[str]],
+        frame_id_blip2_words_mapping: Dict[int, List[str]],
     ):
         frame_id_embedding_mapping = {}
         for frame_id, blip2_answers in frame_id_blip2_answers_mapping.items():

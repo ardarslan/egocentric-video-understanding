@@ -3,15 +3,15 @@ import pickle
 import torch
 import argparse
 import numpy as np
+from copy import deepcopy
 from torch.utils.data import DataLoader
 from sklearn.metrics import balanced_accuracy_score, f1_score
 
 from dataset import Dataset
-from model import Model
+from model import RetrievalModel
 
 from utils import (
     get_analysis_data_file_name_wo_ext_analysis_data_mapping,
-    str2bool,
     save_evaluation_metrics,
     save_validation_predictions,
 )
@@ -19,10 +19,11 @@ from utils import (
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
     parser.add_argument(
-        "--frame_embedder",
-        required=True,
+        "--frame_label_embedder",
+        default="word2vec",
         choices=[
             "word2vec",
+            "glove",
             "sentence_transformer",
             "universal_sentence_encoder",
             "one_hot",
@@ -32,21 +33,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--train_blip2_answer_word_weight_type",
         choices=["idf", "uniform"],
-        required=True,
+        default="idf",
         type=str,
     )
-    parser.add_argument("--device", required=True, type=str)
     parser.add_argument(
         "--annotations_json_file_path",
         default=f"{os.environ['CODE']}/scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json",
         type=str,
     )
-    parser.add_argument(
-        "--hidden_layer_size", default="mean", choices=["mean", "min", "max"], type=str
-    )
-    parser.add_argument("--num_layers", default=1, type=int)
     parser.add_argument("--batch_size", default=16, type=int)
-    parser.add_argument("--num_epochs", default=15, type=int)
     args = parser.parse_args()
 
     analysis_data_file_name_wo_ext_analysis_data_mapping_file_path = os.path.join(
@@ -69,6 +64,7 @@ if __name__ == "__main__":
             analysis_data_file_name_wo_ext_analysis_data_mapping_file_path=analysis_data_file_name_wo_ext_analysis_data_mapping_file_path,
         )
 
+    train_labels = analysis_data_file_name_wo_ext_analysis_data_mapping["train_labels"]
     train_X = analysis_data_file_name_wo_ext_analysis_data_mapping["train_X"]
     train_y = analysis_data_file_name_wo_ext_analysis_data_mapping["train_y"]
     train_clip_ids = analysis_data_file_name_wo_ext_analysis_data_mapping[
@@ -91,16 +87,7 @@ if __name__ == "__main__":
         "test_frame_ids"
     ]
 
-    model = Model(
-        num_activations=args.num_activations,
-        input_size=train_X.shape[1],
-        hidden_layer_size=args.hidden_layer_size,
-        output_size=train_y.shape[1],
-    ).to(args.device)
-    optimizer = torch.optim.Adam(params=model.parameters())
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer=optimizer, verbose=True
-    )
+    model = RetrievalModel(train_labels=train_labels)
 
     train_dataset = Dataset(
         X=train_X, y=train_y, clip_ids=train_clip_ids, frame_ids=train_frame_ids
@@ -121,36 +108,21 @@ if __name__ == "__main__":
         test_dataset, batch_size=args.batch_size, shuffle=False
     )
 
-    best_val_loss = np.inf
-    early_stopping_counter = 0
-
-    evaluation_metrics = {
-        "train_loss_values": [],
-        "train_bmac_values": [],
-        "train_f1_values": [],
-        "val_loss_values": [],
-        "val_bmac_values": [],
-        "val_f1_values": [],
-    }
-
-    for epoch in range(args.num_epochs):
-        train_ys = []
-        train_yhats = []
-        model.train()
-        for batch in train_data_loader:
-            optimizer.zero_grad()
-            yhat = model(batch["X"].to(args.device))
-            y = batch["y"].to(args.device)
-            train_ys.extend(np.argmax(batch["y"].numpy(), axis=1).ravel().tolist())
-            train_yhats.extend(
-                np.argmax(yhat.detach().cpu().numpy(), axis=1).ravel().tolist()
-            )
-            loss = torch.nn.CrossEntropyLoss()(y, yhat)
-            loss.backward()
-            optimizer.step()
-        train_loss = torch.nn.CrossEntropyLoss()(train_ys, train_yhats).item()
-        train_bmac = balanced_accuracy_score(train_ys, train_yhats)
-        train_f1 = f1_score(train_ys, train_yhats)
+    for batch in train_data_loader:
+        yhat = model(batch["X"].to(args.device))
+        y_indices = batch["y"].to(args.device)
+        train_ys.append(batch["y"])
+        train_yhats.append(yhat.detach().cpu())
+        loss = torch.nn.BCEWithLogitsLoss()(yhat, y)
+        loss.backward()
+        optimizer.step()
+        train_ys = torch.vstack(train_ys)
+        train_yhats = torch.vstack(train_yhats)
+        train_ys_argmaxed = np.argmax(train_ys.numpy(), axis=1)
+        train_yhats_argmaxed = np.argmax(train_yhats.numpy(), axis=1)
+        train_loss = torch.nn.BCEWithLogitsLoss()(train_yhats, train_ys).item()
+        train_bmac = balanced_accuracy_score(train_ys_argmaxed, train_yhats_argmaxed)
+        train_f1 = f1_score(train_ys_argmaxed, train_yhats_argmaxed, average="weighted")
 
         evaluation_metrics["train_loss_values"].append(train_loss)
         evaluation_metrics["train_bmac_values"].append(train_bmac)
@@ -158,46 +130,60 @@ if __name__ == "__main__":
 
         val_ys = []
         val_yhats = []
-        val_clip_ids = []
-        val_frame_ids = []
         model.eval()
         for batch in val_data_loader:
             with torch.no_grad():
                 yhat = model(batch["X"].to(args.device))
                 y = batch["y"].to(args.device)
-                val_ys.extend(np.argmax(batch["y"].numpy(), axis=1).ravel().tolist())
-                val_yhats.extend(
-                    np.argmax(yhat.detach().cpu().numpy(), axis=1).ravel().tolist()
-                )
-                val_clip_ids.extend(batch["clip_id"].numpy().ravel().tolist())
-                val_frame_ids.extend(batch["frame_id"].numpy().ravel().tolist())
-        val_loss = torch.nn.CrossEntropyLoss()(val_ys, val_yhats).item()
-        val_bmac = balanced_accuracy_score(val_ys, val_yhats)
-        val_f1 = f1_score(val_ys, val_yhats)
+                val_ys.append(batch["y"])
+                val_yhats.append(yhat.detach().cpu())
+        val_ys = torch.vstack(val_ys)
+        val_yhats = torch.vstack(val_yhats)
+        val_loss = torch.nn.BCEWithLogitsLoss()(val_yhats, val_ys).item()
+        val_ys_argmaxed = np.argmax(val_ys.numpy(), axis=1)
+        val_yhats_argmaxed = np.argmax(val_yhats.numpy(), axis=1)
+        val_bmac = balanced_accuracy_score(val_ys_argmaxed, val_yhats_argmaxed)
+        val_f1 = f1_score(val_ys_argmaxed, val_yhats_argmaxed, average="weighted")
 
         evaluation_metrics["val_loss_values"].append(val_loss)
         evaluation_metrics["val_bmac_values"].append(val_bmac)
         evaluation_metrics["val_f1_values"].append(val_f1)
 
-        if val_loss >= best_val_loss:
-            early_stopping_counter += 1
-            if early_stopping_counter == args.early_stopping_patience:
-                print(f"Stopping early at epoch {epoch}.")
-                break
-        else:
+        if val_loss < best_val_loss:
             best_val_loss = val_loss
-            early_stopping_counter = 0
+            best_model = deepcopy(model)
 
         print(
             f"Epoch: {str(epoch).zfill(2)} | Train BMAC: {np.round(train_bmac, 2)} | Train F1: {np.round(train_f1, 2)} | Train Loss: {np.round(train_loss, 2)} | Val BMAC: {np.round(val_bmac, 2)} | Val F1: {np.round(val_f1, 2)} | Val Loss: {np.round(val_loss, 2)} \n"
         )
         scheduler.step(val_loss)
 
-    save_evaluation_metrics(args=args, evaluation_metrics=evaluation_metrics)
+        save_evaluation_metrics(args=args, evaluation_metrics=evaluation_metrics)
+
+    val_ys = []
+    val_yhats = []
+    val_clip_ids = []
+    val_frame_ids = []
+    best_model.eval()
+    for batch in val_data_loader:
+        with torch.no_grad():
+            yhat = best_model(batch["X"].to(args.device))
+            y = batch["y"].to(args.device)
+            val_ys.append(batch["y"])
+            val_yhats.append(yhat.detach().cpu())
+            val_clip_ids.extend(batch["clip_id"])
+            val_frame_ids.extend(batch["frame_id"])
+
+    val_ys = torch.vstack(val_ys)
+    val_yhats = torch.vstack(val_yhats)
+    val_loss = torch.nn.BCEWithLogitsLoss()(val_yhats, val_ys).item()
+    val_ys_argmaxed = np.argmax(val_ys.numpy(), axis=1)
+    val_yhats_argmaxed = np.argmax(val_yhats.numpy(), axis=1)
+
     save_validation_predictions(
         args=args,
         val_clip_ids=val_clip_ids,
         val_frame_ids=val_frame_ids,
-        val_ys=val_ys,
-        val_yhats=val_yhats,
+        val_ys=val_ys_argmaxed,
+        val_yhats=val_yhats_argmaxed,
     )

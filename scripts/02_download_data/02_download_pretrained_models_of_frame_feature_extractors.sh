@@ -34,7 +34,6 @@ wget https://huggingface.co/Salesforce/blip2-opt-2.7b/resolve/main/pytorch_model
 wget https://huggingface.co/Salesforce/blip2-opt-2.7b/resolve/main/pytorch_model-00002-of-00002.bin -O blip2/pytorch_model-00002-of-00002.bin
 
 # word2vec
-
 mkdir word2vec
 
 cd word2vec
@@ -44,3 +43,31 @@ gdown 0B7XkCwpI5KDYNlNUTTlSS21pQmM -O GoogleNews-vectors-negative300.bin.gz
 gunzip -k GoogleNews-vectors-negative300.bin.gz
 
 rm -rf GoogleNews-vectors-negative300.bin.gz
+
+cd ..
+
+# java
+
+mkdir java
+
+wget https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.tar.gz -O java/jdk-21_linux-x64_bin.tar.gz
+
+cd java
+
+tar -xvf jdk-21_linux-x64_bin.tar.gz
+
+export JAVA_HOME=jdk-install-dir
+
+export PATH=$JAVA_HOME/bin:$PATH
+
+# stanford-corenlp
+
+wget https://downloads.cs.stanford.edu/nlp/software/stanford-corenlp-4.5.5.zip -O stanford-corenlp-4.5.5.zip
+
+unzip stanford-corenlp-4.5.5.zip
+
+mv stanford-corenlp-4.5.5 stanford-corenlp
+
+rm -rf stanford-corenlp-4.5.5.zip
+
+wget https://downloads.cs.stanford.edu/nlp/software/stanford-corenlp-4.5.5-models-english.jar -O stanford-corenlp/stanford-corenlp-4.5.5-models-english.jar
