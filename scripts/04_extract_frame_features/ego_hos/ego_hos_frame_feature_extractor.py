@@ -49,7 +49,6 @@ class EgoHOSFrameFeatureExtractor(FrameFeatureExtractor):
             "y_bottom_right",
             "text_label",
             "detection_score",
-            "object_detection_feature_name",
             "object_label",
         ]
 
@@ -99,20 +98,14 @@ class EgoHOSFrameFeatureExtractor(FrameFeatureExtractor):
         self,
         frame_indices_batch: List[int],
         frames_batch: List[np.array],
-        unidet_features_batch: List[List[Dict[str, Any]]],
         gsam_features_batch: List[List[Dict[str, Any]]],
     ):
         predictions = []
-        for frame_index, frame, unidet_feature_rows, gsam_feature_rows in zip(
+        for frame_index, frame, gsam_feature_rows in zip(
             frame_indices_batch,
             frames_batch,
-            unidet_features_batch,
             gsam_features_batch,
         ):
-            object_detection_feature_name_object_detection_feature_rows_mapping = {
-                "unidet": unidet_feature_rows,
-                "gsam": gsam_feature_rows,
-            }
             seg_twohands_result = self.inference_segmentor(
                 self.seg_twohands_model, frame, previous_results={}
             )[0].astype(np.uint8)
@@ -163,72 +156,60 @@ class EgoHOSFrameFeatureExtractor(FrameFeatureExtractor):
                 "both_hands_second_order": both_hands_second_order_object_pixels,
             }
 
-            for (
-                object_detection_feature_name,
-                object_detection_feature_rows,
-            ) in (
-                object_detection_feature_name_object_detection_feature_rows_mapping.items()
-            ):
-                for object_detection_feature_row in object_detection_feature_rows:
-                    x_top_left = np.round(
-                        object_detection_feature_row["x_top_left"]
-                    ).astype(np.int32)
-                    y_top_left = np.round(
-                        object_detection_feature_row["y_top_left"]
-                    ).astype(np.int32)
-                    x_bottom_right = np.round(
-                        object_detection_feature_row["x_bottom_right"]
-                    ).astype(np.int32)
-                    y_bottom_right = np.round(
-                        object_detection_feature_row["y_bottom_right"]
-                    ).astype(np.int32)
+            for gsam_feature_row in gsam_feature_rows:
+                x_top_left = np.round(gsam_feature_row["x_top_left"]).astype(np.int32)
+                y_top_left = np.round(gsam_feature_row["y_top_left"]).astype(np.int32)
+                x_bottom_right = np.round(gsam_feature_row["x_bottom_right"]).astype(
+                    np.int32
+                )
+                y_bottom_right = np.round(gsam_feature_row["y_bottom_right"]).astype(
+                    np.int32
+                )
 
-                    current_unidet_bounding_box_pixels = np.zeros(frame.shape)
-                    current_unidet_bounding_box_pixels[
-                        y_top_left:y_bottom_right, x_top_left:x_bottom_right
-                    ] = 1
+                current_bounding_box_pixels = np.zeros(frame.shape)
+                current_bounding_box_pixels[
+                    y_top_left:y_bottom_right, x_top_left:x_bottom_right
+                ] = 1
 
-                    for (
-                        object_label,
-                        object_pixels,
-                    ) in object_label_object_pixels_mapping.items():
-                        number_of_object_pixels_inside_the_bounding_box = (
-                            object_pixels * current_unidet_bounding_box_pixels
-                        ).sum()
-                        if (
-                            number_of_object_pixels_inside_the_bounding_box
-                            < diagonal_length
-                        ):
-                            continue
-                        number_of_object_pixels_outside_the_bounding_box = (
-                            object_pixels * (1 - current_unidet_bounding_box_pixels)
-                        ).sum()
+                for (
+                    object_label,
+                    object_pixels,
+                ) in object_label_object_pixels_mapping.items():
+                    number_of_object_pixels_inside_the_bounding_box = (
+                        object_pixels * current_bounding_box_pixels
+                    ).sum()
+                    if (
+                        number_of_object_pixels_inside_the_bounding_box
+                        < diagonal_length
+                    ):
+                        continue
+                    number_of_object_pixels_outside_the_bounding_box = (
+                        object_pixels * (1 - current_bounding_box_pixels)
+                    ).sum()
 
-                        if (
-                            number_of_object_pixels_inside_the_bounding_box
-                            / (
-                                float(number_of_object_pixels_outside_the_bounding_box)
-                                + 1e-6
+                    if (
+                        number_of_object_pixels_inside_the_bounding_box
+                        / (
+                            float(number_of_object_pixels_outside_the_bounding_box)
+                            + 1e-6
+                        )
+                        >= 0.25
+                    ):
+                        predictions.append(
+                            (
+                                frame_index,
+                                gsam_feature_row["detection_index"],
+                                x_top_left,
+                                y_top_left,
+                                x_bottom_right,
+                                y_bottom_right,
+                                gsam_feature_row["text_label"],
+                                gsam_feature_row["detection_score"],
+                                object_label,
                             )
-                            >= 0.60
-                        ):
-                            predictions.append(
-                                (
-                                    frame_index,
-                                    object_detection_feature_row["detection_index"],
-                                    x_top_left,
-                                    y_top_left,
-                                    x_bottom_right,
-                                    y_bottom_right,
-                                    object_detection_feature_row["text_label"],
-                                    object_detection_feature_row["detection_score"],
-                                    object_detection_feature_name,
-                                    object_label,
-                                )
-                            )
+                        )
         del frame_indices_batch
         del frames_batch
-        del unidet_features_batch
         del gsam_features_batch
         gc.collect()
         torch.cuda.empty_cache()

@@ -5,7 +5,9 @@ ipykernel
 torchtext
 gdown
 gensim
+nltk
 pqdm
+matplotlib
 sentence_transformers
 tensorflow
 tensorflow_hub

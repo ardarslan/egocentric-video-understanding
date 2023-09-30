@@ -14,6 +14,8 @@ sys.path.append("../")
 
 from utils import extract_frames
 
+from typing import List
+
 random.seed(1903)
 
 ground_truth_asl_predicted_action_category_match_color_mapping = {
@@ -38,6 +40,10 @@ def get_blip2_answer(current_blip2_rows, blip2_question):
         return "NaN"
     else:
         return answer.values[0]
+
+
+def concatenate_labels(labels: List[str]):
+    return " + ".join(sorted(list(set(labels))))
 
 
 if __name__ == "__main__":
@@ -149,6 +155,8 @@ if __name__ == "__main__":
         frame_id_asl_predicted_action_categories_mapping[current_frame_id] = []
         current_frame_time = current_frame_id / fps
         assigned_to_an_action_category = False
+
+        # asl predictions
         for asl_predicted_action_instance in asl_predicted_action_instances:
             if (
                 current_frame_time >= asl_predicted_action_instance["segment"][0]
@@ -163,23 +171,38 @@ if __name__ == "__main__":
                         asl_predicted_action_instance["score"],
                     )
                 )
-                unique_action_categories.add(asl_predicted_action_instance["label"])
-        if assigned_to_an_action_category:
-            frame_id_asl_predicted_action_categories_mapping[current_frame_id] = sorted(
-                frame_id_asl_predicted_action_categories_mapping[current_frame_id],
-                key=lambda x: x[1],
-            )[-1][0]
-        else:
-            frame_id_asl_predicted_action_categories_mapping[
-                current_frame_id
-            ] = "background"
+        frame_id_asl_predicted_action_categories_mapping[current_frame_id] = sorted(
+            frame_id_asl_predicted_action_categories_mapping[current_frame_id],
+            key=lambda x: x[0],
+        )
+        unique_action_categories.add(
+            concatenate_labels(
+                [
+                    label
+                    for label, _ in frame_id_asl_predicted_action_categories_mapping[
+                        current_frame_id
+                    ]
+                ]
+            )
+        )
 
+        if not assigned_to_an_action_category:
+            frame_id_asl_predicted_action_categories_mapping[current_frame_id] = [
+                (
+                    "background",
+                    1.0,
+                )
+            ]
+            unique_action_categories.add("background")
+
+        # ground truths
         if len(ground_truth_action_instances) == 0:
             frame_id_ground_truth_action_categories_mapping[
                 current_frame_id
             ] = "no_annotations_for_the_clip"
+            unique_action_categories.add("no_annotations_for_the_clip")
         else:
-            current_labels = set()
+            current_labels = []
             for ground_truth_action_instance in ground_truth_action_instances:
                 if (
                     current_frame_time >= ground_truth_action_instance["segment"][0]
@@ -187,18 +210,19 @@ if __name__ == "__main__":
                 ):
                     assigned_to_an_action_category = True
                     current_label = ground_truth_action_instance["label"]
-                    current_labels.add(current_label)
-
-            unique_action_categories.add(" + ".join(list(current_labels)))
+                    current_labels.append(current_label)
 
             if len(current_labels) > 0:
+                concatenated_labels = concatenate_labels(current_labels)
                 frame_id_ground_truth_action_categories_mapping[
                     current_frame_id
-                ] = " + ".join(list(current_labels))
+                ] = concatenated_labels
+                unique_action_categories.add(concatenated_labels)
             else:
                 frame_id_ground_truth_action_categories_mapping[
                     current_frame_id
                 ] = "background"
+                unique_action_categories.add("background")
 
     action_category_color_mapping = dict(
         (action_category, generate_random_color())
@@ -246,13 +270,12 @@ if __name__ == "__main__":
             blip2_question=blip2_captioning_question,
         )
 
-        current_ground_truth_action_category = (
+        sequences_dict["frame_ids"].append(frame_id)
+        sequences_dict["gt_values"].append(
             frame_id_ground_truth_action_categories_mapping[frame_id]
         )
-        sequences_dict["frame_ids"].append(frame_id)
-        sequences_dict["gt_values"].append(current_ground_truth_action_category)
         current_ground_truth_action_category_color = action_category_color_mapping[
-            current_ground_truth_action_category
+            frame_id_ground_truth_action_categories_mapping[frame_id]
         ]
         sequences_dict["gt_colors"].append(current_ground_truth_action_category_color)
         sequences_dict["blip2_happen_answers"].append(current_blip2_happen_answer)
@@ -262,28 +285,49 @@ if __name__ == "__main__":
             current_blip2_captioning_answer
         )
 
-        current_asl_predicted_action_category = (
-            frame_id_asl_predicted_action_categories_mapping[frame_id]
-        )
-        current_asl_predicted_action_category_color = action_category_color_mapping[
-            current_asl_predicted_action_category
-        ]
-        sequences_dict["asl_pred_values"].append(current_asl_predicted_action_category)
-        sequences_dict["asl_pred_colors"].append(
-            current_asl_predicted_action_category_color
+        sequences_dict["asl_pred_values"].append(
+            " + ".join(
+                sorted(
+                    [
+                        f"{label} ({np.round(score, 2)})"
+                        for label, score in frame_id_asl_predicted_action_categories_mapping[
+                            frame_id
+                        ]
+                    ]
+                )
+            )
         )
 
-        current_ground_truth_asl_predicted_action_category_match = (
-            current_asl_predicted_action_category
-            in current_ground_truth_action_category.split(" + ")
+        sequences_dict["asl_pred_colors"].append(
+            action_category_color_mapping[
+                concatenate_labels(
+                    [
+                        label
+                        for label, _ in frame_id_asl_predicted_action_categories_mapping[
+                            frame_id
+                        ]
+                    ]
+                )
+            ]
         )
+
+        current_ground_truth_asl_predicted_action_category_match = False
+        for predicted_label, _ in frame_id_asl_predicted_action_categories_mapping[
+            frame_id
+        ]:
+            for ground_truth_label in frame_id_ground_truth_action_categories_mapping[
+                frame_id
+            ].split(" + "):
+                if ground_truth_label == predicted_label:
+                    current_ground_truth_asl_predicted_action_category_match = True
+        sequences_dict["match_values"].append(
+            current_ground_truth_asl_predicted_action_category_match
+        )
+
         current_ground_truth_asl_predicted_action_category_match_color = (
             ground_truth_asl_predicted_action_category_match_color_mapping[
                 current_ground_truth_asl_predicted_action_category_match
             ]
-        )
-        sequences_dict["match_values"].append(
-            current_ground_truth_asl_predicted_action_category_match
         )
         sequences_dict["match_colors"].append(
             current_ground_truth_asl_predicted_action_category_match_color
@@ -370,29 +414,39 @@ if __name__ == "__main__":
                 [
                     html.Img(
                         src=app.get_asset_url(hoverData["points"][0]["customdata"][0]),
-                        style={"width": "50%", "textAlign": "center"},
-                    ),
-                    html.P(f"Frame ID: {hoverData['points'][0]['customdata'][1]}"),
-                    html.P(
-                        f"Ground Truth: {str(hoverData['points'][0]['customdata'][2]).replace('_', ' ')}"
+                        style={"width": "50%", "text-align": "center"},
                     ),
                     html.P(
-                        f"ASL Prediction: {str(hoverData['points'][0]['customdata'][3]).replace('_', ' ')}"
+                        f"Frame ID: {hoverData['points'][0]['customdata'][1]}",
+                        style={"font-size": "10px", "text-align": "center"},
                     ),
                     html.P(
-                        f"Match: {str(hoverData['points'][0]['customdata'][4]).replace('_', ' ')}"
+                        f"Ground Truth: {str(hoverData['points'][0]['customdata'][2]).replace('_', ' ')}",
+                        style={"font-size": "10px", "text-align": "center"},
                     ),
                     html.P(
-                        f"What does the image describe? (BLIP2): {hoverData['points'][0]['customdata'][5]}"
+                        f"ASL Prediction: {str(hoverData['points'][0]['customdata'][3]).replace('_', ' ')}",
+                        style={"font-size": "10px", "text-align": "center"},
                     ),
                     html.P(
-                        f"What is the person in this picture doing? (BLIP2): {hoverData['points'][0]['customdata'][6]}"
+                        f"Match: {str(hoverData['points'][0]['customdata'][4]).replace('_', ' ')}",
+                        style={"font-size": "10px", "text-align": "center"},
                     ),
                     html.P(
-                        f"What is happening in this picture? (BLIP2): {hoverData['points'][0]['customdata'][7]}"
+                        f"What does the image describe? (BLIP2): {hoverData['points'][0]['customdata'][5]}",
+                        style={"font-size": "10px", "text-align": "center"},
                     ),
                     html.P(
-                        f"Image Caption (BLIP2): {hoverData['points'][0]['customdata'][8]}"
+                        f"What is the person in this picture doing? (BLIP2): {hoverData['points'][0]['customdata'][6]}",
+                        style={"font-size": "10px", "text-align": "center"},
+                    ),
+                    html.P(
+                        f"What is happening in this picture? (BLIP2): {hoverData['points'][0]['customdata'][7]}",
+                        style={"font-size": "10px", "text-align": "center"},
+                    ),
+                    html.P(
+                        f"Image Caption (BLIP2): {hoverData['points'][0]['customdata'][8]}",
+                        style={"font-size": "10px", "text-align": "center"},
                     ),
                 ],
                 style={"width": "600px", "white-space": "normal"},

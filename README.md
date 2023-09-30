@@ -117,6 +117,10 @@ export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+
+export JAVA_HOME=$SCRATCH/mq_libs/java
+
+export PATH=$JAVA_HOME/bin:$PATH
 ```
 
 
@@ -128,6 +132,10 @@ export CODE=/local/home/aarslan/mq
 export SCRATCH=/data/aarslan
 
 export CUDA_HOME=/usr/local/cuda
+
+export JAVA_HOME=$SCRATCH/mq_libs/java
+
+export PATH=$JAVA_HOME/bin:$PATH
 ```
 
 # 01_02 - Install package manager
@@ -354,6 +362,8 @@ cd $CODE/scripts/01_setup_environment
 
 python3 -m pip install -r mq_analysis_requirements.txt
 
+mamba install python-graphviz
+
 python3 -m spacy download en_core_web_lg
 
 python3 -m ipykernel install --user --name=mq
@@ -405,13 +415,13 @@ RUNNING
 sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "3" -c "0,1,2"
 
 NOT DONE
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "1" -c "0,1"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "gsam" -q "1" -c "0,1"
 
 NOT DONE
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "2" -c "0,1"
+sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "gsam" -q "2" -c "0,1,2"
 
 NOT DONE
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_captioning" -q "3" -c "0,1"
+sbatch --time 720 --f=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "gsam" -q "3" -c "0,1,2"
 
 ```
 
@@ -437,34 +447,39 @@ mamba activate mq_data
 
 chmod +x main.sh
 
-
-./main.sh -f "gsam" -q "0" -c "4,5,6,7"
-
-RUNNING
+DONE
 ./main.sh -f "blip2_vqa" -q "0" -c "4,5,6,7"
 
+RUNNING
+./main.sh -f "gsam" -q "0" -c "4,5,6,7"
+
 NOT DONE
-./main.sh -f "blip2_captioning" -q "0" -c "4,5,6,7"
+./main.sh -f "ego_hos" -q "0" -c "4,5,6,7"
 ```
 
 # 05_01 - Extract Frames
 
+```
 cd $CODE/scripts/05_visualize_frame_features/01_extract_frames
 
 mamba activate mq_visualization
 
 python3 frame_extractor.py
+```
 
 # 05_02 - Stream Video
 
+```
 cd $CODE/scripts/05_visualize_frame_features/02_stream_video
 
 mamba activate mq_visualization
 
 python3 manage.py runserver 5960
+```
 
 # 05_03 - Horizontal Bar Plots
 
+```
 cd $CODE/scripts/05_visualize_frame_features/03_horizontal_bar_plots
 
 mamba activate mq_visualization
@@ -478,16 +493,11 @@ python3 horizontal_bar_plots.py --clip_id 013559ff-eab2-4c25-a475-90bf56f5ae9e -
 python3 horizontal_bar_plots.py --clip_id 00e4af86-adca-479f-a20a-402f1bc933a0 --port 8054
 
 python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe --port 8055
+```
 
 # 06 - Analyze frame features
 
-cd $CODE/scripts/06_analyze_frame_features
-
-mamba deactivate
-
-mamba activate mq_visualization
-
-python3 analyze_frame_features.py --clip_id
+Use analyze_frame_features.ipynb
 
 # 07 - Reproduce baseline results (Works in CVL Server)
 
