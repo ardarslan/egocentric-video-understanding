@@ -406,22 +406,23 @@ mamba deactivate
 mamba activate mq_data
 
 RUNNING
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "1" -c "0,1"
+sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "1" -c "0,1,2,3"
 
 RUNNING
-sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "2" -c "0,1,2"
-
-RUNNING
-sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "3" -c "0,1,2"
+sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "3" -c "0,1,2,3"
 
 NOT DONE
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "gsam" -q "1" -c "0,1"
 
 NOT DONE
-sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "gsam" -q "2" -c "0,1,2"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "gsam" -q "2" -c "0,1"
 
 NOT DONE
-sbatch --time 720 --f=gpu:3 --cpus-per-task 3 --mem-per-cpu 50G main.sh -f "gsam" -q "3" -c "0,1,2"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "gsam" -q "3" -c "0,1"
+
+DONE
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "2" -c "0,1"
+
 
 ```
 

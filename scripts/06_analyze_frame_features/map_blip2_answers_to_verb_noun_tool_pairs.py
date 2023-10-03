@@ -38,7 +38,7 @@ if __name__ == "__main__":
             os.environ["SCRATCH"],
             "ego4d_data/v2",
             "analysis_data",
-            "blip2_answers_verb_noun_obl_pairs.pickle",
+            "clip_id_frame_id_blip2_verb_noun_tool_pair_mapping.pickle",
         ),
         type=str,
     )
@@ -96,7 +96,6 @@ if __name__ == "__main__":
             {
                 "clip_id": clip_id,
                 "frame_id_blip2_answers_mapping": frame_id_blip2_answers_mapping,
-                "server_url": "http://localhost:5960",
             }
             for clip_id, frame_id_blip2_answers_mapping in list(
                 clip_id_frame_id_blip2_answers_mapping.items()
