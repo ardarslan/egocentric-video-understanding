@@ -25,7 +25,7 @@ from nltk.parse.corenlp import CoreNLPDependencyParser
 from typing import Dict, List
 
 
-taggers = {}
+dependency_parser = CoreNLPDependencyParser(url="http://localhost:5960")
 
 
 def str2bool(v):
@@ -126,7 +126,7 @@ def get_clip_id_frame_id_blip2_answers_mapping(clip_ids: str):
             for question in [
                 "What is happening in this picture?",
                 "What does the image describe?",
-                "What does the image describe?",
+                "What is the person in this picture doing?",
             ]:
                 answer = current_blip2_answers[
                     current_blip2_answers["question"] == question
@@ -364,16 +364,6 @@ def get_clip_ids(annotations_json_file_path: str):
     return train_clip_ids, val_clip_ids, test_clip_ids
 
 
-def get_dependency_parser(server_url: str):
-    if "dependency_parser" in taggers.keys():
-        dependency_parser = taggers["dependency_parser"]
-        return dependency_parser
-    else:
-        dependency_parser = CoreNLPDependencyParser(url=server_url)
-        taggers["dependency_parser"] = dependency_parser
-        return dependency_parser
-
-
 def get_clip_id_frame_id_blip2_words_mapping(
     clip_id_frame_id_blip2_answers_mapping: Dict[str, Dict[str, Dict[str, str]]]
 ):
@@ -476,6 +466,7 @@ def get_clip_id_frame_id_embedding_mapping(
         ],
         function=frame_embedder.get_embedding_per_clip,
         n_jobs=8,
+        exception_behaviour="immediate",
         argument_type="kwargs",
     )
     return dict(result)
@@ -534,9 +525,9 @@ def get_verb_noun_tool_pairs(
     blip2_answer_clean_splitted = blip2_answer_clean.split()
 
     verb_noun_tool_pairs = []
-    dependency_parser_results = dependency_parser.parse(blip2_answer_clean_splitted)
 
     try:
+        dependency_parser_results = dependency_parser.parse(blip2_answer_clean_splitted)
         dependency_parser_result = dependency_parser_results.__next__()
     except Exception as e:
         e = ""
@@ -583,6 +574,7 @@ def get_verb_noun_tool_pairs(
                 ]
                 verb_compound_prt_lemma = verb_compound_prt_node["lemma"]
                 verb_lemma = verb_lemma + " " + verb_compound_prt_lemma
+            verb_lemma = verb_lemma.replace("-", " ")
 
             # Extract tools that are related to the verb with a "with".
             tool_addresses = current_word_node["deps"].get("obl", [])
@@ -623,7 +615,8 @@ def get_verb_noun_tool_pairs(
                     ]
                     noun_compound_lemma = noun_compound_node["lemma"]
                     noun_lemma = noun_compound_lemma + " " + noun_lemma
-                    noun_lemmas.append(noun_lemma)
+                noun_lemma = noun_lemma.replace("-", " ")
+                noun_lemmas.append(noun_lemma)
 
             # Extract tool lemmas.
             tool_lemmas = []
@@ -638,7 +631,8 @@ def get_verb_noun_tool_pairs(
                     ]
                     tool_compound_lemma = tool_compound_node["lemma"]
                     tool_lemma = tool_compound_lemma + " " + tool_lemma
-                    tool_lemmas.append(tool_lemma)
+                tool_lemma = tool_lemma.replace("-", " ")
+                tool_lemmas.append(tool_lemma)
 
             if len(noun_lemmas) == 0:
                 noun_lemmas = ["NaN"]
@@ -655,10 +649,7 @@ def get_verb_noun_tool_pairs(
 def get_verb_noun_tool_pairs_per_clip(
     clip_id: str,
     frame_id_blip2_answers_mapping: Dict[int, Dict[str, str]],
-    server_url: str,
 ):
-    dependency_parser = get_dependency_parser(server_url=server_url)
-
     frame_id_verb_noun_tool_pairs_mapping = dict()
     for frame_id, blip2_answers_mapping in frame_id_blip2_answers_mapping.items():
         frame_id_verb_noun_tool_pairs_mapping[frame_id] = dict()

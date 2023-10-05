@@ -1,5 +1,5 @@
 {
-    "\"clean_/_repair_small_equipment_[mower,_trimmer_etc.]\"": [
+    "\"clean_/_repair_small_equipment_(mower,_trimmer_etc.)\"": [
         ["clean", "equipment", "NaN"],
         ["clean", "mower", "NaN"],
         ["clean", "trimmer", "NaN"],
@@ -27,7 +27,7 @@
         ["slice", "fruit", "NaN"],
         ["slice", "meat", "NaN"]
     ],
-    "\"level_ground_/_soil_[eg._using_rake,_shovel,_etc]\"": [
+    "\"level_ground_/_soil_(eg._using_rake,_shovel,_etc)\"": [
         ["rake", "ground", "NaN"],
         ["shovel", "ground", "NaN"],
 
@@ -36,7 +36,7 @@
         ["level", "soil", "rake"],
         ["level", "soil", "shovel"],
 
-        ["use", "shovel"]
+        ["use", "shovel", "NaN"]
     ],
     "\"make_the_bed_/_arrange_pillows,_sheets_etc._on_bed\"": [
         ["make", "bed", "NaN"],
@@ -44,7 +44,7 @@
         ["arrange", "pillow", "NaN"],
         ["arrange", "sheet", "NaN"]
     ],
-    "\"put_on_safety_equipment_[e.g._gloves,_helmet,_safety_goggles]\"": [
+    "\"put_on_safety_equipment_(e.g._gloves,_helmet,_safety_goggles)\"": [
         ["wear", "safety equipment", "NaN"],
         ["wear", "glove", "NaN"],
         ["wear", "helmet", "NaN"],
@@ -69,7 +69,7 @@
         ["try out", "goggles", "NaN"],
         ["try out", "safety goggles", "NaN"]
     ],
-    "\"try-out_/_wear_accessories_[e.g._tie,_belt,_scarf]\"": [
+    "\"try-out_/_wear_accessories_(e.g._tie,_belt,_scarf)\"": [
         ["wear", "accessory", "NaN"],
         ["wear", "tie", "NaN"],
         ["wear", "scarf", "NaN"],
@@ -90,7 +90,7 @@
         ["try out", "scarf", "NaN"],
         ["try out", "belt", "NaN"]
     ],
-    "\"try-out_/_wear_clothing_items_[e.g._shirt,_jeans,_sweater]\"": [
+    "\"try-out_/_wear_clothing_items_(e.g._shirt,_jeans,_sweater)\"": [
         ["wear", "cloth", "NaN"],
         ["wear", "clothing item", "NaN"],
         ["wear", "shirt", "NaN"],
@@ -222,7 +222,7 @@
         ["trim", "grass", "tool"]
     ],
     "cut_dough": [["cut", "dough", "NaN"]],
-    "cut_open_a_package_[e.g._with_scissors]": [
+    "cut_open_a_package_(e.g._with_scissors)": [
         ["cut", "package", "scissors"],
         ["open", "package", "scissors"]
     ],
@@ -236,7 +236,9 @@
         ["cut", "paper", "cutter"],
         ["cut", "cardboard", "scissors"],
         ["cut", "cardboard", "knife"],
-        ["cut", "cardboard", "cutter"]
+        ["cut", "cardboard", "cutter"],
+        ["use", "cutter", "NaN"],
+        ["use", "knife", "NaN"]
     ],
     "cut_tree_branch": [
         ["cut", "tree", "NaN"],
@@ -388,19 +390,19 @@
         ["prepare", "mortar", "NaN"],
         ["apply", "mortar", "NaN"]
     ],
-    "put_away_[or_take_out]_dishes_/_utensils_in_storage": [
+    "put_away_(or_take_out)_dishes_/_utensils_in_storage": [
         ["put away", "dish", "NaN"],
         ["put away", "utensil", "NaN"],
         ["take out", "dish", "NaN"],
         ["take out", "utensil", "NaN"]
     ],
-    "put_away_[or_take_out]_food_items_in_the_fridge": [
+    "put_away_(or_take_out)_food_items_in_the_fridge": [
         ["put away", "food", "NaN"],
         ["take out", "food", "NaN"],
         ["put away", "food item", "NaN"],
         ["take out", "food item", "NaN"]
     ],
-    "put_away_[or_take_out]_ingredients_in_storage": [
+    "put_away_(or_take_out)_ingredients_in_storage": [
         ["put away", "ingredient", "NaN"],
         ["take out", "ingredient", "NaN"]
     ],
@@ -437,7 +439,7 @@
         ["stir", "food", "NaN"],
         ["mix", "food", "NaN"]
     ],
-    "stir_/_mix_ingredients_in_a_bowl_or_pan_[before_cooking]": [
+    "stir_/_mix_ingredients_in_a_bowl_or_pan_(before_cooking)": [
         ["stir", "ingredient", "NaN"],
         ["mix", "ingredient", "NaN"]
     ],
