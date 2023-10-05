@@ -512,6 +512,17 @@ sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender
 
 sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 test.sh
 
+
+mamba deactivate
+
+mamba activate mq_model
+
+cd $CODE/scripts/07_reproduce_baseline_results
+
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 train.sh
+
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 test.sh
+
 python merge_submission.py
 
 
