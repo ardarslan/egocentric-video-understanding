@@ -1,24 +1,11 @@
 import os
 import cv2
 import json
-import pickle
 import argparse
 import numpy as np
 import pandas as pd
 import itertools
-from pqdm.processes import pqdm
-from pathlib import Path
-
-from frame_embedder.frame_embedder import FrameEmbedder
-from frame_embedder.word2vec_frame_embedder import Word2VecFrameEmbedder
-from frame_embedder.glove_frame_embedder import GloveFrameEmbedder
-from frame_embedder.one_hot_frame_embedder import OneHotFrameEmbedder
-from frame_embedder.universal_sentence_encoder_frame_embedder import (
-    UniversalSentenceEncoderFrameEmbedder,
-)
-from frame_embedder.sentence_transformer_frame_embedder import (
-    SentenceTransformerFrameEmbedder,
-)
+from tqdm import tqdm
 
 from nltk.parse.corenlp import CoreNLPDependencyParser
 
@@ -136,17 +123,17 @@ def get_clip_id_frame_id_blip2_answers_mapping(clip_ids: str):
     return clip_id_frame_id_blip2_answers_mapping
 
 
-def get_clip_id_frame_id_labels_mapping(
+def get_clip_id_frame_id_label_indices_mapping(
     clip_ids: List[str], annotations_json_file_path: str
 ):
-    clip_id_frame_id_labels_mapping = dict()
+    clip_id_frame_id_label_indices_mapping = dict()
     for clip_id in clip_ids:
         with open(annotations_json_file_path, "r") as reader:
             annotations = json.load(reader)
         clip_info = get_clip_info(clip_id)
         num_frames = clip_info["num_frames"]
         fps = clip_info["fps"]
-        frame_id_labels_mapping = {}
+        frame_id_label_indices_mapping = {}
         current_annotations = annotations[clip_id]["annotations"]
         for frame_id in range(num_frames):
             current_labels = set()
@@ -161,123 +148,123 @@ def get_clip_id_frame_id_labels_mapping(
                         current_labels.add(current_annotation["label"])
                 if len(current_labels) == 0:
                     current_labels.add("background")
-            frame_id_labels_mapping[frame_id] = current_labels
-        clip_id_frame_id_labels_mapping[clip_id] = frame_id_labels_mapping
-    return clip_id_frame_id_labels_mapping
+            frame_id_label_indices_mapping[frame_id] = current_labels
+        clip_id_frame_id_label_indices_mapping[clip_id] = frame_id_label_indices_mapping
+    return clip_id_frame_id_label_indices_mapping
 
 
-def get_analysis_data_file_name_wo_ext_analysis_data_mapping(
-    args: argparse.Namespace,
-    analysis_data_file_name_wo_ext_analysis_data_mapping_file_path: str,
-):
-    train_clip_ids, val_clip_ids, test_clip_ids = get_clip_ids(
-        annotations_json_file_path=args.annotations_json_file_path
-    )
+# def get_analysis_data_file_name_wo_ext_analysis_data_mapping(
+#     args: argparse.Namespace,
+#     analysis_data_file_name_wo_ext_analysis_data_mapping_file_path: str,
+# ):
+#     train_clip_ids, val_clip_ids, test_clip_ids = get_clip_ids(
+#         annotations_json_file_path=args.annotations_json_file_path
+#     )
 
-    train_clip_id_frame_id_labels_mapping = get_clip_id_frame_id_labels_mapping(
-        clip_ids=train_clip_ids,
-        annotations_json_file_path=args.annotations_json_file_path,
-    )
-    val_clip_id_frame_id_labels_mapping = get_clip_id_frame_id_labels_mapping(
-        clip_ids=val_clip_ids,
-        annotations_json_file_path=args.annotations_json_file_path,
-    )
+#     train_clip_id_frame_id_labels_mapping = get_clip_id_frame_id_labels_mapping(
+#         clip_ids=train_clip_ids,
+#         annotations_json_file_path=args.annotations_json_file_path,
+#     )
+#     val_clip_id_frame_id_labels_mapping = get_clip_id_frame_id_labels_mapping(
+#         clip_ids=val_clip_ids,
+#         annotations_json_file_path=args.annotations_json_file_path,
+#     )
 
-    train_clip_id_frame_id_blip2_answers_mapping = (
-        get_clip_id_frame_id_blip2_answers_mapping(clip_ids=train_clip_ids)
-    )
-    val_clip_id_frame_id_blip2_answers_mapping = (
-        get_clip_id_frame_id_blip2_answers_mapping(clip_ids=val_clip_ids)
-    )
-    test_clip_id_frame_id_blip2_answers_mapping = (
-        get_clip_id_frame_id_blip2_answers_mapping(clip_ids=test_clip_ids)
-    )
+#     train_clip_id_frame_id_blip2_answers_mapping = (
+#         get_clip_id_frame_id_blip2_answers_mapping(clip_ids=train_clip_ids)
+#     )
+#     val_clip_id_frame_id_blip2_answers_mapping = (
+#         get_clip_id_frame_id_blip2_answers_mapping(clip_ids=val_clip_ids)
+#     )
+#     test_clip_id_frame_id_blip2_answers_mapping = (
+#         get_clip_id_frame_id_blip2_answers_mapping(clip_ids=test_clip_ids)
+#     )
 
-    train_clip_id_frame_id_blip2_words_mapping = get_clip_id_frame_id_blip2_words_mapping(
-        clip_id_frame_id_blip2_answers_mapping=train_clip_id_frame_id_blip2_answers_mapping
-    )
-    val_clip_id_frame_id_blip2_words_mapping = get_clip_id_frame_id_blip2_words_mapping(
-        clip_id_frame_id_blip2_answers_mapping=val_clip_id_frame_id_blip2_answers_mapping
-    )
-    test_clip_id_frame_id_blip2_words_mapping = get_clip_id_frame_id_blip2_words_mapping(
-        clip_id_frame_id_blip2_answers_mapping=test_clip_id_frame_id_blip2_answers_mapping
-    )
+#     train_clip_id_frame_id_blip2_words_mapping = get_clip_id_frame_id_blip2_words_mapping(
+#         clip_id_frame_id_blip2_answers_mapping=train_clip_id_frame_id_blip2_answers_mapping
+#     )
+#     val_clip_id_frame_id_blip2_words_mapping = get_clip_id_frame_id_blip2_words_mapping(
+#         clip_id_frame_id_blip2_answers_mapping=val_clip_id_frame_id_blip2_answers_mapping
+#     )
+#     test_clip_id_frame_id_blip2_words_mapping = get_clip_id_frame_id_blip2_words_mapping(
+#         clip_id_frame_id_blip2_answers_mapping=test_clip_id_frame_id_blip2_answers_mapping
+#     )
 
-    train_labels, train_blip2_answer_word_label_mapping = get_train_labels(
-        train_clip_id_frame_id_blip2_words_mapping=train_clip_id_frame_id_blip2_words_mapping,
-        train_clip_id_frame_id_labels_mapping=train_clip_id_frame_id_labels_mapping,
-    )
+#     train_labels, train_blip2_answer_word_label_mapping = get_train_labels(
+#         train_clip_id_frame_id_blip2_words_mapping=train_clip_id_frame_id_blip2_words_mapping,
+#         train_clip_id_frame_id_labels_mapping=train_clip_id_frame_id_labels_mapping,
+#     )
 
-    train_blip2_answer_word_weight_mapping = get_train_blip2_answer_word_weight_mapping(
-        train_blip2_answer_word_weight_type=args.train_blip2_answer_word_weight_type,
-        train_blip2_answer_word_label_mapping=train_blip2_answer_word_label_mapping,
-    )
+#     train_blip2_answer_word_weight_mapping = get_train_blip2_answer_word_weight_mapping(
+#         train_blip2_answer_word_weight_type=args.train_blip2_answer_word_weight_type,
+#         train_blip2_answer_word_label_mapping=train_blip2_answer_word_label_mapping,
+#     )
 
-    frame_embedder = get_frame_embedder(
-        frame_embedder_name=args.frame_embedder,
-        train_blip2_answer_word_label_mapping=train_blip2_answer_word_weight_mapping,
-        unify_words=False,
-    )
+#     frame_embedder = get_frame_embedder(
+#         frame_embedder_name=args.frame_embedder,
+#         train_blip2_answer_word_label_mapping=train_blip2_answer_word_weight_mapping,
+#         unify_words=False,
+#     )
 
-    train_clip_id_frame_id_embedding_mapping = get_clip_id_frame_id_embedding_mapping(
-        frame_embedder=frame_embedder,
-        clip_id_frame_id_blip2_answers_mapping=train_clip_id_frame_id_blip2_answers_mapping,
-        clip_id_frame_id_blip2_words_mapping=train_clip_id_frame_id_blip2_words_mapping,
-    )
-    val_clip_id_frame_id_embedding_mapping = get_clip_id_frame_id_embedding_mapping(
-        frame_embedder=frame_embedder,
-        clip_id_frame_id_blip2_answers_mapping=val_clip_id_frame_id_blip2_answers_mapping,
-        clip_id_frame_id_blip2_words_mapping=val_clip_id_frame_id_blip2_words_mapping,
-    )
-    test_clip_id_frame_id_embedding_mapping = get_clip_id_frame_id_embedding_mapping(
-        frame_embedder=frame_embedder,
-        clip_id_frame_id_blip2_answers_mapping=test_clip_id_frame_id_blip2_answers_mapping,
-        clip_id_frame_id_blip2_words_mapping=test_clip_id_frame_id_blip2_words_mapping,
-    )
+#     train_clip_id_frame_id_embedding_mapping = get_clip_id_frame_id_embedding_mapping(
+#         frame_embedder=frame_embedder,
+#         clip_id_frame_id_blip2_answers_mapping=train_clip_id_frame_id_blip2_answers_mapping,
+#         clip_id_frame_id_blip2_words_mapping=train_clip_id_frame_id_blip2_words_mapping,
+#     )
+#     val_clip_id_frame_id_embedding_mapping = get_clip_id_frame_id_embedding_mapping(
+#         frame_embedder=frame_embedder,
+#         clip_id_frame_id_blip2_answers_mapping=val_clip_id_frame_id_blip2_answers_mapping,
+#         clip_id_frame_id_blip2_words_mapping=val_clip_id_frame_id_blip2_words_mapping,
+#     )
+#     test_clip_id_frame_id_embedding_mapping = get_clip_id_frame_id_embedding_mapping(
+#         frame_embedder=frame_embedder,
+#         clip_id_frame_id_blip2_answers_mapping=test_clip_id_frame_id_blip2_answers_mapping,
+#         clip_id_frame_id_blip2_words_mapping=test_clip_id_frame_id_blip2_words_mapping,
+#     )
 
-    train_X, train_y, train_clip_ids, train_frame_ids = get_data(
-        clip_id_frame_id_embedding_mapping=train_clip_id_frame_id_embedding_mapping,
-        clip_id_frame_id_labels_mapping=train_clip_id_frame_id_labels_mapping,
-        train_labels=train_labels,
-    )
-    val_X, val_y, val_clip_ids, val_frame_ids = get_data(
-        clip_id_frame_id_embedding_mapping=val_clip_id_frame_id_embedding_mapping,
-        clip_id_frame_id_labels_mapping=val_clip_id_frame_id_labels_mapping,
-        train_labels=train_labels,
-    )
-    test_X, _, test_clip_ids, test_frame_ids = get_data(
-        clip_id_frame_id_embedding_mapping=test_clip_id_frame_id_embedding_mapping,
-        clip_id_frame_id_labels_mapping=None,
-        train_labels=train_labels,
-    )
+#     train_X, train_y, train_clip_ids, train_frame_ids = get_data(
+#         clip_id_frame_id_embedding_mapping=train_clip_id_frame_id_embedding_mapping,
+#         clip_id_frame_id_labels_mapping=train_clip_id_frame_id_labels_mapping,
+#         train_labels=train_labels,
+#     )
+#     val_X, val_y, val_clip_ids, val_frame_ids = get_data(
+#         clip_id_frame_id_embedding_mapping=val_clip_id_frame_id_embedding_mapping,
+#         clip_id_frame_id_labels_mapping=val_clip_id_frame_id_labels_mapping,
+#         train_labels=train_labels,
+#     )
+#     test_X, _, test_clip_ids, test_frame_ids = get_data(
+#         clip_id_frame_id_embedding_mapping=test_clip_id_frame_id_embedding_mapping,
+#         clip_id_frame_id_labels_mapping=None,
+#         train_labels=train_labels,
+#     )
 
-    analysis_data_file_name_wo_ext_analysis_data_mapping = {
-        "train_labels": train_labels,
-        "train_blip2_answer_word_label_mapping": train_blip2_answer_word_label_mapping,
-        "train_X": train_X,
-        "train_y": train_y,
-        "train_clip_ids": train_clip_ids,
-        "train_frame_ids": train_frame_ids,
-        "val_X": val_X,
-        "val_y": val_y,
-        "val_clip_ids": val_clip_ids,
-        "val_frame_ids": val_frame_ids,
-        "test_X": test_X,
-        "test_clip_ids": test_clip_ids,
-        "test_frame_ids": test_frame_ids,
-    }
+#     analysis_data_file_name_wo_ext_analysis_data_mapping = {
+#         "train_labels": train_labels,
+#         "train_blip2_answer_word_label_mapping": train_blip2_answer_word_label_mapping,
+#         "train_X": train_X,
+#         "train_y": train_y,
+#         "train_clip_ids": train_clip_ids,
+#         "train_frame_ids": train_frame_ids,
+#         "val_X": val_X,
+#         "val_y": val_y,
+#         "val_clip_ids": val_clip_ids,
+#         "val_frame_ids": val_frame_ids,
+#         "test_X": test_X,
+#         "test_clip_ids": test_clip_ids,
+#         "test_frame_ids": test_frame_ids,
+#     }
 
-    os.makedirs(
-        Path(analysis_data_file_name_wo_ext_analysis_data_mapping_file_path).parent,
-        exist_ok=True,
-    )
+#     os.makedirs(
+#         Path(analysis_data_file_name_wo_ext_analysis_data_mapping_file_path).parent,
+#         exist_ok=True,
+#     )
 
-    with open(
-        analysis_data_file_name_wo_ext_analysis_data_mapping_file_path, "wb"
-    ) as writer:
-        pickle.dump(analysis_data_file_name_wo_ext_analysis_data_mapping, writer)
+#     with open(
+#         analysis_data_file_name_wo_ext_analysis_data_mapping_file_path, "wb"
+#     ) as writer:
+#         pickle.dump(analysis_data_file_name_wo_ext_analysis_data_mapping, writer)
 
-    return analysis_data_file_name_wo_ext_analysis_data_mapping
+#     return analysis_data_file_name_wo_ext_analysis_data_mapping
 
 
 def get_data(
@@ -324,25 +311,25 @@ def get_data(
     return X, y, clip_ids, frame_ids
 
 
-def get_frame_embedder(
-    frame_embedder_name: str,
-    train_blip2_answer_word_label_mapping: Dict[str, float],
-    unify_words: bool,
-):
-    if frame_embedder_name == "word2vec":
-        frame_embedder_class = Word2VecFrameEmbedder
-    elif frame_embedder_name == "glove":
-        frame_embedder_class = GloveFrameEmbedder
-    elif frame_embedder_name == "one_hot":
-        frame_embedder_class = OneHotFrameEmbedder
-    elif frame_embedder_name == "universal_sentence_encoder":
-        frame_embedder_class = UniversalSentenceEncoderFrameEmbedder
-    elif frame_embedder_name == "sentence_transformer":
-        frame_embedder_class = SentenceTransformerFrameEmbedder
-    return frame_embedder_class(
-        train_blip2_answer_word_label_mapping=train_blip2_answer_word_label_mapping,
-        unify_words=unify_words,
-    )
+# def get_frame_embedder(
+#     frame_embedder_name: str,
+#     train_blip2_answer_word_label_mapping: Dict[str, float],
+#     unify_words: bool,
+# ):
+#     if frame_embedder_name == "word2vec":
+#         frame_embedder_class = Word2VecFrameEmbedder
+#     elif frame_embedder_name == "glove":
+#         frame_embedder_class = GloveFrameEmbedder
+#     elif frame_embedder_name == "one_hot":
+#         frame_embedder_class = OneHotFrameEmbedder
+#     elif frame_embedder_name == "universal_sentence_encoder":
+#         frame_embedder_class = UniversalSentenceEncoderFrameEmbedder
+#     elif frame_embedder_name == "sentence_transformer":
+#         frame_embedder_class = SentenceTransformerFrameEmbedder
+#     return frame_embedder_class(
+#         train_blip2_answer_word_label_mapping=train_blip2_answer_word_label_mapping,
+#         unify_words=unify_words,
+#     )
 
 
 def get_clip_ids(annotations_json_file_path: str):
@@ -364,23 +351,23 @@ def get_clip_ids(annotations_json_file_path: str):
     return train_clip_ids, val_clip_ids, test_clip_ids
 
 
-def get_clip_id_frame_id_blip2_words_mapping(
-    clip_id_frame_id_blip2_answers_mapping: Dict[str, Dict[str, Dict[str, str]]]
-):
-    return dict(
-        pqdm(
-            [
-                {
-                    "clip_id": clip_id,
-                    "frame_id_blip2_answers_mapping": frame_id_blip2_answers_mapping,
-                }
-                for clip_id, frame_id_blip2_answers_mapping in clip_id_frame_id_blip2_answers_mapping.items()
-            ],
-            function=FrameEmbedder.process_per_clip_blip2_answers,
-            n_jobs=8,
-            argument_type="kwargs",
-        )
-    )
+# def get_clip_id_frame_id_blip2_words_mapping(
+#     clip_id_frame_id_blip2_answers_mapping: Dict[str, Dict[str, Dict[str, str]]]
+# ):
+#     return dict(
+#         pqdm(
+#             [
+#                 {
+#                     "clip_id": clip_id,
+#                     "frame_id_blip2_answers_mapping": frame_id_blip2_answers_mapping,
+#                 }
+#                 for clip_id, frame_id_blip2_answers_mapping in clip_id_frame_id_blip2_answers_mapping.items()
+#             ],
+#             function=FrameEmbedder.process_per_clip_blip2_answers,
+#             n_jobs=8,
+#             argument_type="kwargs",
+#         )
+#     )
 
 
 def get_train_labels(
@@ -446,30 +433,30 @@ def get_train_blip2_answer_word_weight_mapping(
     return train_blip2_answer_word_weight_mapping
 
 
-def get_clip_id_frame_id_embedding_mapping(
-    frame_embedder: FrameEmbedder,
-    clip_id_frame_id_blip2_answers_mapping: Dict[str, Dict[str, List[str]]],
-    clip_id_frame_id_blip2_words_mapping: Dict[str, Dict[str, List[str]]],
-):
-    result = pqdm(
-        [
-            {
-                "clip_id": clip_id,
-                "frame_id_blip2_answers_mapping": clip_id_frame_id_blip2_answers_mapping[
-                    clip_id
-                ],
-                "frame_id_blip2_words_mapping": clip_id_frame_id_blip2_words_mapping[
-                    clip_id
-                ],
-            }
-            for clip_id in clip_id_frame_id_blip2_answers_mapping.keys()
-        ],
-        function=frame_embedder.get_embedding_per_clip,
-        n_jobs=8,
-        exception_behaviour="immediate",
-        argument_type="kwargs",
-    )
-    return dict(result)
+# def get_clip_id_frame_id_embedding_mapping(
+#     frame_embedder: FrameEmbedder,
+#     clip_id_frame_id_blip2_answers_mapping: Dict[str, Dict[str, List[str]]],
+#     clip_id_frame_id_blip2_words_mapping: Dict[str, Dict[str, List[str]]],
+# ):
+#     result = pqdm(
+#         [
+#             {
+#                 "clip_id": clip_id,
+#                 "frame_id_blip2_answers_mapping": clip_id_frame_id_blip2_answers_mapping[
+#                     clip_id
+#                 ],
+#                 "frame_id_blip2_words_mapping": clip_id_frame_id_blip2_words_mapping[
+#                     clip_id
+#                 ],
+#             }
+#             for clip_id in clip_id_frame_id_blip2_answers_mapping.keys()
+#         ],
+#         function=frame_embedder.get_embedding_per_clip,
+#         n_jobs=8,
+#         exception_behaviour="immediate",
+#         argument_type="kwargs",
+#     )
+#     return dict(result)
 
 
 def save_evaluation_metrics(
@@ -659,3 +646,96 @@ def get_verb_noun_tool_pairs_per_clip(
                 get_verb_noun_tool_pairs(blip2_answer, dependency_parser),
             )
     return clip_id, frame_id_verb_noun_tool_pairs_mapping
+
+
+def get_clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping(
+    label_verb_noun_tool_mapping_path: str, asl_predictions_path: str
+):
+    clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping = dict()
+
+    with open(
+        asl_predictions_path,
+        "r",
+    ) as reader:
+        asl_predictions = json.load(reader)["detect_results"]
+
+    with open(
+        label_verb_noun_tool_mapping_path,
+        "r",
+    ) as reader:
+        label_verb_noun_tools_mapping = json.load(reader)
+
+    distinct_ground_truth_labels = ["background"] + sorted(
+        list(label_verb_noun_tools_mapping.keys())
+    )
+
+    for clip_id in tqdm(list(asl_predictions.keys())):
+        clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
+            clip_id
+        ] = dict()
+        cap = cv2.VideoCapture(
+            os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips", clip_id + ".mp4")
+        )
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = float(cap.get(cv2.CAP_PROP_FPS))
+        cap.release()
+        for frame_id in range(frame_count):
+            clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[clip_id][
+                frame_id
+            ] = dict()
+            for label_index in range(len(distinct_ground_truth_labels)):
+                clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
+                    clip_id
+                ][frame_id][label_index] = 0.0
+            current_frame_time = frame_id / fps
+            assigned_label_to_current_frame = False
+            annotations = asl_predictions[clip_id]
+            for annotation in annotations:
+                annotation_start_time = annotation["segment"][0]
+                annotation_end_time = annotation["segment"][1]
+                annotation_label = annotation["label"]
+                annotation_label_index = distinct_ground_truth_labels.index(
+                    annotation_label
+                )
+                annotation_score = annotation["score"]
+                if (
+                    annotation_start_time <= current_frame_time
+                    and annotation_end_time >= current_frame_time
+                ):
+                    assigned_label_to_current_frame = True
+                    clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
+                        clip_id
+                    ][frame_id][annotation_label_index] = max(
+                        clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
+                            clip_id
+                        ][frame_id][annotation_label_index],
+                        annotation_score,
+                    )
+            if not assigned_label_to_current_frame:
+                clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
+                    clip_id
+                ][frame_id][0] = 1.0
+
+            # Normalize scores per frame so that their sum is equal to 1.0.
+            sum_scores = 0.0
+            for label_index in range(len(distinct_ground_truth_labels)):
+                sum_scores += (
+                    clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
+                        clip_id
+                    ][frame_id][label_index]
+                )
+            for label_index in range(len(distinct_ground_truth_labels)):
+                clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
+                    clip_id
+                ][frame_id][
+                    label_index
+                ] = clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
+                    clip_id
+                ][
+                    frame_id
+                ][
+                    label_index
+                ] / float(
+                    sum_scores
+                )
+    return clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping

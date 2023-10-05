@@ -5,9 +5,9 @@ from pqdm.processes import pqdm
 
 from utils import (
     get_clip_ids,
-    get_clip_id_frame_id_labels_mapping,
+    get_clip_id_frame_id_label_indices_mapping,
     get_clip_id_frame_id_blip2_answers_mapping,
-    get_clip_id_frame_id_blip2_words_mapping,
+    get_clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping,
     get_verb_noun_tool_pairs_per_clip,
 )
 
@@ -51,15 +51,24 @@ if __name__ == "__main__":
         clip_ids = (
             set(train_clip_ids).union(set(val_clip_ids)).union(set(test_clip_ids))
         )
-        clip_id_frame_id_labels_mapping = get_clip_id_frame_id_labels_mapping(
-            clip_ids=clip_ids,
-            annotations_json_file_path=args.annotations_json_file_path,
+        clip_id_frame_id_label_indices_mapping = (
+            get_clip_id_frame_id_label_indices_mapping(
+                clip_ids=clip_ids,
+                annotations_json_file_path=args.annotations_json_file_path,
+            )
         )
         clip_id_frame_id_blip2_answers_mapping = (
             get_clip_id_frame_id_blip2_answers_mapping(clip_ids=clip_ids)
         )
-        clip_id_frame_id_blip2_words_mapping = get_clip_id_frame_id_blip2_words_mapping(
-            clip_id_frame_id_blip2_answers_mapping=clip_id_frame_id_blip2_answers_mapping
+        clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping = get_clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping(
+            label_verb_noun_tool_mapping_path=os.path.join(
+                os.environ["CODE"],
+                "scripts/06_analyze_frame_features/label_verb_noun_tool_mapping.json",
+            ),
+            asl_predictions_path=os.path.join(
+                os.environ["CODE"],
+                "scripts/07_reproduce_baseline_results/submission_final.json",
+            ),
         )
 
         os.makedirs(
@@ -69,9 +78,9 @@ if __name__ == "__main__":
 
         analysis_data = {
             "clip_ids": clip_ids,
-            "clip_id_frame_id_labels_mapping": clip_id_frame_id_labels_mapping,
+            "clip_id_frame_id_label_indices_mapping": clip_id_frame_id_label_indices_mapping,
             "clip_id_frame_id_blip2_answers_mapping": clip_id_frame_id_blip2_answers_mapping,
-            "clip_id_frame_id_blip2_words_mapping": clip_id_frame_id_blip2_words_mapping,
+            "clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping": clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping,
         }
 
         with open(args.input_data_file_path, "wb") as writer:
@@ -81,14 +90,11 @@ if __name__ == "__main__":
             analysis_data = pickle.load(reader)
 
         clip_ids = analysis_data["clip_ids"]
-        clip_id_frame_id_labels_mapping = analysis_data[
-            "clip_id_frame_id_labels_mapping"
+        clip_id_frame_id_label_indices_mapping = analysis_data[
+            "clip_id_frame_id_label_indices_mapping"
         ]
         clip_id_frame_id_blip2_answers_mapping = analysis_data[
             "clip_id_frame_id_blip2_answers_mapping"
-        ]
-        clip_id_frame_id_blip2_words_mapping = analysis_data[
-            "clip_id_frame_id_blip2_words_mapping"
         ]
 
     result = pqdm(
