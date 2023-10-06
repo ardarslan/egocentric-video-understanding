@@ -101,25 +101,23 @@ def postprocess_asl_predictions_per_clip(
             ] / float(
                 sum_scores
             )
-    return frame_id_asl_predicted_label_indices_and_scores_mapping
+    return clip_id, frame_id_asl_predicted_label_indices_and_scores_mapping
 
 
-clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping = dict(
-    pqdm(
-        [
-            {
-                "clip_id": clip_id,
-                "asl_predictions": asl_predictions,
-                "distinct_ground_truth_labels": distinct_ground_truth_labels,
-            }
-            for clip_id in clip_ids
-        ],
-        function=postprocess_asl_predictions_per_clip,
-        n_jobs=8,
-        argument_type="kwargs",
-        exception_behaviour="immediate",
-    )
-)
+clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping = dict(pqdm(
+    [
+        {
+            "clip_id": clip_id,
+            "asl_predictions": asl_predictions,
+            "distinct_ground_truth_labels": distinct_ground_truth_labels,
+        }
+        for clip_id in list(clip_ids)
+    ],
+    function=postprocess_asl_predictions_per_clip,
+    n_jobs=8,
+    argument_type="kwargs",
+    exception_behaviour="immediate",
+))
 
 with open(
     os.path.join(
