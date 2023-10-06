@@ -21,7 +21,7 @@ with open(os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/analysis_data", "an
 
 sbert = SentenceTransformer('sentence-transformers/paraphrase-MiniLM-L6-v2')
 
-distinct_ground_truth_labels = ["background"] + sorted(list(label_verb_noun_tools_mapping.keys()))
+distinct_ground_truth_labels = sorted(list(label_verb_noun_tools_mapping.keys()))
 
 clip_id_frame_id_ground_truth_label_indices_mapping = dict()
 for clip_id, frame_id_ground_truth_labels_mapping in clip_id_frame_id_ground_truth_labels_mapping.items():
@@ -31,6 +31,8 @@ for clip_id, frame_id_ground_truth_labels_mapping in clip_id_frame_id_ground_tru
     for frame_id, ground_truth_labels in frame_id_ground_truth_labels_mapping.items():
         clip_id_frame_id_ground_truth_label_indices_mapping[clip_id][frame_id] = []
         for ground_truth_label in ground_truth_labels:
+            if ground_truth_label == "background": # handle in map_blip2_answers_to_verb_noun_tool_pairs.py so that such a label never comes.
+                continue
             clip_id_frame_id_ground_truth_label_indices_mapping[clip_id][frame_id].append(distinct_ground_truth_labels.index(ground_truth_label))
 del clip_id_frame_id_ground_truth_labels_mapping
 
@@ -42,17 +44,20 @@ def evaluate_predictions(clip_id_frame_id_predicted_label_indices_mapping: Dict[
     for clip_id, frame_id_ground_truth_label_indices_mapping in tqdm(list(clip_id_frame_id_ground_truth_label_indices_mapping.items())):
         for frame_id, ground_truth_label_indices in frame_id_ground_truth_label_indices_mapping.items():
             predicted_label_indices = clip_id_frame_id_predicted_label_indices_mapping[clip_id][int(frame_id // 6 * 6)]
-            predicted_labels_one_hot_vector = np.zeros(len(distinct_ground_truth_labels))
-            ground_truth_labels_one_hot_vector = np.zeros(len(distinct_ground_truth_labels))
+            predicted_labels_one_hot_vector = np.zeros(len(distinct_ground_truth_labels) + 1)
+            ground_truth_labels_one_hot_vector = np.zeros(len(distinct_ground_truth_labels) + 1)
 
             if len(predicted_label_indices) == 0:
-                print("Having zero label index is not possible!!!!")
+                predicted_labels_one_hot_vector[-1] = 1
             else:
                 for predicted_label_index in predicted_label_indices:
                     predicted_labels_one_hot_vector[predicted_label_index] = 1
 
-            for ground_truth_label_index in ground_truth_label_indices:
-                ground_truth_labels_one_hot_vector[ground_truth_label_index] = 1
+            if len(ground_truth_label_indices) == 0:
+                ground_truth_labels_one_hot_vector[-1] = 1
+            else:
+                for ground_truth_label_index in ground_truth_label_indices:
+                    ground_truth_labels_one_hot_vector[ground_truth_label_index] = 1
 
             predicted_label_one_hot_vectors.append(predicted_labels_one_hot_vector)
             ground_truth_label_one_hot_vectors.append(ground_truth_labels_one_hot_vector)
@@ -80,39 +85,31 @@ def nontemporal_dictionary_matching_for_given_clip(clip_id: str, frame_id_blip2_
     for frame_id, blip2_question_answer_verb_noun_tool_pairs_mapping in frame_id_blip2_question_answer_verb_noun_tool_pairs_mapping.items():
         frame_id_predicted_label_indices_and_scores[frame_id] = dict()
         for label_index in range(len(distinct_ground_truth_labels)):
-            if label_index == 0:
-                for blip2_question, blip2_answer_verb_noun_tool_pairs in blip2_question_answer_verb_noun_tool_pairs_mapping.items():
-                    blip2_verb_noun_tool_pairs = blip2_answer_verb_noun_tool_pairs[1]
-                    if len(blip2_verb_noun_tool_pairs) == 0:
-                        frame_id_predicted_label_indices_and_scores[frame_id][label_index] = 1.0
-                    else:
-                        frame_id_predicted_label_indices_and_scores[frame_id][label_index] = 0.0
-            else:
-                if label_index not in frame_id_predicted_label_indices_and_scores[frame_id].keys():
-                    frame_id_predicted_label_indices_and_scores[frame_id][label_index] = 0.0
-                
-                label = distinct_ground_truth_labels[label_index]
-                label_verb_noun_tools = label_verb_noun_tools_mapping[label]
+            if label_index not in frame_id_predicted_label_indices_and_scores[frame_id].keys():
+                frame_id_predicted_label_indices_and_scores[frame_id][label_index] = 0.0
+            
+            label = distinct_ground_truth_labels[label_index]
+            label_verb_noun_tools = label_verb_noun_tools_mapping[label]
 
-                for label_verb_noun_tool in label_verb_noun_tools:
-                    label_verb = label_verb_noun_tool[0].replace(" ", "")
-                    label_noun = label_verb_noun_tool[1].replace(" ", "")
-                    label_tool = label_verb_noun_tool[2].replace(" ", "")
-                    for blip2_question, blip2_answer_verb_noun_tool_pairs in blip2_question_answer_verb_noun_tool_pairs_mapping.items():
-                        blip2_answer = blip2_answer_verb_noun_tool_pairs[0]
-                        blip2_verb_noun_tool_pairs = blip2_answer_verb_noun_tool_pairs[1]
-                        for blip2_verb_noun_tool_pair in blip2_verb_noun_tool_pairs:
-                            blip2_verb = blip2_verb_noun_tool_pair[0].replace(" ", "")
-                            blip2_noun = blip2_verb_noun_tool_pair[1].replace(" ", "")
-                            blip2_tool = blip2_verb_noun_tool_pair[2].replace(" ", "")
-                            if label_verb == blip2_verb and label_noun == blip2_noun and label_tool == blip2_tool:
-                                frame_id_predicted_label_indices_and_scores[frame_id][label_index] = max(frame_id_predicted_label_indices_and_scores[frame_id][label_index], 1.00)
-                            elif label_verb == blip2_verb and label_noun == blip2_noun:
-                                frame_id_predicted_label_indices_and_scores[frame_id][label_index] = max(frame_id_predicted_label_indices_and_scores[frame_id][label_index], 0.75)
-                            elif label_verb == blip2_verb and label_tool == blip2_tool:
-                                frame_id_predicted_label_indices_and_scores[frame_id][label_index] = max(frame_id_predicted_label_indices_and_scores[frame_id][label_index], 0.50)
-                            elif label_verb == blip2_verb:
-                                frame_id_predicted_label_indices_and_scores[frame_id][label_index] = max(frame_id_predicted_label_indices_and_scores[frame_id][label_index], 0.25)
+            for label_verb_noun_tool in label_verb_noun_tools:
+                label_verb = label_verb_noun_tool[0].replace(" ", "")
+                label_noun = label_verb_noun_tool[1].replace(" ", "")
+                label_tool = label_verb_noun_tool[2].replace(" ", "")
+                for blip2_question, blip2_answer_verb_noun_tool_pairs in blip2_question_answer_verb_noun_tool_pairs_mapping.items():
+                    blip2_answer = blip2_answer_verb_noun_tool_pairs[0]
+                    blip2_verb_noun_tool_pairs = blip2_answer_verb_noun_tool_pairs[1]
+                    for blip2_verb_noun_tool_pair in blip2_verb_noun_tool_pairs:
+                        blip2_verb = blip2_verb_noun_tool_pair[0].replace(" ", "")
+                        blip2_noun = blip2_verb_noun_tool_pair[1].replace(" ", "")
+                        blip2_tool = blip2_verb_noun_tool_pair[2].replace(" ", "")
+                        if label_verb == blip2_verb and label_noun == blip2_noun and label_tool == blip2_tool:
+                            frame_id_predicted_label_indices_and_scores[frame_id][label_index] = max(frame_id_predicted_label_indices_and_scores[frame_id][label_index], 1.00)
+                        elif label_verb == blip2_verb and label_noun == blip2_noun:
+                            frame_id_predicted_label_indices_and_scores[frame_id][label_index] = max(frame_id_predicted_label_indices_and_scores[frame_id][label_index], 0.75)
+                        elif label_verb == blip2_verb and label_tool == blip2_tool:
+                            frame_id_predicted_label_indices_and_scores[frame_id][label_index] = max(frame_id_predicted_label_indices_and_scores[frame_id][label_index], 0.50)
+                        elif label_verb == blip2_verb:
+                            frame_id_predicted_label_indices_and_scores[frame_id][label_index] = max(frame_id_predicted_label_indices_and_scores[frame_id][label_index], 0.25)
 
         # Normalize scores per frame so that their sum is equal to 1.0.
         sum_scores = 0.0
@@ -221,32 +218,24 @@ def nontemporal_sbert_embedding_for_given_clip(clip_id: str, frame_id_blip2_ques
         blip2_verb_sbert_embeddings = frame_id_blip2_verb_sbert_embeddings_mapping[frame_id]
 
         for label_index in range(len(distinct_ground_truth_labels)):
-            if label_index == 0:
-                for blip2_question, blip2_answer_verb_noun_tool_pairs in blip2_question_answer_verb_noun_tool_pairs_mapping.items():
-                    blip2_verb_noun_tool_pairs = blip2_answer_verb_noun_tool_pairs[1]
-                    if len(blip2_verb_noun_tool_pairs) == 0:
-                        frame_id_predicted_label_indices_and_scores[frame_id][label_index] = 1.0
-                    else:
-                        frame_id_predicted_label_indices_and_scores[frame_id][label_index] = 0.0
-            else:
-                if label not in frame_id_predicted_label_indices_and_scores[frame_id].keys():
-                    frame_id_predicted_label_indices_and_scores[frame_id][label_index] = 0.0
+            if label_index not in frame_id_predicted_label_indices_and_scores[frame_id].keys():
+                frame_id_predicted_label_indices_and_scores[frame_id][label_index] = 0.0
 
-                label_verb_noun_tool_sbert_embeddings = label_verb_noun_tool_sbert_embeddings_mapping[label_index]
-                label_verb_noun_sbert_embeddings = label_verb_noun_sbert_embeddings_mapping[label_index]
-                label_verb_tool_sbert_embeddings = label_verb_tool_sbert_embeddings_mapping[label_index]
-                label_verb_sbert_embeddings = label_verb_sbert_embeddings_mapping[label_index]
+            label_verb_noun_tool_sbert_embeddings = label_verb_noun_tool_sbert_embeddings_mapping[label_index]
+            label_verb_noun_sbert_embeddings = label_verb_noun_sbert_embeddings_mapping[label_index]
+            label_verb_tool_sbert_embeddings = label_verb_tool_sbert_embeddings_mapping[label_index]
+            label_verb_sbert_embeddings = label_verb_sbert_embeddings_mapping[label_index]
 
-                frame_id_predicted_label_indices_and_scores[frame_id][label_index] = max([
-                    calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_answer_sbert_embeddings, label_sbert_embeddings=label_verb_noun_tool_sbert_embeddings),
-                    calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_answer_sbert_embeddings, label_sbert_embeddings=label_verb_noun_sbert_embeddings),
-                    calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_answer_sbert_embeddings, label_sbert_embeddings=label_verb_tool_sbert_embeddings),
-                    calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_answer_sbert_embeddings, label_sbert_embeddings=label_verb_sbert_embeddings),
-                    calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_verb_noun_tool_sbert_embeddings, label_sbert_embeddings=label_verb_noun_tool_sbert_embeddings),
-                    calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_verb_noun_sbert_embeddings, label_sbert_embeddings=label_verb_noun_sbert_embeddings),
-                    calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_verb_tool_sbert_embeddings, label_sbert_embeddings=label_verb_tool_sbert_embeddings),
-                    calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_verb_sbert_embeddings, label_sbert_embeddings=label_verb_sbert_embeddings)
-                ])
+            frame_id_predicted_label_indices_and_scores[frame_id][label_index] = max([
+                calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_answer_sbert_embeddings, label_sbert_embeddings=label_verb_noun_tool_sbert_embeddings),
+                calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_answer_sbert_embeddings, label_sbert_embeddings=label_verb_noun_sbert_embeddings),
+                calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_answer_sbert_embeddings, label_sbert_embeddings=label_verb_tool_sbert_embeddings),
+                calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_answer_sbert_embeddings, label_sbert_embeddings=label_verb_sbert_embeddings),
+                calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_verb_noun_tool_sbert_embeddings, label_sbert_embeddings=label_verb_noun_tool_sbert_embeddings),
+                calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_verb_noun_sbert_embeddings, label_sbert_embeddings=label_verb_noun_sbert_embeddings),
+                calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_verb_tool_sbert_embeddings, label_sbert_embeddings=label_verb_tool_sbert_embeddings),
+                calculate_sbert_cosine_similarities(blip2_sbert_embeddings=blip2_verb_sbert_embeddings, label_sbert_embeddings=label_verb_sbert_embeddings)
+            ])
 
         # Normalize scores per frame so that their sum is equal to 1.0.
         sum_scores = 0.0

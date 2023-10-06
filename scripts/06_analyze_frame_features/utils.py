@@ -146,8 +146,6 @@ def get_clip_id_frame_id_label_indices_mapping(
                         and frame_id / fps <= current_annotation["segment"][1]
                     ):
                         current_labels.add(current_annotation["label"])
-                if len(current_labels) == 0:
-                    current_labels.add("background")
             frame_id_label_indices_mapping[frame_id] = current_labels
         clip_id_frame_id_label_indices_mapping[clip_id] = frame_id_label_indices_mapping
     return clip_id_frame_id_label_indices_mapping
@@ -665,7 +663,7 @@ def get_clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping(
     ) as reader:
         label_verb_noun_tools_mapping = json.load(reader)
 
-    distinct_ground_truth_labels = ["background"] + sorted(
+    distinct_ground_truth_labels = sorted(
         list(label_verb_noun_tools_mapping.keys())
     )
 
@@ -688,7 +686,6 @@ def get_clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping(
                     clip_id
                 ][frame_id][label_index] = 0.0
             current_frame_time = frame_id / fps
-            assigned_label_to_current_frame = False
             annotations = asl_predictions[clip_id]
             for annotation in annotations:
                 annotation_start_time = annotation["segment"][0]
@@ -702,7 +699,6 @@ def get_clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping(
                     annotation_start_time <= current_frame_time
                     and annotation_end_time >= current_frame_time
                 ):
-                    assigned_label_to_current_frame = True
                     clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
                         clip_id
                     ][frame_id][annotation_label_index] = max(
@@ -711,10 +707,6 @@ def get_clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping(
                         ][frame_id][annotation_label_index],
                         annotation_score,
                     )
-            if not assigned_label_to_current_frame:
-                clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
-                    clip_id
-                ][frame_id][0] = 1.0
 
             # Normalize scores per frame so that their sum is equal to 1.0.
             sum_scores = 0.0
