@@ -39,7 +39,7 @@ with open(
 
 
 with open(analysis_data_path, "rb") as reader:
-    analysis_data = pickle.load(reader)
+    clip_ids = pickle.load(reader)["clip_ids"]
 
 
 def postprocess_asl_predictions_per_clip(
@@ -111,9 +111,7 @@ clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping = pqdm(
                 "asl_predictions": asl_predictions,
                 "distinct_ground_truth_labels": distinct_ground_truth_labels,
             }
-            for clip_id in list(
-                analysis_data["clip_id_frame_id_label_indices_mapping"].keys()
-            )
+            for clip_id in clip_ids
         ]
     ),
     function=postprocess_asl_predictions_per_clip,
