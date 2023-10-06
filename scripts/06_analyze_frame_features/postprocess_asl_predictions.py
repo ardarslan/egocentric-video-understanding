@@ -104,8 +104,8 @@ def postprocess_asl_predictions_per_clip(
     return frame_id_asl_predicted_label_indices_and_scores_mapping
 
 
-clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping = pqdm(
-    dict(
+clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping = dict(
+    pqdm(
         [
             {
                 "clip_id": clip_id,
@@ -113,12 +113,12 @@ clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping = pqdm(
                 "distinct_ground_truth_labels": distinct_ground_truth_labels,
             }
             for clip_id in clip_ids
-        ]
-    ),
-    function=postprocess_asl_predictions_per_clip,
-    n_jobs=8,
-    argument_type="kwargs",
-    exception_behaviour="immediate",
+        ],
+        function=postprocess_asl_predictions_per_clip,
+        n_jobs=8,
+        argument_type="kwargs",
+        exception_behaviour="immediate",
+    )
 )
 
 with open(
