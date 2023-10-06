@@ -2,7 +2,7 @@ import os
 import cv2
 import json
 import pickle
-from pqdm import pqdm
+from pqdm.processes import pqdm
 
 from typing import Any, Dict, List
 
