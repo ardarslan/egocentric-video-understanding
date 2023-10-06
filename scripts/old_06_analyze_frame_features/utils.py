@@ -2,15 +2,15 @@ import os
 import cv2
 import json
 import argparse
+import itertools
 import numpy as np
 import pandas as pd
-import itertools
 from tqdm import tqdm
+from pqdm.processes import pqdm
 
 from nltk.parse.corenlp import CoreNLPDependencyParser
 
 from typing import Dict, List
-
 
 dependency_parser = CoreNLPDependencyParser(url="http://localhost:5960")
 
@@ -78,8 +78,7 @@ def get_clip_info(clip_id: str):
 
 
 def get_clip_id_frame_id_blip2_answers_mapping(clip_ids: str):
-    clip_id_frame_id_blip2_answers_mapping = dict()
-    for clip_id in clip_ids:
+    def get_clip_id_frame_id_blip2_answers_mapping_helper(clip_id: str):
         clip_info = get_clip_info(clip_id=clip_id)
         num_frames = clip_info["num_frames"]
         blip2_vqa_answers_df = pd.read_csv(
@@ -119,17 +118,33 @@ def get_clip_id_frame_id_blip2_answers_mapping(clip_ids: str):
                     current_blip2_answers["question"] == question
                 ]["answer"].values[0]
                 frame_id_blip2_answers_mapping[frame_id][question] = answer
-        clip_id_frame_id_blip2_answers_mapping[clip_id] = frame_id_blip2_answers_mapping
+        return frame_id_blip2_answers_mapping
+
+    clip_id_frame_id_blip2_answers_mapping = dict(
+        pqdm(
+            [
+                {
+                    "clip_id": clip_id,
+                }
+                for clip_id in clip_ids
+            ],
+            function=get_clip_id_frame_id_blip2_answers_mapping_helper,
+            n_jobs=8,
+            argument_type="kwargs",
+            exception_behaviour="immediate",
+        )
+    )
+
     return clip_id_frame_id_blip2_answers_mapping
 
 
 def get_clip_id_frame_id_label_indices_mapping(
     clip_ids: List[str], annotations_json_file_path: str
 ):
+    with open(annotations_json_file_path, "r") as reader:
+        annotations = json.load(reader)
     clip_id_frame_id_label_indices_mapping = dict()
     for clip_id in clip_ids:
-        with open(annotations_json_file_path, "r") as reader:
-            annotations = json.load(reader)
         clip_info = get_clip_info(clip_id)
         num_frames = clip_info["num_frames"]
         fps = clip_info["fps"]
