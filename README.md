@@ -366,7 +366,7 @@ mamba install python-graphviz
 
 python3 -m spacy download en_core_web_lg
 
-python3 -m ipykernel install --user --name=mq
+python3 -m ipykernel install --user --name=mq_analysis
 
 # 02_01 - Download Ego4D dataset and pre-extracted features
 
@@ -452,7 +452,7 @@ DONE
 ./main.sh -f "blip2_vqa" -q "0" -c "4,5,6,7"
 
 RUNNING
-./main.sh -f "gsam" -q "0" -c "4,5"
+./main.sh -f "gsam" -q "0" -c "6,7"
 
 NOT DONE
 ./main.sh -f "ego_hos" -q "0" -c "4,5,6,7"
