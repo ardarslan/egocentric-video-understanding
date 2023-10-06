@@ -2,15 +2,15 @@ import os
 import cv2
 import json
 import argparse
+import itertools
 import numpy as np
 import pandas as pd
-import itertools
 from tqdm import tqdm
+from pqdm.processes import pqdm
 
 from nltk.parse.corenlp import CoreNLPDependencyParser
 
 from typing import Dict, List
-
 
 dependency_parser = CoreNLPDependencyParser(url="http://localhost:5960")
 
@@ -78,8 +78,7 @@ def get_clip_info(clip_id: str):
 
 
 def get_clip_id_frame_id_blip2_answers_mapping(clip_ids: str):
-    clip_id_frame_id_blip2_answers_mapping = dict()
-    for clip_id in clip_ids:
+    def get_clip_id_frame_id_blip2_answers_mapping_helper(clip_id: str):
         clip_info = get_clip_info(clip_id=clip_id)
         num_frames = clip_info["num_frames"]
         blip2_vqa_answers_df = pd.read_csv(
@@ -119,17 +118,33 @@ def get_clip_id_frame_id_blip2_answers_mapping(clip_ids: str):
                     current_blip2_answers["question"] == question
                 ]["answer"].values[0]
                 frame_id_blip2_answers_mapping[frame_id][question] = answer
-        clip_id_frame_id_blip2_answers_mapping[clip_id] = frame_id_blip2_answers_mapping
+        return frame_id_blip2_answers_mapping
+
+    clip_id_frame_id_blip2_answers_mapping = dict(
+        pqdm(
+            [
+                {
+                    "clip_id": clip_id,
+                }
+                for clip_id in clip_ids
+            ],
+            function=get_clip_id_frame_id_blip2_answers_mapping_helper,
+            n_jobs=8,
+            argument_type="kwargs",
+            exception_behaviour="immediate",
+        )
+    )
+
     return clip_id_frame_id_blip2_answers_mapping
 
 
 def get_clip_id_frame_id_label_indices_mapping(
     clip_ids: List[str], annotations_json_file_path: str
 ):
+    with open(annotations_json_file_path, "r") as reader:
+        annotations = json.load(reader)
     clip_id_frame_id_label_indices_mapping = dict()
     for clip_id in clip_ids:
-        with open(annotations_json_file_path, "r") as reader:
-            annotations = json.load(reader)
         clip_info = get_clip_info(clip_id)
         num_frames = clip_info["num_frames"]
         fps = clip_info["fps"]
@@ -646,96 +661,3 @@ def get_verb_noun_tool_pairs_per_clip(
                 get_verb_noun_tool_pairs(blip2_answer, dependency_parser),
             )
     return clip_id, frame_id_verb_noun_tool_pairs_mapping
-
-
-def get_clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping(
-    label_verb_noun_tool_mapping_path: str, asl_predictions_path: str
-):
-    clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping = dict()
-
-    with open(
-        asl_predictions_path,
-        "r",
-    ) as reader:
-        asl_predictions = json.load(reader)["detect_results"]
-
-    with open(
-        label_verb_noun_tool_mapping_path,
-        "r",
-    ) as reader:
-        label_verb_noun_tools_mapping = json.load(reader)
-
-    distinct_ground_truth_labels = ["background"] + sorted(
-        list(label_verb_noun_tools_mapping.keys())
-    )
-
-    for clip_id in tqdm(list(asl_predictions.keys())):
-        clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
-            clip_id
-        ] = dict()
-        cap = cv2.VideoCapture(
-            os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips", clip_id + ".mp4")
-        )
-        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        fps = float(cap.get(cv2.CAP_PROP_FPS))
-        cap.release()
-        for frame_id in range(frame_count):
-            clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[clip_id][
-                frame_id
-            ] = dict()
-            for label_index in range(len(distinct_ground_truth_labels)):
-                clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
-                    clip_id
-                ][frame_id][label_index] = 0.0
-            current_frame_time = frame_id / fps
-            assigned_label_to_current_frame = False
-            annotations = asl_predictions[clip_id]
-            for annotation in annotations:
-                annotation_start_time = annotation["segment"][0]
-                annotation_end_time = annotation["segment"][1]
-                annotation_label = annotation["label"]
-                annotation_label_index = distinct_ground_truth_labels.index(
-                    annotation_label
-                )
-                annotation_score = annotation["score"]
-                if (
-                    annotation_start_time <= current_frame_time
-                    and annotation_end_time >= current_frame_time
-                ):
-                    assigned_label_to_current_frame = True
-                    clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
-                        clip_id
-                    ][frame_id][annotation_label_index] = max(
-                        clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
-                            clip_id
-                        ][frame_id][annotation_label_index],
-                        annotation_score,
-                    )
-            if not assigned_label_to_current_frame:
-                clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
-                    clip_id
-                ][frame_id][0] = 1.0
-
-            # Normalize scores per frame so that their sum is equal to 1.0.
-            sum_scores = 0.0
-            for label_index in range(len(distinct_ground_truth_labels)):
-                sum_scores += (
-                    clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
-                        clip_id
-                    ][frame_id][label_index]
-                )
-            for label_index in range(len(distinct_ground_truth_labels)):
-                clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
-                    clip_id
-                ][frame_id][
-                    label_index
-                ] = clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping[
-                    clip_id
-                ][
-                    frame_id
-                ][
-                    label_index
-                ] / float(
-                    sum_scores
-                )
-    return clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping
