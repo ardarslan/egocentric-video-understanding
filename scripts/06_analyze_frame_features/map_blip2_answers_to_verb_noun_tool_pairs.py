@@ -97,23 +97,23 @@ if __name__ == "__main__":
             "clip_id_frame_id_blip2_answers_mapping"
         ]
 
-    result = pqdm(
-        [
-            {
-                "clip_id": clip_id,
-                "frame_id_blip2_answers_mapping": frame_id_blip2_answers_mapping,
-            }
-            for clip_id, frame_id_blip2_answers_mapping in list(
-                clip_id_frame_id_blip2_answers_mapping.items()
-            )
-        ],
-        function=get_verb_noun_tool_pairs_per_clip,
-        n_jobs=8,
-        argument_type="kwargs",
-        exception_behaviour="immediate",
+    result = dict(
+        pqdm(
+            [
+                {
+                    "clip_id": clip_id,
+                    "frame_id_blip2_answers_mapping": frame_id_blip2_answers_mapping,
+                }
+                for clip_id, frame_id_blip2_answers_mapping in list(
+                    clip_id_frame_id_blip2_answers_mapping.items()
+                )
+            ],
+            function=get_verb_noun_tool_pairs_per_clip,
+            n_jobs=8,
+            argument_type="kwargs",
+            exception_behaviour="immediate",
+        )
     )
-
-    result = dict(result)
 
     with open(args.output_data_file_path, "wb") as writer:
         pickle.dump(result, writer)

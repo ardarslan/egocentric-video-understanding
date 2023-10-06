@@ -101,6 +101,7 @@ def postprocess_asl_predictions_per_clip(
             ] / float(
                 sum_scores
             )
+    return frame_id_asl_predicted_label_indices_and_scores_mapping
 
 
 clip_id_frame_id_asl_predicted_label_indices_and_scores_mapping = pqdm(
