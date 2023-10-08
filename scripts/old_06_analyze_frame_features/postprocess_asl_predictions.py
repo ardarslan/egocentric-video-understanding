@@ -27,7 +27,7 @@ with open(
 ) as reader:
     label_verb_noun_tools_mapping = json.load(reader)
 
-distinct_ground_truth_labels = ["background"] + sorted(
+distinct_ground_truth_labels = sorted(
     list(label_verb_noun_tools_mapping.keys())
 )
 
@@ -75,7 +75,6 @@ def postprocess_asl_predictions_per_clip(
                 annotation_start_time <= current_frame_time
                 and annotation_end_time >= current_frame_time
             ):
-                assigned_label_to_current_frame = True
                 frame_id_asl_predicted_label_indices_and_scores_mapping[frame_id][
                     annotation_label_index
                 ] = max(
@@ -84,8 +83,6 @@ def postprocess_asl_predictions_per_clip(
                     ],
                     annotation_score,
                 )
-        if not assigned_label_to_current_frame:
-            frame_id_asl_predicted_label_indices_and_scores_mapping[frame_id][0] = 1.0
 
         # Normalize scores per frame so that their sum is equal to 1.0.
         sum_scores = 0.0
