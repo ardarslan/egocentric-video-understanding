@@ -5,7 +5,6 @@ import argparse
 import itertools
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 from pqdm.processes import pqdm
 
 from nltk.parse.corenlp import CoreNLPDependencyParser
