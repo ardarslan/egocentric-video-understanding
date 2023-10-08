@@ -83,28 +83,44 @@ if __name__ == "__main__":
     ) as reader:
         clip_id_frame_id_predicted_label_indices_and_scores = pickle.load(reader)
 
-    clip_id_frame_id_selected_label_index_score_mapping = dict(
-        pqdm(
-            [
-                {
-                    "clip_id": clip_id,
-                    "frame_id_predicted_label_indices_and_scores": frame_id_predicted_label_indices_and_scores,
-                    "query_score_type": args.query_score_type,
-                }
-                for clip_id, frame_id_predicted_label_indices_and_scores in clip_id_frame_id_predicted_label_indices_and_scores.items()
-            ],
-            function=nontemporal_prediction_postprocessing_per_clip,
-            n_jobs=8,
-            argument_type="kwargs",
-            exception_behaviour="immediate",
+    clip_id_frame_id_selected_label_index_score_mapping = dict()
+    counter = 0
+    for (
+        clip_id,
+        frame_id_predicted_label_indices_and_scores,
+    ) in clip_id_frame_id_predicted_label_indices_and_scores.items():
+        if counter == 10:
+            break
+        clip_id_frame_id_selected_label_index_score_mapping[
+            clip_id
+        ] = nontemporal_prediction_postprocessing_per_clip(
+            clip_id=clip_id,
+            frame_id_predicted_label_indices_and_scores=frame_id_predicted_label_indices_and_scores,
+            query_score_type=args.query_score_type,
         )
-    )
+        counter += 1
 
-    with open(
-        args.clip_id_frame_id_selected_label_index_score_mapping_file_path,
-        "wb",
-    ) as writer:
-        pickle.dump(
-            clip_id_frame_id_selected_label_index_score_mapping,
-            writer,
-        )
+    #     pqdm(
+    #         [
+    #             {
+    #                 "clip_id": clip_id,
+    #                 "frame_id_predicted_label_indices_and_scores": frame_id_predicted_label_indices_and_scores,
+    #                 "query_score_type": args.query_score_type,
+    #             }
+    #             for clip_id, frame_id_predicted_label_indices_and_scores in clip_id_frame_id_predicted_label_indices_and_scores.items()
+    #         ],
+    #         function=nontemporal_prediction_postprocessing_per_clip,
+    #         n_jobs=8,
+    #         argument_type="kwargs",
+    #         exception_behaviour="immediate",
+    #     )
+    # )
+
+    # with open(
+    #     args.clip_id_frame_id_selected_label_index_score_mapping_file_path,
+    #     "wb",
+    # ) as writer:
+    #     pickle.dump(
+    #         clip_id_frame_id_selected_label_index_score_mapping,
+    #         writer,
+    #     )

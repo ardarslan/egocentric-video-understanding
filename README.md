@@ -422,10 +422,7 @@ sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "b
 
 DONE
 sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "3" -c "0,1,2,3"
-
-
 ```
-
 
 AIT:
 
@@ -496,11 +493,23 @@ python3 horizontal_bar_plots.py --clip_id 00e4af86-adca-479f-a20a-402f1bc933a0 -
 python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe --port 8055
 ```
 
-# 06 - Analyze frame features
+# 06 - Analyze frame features (CVL)
 
-Use analyze_frame_features.ipynb
+cd $CODE/scripts/06_analyze_frame_features/02_extract_blip2_answer_dependency_parsing_features
 
-# 07 - Reproduce baseline results (Works in CVL Server)
+python3 01_start_core_nlp_server.py
+
+chmod +x 02_extract_blip2_answer_dependency_parsing_features.sh
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G 02_extract_blip2_answer_dependency_parsing_features.sh
+
+cd ../03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features_nontemporal
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G dictionary_matching.sh
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G nontemporal_prediction_postprocessing.sh
+
+# 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
 
 mamba deactivate
 
@@ -512,6 +521,7 @@ sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender
 
 sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 test.sh
 
+# 07_02 - Reproduce baseline results (Works in CVL Server, With Ensemble)
 
 mamba deactivate
 
