@@ -22,23 +22,14 @@ def calculate_sbert_cosine_similarities(
     cosine_similarities = []
     for blip2_sbert_embedding in blip2_sbert_embeddings:
         for label_sbert_embedding in label_sbert_embeddings:
-            cosine_similarity = (
-                np.dot(blip2_sbert_embedding, label_sbert_embedding)
-                / (
-                    np.linalg.norm(blip2_sbert_embedding)
-                    * np.linalg.norm(label_sbert_embedding)
-                )
-                + 1.0
-            ) / 2.0
+            cosine_similarity = (np.dot(blip2_sbert_embedding, label_sbert_embedding) / (np.linalg.norm(blip2_sbert_embedding) * np.linalg.norm(label_sbert_embedding)) + 1.0) / 2.0
             cosine_similarities.append((similarity_type, cosine_similarity))
     return cosine_similarities
 
 
 def nontemporal_sbert_embedding_for_given_clip(
     clip_id: str,
-    frame_id_blip2_question_answer_verb_noun_tool_pairs_mapping: Dict[
-        str, List[Tuple[str, str, str]]
-    ],
+    frame_id_blip2_question_answer_verb_noun_tool_pairs_mapping: Dict[str, List[Tuple[str, str, str]]],
     label_verb_noun_tool_mapping: Dict[str, List[Tuple[str, str, str]]],
 ):
     label_verb_noun_tool_sbert_embeddings_mapping = dict()
@@ -77,18 +68,10 @@ def nontemporal_sbert_embedding_for_given_clip(
                 ]
             )
 
-            label_verb_noun_tool_sbert_embeddings_mapping[label_index].append(
-                label_sbert_embeddings[0]
-            )
-            label_verb_noun_sbert_embeddings_mapping[label_index].append(
-                label_sbert_embeddings[1]
-            )
-            label_verb_tool_sbert_embeddings_mapping[label_index].append(
-                label_sbert_embeddings[2]
-            )
-            label_verb_sbert_embeddings_mapping[label_index].append(
-                label_sbert_embeddings[3]
-            )
+            label_verb_noun_tool_sbert_embeddings_mapping[label_index].append(label_sbert_embeddings[0])
+            label_verb_noun_sbert_embeddings_mapping[label_index].append(label_sbert_embeddings[1])
+            label_verb_tool_sbert_embeddings_mapping[label_index].append(label_sbert_embeddings[2])
+            label_verb_sbert_embeddings_mapping[label_index].append(label_sbert_embeddings[3])
 
     frame_id_blip2_answer_sbert_embeddings_mapping = dict()
     frame_id_blip2_verb_noun_tool_sbert_embeddings_mapping = dict()
@@ -109,9 +92,7 @@ def nontemporal_sbert_embedding_for_given_clip(
             _,
             blip2_answer_verb_noun_tool_pairs,
         ) in blip2_question_answer_verb_noun_tool_pairs_mapping.items():
-            for index, blip2_answer_verb_noun_tool_pair in enumerate(
-                blip2_answer_verb_noun_tool_pairs[1]
-            ):
+            for index, blip2_answer_verb_noun_tool_pair in enumerate(blip2_answer_verb_noun_tool_pairs[1]):
                 blip2_verb = blip2_answer_verb_noun_tool_pair[0]
                 blip2_noun = blip2_answer_verb_noun_tool_pair[1]
                 blip2_tool = blip2_answer_verb_noun_tool_pair[2]
@@ -131,21 +112,11 @@ def nontemporal_sbert_embedding_for_given_clip(
                             f"{blip2_answer}",
                         ]
                     )
-                    frame_id_blip2_verb_noun_tool_sbert_embeddings_mapping[
-                        frame_id
-                    ].append(blip2_sbert_embeddings[0])
-                    frame_id_blip2_verb_noun_sbert_embeddings_mapping[frame_id].append(
-                        blip2_sbert_embeddings[1]
-                    )
-                    frame_id_blip2_verb_tool_sbert_embeddings_mapping[frame_id].append(
-                        blip2_sbert_embeddings[2]
-                    )
-                    frame_id_blip2_verb_sbert_embeddings_mapping[frame_id].append(
-                        blip2_sbert_embeddings[3]
-                    )
-                    frame_id_blip2_answer_sbert_embeddings_mapping[frame_id].append(
-                        blip2_sbert_embeddings[4]
-                    )
+                    frame_id_blip2_verb_noun_tool_sbert_embeddings_mapping[frame_id].append(blip2_sbert_embeddings[0])
+                    frame_id_blip2_verb_noun_sbert_embeddings_mapping[frame_id].append(blip2_sbert_embeddings[1])
+                    frame_id_blip2_verb_tool_sbert_embeddings_mapping[frame_id].append(blip2_sbert_embeddings[2])
+                    frame_id_blip2_verb_sbert_embeddings_mapping[frame_id].append(blip2_sbert_embeddings[3])
+                    frame_id_blip2_answer_sbert_embeddings_mapping[frame_id].append(blip2_sbert_embeddings[4])
                 else:
                     blip2_sbert_embeddings = sbert.encode(
                         [
@@ -155,38 +126,20 @@ def nontemporal_sbert_embedding_for_given_clip(
                             f"{blip2_verb}",
                         ]
                     )
-                    frame_id_blip2_verb_noun_tool_sbert_embeddings_mapping[
-                        frame_id
-                    ].append(blip2_sbert_embeddings[0])
-                    frame_id_blip2_verb_noun_sbert_embeddings_mapping[frame_id].append(
-                        blip2_sbert_embeddings[1]
-                    )
-                    frame_id_blip2_verb_tool_sbert_embeddings_mapping[frame_id].append(
-                        blip2_sbert_embeddings[2]
-                    )
-                    frame_id_blip2_verb_sbert_embeddings_mapping[frame_id].append(
-                        blip2_sbert_embeddings[3]
-                    )
+                    frame_id_blip2_verb_noun_tool_sbert_embeddings_mapping[frame_id].append(blip2_sbert_embeddings[0])
+                    frame_id_blip2_verb_noun_sbert_embeddings_mapping[frame_id].append(blip2_sbert_embeddings[1])
+                    frame_id_blip2_verb_tool_sbert_embeddings_mapping[frame_id].append(blip2_sbert_embeddings[2])
+                    frame_id_blip2_verb_sbert_embeddings_mapping[frame_id].append(blip2_sbert_embeddings[3])
 
     frame_id_predicted_label_indices_and_scores = dict()
     for frame_id in frame_id_blip2_question_answer_verb_noun_tool_pairs_mapping.keys():
         frame_id_predicted_label_indices_and_scores[frame_id] = dict()
 
-        blip2_answer_sbert_embeddings = frame_id_blip2_answer_sbert_embeddings_mapping[
-            frame_id
-        ]
-        blip2_verb_noun_tool_sbert_embeddings = (
-            frame_id_blip2_verb_noun_tool_sbert_embeddings_mapping[frame_id]
-        )
-        blip2_verb_noun_sbert_embeddings = (
-            frame_id_blip2_verb_noun_sbert_embeddings_mapping[frame_id]
-        )
-        blip2_verb_tool_sbert_embeddings = (
-            frame_id_blip2_verb_tool_sbert_embeddings_mapping[frame_id]
-        )
-        blip2_verb_sbert_embeddings = frame_id_blip2_verb_sbert_embeddings_mapping[
-            frame_id
-        ]
+        blip2_answer_sbert_embeddings = frame_id_blip2_answer_sbert_embeddings_mapping[frame_id]
+        blip2_verb_noun_tool_sbert_embeddings = frame_id_blip2_verb_noun_tool_sbert_embeddings_mapping[frame_id]
+        blip2_verb_noun_sbert_embeddings = frame_id_blip2_verb_noun_sbert_embeddings_mapping[frame_id]
+        blip2_verb_tool_sbert_embeddings = frame_id_blip2_verb_tool_sbert_embeddings_mapping[frame_id]
+        blip2_verb_sbert_embeddings = frame_id_blip2_verb_sbert_embeddings_mapping[frame_id]
 
         for label_index in range(len(distinct_ground_truth_labels) + 1):
             if label_index == len(distinct_ground_truth_labels):
@@ -196,32 +149,18 @@ def nontemporal_sbert_embedding_for_given_clip(
                 ) in blip2_question_answer_verb_noun_tool_pairs_mapping.items():
                     blip2_verb_noun_tool_pairs = blip2_answer_verb_noun_tool_pairs[1]
                     if len(blip2_verb_noun_tool_pairs) == 0:
-                        frame_id_predicted_label_indices_and_scores[frame_id][
-                            label_index
-                        ] = 1.0
+                        frame_id_predicted_label_indices_and_scores[frame_id][label_index] = 1.0
                     else:
-                        frame_id_predicted_label_indices_and_scores[frame_id][
-                            label_index
-                        ] = 0.0
+                        frame_id_predicted_label_indices_and_scores[frame_id][label_index] = 0.0
             else:
                 frame_id_predicted_label_indices_and_scores[frame_id][label_index] = []
 
-                label_verb_noun_tool_sbert_embeddings = (
-                    label_verb_noun_tool_sbert_embeddings_mapping[label_index]
-                )
-                label_verb_noun_sbert_embeddings = (
-                    label_verb_noun_sbert_embeddings_mapping[label_index]
-                )
-                label_verb_tool_sbert_embeddings = (
-                    label_verb_tool_sbert_embeddings_mapping[label_index]
-                )
-                label_verb_sbert_embeddings = label_verb_sbert_embeddings_mapping[
-                    label_index
-                ]
+                label_verb_noun_tool_sbert_embeddings = label_verb_noun_tool_sbert_embeddings_mapping[label_index]
+                label_verb_noun_sbert_embeddings = label_verb_noun_sbert_embeddings_mapping[label_index]
+                label_verb_tool_sbert_embeddings = label_verb_tool_sbert_embeddings_mapping[label_index]
+                label_verb_sbert_embeddings = label_verb_sbert_embeddings_mapping[label_index]
 
-                frame_id_predicted_label_indices_and_scores[frame_id][
-                    label_index
-                ].extend(
+                frame_id_predicted_label_indices_and_scores[frame_id][label_index].extend(
                     calculate_sbert_cosine_similarities(
                         blip2_sbert_embeddings=blip2_answer_sbert_embeddings,
                         label_sbert_embeddings=label_verb_noun_tool_sbert_embeddings,
@@ -229,9 +168,7 @@ def nontemporal_sbert_embedding_for_given_clip(
                     )
                 )
 
-                frame_id_predicted_label_indices_and_scores[frame_id][
-                    label_index
-                ].extend(
+                frame_id_predicted_label_indices_and_scores[frame_id][label_index].extend(
                     calculate_sbert_cosine_similarities(
                         blip2_sbert_embeddings=blip2_answer_sbert_embeddings,
                         label_sbert_embeddings=label_verb_noun_sbert_embeddings,
@@ -239,9 +176,7 @@ def nontemporal_sbert_embedding_for_given_clip(
                     )
                 )
 
-                frame_id_predicted_label_indices_and_scores[frame_id][
-                    label_index
-                ].extend(
+                frame_id_predicted_label_indices_and_scores[frame_id][label_index].extend(
                     calculate_sbert_cosine_similarities(
                         blip2_sbert_embeddings=blip2_answer_sbert_embeddings,
                         label_sbert_embeddings=label_verb_tool_sbert_embeddings,
@@ -249,9 +184,7 @@ def nontemporal_sbert_embedding_for_given_clip(
                     )
                 )
 
-                frame_id_predicted_label_indices_and_scores[frame_id][
-                    label_index
-                ].extend(
+                frame_id_predicted_label_indices_and_scores[frame_id][label_index].extend(
                     calculate_sbert_cosine_similarities(
                         blip2_sbert_embeddings=blip2_answer_sbert_embeddings,
                         label_sbert_embeddings=label_verb_sbert_embeddings,
@@ -259,9 +192,7 @@ def nontemporal_sbert_embedding_for_given_clip(
                     )
                 )
 
-                frame_id_predicted_label_indices_and_scores[frame_id][
-                    label_index
-                ].extend(
+                frame_id_predicted_label_indices_and_scores[frame_id][label_index].extend(
                     calculate_sbert_cosine_similarities(
                         blip2_sbert_embeddings=blip2_verb_noun_tool_sbert_embeddings,
                         label_sbert_embeddings=label_verb_noun_tool_sbert_embeddings,
@@ -269,9 +200,7 @@ def nontemporal_sbert_embedding_for_given_clip(
                     )
                 )
 
-                frame_id_predicted_label_indices_and_scores[frame_id][
-                    label_index
-                ].extend(
+                frame_id_predicted_label_indices_and_scores[frame_id][label_index].extend(
                     calculate_sbert_cosine_similarities(
                         blip2_sbert_embeddings=blip2_verb_noun_sbert_embeddings,
                         label_sbert_embeddings=label_verb_noun_sbert_embeddings,
@@ -279,9 +208,7 @@ def nontemporal_sbert_embedding_for_given_clip(
                     )
                 )
 
-                frame_id_predicted_label_indices_and_scores[frame_id][
-                    label_index
-                ].extend(
+                frame_id_predicted_label_indices_and_scores[frame_id][label_index].extend(
                     calculate_sbert_cosine_similarities(
                         blip2_sbert_embeddings=blip2_verb_tool_sbert_embeddings,
                         label_sbert_embeddings=label_verb_tool_sbert_embeddings,
@@ -289,9 +216,7 @@ def nontemporal_sbert_embedding_for_given_clip(
                     )
                 )
 
-                frame_id_predicted_label_indices_and_scores[frame_id][
-                    label_index
-                ].extend(
+                frame_id_predicted_label_indices_and_scores[frame_id][label_index].extend(
                     calculate_sbert_cosine_similarities(
                         blip2_sbert_embeddings=blip2_verb_sbert_embeddings,
                         label_sbert_embeddings=label_verb_sbert_embeddings,
@@ -338,12 +263,12 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        "--output_file_path",
+        "--output_path_name_wo_ext",
         type=str,
         default=os.path.join(
             os.environ["SCRATCH"],
             "ego4d_data/v2/analysis_data",
-            "clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding.pickle",
+            "clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding",
         ),
     )
     args = parser.parse_args()
@@ -357,22 +282,16 @@ if __name__ == "__main__":
     ) as reader:
         clip_id_frame_id_verb_noun_tool_pairs_mapping = pickle.load(reader)
 
-    clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding = (
-        dict()
-    )
-    for clip_id, frame_id_blip2_question_answer_verb_noun_tool_pairs_mapping in tqdm(
-        list(clip_id_frame_id_verb_noun_tool_pairs_mapping.items())
-    ):
-        clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding[
-            clip_id
-        ] = nontemporal_sbert_embedding_for_given_clip(
-            clip_id=clip_id,
-            frame_id_blip2_question_answer_verb_noun_tool_pairs_mapping=frame_id_blip2_question_answer_verb_noun_tool_pairs_mapping,
-            label_verb_noun_tool_mapping=label_verb_noun_tool_mapping,
+    current_clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding = dict()
+    clip_counter = 0
+    file_name_counter = 0
+    for clip_id, frame_id_verb_noun_tool_pairs_mapping in clip_id_frame_id_verb_noun_tool_pairs_mapping.items():
+        current_clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding[clip_id] = nontemporal_sbert_embedding_for_given_clip(
+            clip_id=clip_id, frame_id_blip2_question_answer_verb_noun_tool_pairs_mapping=frame_id_verb_noun_tool_pairs_mapping, label_verb_noun_tool_mapping=label_verb_noun_tool_mapping
         )
-
-    with open(args.output_file_path, "wb") as writer:
-        pickle.dump(
-            clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding,
-            writer,
-        )
+        clip_counter += 1
+        if clip_counter % 100 == 0:
+            with open(args.output_path_name_wo_ext + "_" + str(file_name_counter).zfill(3) + ".pickle", "wb") as writer:
+                pickle.dump(current_clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding, writer)
+            current_clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding = dict()
+            file_name_counter += 1
