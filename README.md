@@ -497,17 +497,25 @@ python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe -
 
 cd $CODE/scripts/06_analyze_frame_features/02_extract_blip2_answer_dependency_parsing_features
 
-python3 01_start_core_nlp_server.py
-
 chmod +x 02_extract_blip2_answer_dependency_parsing_features.sh
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G 02_extract_blip2_answer_dependency_parsing_features.sh
+sbatch --time 720 --cpus-per-task=24 --mem 200G 02_extract_blip2_answer_dependency_parsing_features.sh
 
-cd ../03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features_nontemporal
+cd ../03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G dictionary_matching.sh
+sbatch --time 720 --cpus-per-task=24 --mem 200G 01_dictionary_matching.sh
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G nontemporal_prediction_postprocessing.sh
+sbatch --time 720 --cpus-per-task=24 --mem 200G 01_sbert_matching.sh
+
+sbatch --time 720 --cpus-per-task=24 --mem 200G 02_max_per_label_postprocessing.sh
+
+sbatch --time 720 --cpus-per-task=24 --mem 200G 03_process_ground_truth_labels.sh
+
+sbatch --time 720 --cpus-per-task=24 --mem 200G 04_process_asl_predictions.sh
+
+sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_blip2_predictions.sh
+
+sbatch --time 720 --cpus-per-task=4 --mem 200G 06_evaluate_asl_predictions.sh
 
 # 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
 

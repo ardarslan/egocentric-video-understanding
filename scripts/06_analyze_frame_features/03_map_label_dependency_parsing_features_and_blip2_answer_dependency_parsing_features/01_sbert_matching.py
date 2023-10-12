@@ -37,7 +37,7 @@ def nontemporal_sbert_embedding_for_given_clip(
     label_verb_tool_sbert_embeddings_mapping = dict()
     label_verb_sbert_embeddings_mapping = dict()
 
-    distinct_ground_truth_labels = list(label_verb_noun_tool_mapping.keys())
+    distinct_ground_truth_labels = sorted(list(label_verb_noun_tool_mapping.keys()))
 
     for label, label_verb_noun_tools in label_verb_noun_tool_mapping.items():
         label_index = distinct_ground_truth_labels.index(label)
@@ -225,19 +225,11 @@ def nontemporal_sbert_embedding_for_given_clip(
                 )
 
         # Normalize scores per frame so that their sum is equal to 1.0.
-        # sum_scores = 0.0
-        # for label_index in range(len(distinct_ground_truth_labels)):
-        #     sum_scores += frame_id_predicted_label_indices_and_scores[frame_id][
-        #         label_index
-        #     ]
-        # for label_index in range(len(distinct_ground_truth_labels)):
-        #     frame_id_predicted_label_indices_and_scores[frame_id][
-        #         label_index
-        #     ] = frame_id_predicted_label_indices_and_scores[frame_id][
-        #         label_index
-        #     ] / float(
-        #         sum_scores
-        #     )
+        sum_scores = 0.0
+        for label_index in range(len(distinct_ground_truth_labels)):
+            sum_scores += frame_id_predicted_label_indices_and_scores[frame_id][label_index]
+        for label_index in range(len(distinct_ground_truth_labels)):
+            frame_id_predicted_label_indices_and_scores[frame_id][label_index] = frame_id_predicted_label_indices_and_scores[frame_id][label_index] / float(sum_scores)
 
     return clip_id, frame_id_predicted_label_indices_and_scores
 
@@ -288,10 +280,14 @@ if __name__ == "__main__":
     for clip_id, frame_id_verb_noun_tool_pairs_mapping in clip_id_frame_id_verb_noun_tool_pairs_mapping.items():
         current_clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding[clip_id] = nontemporal_sbert_embedding_for_given_clip(
             clip_id=clip_id, frame_id_blip2_question_answer_verb_noun_tool_pairs_mapping=frame_id_verb_noun_tool_pairs_mapping, label_verb_noun_tool_mapping=label_verb_noun_tool_mapping
-        )
+        )[1]
         clip_counter += 1
         if clip_counter % 100 == 0:
             with open(args.output_path_name_wo_ext + "_" + str(file_name_counter).zfill(3) + ".pickle", "wb") as writer:
                 pickle.dump(current_clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding, writer)
             current_clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding = dict()
             file_name_counter += 1
+
+    if len(current_clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding.keys()) > 0:
+        with open(args.output_path_name_wo_ext + "_" + str(file_name_counter).zfill(3) + ".pickle", "wb") as writer:
+            pickle.dump(current_clip_id_frame_id_predicted_label_indices_and_scores_nontemporal_sbert_embedding, writer)

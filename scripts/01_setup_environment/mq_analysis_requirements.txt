@@ -1,9 +1,11 @@
 spacy
+black
 pandas
 opencv_python
 ipykernel
 torchtext
 gdown
+flake8
 gensim
 nltk
 pqdm
