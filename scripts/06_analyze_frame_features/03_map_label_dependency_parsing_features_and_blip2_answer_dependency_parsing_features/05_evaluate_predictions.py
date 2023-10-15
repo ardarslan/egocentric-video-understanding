@@ -40,7 +40,7 @@ if __name__ == "__main__":
     parser.add_argument("--output_folder_path", type=str, default=os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/analysis_data/evaluation_results"))
     args = parser.parse_args()
 
-    predictions_folder_path = os.path.join(os.environ["SCRATCH"], f"ego4d_data/v2/analysis_data/{args.predictions_folder_path}")
+    predictions_folder_path = os.path.join(os.environ["SCRATCH"], f"ego4d_data/v2/analysis_data/{args.predictions_folder_name}")
 
     with open(args.label_verb_noun_tool_mapping_file_path, "r") as reader:
         label_verb_noun_tool_mapping = json.load(reader)
@@ -59,14 +59,14 @@ if __name__ == "__main__":
                 predictions_one_hot_vectors_dict[clip_id] = dict()
                 for frame_id in current_predictions_max_per_label_postprocessing_results[clip_id].keys():
                     predictions_one_hot_vectors_dict[clip_id][frame_id] = dict()
-                    for blip2_question_index in current_predictions_max_per_label_postprocessing_results[clip_id][frame_id].keys():
-                        predictions_one_hot_vectors_dict[clip_id][frame_id][blip2_question_index] = dict()
+                    for question_index in current_predictions_max_per_label_postprocessing_results[clip_id][frame_id].keys():
+                        predictions_one_hot_vectors_dict[clip_id][frame_id][question_index] = dict()
                         current_one_hot_vector = np.zeros(len(distinct_ground_truth_labels) + 1)
-                        for label_index in current_predictions_max_per_label_postprocessing_results[clip_id][frame_id][blip2_question_index].keys():
-                            current_score = current_predictions_max_per_label_postprocessing_results[clip_id][frame_id][blip2_question_index][label_index][1]
+                        for label_index in current_predictions_max_per_label_postprocessing_results[clip_id][frame_id][question_index].keys():
+                            current_score = current_predictions_max_per_label_postprocessing_results[clip_id][frame_id][question_index][label_index][1]
                             if current_score >= args.threshold:
                                 current_one_hot_vector[label_index] = 1
-                        predictions_one_hot_vectors_dict[clip_id][frame_id][blip2_question_index] = current_one_hot_vector
+                        predictions_one_hot_vectors_dict[clip_id][frame_id][question_index] = current_one_hot_vector
 
     with open(args.ground_truth_file_path, "rb") as reader:
         ground_truths = pickle.load(reader)
@@ -81,27 +81,30 @@ if __name__ == "__main__":
             ground_truth_one_hot_vectors_dict[clip_id][frame_id] = current_one_hot_vector
 
     ground_truth_one_hot_vectors_list = []
-    blip2_question_predicted_one_hot_vectors_list_mapping = dict()
+    question_index_predicted_one_hot_vectors_list_mapping = dict()
     for clip_id in ground_truth_one_hot_vectors_dict.keys():
         for frame_id in ground_truth_one_hot_vectors_dict[clip_id].keys():
             ground_truth_one_hot_vectors_list.append(ground_truth_one_hot_vectors_dict[clip_id][frame_id])
-            # Fix here
-            predicted_one_hot_vectors_list.append(predictions_one_hot_vectors_dict[clip_id][int((frame_id // 6) * 6)])
-
-    f1_weighted_average = f1_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average="weighted", zero_division=0)
-    precision_weighted_average = precision_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average="weighted", zero_division=0)
-    recall_weighted_average = recall_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average="weighted", zero_division=0)
-
-    f1_per_label = f1_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average=None, zero_division=0).tolist()
-    precision_per_label = precision_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average=None, zero_division=0).tolist()
-    recall_per_label = recall_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average=None, zero_division=0).tolist()
+            for question_index in predictions_one_hot_vectors_dict[clip_id][frame_id].keys():
+                if question_index not in question_index_predicted_one_hot_vectors_list_mapping.keys():
+                    question_index_predicted_one_hot_vectors_list_mapping[question_index] = []
+                question_index_predicted_one_hot_vectors_list_mapping[question_index].append(predictions_one_hot_vectors_dict[clip_id][frame_id][question_index])
 
     os.makedirs(args.output_folder_path, exist_ok=True)
+    for question_index in question_index_predicted_one_hot_vectors_list_mapping.keys():
+        predicted_one_hot_vectors_list = question_index_predicted_one_hot_vectors_list_mapping[question_index]
+        f1_weighted_average = f1_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average="weighted", zero_division=0)
+        precision_weighted_average = precision_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average="weighted", zero_division=0)
+        recall_weighted_average = recall_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average="weighted", zero_division=0)
 
-    df = []
-    for label, f1, precision, recall in zip(distinct_ground_truth_labels + ["background"], f1_per_label, precision_per_label, recall_per_label):
-        df.append((label, f1, precision, recall))
-    df.append(("weighted_average", f1_weighted_average, precision_weighted_average, recall_weighted_average))
+        f1_per_label = f1_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average=None, zero_division=0).tolist()
+        precision_per_label = precision_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average=None, zero_division=0).tolist()
+        recall_per_label = recall_score(y_true=ground_truth_one_hot_vectors_list, y_pred=predicted_one_hot_vectors_list, average=None, zero_division=0).tolist()
 
-    df = pd.DataFrame(data=df, columns=["label", "f1_score", "precision_score", "recall_score"])
-    df.to_csv(os.path.join(args.output_folder_path, f"prediction_method_{args.prediction_method}__threshold_{str(args.threshold).replace('.', '')}.tsv"), sep="\t")
+        df = []
+        for label, f1, precision, recall in zip(distinct_ground_truth_labels + ["background"], f1_per_label, precision_per_label, recall_per_label):
+            df.append((label, f1, precision, recall))
+        df.append(("weighted_average", f1_weighted_average, precision_weighted_average, recall_weighted_average))
+
+        df = pd.DataFrame(data=df, columns=["label", "f1_score", "precision_score", "recall_score"])
+        df.to_csv(os.path.join(args.output_folder_path, f"{args.predictions_folder_name}__question_index_{args.question_index}__threshold_{str(args.threshold).replace('.', '')}.tsv"), sep="\t")

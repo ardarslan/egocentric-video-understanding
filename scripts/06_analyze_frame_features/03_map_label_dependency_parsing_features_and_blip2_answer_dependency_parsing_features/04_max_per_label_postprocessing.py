@@ -47,7 +47,7 @@ def max_per_label_postprocessing_per_clip(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argument parser")
-    parser.add_argument("--predictions_folder_name", type=str, choices=["asl", "blip2_dictionary_matching", "blip2_sbert_matching"], required=True)
+    parser.add_argument("--predictions_folder_name", type=str, choices=["asl_predictions", "blip2_dictionary_matching_predictions", "blip2_sbert_matching_predictions"], required=True)
     parser.add_argument(
         "--query_score_type",
         type=str,
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     input_folder_path = os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/analysis_data", args.predictions_folder_name)
-    output_folder_path = os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/analysis_data", f"{args.predictions_folder_name}_max_per_label_predictions")
+    output_folder_path = os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/analysis_data", f"{args.predictions_folder_name.replace('_predictions', '')}_max_per_label_predictions")
 
     os.makedirs(output_folder_path, exist_ok=True)
 

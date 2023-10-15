@@ -516,17 +516,17 @@ sbatch --time 720 --cpus-per-task=8 --mem 40G 03_blip2_dictionary_matching.sh
 
 sbatch --time 720 --cpus-per-task=24 --mem 200G 03_blip2_sbert_matching.sh
 
-sbatch --time 720 --cpus-per-task=8 --mem 40G 04_max_per_label_postprocessing.sh -p asl
+sbatch --time 720 --cpus-per-task=8 --mem 40G 04_max_per_label_postprocessing.sh -p asl_predictions
 
-sbatch --time 720 --cpus-per-task=8 --mem 40G 04_max_per_label_postprocessing.sh -p blip2_dictionary_matching
+sbatch --time 720 --cpus-per-task=8 --mem 40G 04_max_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 04_max_per_label_postprocessing.sh -p blip2_sbert_matching
+sbatch --time 720 --cpus-per-task=24 --mem 200G 04_max_per_label_postprocessing.sh -p blip2_sbert_matching_predictions
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p asl
+sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p asl_max_per_label_postprocessing_predictions
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p blip2_dictionary_matching
+sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_postprocessing_predictions
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p blip2_sbert_matching
+sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p blip2_sbert_matching_max_per_label_postprocessing_predictions
 
 # 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
 
