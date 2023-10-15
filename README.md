@@ -39,7 +39,7 @@ du -sch .[!.]* * | sort -h
 CVL Server:
 
 ```
-srun --time 720 --gres=gpu:1 --cpus-per-task=1 --mem=10G --pty bash -i
+srun --time 720 --cpus-per-task=1 --mem=10G --pty bash -i
 
 OVS_HOST=$(hostname -f) && openvscode-server --host $OVS_HOST --port 5900 --accept-server-license-terms --telemetry-level off |sed "s/localhost/$OVS_HOST/g"
 ```
@@ -415,13 +415,16 @@ NOT DONE
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "gsam" -q "3" -c "0,1"
 
 DONE
-sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "1" -c "0,1,2,3"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "0" -c "0,1"
+
+DONE
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "1" -c "0,1"
 
 DONE
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "2" -c "0,1"
 
 DONE
-sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "3" -c "0,1,2,3"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "3" -c "0,1"
 ```
 
 AIT:
@@ -495,27 +498,35 @@ python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe -
 
 # 06 - Analyze frame features (CVL)
 
+mamba activate mq_analysis
+
 cd $CODE/scripts/06_analyze_frame_features/02_extract_blip2_answer_dependency_parsing_features
 
-chmod +x 02_extract_blip2_answer_dependency_parsing_features.sh
+chmod +x 01_extract_blip2_answer_dependency_parsing_features.sh
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 02_extract_blip2_answer_dependency_parsing_features.sh
+sbatch --time 720 --cpus-per-task=24 --mem 40G 01_extract_blip2_answer_dependency_parsing_features.sh
 
-cd ../03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
+cd $CODE/scripts/06_analyze_frame_features/03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 01_dictionary_matching.sh
+sbatch --time 720 --cpus-per-task=24 --mem 200G 01_process_ground_truth_labels.sh
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 01_sbert_matching.sh
+sbatch --time 720 --cpus-per-task=8 --mem 200G 02_process_asl_predictions.sh
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 02_max_per_label_postprocessing.sh
+sbatch --time 720 --cpus-per-task=8 --mem 40G 03_blip2_dictionary_matching.sh
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 03_process_ground_truth_labels.sh
+sbatch --time 720 --cpus-per-task=24 --mem 200G 03_blip2_sbert_matching.sh
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 04_process_asl_predictions.sh
+sbatch --time 720 --cpus-per-task=8 --mem 40G 04_max_per_label_postprocessing.sh -p asl
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_blip2_predictions.sh
+sbatch --time 720 --cpus-per-task=8 --mem 40G 04_max_per_label_postprocessing.sh -p blip2_dictionary_matching
 
-sbatch --time 720 --cpus-per-task=4 --mem 200G 06_evaluate_asl_predictions.sh
+sbatch --time 720 --cpus-per-task=24 --mem 200G 04_max_per_label_postprocessing.sh -p blip2_sbert_matching
+
+sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p asl
+
+sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p blip2_dictionary_matching
+
+sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p blip2_sbert_matching
 
 # 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
 

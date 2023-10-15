@@ -3,6 +3,8 @@ import cv2
 import json
 import argparse
 import pickle
+import constants
+from tqdm import tqdm
 from pathlib import Path
 
 
@@ -34,24 +36,31 @@ if __name__ == "__main__":
 
     os.makedirs(Path(args.output_file_path).parent, exist_ok=True)
 
-    for clip_id in asl_predictions.keys():
+    for clip_id in tqdm(list(asl_predictions.keys())):
         clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id] = dict()
         cap = cv2.VideoCapture(os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips", f"{clip_id}.mp4"))
         fps = cap.get(cv2.CAP_PROP_FPS)
         num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         cap.release()
         for frame_id in range(num_frames):
-            clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id] = []
+            clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id] = dict()
+            clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]] = dict()
             frame_time = frame_id / float(fps)
             for annotation in asl_predictions[clip_id]:
                 annotation_start_time = annotation["segment"][0]
                 annotation_end_time = annotation["segment"][1]
                 annotation_label = annotation["label"]
+                annotation_score = annotation["score"]
                 annotation_label_index = distinct_ground_truth_labels.index(annotation_label)
                 if frame_time >= annotation_start_time and frame_time <= annotation_end_time:
-                    clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id].append(annotation_label_index)
-        if len(clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id]) == 0:
-            clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id].append(len(distinct_ground_truth_labels))
+                    if annotation_label_index not in clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]].keys():
+                        clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]][annotation_label_index] = []
+                    match_type = constants.ASL_MATCH
+                    clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]][annotation_label_index].append((match_type, annotation_score))
+
+            if len(clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]].keys()) == 0:
+                match_type = constants.BACKGROUND_MATCH
+                clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]][len(distinct_ground_truth_labels)] = [(match_type, 1.0)]
 
     with open(args.output_file_path, "wb") as writer:
         pickle.dump(clip_id_frame_id_asl_predicted_label_indices_mapping, writer)
