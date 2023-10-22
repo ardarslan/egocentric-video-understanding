@@ -11,7 +11,7 @@ from typing import List, Tuple
 
 import constants
 
-sbert = SentenceTransformer("sentence-transformers/paraphrase-MiniLM-L6-v2")
+sbert = SentenceTransformer("sentence-transformers/paraphrase-MiniLM-L6-v2", device="cuda")
 
 
 def calculate_sbert_cosine_similarities(
@@ -39,7 +39,6 @@ def get_label_index_dependency_parsing_feature_sbert_embeddings_mapping(label_ve
         label_index = distinct_ground_truth_labels.index(label)
         label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index] = dict()
         label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb"] = []
-        label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["noun"] = []
         label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb_noun"] = []
         label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb_tool"] = []
         label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb_noun_tool"] = []
@@ -61,19 +60,17 @@ def get_label_index_dependency_parsing_feature_sbert_embeddings_mapping(label_ve
             else:
                 # Noun is not NaN. Tool is NaN. Then we encode (verb, noun, verb_noun)
                 if label_tool == "NaN":
-                    sbert_embeddings = sbert.encode([label_verb, label_noun, f"{label_verb}_{label_noun}"])
+                    sbert_embeddings = sbert.encode([label_verb, f"{label_verb}_{label_noun}"])
 
                     label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb"].append(sbert_embeddings[0])
-                    label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["noun"].append(sbert_embeddings[1])
-                    label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb_noun"].append(sbert_embeddings[2])
+                    label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb_noun"].append(sbert_embeddings[1])
                 # Noun is not NaN, Tool is not NaN. Then we encode (verb, noun, verb_noun, verb_tool, verb_noun_tool)
                 else:
-                    sbert_embeddings = sbert.encode([label_verb, label_noun, f"{label_verb}_{label_noun}", f"{label_verb}_using_{label_tool}", f"{label_verb}_{label_noun}_using_{label_tool}"])
+                    sbert_embeddings = sbert.encode([label_verb, f"{label_verb}_{label_noun}", f"{label_verb}_using_{label_tool}", f"{label_verb}_{label_noun}_using_{label_tool}"])
                     label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb"].append(sbert_embeddings[0])
-                    label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["noun"].append(sbert_embeddings[1])
-                    label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb_noun"].append(sbert_embeddings[2])
-                    label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb_tool"].append(sbert_embeddings[3])
-                    label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb_noun_tool"].append(sbert_embeddings[4])
+                    label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb_noun"].append(sbert_embeddings[1])
+                    label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb_tool"].append(sbert_embeddings[2])
+                    label_index_dependency_parsing_feature_sbert_embeddings_mapping[label_index]["verb_noun_tool"].append(sbert_embeddings[3])
     return label_index_dependency_parsing_feature_sbert_embeddings_mapping
 
 
@@ -81,7 +78,6 @@ def get_blip2_dependency_parsing_feature_sbert_embeddings_mapping(blip2_answer: 
     blip2_dependency_parsing_feature_sbert_embeddings_mapping = dict()
     blip2_dependency_parsing_feature_sbert_embeddings_mapping["answer"] = []
     blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb"] = []
-    blip2_dependency_parsing_feature_sbert_embeddings_mapping["noun"] = []
     blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb_noun"] = []
     blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb_tool"] = []
     blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb_noun_tool"] = []
@@ -107,8 +103,7 @@ def get_blip2_dependency_parsing_feature_sbert_embeddings_mapping(blip2_answer: 
                 sbert_embeddings = sbert.encode([blip2_answer, blip2_verb, blip2_noun, f"{blip2_verb}_{blip2_noun}"])
                 blip2_dependency_parsing_feature_sbert_embeddings_mapping["answer"].append(sbert_embeddings[0])
                 blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb"].append(sbert_embeddings[1])
-                blip2_dependency_parsing_feature_sbert_embeddings_mapping["noun"].append(sbert_embeddings[2])
-                blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb_noun"].append(sbert_embeddings[3])
+                blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb_noun"].append(sbert_embeddings[2])
             # Noun is not NaN, Tool is not NaN. Then we encode (verb, noun, verb_noun, verb_tool, verb_noun_tool)
             else:
                 sbert_embeddings = sbert.encode(
@@ -116,10 +111,9 @@ def get_blip2_dependency_parsing_feature_sbert_embeddings_mapping(blip2_answer: 
                 )
                 blip2_dependency_parsing_feature_sbert_embeddings_mapping["answer"].append(sbert_embeddings[0])
                 blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb"].append(sbert_embeddings[1])
-                blip2_dependency_parsing_feature_sbert_embeddings_mapping["noun"].append(sbert_embeddings[2])
-                blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb_noun"].append(sbert_embeddings[3])
-                blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb_tool"].append(sbert_embeddings[4])
-                blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb_noun_tool"].append(sbert_embeddings[5])
+                blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb_noun"].append(sbert_embeddings[2])
+                blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb_tool"].append(sbert_embeddings[3])
+                blip2_dependency_parsing_feature_sbert_embeddings_mapping["verb_noun_tool"].append(sbert_embeddings[4])
     return blip2_dependency_parsing_feature_sbert_embeddings_mapping
 
 
@@ -168,21 +162,36 @@ if __name__ == "__main__":
 
     current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching = dict()
     clip_counter = 0
-    file_name_counter = 0
-    for clip_id, frame_id_verb_noun_tool_pairs_mapping in tqdm(clip_id_frame_id_verb_noun_tool_pairs_mapping.items()):
+    for clip_id, frame_id_verb_noun_tool_pairs_mapping in tqdm(sorted(list(clip_id_frame_id_verb_noun_tool_pairs_mapping.items()), key=lambda x: x[0])):
+        if os.path.exists(os.path.join(args.output_folder_path, str(clip_counter).zfill(5) + ".pickle")):
+            continue
+
         current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[clip_id] = dict()
         for frame_id, blip2_question_answer_verb_noun_tool_pairs_mapping in frame_id_verb_noun_tool_pairs_mapping.items():
             current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[clip_id][frame_id] = dict()
             for blip2_question_index, blip2_answer_verb_noun_tool_pairs in blip2_question_answer_verb_noun_tool_pairs_mapping.items():
                 current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[clip_id][frame_id][blip2_question_index] = dict()
                 for label_index, label_dependency_parsing_feature_sbert_embeddings_mapping in label_index_dependency_parsing_feature_sbert_embeddings_mapping.items():
-                    current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[clip_id][frame_id][blip2_question_index][label_index] = dict()
+                    current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[clip_id][frame_id][blip2_question_index][label_index] = []
                     for label_dependency_parsing_feature, label_sbert_embeddings in label_dependency_parsing_feature_sbert_embeddings_mapping.items():
-                        blip2_answer, blip2_verb_noun_tool_pairs = blip2_answer_verb_noun_tool_pairs
+                        blip2_answer, blip2_verb_noun_tools = blip2_answer_verb_noun_tool_pairs
                         blip2_dependency_parsing_feature_sbert_embeddings_mapping = get_blip2_dependency_parsing_feature_sbert_embeddings_mapping(
-                            blip2_answer=blip2_answer, blip2_verb_noun_tool_pairs=blip2_verb_noun_tool_pairs
+                            blip2_answer=blip2_answer, blip2_verb_noun_tools=blip2_verb_noun_tools
                         )
                         for blip2_dependency_parsing_feature, blip2_sbert_embeddings in blip2_dependency_parsing_feature_sbert_embeddings_mapping.items():
+                            if (
+                                blip2_dependency_parsing_feature == "answer"
+                                and (
+                                    label_dependency_parsing_feature == "verb_noun_tool"
+                                    or label_dependency_parsing_feature == "verb_noun"
+                                    or label_dependency_parsing_feature == "verb_tool"
+                                    or label_dependency_parsing_feature == "verb"
+                                )
+                            ) or (blip2_dependency_parsing_feature == label_dependency_parsing_feature):
+                                pass
+                            else:
+                                continue
+
                             blip2_dependency_parsing_feature_label_dependency_parsing_feature = f"blip2_{blip2_dependency_parsing_feature}_label_{label_dependency_parsing_feature}"
                             cosine_similarities = calculate_sbert_cosine_similarities(
                                 blip2_sbert_embeddings=blip2_sbert_embeddings,
@@ -191,12 +200,6 @@ if __name__ == "__main__":
                             )
                             current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[clip_id][frame_id][blip2_question_index][label_index].extend(cosine_similarities)
         clip_counter += 1
-        if clip_counter % 100 == 0:
-            with open(os.path.join(args.output_folder_path, str(file_name_counter).zfill(3) + ".pickle"), "wb") as writer:
-                pickle.dump(current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching, writer)
-            current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching = dict()
-            file_name_counter += 1
-
-    if len(current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching.keys()) > 0:
-        with open(os.path.join(args.output_folder_path, str(file_name_counter).zfill(3) + ".pickle"), "wb") as writer:
+        with open(os.path.join(args.output_folder_path, str(clip_counter).zfill(5) + ".pickle"), "wb") as writer:
             pickle.dump(current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching, writer)
+        current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching = dict()

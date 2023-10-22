@@ -356,13 +356,11 @@ mamba deactivate
 
 mamba create -n mq_analysis python=3.9.9
 
-mamba activate mq_analysis
-
 cd $CODE/scripts/01_setup_environment
 
 python3 -m pip install -r mq_analysis_requirements.txt
 
-mamba install python-graphviz
+sbatch --time 720 --cpus-per-task=4 --gres=gpu:1 --nodelist=biwirender08 --mem 50G install_torch_torchvision.sh
 
 python3 -m spacy download en_core_web_lg
 
@@ -512,21 +510,30 @@ sbatch --time 720 --cpus-per-task=24 --mem 200G 01_process_ground_truth_labels.s
 
 sbatch --time 720 --cpus-per-task=8 --mem 200G 02_process_asl_predictions.sh
 
-sbatch --time 720 --cpus-per-task=8 --mem 40G 03_blip2_dictionary_matching.sh
+sbatch --time 720 --cpus-per-task=8 --mem 40G nodelist=biwirender08 03_blip2_dictionary_matching.sh
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 03_blip2_sbert_matching.sh
+sbatch --time 720 --cpus-per-task=4 --gres=gpu:1 --nodelist=biwirender08 --mem 50G 03_blip2_sbert_matching.sh
 
-sbatch --time 720 --cpus-per-task=8 --mem 40G 04_max_per_label_postprocessing.sh -p asl_predictions
+sbatch --time 720 --cpus-per-task=8 --mem 200G 04_max_per_label_postprocessing.sh -p asl_predictions
 
-sbatch --time 720 --cpus-per-task=8 --mem 40G 04_max_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
+sbatch --time 720 --cpus-per-task=8 --mem 200G 04_max_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
 
 sbatch --time 720 --cpus-per-task=24 --mem 200G 04_max_per_label_postprocessing.sh -p blip2_sbert_matching_predictions
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p asl_max_per_label_postprocessing_predictions
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_postprocessing_predictions
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 05_evaluate_predictions.sh -p blip2_sbert_matching_max_per_label_postprocessing_predictions
+sbatch --time 720 --cpus-per-task=8 --mem 200G 05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G 05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t median_temporal_aggregation
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G 05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t transfusion_temporal_aggregation
+
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G 05_evaluate_predictions.sh -p blip2_sbert_matching_max_per_label_predictions -t no_temporal_aggregation
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G 05_evaluate_predictions.sh -p blip2_sbert_matching_max_per_label_predictions -t median_temporal_aggregation
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G 05_evaluate_predictions.sh -p blip2_sbert_matching_max_per_label_predictions -t transfusion_temporal_aggregation
 
 # 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
 

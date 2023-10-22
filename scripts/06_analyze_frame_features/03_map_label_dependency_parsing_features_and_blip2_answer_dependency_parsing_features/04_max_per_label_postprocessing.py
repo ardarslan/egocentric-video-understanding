@@ -2,7 +2,7 @@ import os
 import gc
 import pickle
 import argparse
-from pqdm.processes import pqdm
+from tqdm import tqdm
 from typing import Dict, List, Tuple
 
 import constants
@@ -77,24 +77,12 @@ if __name__ == "__main__":
         with open(input_file_path, "rb") as reader:
             current_clip_id_frame_id_blip2_question_index_label_index_scores_mapping = pickle.load(reader)
 
-        current_clip_id_frame_id_blip2_question_index_selected_label_index_score_mapping = dict(
-            pqdm(
-                [
-                    {
-                        "clip_id": clip_id,
-                        "frame_id_blip2_question_index_label_index_scores_mapping": frame_id_blip2_question_index_label_index_scores_mapping,
-                        "query_score_type": args.query_score_type,
-                    }
-                    for clip_id, frame_id_blip2_question_index_label_index_scores_mapping in current_clip_id_frame_id_blip2_question_index_label_index_scores_mapping.items()
-                ],
-                function=max_per_label_postprocessing_per_clip,
-                n_jobs=8,
-                argument_type="kwargs",
-                exception_behaviour="immediate",
-            )
-        )
-        del current_clip_id_frame_id_blip2_question_index_label_index_scores_mapping
-        gc.collect()
+        current_clip_id_frame_id_blip2_question_index_selected_label_index_score_mapping = dict()
+
+        for clip_id, frame_id_blip2_question_index_label_index_scores_mapping in tqdm(current_clip_id_frame_id_blip2_question_index_label_index_scores_mapping.items()):
+            current_clip_id_frame_id_blip2_question_index_selected_label_index_score_mapping[clip_id] = max_per_label_postprocessing_per_clip(
+                clip_id=clip_id, frame_id_blip2_question_index_label_index_scores_mapping=frame_id_blip2_question_index_label_index_scores_mapping, query_score_type=args.query_score_type
+            )[1]
 
         with open(
             os.path.join(output_folder_path, input_file_path.split("/")[-1]),

@@ -33,9 +33,7 @@ def generate_random_color():
 
 
 def get_blip2_answer(current_blip2_rows, blip2_question):
-    answer = current_blip2_rows[current_blip2_rows["question"] == blip2_question][
-        "answer"
-    ]
+    answer = current_blip2_rows[current_blip2_rows["question"] == blip2_question]["answer"]
     if len(answer) == 0:
         return "NaN"
     else:
@@ -106,20 +104,10 @@ if __name__ == "__main__":
     ):
         raise Exception("Please choose another clip.")
 
-    ground_truth_action_instances = json.load(
-        open(args.ground_truth_action_instances_file_path, "r")
-    )[args.clip_id]["annotations"]
-    asl_predicted_action_instances = json.load(
-        open(args.asl_predicted_action_instances_file_path, "r")
-    )["detect_results"][args.clip_id]
-    blip2_answers_folder_path = os.path.join(
-        os.environ["SCRATCH"], "ego4d_data/v2/frame_features", args.clip_id
-    )
-    blip2_answers_file_names = [
-        file_name
-        for file_name in os.listdir(blip2_answers_folder_path)
-        if file_name.startswith("blip2_")
-    ]
+    ground_truth_action_instances = json.load(open(args.ground_truth_action_instances_file_path, "r"))[args.clip_id]["annotations"]
+    asl_predicted_action_instances = json.load(open(args.asl_predicted_action_instances_file_path, "r"))["detect_results"][args.clip_id]
+    blip2_answers_folder_path = os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/frame_features", args.clip_id)
+    blip2_answers_file_names = [file_name for file_name in os.listdir(blip2_answers_folder_path) if file_name.startswith("blip2_")]
     blip2_answers_file_paths = [
         os.path.join(
             os.environ["SCRATCH"],
@@ -130,18 +118,11 @@ if __name__ == "__main__":
         for blip2_answers_file_name in blip2_answers_file_names
     ]
     blip2_answers_dfs = pd.concat(
-        [
-            pd.read_csv(blip2_answers_file_path, sep="\t")
-            for blip2_answers_file_path in blip2_answers_file_paths
-        ],
+        [pd.read_csv(blip2_answers_file_path, sep="\t") for blip2_answers_file_path in blip2_answers_file_paths],
         axis=0,
     )
 
-    cap = cv2.VideoCapture(
-        os.path.join(
-            os.environ["SCRATCH"], "ego4d_data/v2/clips", args.clip_id + ".mp4"
-        )
-    )
+    cap = cv2.VideoCapture(os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips", args.clip_id + ".mp4"))
     fps = cap.get(cv2.CAP_PROP_FPS)
     num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     cap.release()
@@ -158,14 +139,9 @@ if __name__ == "__main__":
 
         # asl predictions
         for asl_predicted_action_instance in asl_predicted_action_instances:
-            if (
-                current_frame_time >= asl_predicted_action_instance["segment"][0]
-                and current_frame_time <= asl_predicted_action_instance["segment"][1]
-            ):
+            if current_frame_time >= asl_predicted_action_instance["segment"][0] and current_frame_time <= asl_predicted_action_instance["segment"][1]:
                 assigned_to_an_action_category = True
-                frame_id_asl_predicted_action_categories_mapping[
-                    current_frame_id
-                ].append(
+                frame_id_asl_predicted_action_categories_mapping[current_frame_id].append(
                     (
                         asl_predicted_action_instance["label"],
                         asl_predicted_action_instance["score"],
@@ -175,16 +151,7 @@ if __name__ == "__main__":
             frame_id_asl_predicted_action_categories_mapping[current_frame_id],
             key=lambda x: x[0],
         )
-        unique_action_categories.add(
-            concatenate_labels(
-                [
-                    label
-                    for label, _ in frame_id_asl_predicted_action_categories_mapping[
-                        current_frame_id
-                    ]
-                ]
-            )
-        )
+        unique_action_categories.add(concatenate_labels([label for label, _ in frame_id_asl_predicted_action_categories_mapping[current_frame_id]]))
 
         if not assigned_to_an_action_category:
             frame_id_asl_predicted_action_categories_mapping[current_frame_id] = [
@@ -197,37 +164,25 @@ if __name__ == "__main__":
 
         # ground truths
         if len(ground_truth_action_instances) == 0:
-            frame_id_ground_truth_action_categories_mapping[
-                current_frame_id
-            ] = "no_annotations_for_the_clip"
+            frame_id_ground_truth_action_categories_mapping[current_frame_id] = "no_annotations_for_the_clip"
             unique_action_categories.add("no_annotations_for_the_clip")
         else:
             current_labels = []
             for ground_truth_action_instance in ground_truth_action_instances:
-                if (
-                    current_frame_time >= ground_truth_action_instance["segment"][0]
-                    and current_frame_time <= ground_truth_action_instance["segment"][1]
-                ):
+                if current_frame_time >= ground_truth_action_instance["segment"][0] and current_frame_time <= ground_truth_action_instance["segment"][1]:
                     assigned_to_an_action_category = True
                     current_label = ground_truth_action_instance["label"]
                     current_labels.append(current_label)
 
             if len(current_labels) > 0:
                 concatenated_labels = concatenate_labels(current_labels)
-                frame_id_ground_truth_action_categories_mapping[
-                    current_frame_id
-                ] = concatenated_labels
+                frame_id_ground_truth_action_categories_mapping[current_frame_id] = concatenated_labels
                 unique_action_categories.add(concatenated_labels)
             else:
-                frame_id_ground_truth_action_categories_mapping[
-                    current_frame_id
-                ] = "background"
+                frame_id_ground_truth_action_categories_mapping[current_frame_id] = "background"
                 unique_action_categories.add("background")
 
-    action_category_color_mapping = dict(
-        (action_category, generate_random_color())
-        for action_category in sorted(list(unique_action_categories))
-    )
+    action_category_color_mapping = dict((action_category, generate_random_color()) for action_category in sorted(list(unique_action_categories)))
 
     sequences_dict = {
         "gt_colors": [],
@@ -249,18 +204,12 @@ if __name__ == "__main__":
     blip2_captioning_question = "Image Caption"
 
     for frame_id in range(num_frames):
-        current_blip2_rows = blip2_answers_dfs[
-            blip2_answers_dfs["frame_index"]
-            == (frame_id // args.frame_feature_extraction_stride)
-            * args.frame_feature_extraction_stride
-        ]
+        current_blip2_rows = blip2_answers_dfs[blip2_answers_dfs["frame_index"] == (frame_id // args.frame_feature_extraction_stride) * args.frame_feature_extraction_stride]
         current_blip2_describe_answer = get_blip2_answer(
             current_blip2_rows=current_blip2_rows,
             blip2_question=blip2_describe_question,
         )
-        current_blip2_do_answer = get_blip2_answer(
-            current_blip2_rows=current_blip2_rows, blip2_question=blip2_do_question
-        )
+        current_blip2_do_answer = get_blip2_answer(current_blip2_rows=current_blip2_rows, blip2_question=blip2_do_question)
         current_blip2_happen_answer = get_blip2_answer(
             current_blip2_rows=current_blip2_rows,
             blip2_question=blip2_happen_question,
@@ -271,80 +220,34 @@ if __name__ == "__main__":
         )
 
         sequences_dict["frame_ids"].append(frame_id)
-        sequences_dict["gt_values"].append(
-            frame_id_ground_truth_action_categories_mapping[frame_id]
-        )
-        current_ground_truth_action_category_color = action_category_color_mapping[
-            frame_id_ground_truth_action_categories_mapping[frame_id]
-        ]
+        sequences_dict["gt_values"].append(frame_id_ground_truth_action_categories_mapping[frame_id])
+        current_ground_truth_action_category_color = action_category_color_mapping[frame_id_ground_truth_action_categories_mapping[frame_id]]
         sequences_dict["gt_colors"].append(current_ground_truth_action_category_color)
         sequences_dict["blip2_happen_answers"].append(current_blip2_happen_answer)
         sequences_dict["blip2_do_answers"].append(current_blip2_do_answer)
         sequences_dict["blip2_describe_answers"].append(current_blip2_describe_answer)
-        sequences_dict["blip2_captioning_answers"].append(
-            current_blip2_captioning_answer
-        )
+        sequences_dict["blip2_captioning_answers"].append(current_blip2_captioning_answer)
 
-        sequences_dict["asl_pred_values"].append(
-            " + ".join(
-                sorted(
-                    [
-                        f"{label} ({np.round(score, 2)})"
-                        for label, score in frame_id_asl_predicted_action_categories_mapping[
-                            frame_id
-                        ]
-                    ]
-                )
-            )
-        )
+        sequences_dict["asl_pred_values"].append(" + ".join(sorted([f"{label} ({np.round(score, 2)})" for label, score in frame_id_asl_predicted_action_categories_mapping[frame_id]])))
 
-        sequences_dict["asl_pred_colors"].append(
-            action_category_color_mapping[
-                concatenate_labels(
-                    [
-                        label
-                        for label, _ in frame_id_asl_predicted_action_categories_mapping[
-                            frame_id
-                        ]
-                    ]
-                )
-            ]
-        )
+        sequences_dict["asl_pred_colors"].append(action_category_color_mapping[concatenate_labels([label for label, _ in frame_id_asl_predicted_action_categories_mapping[frame_id]])])
 
         current_ground_truth_asl_predicted_action_category_match = False
-        for predicted_label, _ in frame_id_asl_predicted_action_categories_mapping[
-            frame_id
-        ]:
-            for ground_truth_label in frame_id_ground_truth_action_categories_mapping[
-                frame_id
-            ].split(" + "):
+        for predicted_label, _ in frame_id_asl_predicted_action_categories_mapping[frame_id]:
+            for ground_truth_label in frame_id_ground_truth_action_categories_mapping[frame_id].split(" + "):
                 if ground_truth_label == predicted_label:
                     current_ground_truth_asl_predicted_action_category_match = True
-        sequences_dict["match_values"].append(
-            current_ground_truth_asl_predicted_action_category_match
-        )
+        sequences_dict["match_values"].append(current_ground_truth_asl_predicted_action_category_match)
 
-        current_ground_truth_asl_predicted_action_category_match_color = (
-            ground_truth_asl_predicted_action_category_match_color_mapping[
-                current_ground_truth_asl_predicted_action_category_match
-            ]
-        )
-        sequences_dict["match_colors"].append(
-            current_ground_truth_asl_predicted_action_category_match_color
-        )
+        current_ground_truth_asl_predicted_action_category_match_color = ground_truth_asl_predicted_action_category_match_color_mapping[current_ground_truth_asl_predicted_action_category_match]
+        sequences_dict["match_colors"].append(current_ground_truth_asl_predicted_action_category_match_color)
 
     sequences_dict["frame_file_paths"] = [
         os.path.join(
             args.clip_id,
             frame_file_name,
         )
-        for frame_file_name in sorted(
-            os.listdir(
-                os.path.join(
-                    os.environ["SCRATCH"], "ego4d_data/v2/frames", args.clip_id
-                )
-            )
-        )
+        for frame_file_name in sorted(os.listdir(os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/frames", args.clip_id)))
     ]
 
     fig = go.Figure(
