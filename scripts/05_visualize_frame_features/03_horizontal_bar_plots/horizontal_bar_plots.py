@@ -12,8 +12,11 @@ from dash import Dash, html, dcc, Input, Output, no_update
 import sys
 
 sys.path.append("../")
-
 from utils import extract_frames
+
+sys.path.append("../../06_analyze_frame_features/03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features")
+import constants
+
 
 from typing import List
 
@@ -99,6 +102,11 @@ if __name__ == "__main__":
         default=f"{os.environ['SCRATCH']}/ego4d_data/v2/analysis_data/blip2_sbert_matching_max_per_label_predictions",
     )
     parser.add_argument(
+        "--dependency_parsing_results_file_path",
+        type=str,
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/analysis_data/dependency_parsing_results/dependency_parsing_results.pickle",
+    )
+    parser.add_argument(
         "--assets_path",
         type=str,
         default=f"{os.environ['SCRATCH']}/ego4d_data/v2/frames",
@@ -152,6 +160,9 @@ if __name__ == "__main__":
         [pd.read_csv(blip2_answers_file_path, sep="\t") for blip2_answers_file_path in blip2_answers_file_paths],
         axis=0,
     )
+
+    with open(args.dependency_parsing_results_file_path, "rb") as reader:
+        dependency_parsing_results = pickle.load(reader)[args.clip_id]
 
     cap = cv2.VideoCapture(os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips", args.clip_id + ".mp4"))
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -309,15 +320,16 @@ if __name__ == "__main__":
         "match_values": [],
         "frame_ids": [],
         "blip2_happen_answers": [],
+        "blip2_happen_dependency_parsing_features": [],
         "blip2_do_answers": [],
+        "blip2_do_dependency_parsing_features": [],
         "blip2_describe_answers": [],
-        "blip2_captioning_answers": [],
+        "blip2_describe_dependency_parsing_features": [],
     }
 
     blip2_describe_question = "What does the image describe?"
     blip2_do_question = "What is the person in this picture doing?"
     blip2_happen_question = "What is happening in this picture?"
-    blip2_captioning_question = "Image Caption"
 
     for frame_id in range(num_frames):
         current_blip2_rows = blip2_answers_dfs[blip2_answers_dfs["frame_index"] == (frame_id // frame_feature_extraction_stride) * frame_feature_extraction_stride]
@@ -330,19 +342,24 @@ if __name__ == "__main__":
             current_blip2_rows=current_blip2_rows,
             blip2_question=blip2_happen_question,
         )
-        current_blip2_captioning_answer = get_blip2_answer(
-            current_blip2_rows=current_blip2_rows,
-            blip2_question=blip2_captioning_question,
-        )
-
+        current_blip2_happen_answer_dependency_parsing_features = dependency_parsing_results[int(frame_id // frame_feature_extraction_stride * frame_feature_extraction_stride)][
+            constants.question_constant_mapping[blip2_happen_question]
+        ]
+        current_blip2_do_answer_dependency_parsing_features = dependency_parsing_results[int(frame_id // frame_feature_extraction_stride * frame_feature_extraction_stride)][
+            constants.question_constant_mapping[blip2_do_question]
+        ]
+        current_blip2_describe_answer_dependency_parsing_features = dependency_parsing_results[int(frame_id // frame_feature_extraction_stride * frame_feature_extraction_stride)][
+            constants.question_constant_mapping[blip2_describe_question]
+        ]
         sequences_dict["frame_ids"].append(frame_id)
         sequences_dict["gt_values"].append(frame_id_ground_truth_action_categories_mapping[frame_id])
-        current_ground_truth_action_category_color = action_category_color_mapping[frame_id_ground_truth_action_categories_mapping[frame_id]]
-        sequences_dict["gt_colors"].append(current_ground_truth_action_category_color)
+        sequences_dict["gt_colors"].append(action_category_color_mapping[frame_id_ground_truth_action_categories_mapping[frame_id]])
         sequences_dict["blip2_happen_answers"].append(current_blip2_happen_answer)
+        sequences_dict["blip2_happen_dependency_parsing_features"].append(current_blip2_happen_answer_dependency_parsing_features)
         sequences_dict["blip2_do_answers"].append(current_blip2_do_answer)
+        sequences_dict["blip2_do_dependency_parsing_features"].append(current_blip2_do_answer_dependency_parsing_features)
         sequences_dict["blip2_describe_answers"].append(current_blip2_describe_answer)
-        sequences_dict["blip2_captioning_answers"].append(current_blip2_captioning_answer)
+        sequences_dict["blip2_describe_dependency_parsing_features"].append(current_blip2_describe_answer_dependency_parsing_features)
 
         sequences_dict["pred_values"].append(
             " + ".join(
@@ -396,9 +413,11 @@ if __name__ == "__main__":
                         sequences_dict["pred_values"],
                         sequences_dict["match_values"],
                         sequences_dict["blip2_describe_answers"],
+                        sequences_dict["blip2_describe_dependency_parsing_features"],
                         sequences_dict["blip2_do_answers"],
+                        sequences_dict["blip2_do_dependency_parsing_features"],
                         sequences_dict["blip2_happen_answers"],
-                        sequences_dict["blip2_captioning_answers"],
+                        sequences_dict["blip2_happen_dependency_parsing_features"],
                     )
                 ),
             )
@@ -468,15 +487,15 @@ if __name__ == "__main__":
                         style={"font-size": "10px", "text-align": "center"},
                     ),
                     html.P(
-                        f"What is the person in this picture doing? (BLIP2): {hoverData['points'][0]['customdata'][6]}",
+                        f"What does the image describe? (BLIP2 Dependency Parsing Features): {hoverData['points'][0]['customdata'][6]}",
                         style={"font-size": "10px", "text-align": "center"},
                     ),
                     html.P(
-                        f"What is happening in this picture? (BLIP2): {hoverData['points'][0]['customdata'][7]}",
+                        f"What is the person in this picture doing? (BLIP2): {hoverData['points'][0]['customdata'][7]}",
                         style={"font-size": "10px", "text-align": "center"},
                     ),
                     html.P(
-                        f"Image Caption (BLIP2): {hoverData['points'][0]['customdata'][8]}",
+                        f"What is happening in this picture? (BLIP2 Dependency Parsing Features): {hoverData['points'][0]['customdata'][8]}",
                         style={"font-size": "10px", "text-align": "center"},
                     ),
                 ],
