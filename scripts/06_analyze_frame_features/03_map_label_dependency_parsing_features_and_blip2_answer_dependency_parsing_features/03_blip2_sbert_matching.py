@@ -3,6 +3,7 @@ import json
 import pickle
 import argparse
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
 from sentence_transformers import SentenceTransformer
@@ -150,18 +151,17 @@ def get_blip2_dependency_parsing_feature_sbert_embeddings_mapping(
         dependency_parsing_feature
         for _, dependency_parsing_feature in five_best_dependency_parsing_features
     ]
-    dependency_parsing_features = ["answer"] + [
-        dependency_parsing_feature
-        for dependency_parsing_feature, _ in five_best_dependency_parsing_features
+    dependency_parsing_feature_types = ["answer"] + [
+        dependency_parsing_feature_type
+        for dependency_parsing_feature_type, _ in five_best_dependency_parsing_features
     ]
-
     sbert_embeddings = sbert.encode(sentences_to_encode)
 
-    for dependency_parsing_feature, sbert_embedding in zip(
-        dependency_parsing_features, sbert_embeddings
+    for dependency_parsing_feature_type, sbert_embedding in zip(
+        dependency_parsing_feature_types, sbert_embeddings
     ):
         blip2_dependency_parsing_feature_sbert_embeddings_mapping[
-            dependency_parsing_feature
+            dependency_parsing_feature_type
         ].append(sbert_embedding)
 
     return blip2_dependency_parsing_feature_sbert_embeddings_mapping
@@ -293,7 +293,7 @@ if __name__ == "__main__":
         for (
             frame_id,
             blip2_question_answer_verb_noun_tool_pairs_mapping,
-        ) in tqdm(frame_id_verb_noun_tool_pairs_mapping.items()):
+        ) in frame_id_verb_noun_tool_pairs_mapping.items():
             current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[
                 clip_id
             ][
@@ -307,86 +307,101 @@ if __name__ == "__main__":
                     blip2_answer,
                     blip2_verb_noun_tools,
                 ) = blip2_answer_verb_noun_tool_pairs
-                five_best_dependency_parsing_features = (
-                    get_five_best_dependency_parsing_features(
-                        blip2_verb_noun_tools=blip2_verb_noun_tools
-                    )
-                )
-                blip2_dependency_parsing_feature_sbert_embeddings_mapping = get_blip2_dependency_parsing_feature_sbert_embeddings_mapping(
-                    blip2_answer=blip2_answer,
-                    five_best_dependency_parsing_features=five_best_dependency_parsing_features,
-                )
 
-                current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[
-                    clip_id
-                ][
-                    frame_id
-                ][
-                    blip2_question_index
-                ] = dict()
-                for (
-                    label_index,
-                    label_dependency_parsing_feature_sbert_embeddings_mapping,
-                ) in (
-                    label_index_dependency_parsing_feature_sbert_embeddings_mapping.items()
-                ):
+                if pd.isnull(blip2_answer):
                     current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[
                         clip_id
                     ][
                         frame_id
                     ][
                         blip2_question_index
-                    ][
-                        label_index
-                    ] = []
-                    for (
-                        blip2_dependency_parsing_feature,
-                        blip2_sbert_embeddings,
-                    ) in (
-                        blip2_dependency_parsing_feature_sbert_embeddings_mapping.items()
-                    ):
-                        for (
-                            label_dependency_parsing_feature,
-                            label_sbert_embeddings,
-                        ) in (
-                            label_dependency_parsing_feature_sbert_embeddings_mapping.items()
-                        ):
-                            if (
-                                blip2_dependency_parsing_feature == "answer"
-                                and (
-                                    label_dependency_parsing_feature == "verb_noun_tool"
-                                    or label_dependency_parsing_feature == "verb_noun"
-                                    or label_dependency_parsing_feature == "verb_tool"
-                                    or label_dependency_parsing_feature == "verb"
-                                    or label_dependency_parsing_feature == "noun"
-                                )
-                            ) or (
-                                blip2_dependency_parsing_feature
-                                == label_dependency_parsing_feature
-                            ):
-                                pass
-                            else:
-                                continue
+                    ] = dict()
+                    continue
+                else:
+                    five_best_dependency_parsing_features = (
+                        get_five_best_dependency_parsing_features(
+                            blip2_verb_noun_tools=blip2_verb_noun_tools
+                        )
+                    )
+                    blip2_dependency_parsing_feature_sbert_embeddings_mapping = get_blip2_dependency_parsing_feature_sbert_embeddings_mapping(
+                        blip2_answer=blip2_answer,
+                        five_best_dependency_parsing_features=five_best_dependency_parsing_features,
+                    )
 
-                            blip2_dependency_parsing_feature_label_dependency_parsing_feature = f"blip2_{blip2_dependency_parsing_feature}_label_{label_dependency_parsing_feature}"
-                            cosine_similarities = calculate_sbert_cosine_similarities(
-                                blip2_sbert_embeddings=blip2_sbert_embeddings,
-                                label_sbert_embeddings=label_sbert_embeddings,
-                                similarity_type=constants.blip2_dependency_parsing_feature_label_dependency_parsing_feature_mapping[
-                                    blip2_dependency_parsing_feature_label_dependency_parsing_feature
-                                ],
-                            )
-                            current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[
-                                clip_id
-                            ][
-                                frame_id
-                            ][
-                                blip2_question_index
-                            ][
-                                label_index
-                            ].extend(
-                                cosine_similarities
-                            )
+                    current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[
+                        clip_id
+                    ][
+                        frame_id
+                    ][
+                        blip2_question_index
+                    ] = dict()
+
+                    for (
+                        label_index,
+                        label_dependency_parsing_feature_sbert_embeddings_mapping,
+                    ) in (
+                        label_index_dependency_parsing_feature_sbert_embeddings_mapping.items()
+                    ):
+                        current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[
+                            clip_id
+                        ][
+                            frame_id
+                        ][
+                            blip2_question_index
+                        ][
+                            label_index
+                        ] = []
+                        for (
+                            blip2_dependency_parsing_feature,
+                            blip2_sbert_embeddings,
+                        ) in (
+                            blip2_dependency_parsing_feature_sbert_embeddings_mapping.items()
+                        ):
+                            for (
+                                label_dependency_parsing_feature,
+                                label_sbert_embeddings,
+                            ) in (
+                                label_dependency_parsing_feature_sbert_embeddings_mapping.items()
+                            ):
+                                if (
+                                    blip2_dependency_parsing_feature == "answer"
+                                    and (
+                                        label_dependency_parsing_feature
+                                        == "verb_noun_tool"
+                                        or label_dependency_parsing_feature
+                                        == "verb_noun"
+                                        or label_dependency_parsing_feature
+                                        == "verb_tool"
+                                        or label_dependency_parsing_feature == "verb"
+                                        or label_dependency_parsing_feature == "noun"
+                                    )
+                                ) or (
+                                    blip2_dependency_parsing_feature
+                                    == label_dependency_parsing_feature
+                                ):
+                                    pass
+                                else:
+                                    continue
+
+                                blip2_dependency_parsing_feature_label_dependency_parsing_feature = f"blip2_{blip2_dependency_parsing_feature}_label_{label_dependency_parsing_feature}"
+                                cosine_similarities = calculate_sbert_cosine_similarities(
+                                    blip2_sbert_embeddings=blip2_sbert_embeddings,
+                                    label_sbert_embeddings=label_sbert_embeddings,
+                                    similarity_type=constants.blip2_dependency_parsing_feature_label_dependency_parsing_feature_mapping[
+                                        blip2_dependency_parsing_feature_label_dependency_parsing_feature
+                                    ],
+                                )
+                                current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[
+                                    clip_id
+                                ][
+                                    frame_id
+                                ][
+                                    blip2_question_index
+                                ][
+                                    label_index
+                                ].extend(
+                                    cosine_similarities
+                                )
         with open(
             os.path.join(args.output_folder_path, clip_id + ".pickle"), "wb"
         ) as writer:
