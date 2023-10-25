@@ -532,13 +532,21 @@ mamba activate mq_analysis
 
 cd $CODE/scripts/06_analyze_frame_features/03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
 
-./03_blip2_sbert_matching.sh -q 0 -c 4
+./03_blip2_sbert_matching.sh -q 0 -c 4 -b sentence-transformers/paraphrase-MiniLM-L6-v2
 
-./03_blip2_sbert_matching.sh -q 1 -c 5
+./03_blip2_sbert_matching.sh -q 1 -c 5 -b sentence-transformers/paraphrase-MiniLM-L6-v2
 
-./03_blip2_sbert_matching.sh -q 2 -c 6
+./03_blip2_sbert_matching.sh -q 2 -c 6 -b sentence-transformers/paraphrase-MiniLM-L6-v2
 
-./03_blip2_sbert_matching.sh -q 3 -c 7
+./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/paraphrase-MiniLM-L6-v2
+
+./03_blip2_sbert_matching.sh -q 0 -c 4 -b sentence-transformers/all-distilroberta-v1
+
+./03_blip2_sbert_matching.sh -q 1 -c 5 -b sentence-transformers/all-distilroberta-v1
+
+./03_blip2_sbert_matching.sh -q 2 -c 6 -b sentence-transformers/all-distilroberta-v1
+
+./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
 
 # 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
 

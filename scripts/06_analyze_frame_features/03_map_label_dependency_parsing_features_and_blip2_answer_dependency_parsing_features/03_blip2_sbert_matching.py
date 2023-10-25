@@ -12,10 +12,6 @@ from typing import List, Tuple
 
 import constants
 
-sbert = SentenceTransformer(
-    "sentence-transformers/paraphrase-MiniLM-L6-v2", device="cuda"
-)
-
 
 def calculate_sbert_cosine_similarities(
     blip2_sbert_embeddings: List[np.array],
@@ -38,7 +34,7 @@ def calculate_sbert_cosine_similarities(
 
 
 def get_label_index_dependency_parsing_feature_sbert_embeddings_mapping(
-    label_verb_noun_tool_mapping_file_path: str,
+    label_verb_noun_tool_mapping_file_path: str, model: SentenceTransformer
 ):
     with open(label_verb_noun_tool_mapping_file_path, "r") as reader:
         label_verb_noun_tool_mapping = json.load(reader)
@@ -74,13 +70,13 @@ def get_label_index_dependency_parsing_feature_sbert_embeddings_mapping(
             if label_noun == "NaN":
                 # Both noun and tool are NaN, so only encode verb.
                 if label_tool == "NaN":
-                    sbert_embeddings = sbert.encode([label_verb])
+                    sbert_embeddings = model.encode([label_verb])
                     label_index_dependency_parsing_feature_sbert_embeddings_mapping[
                         label_index
                     ]["verb"].append(sbert_embeddings[0])
                 # Only noun is NaN. So we encode both verb, and verb_using_tool.
                 else:
-                    sbert_embeddings = sbert.encode(
+                    sbert_embeddings = model.encode(
                         [label_verb, f"{label_verb}_using_{label_tool}"]
                     )
 
@@ -93,7 +89,7 @@ def get_label_index_dependency_parsing_feature_sbert_embeddings_mapping(
             else:
                 # Noun is not NaN. Tool is NaN. Then we encode (verb, noun, verb_noun)
                 if label_tool == "NaN":
-                    sbert_embeddings = sbert.encode(
+                    sbert_embeddings = model.encode(
                         [label_verb, label_noun, f"{label_verb}_{label_noun}"]
                     )
 
@@ -108,7 +104,7 @@ def get_label_index_dependency_parsing_feature_sbert_embeddings_mapping(
                     ]["verb_noun"].append(sbert_embeddings[2])
                 # Noun is not NaN, Tool is not NaN. Then we encode (verb, noun, verb_noun, verb_tool, verb_noun_tool)
                 else:
-                    sbert_embeddings = sbert.encode(
+                    sbert_embeddings = model.encode(
                         [
                             label_verb,
                             label_noun,
@@ -155,7 +151,7 @@ def get_blip2_dependency_parsing_feature_sbert_embeddings_mapping(
         dependency_parsing_feature_type
         for dependency_parsing_feature_type, _ in five_best_dependency_parsing_features
     ]
-    sbert_embeddings = sbert.encode(sentences_to_encode)
+    sbert_embeddings = model.encode(sentences_to_encode)
 
     for dependency_parsing_feature_type, sbert_embedding in zip(
         dependency_parsing_feature_types, sbert_embeddings
@@ -218,6 +214,15 @@ def get_five_best_dependency_parsing_features(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--backbone",
+        type=str,
+        choices=[
+            "sentence-transformers/paraphrase-MiniLM-L6-v2",
+            "sentence-transformers/all-distilroberta-v1",
+        ],
+        default="sentence-transformers/paraphrase-MiniLM-L6-v2",
+    )
+    parser.add_argument(
         "--label_verb_noun_tool_mapping_file_path",
         type=str,
         default=os.path.join(
@@ -239,15 +244,16 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        "--output_folder_path",
+        "--output_parent_folder_path",
         type=str,
         default=os.path.join(
             os.environ["SCRATCH"],
             "ego4d_data/v2/analysis_data",
-            "blip2_sbert_matching_predictions",
         ),
     )
     args = parser.parse_args()
+
+    model = SentenceTransformer(args.backbone, device="cuda")
 
     with open(
         args.input_file_path,
@@ -255,10 +261,18 @@ if __name__ == "__main__":
     ) as reader:
         clip_id_frame_id_verb_noun_tool_pairs_mapping = pickle.load(reader)
 
-    os.makedirs(args.output_folder_path, exist_ok=True)
+    output_folder_path = (
+        args.output_parent_folder_path
+        + "/"
+        + "blip2_sbert_matching_"
+        + args.backbone.split("/")[-1]
+        + "_predictions"
+    )
+    os.makedirs(output_folder_path, exist_ok=True)
 
     label_index_dependency_parsing_feature_sbert_embeddings_mapping = get_label_index_dependency_parsing_feature_sbert_embeddings_mapping(
-        label_verb_noun_tool_mapping_file_path=args.label_verb_noun_tool_mapping_file_path
+        label_verb_noun_tool_mapping_file_path=args.label_verb_noun_tool_mapping_file_path,
+        model=model,
     )
 
     number_of_clips = len(clip_id_frame_id_verb_noun_tool_pairs_mapping.keys())
@@ -284,7 +298,7 @@ if __name__ == "__main__":
     for clip_id, frame_id_verb_noun_tool_pairs_mapping in tqdm(
         current_clip_id_frame_id_verb_noun_tool_pairs_list
     ):
-        if os.path.exists(os.path.join(args.output_folder_path, clip_id + ".pickle")):
+        if os.path.exists(os.path.join(output_folder_path, clip_id + ".pickle")):
             continue
 
         current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[
@@ -403,7 +417,7 @@ if __name__ == "__main__":
                                     cosine_similarities
                                 )
         with open(
-            os.path.join(args.output_folder_path, clip_id + ".pickle"), "wb"
+            os.path.join(output_folder_path, clip_id + ".pickle"), "wb"
         ) as writer:
             pickle.dump(
                 current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching,
