@@ -4,7 +4,7 @@ helpFunction()
 {
    echo ""
    echo "Usage: $0 -p PREDICTIONS_FOLDER_NAME"
-   echo -e "\t-p One of asl_predictions, blip2_dictionary_matching_predictions, blip2_sbert_matching_predictions"
+   echo -e "\t-p One of asl_predictions, blip2_dictionary_matching_predictions, blip2_sbert_matching_all-distilroberta-v1_predictions, blip2_sbert_matching_paraphrase-MiniLM-L6-v2_predictions"
    exit 1 # Exit script after printing help
 }
 

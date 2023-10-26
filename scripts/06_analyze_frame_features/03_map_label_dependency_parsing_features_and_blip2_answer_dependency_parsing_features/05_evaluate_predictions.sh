@@ -7,17 +7,8 @@ helpFunction()
    echo -e "\t-t One of no_temporal_aggregation, transfusion_temporal_aggregation, median_temporal_aggregation."
    echo -e "\t-p One of
    'blip2_dictionary_matching_max_per_label_predictions',
-   'blip2_sbert_matching_max_per_label_predictions',
-   'asl_max_per_label_predictions',
-   'blip2_dictionary_matching_max_per_label_transfusion_predictions',
-   'blip2_sbert_matching_max_per_label_transfusion_predictions',
-   'asl_max_per_label_transfusion_predictions',
-   'blip2_dictionary_matching_max_per_label_mode_filter_predictions',
-   'blip2_sbert_matching_max_per_label_mode_filter_predictions',
-   'asl_max_per_label_mode_filter_predictions',
-   'blip2_dictionary_matching_max_per_label_median_filter_predictions',
-   'blip2_sbert_matching_max_per_label_median_filter_predictions',
-   'asl_max_per_label_median_filter_predictions'"
+   'blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions',
+   'blip2_sbert_matching_paraphrase-MiniLM-L6-v2_max_per_label_predictions'"
    exit 1 # Exit script after printing help
 }
 

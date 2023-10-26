@@ -540,6 +540,11 @@ cd $CODE/scripts/06_analyze_frame_features/03_map_label_dependency_parsing_featu
 
 ./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/paraphrase-MiniLM-L6-v2
 
+./04_max_per_label_postprocessing.sh -p blip2_sbert_matching_paraphrase-MiniLM-L6-v2_predictions
+
+
+
+
 ./03_blip2_sbert_matching.sh -q 0 -c 4 -b sentence-transformers/all-distilroberta-v1
 
 ./03_blip2_sbert_matching.sh -q 1 -c 5 -b sentence-transformers/all-distilroberta-v1
@@ -547,6 +552,10 @@ cd $CODE/scripts/06_analyze_frame_features/03_map_label_dependency_parsing_featu
 ./03_blip2_sbert_matching.sh -q 2 -c 6 -b sentence-transformers/all-distilroberta-v1
 
 ./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
+
+./04_max_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
+
+
 
 # 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
 
