@@ -5,7 +5,7 @@ import argparse
 import traceback
 from datetime import datetime
 
-import ray
+# import ray # CHANGEHERE
 import torch
 from tqdm import tqdm
 import cv2
@@ -114,9 +114,15 @@ if __name__ == "__main__":
         default=f"{os.environ['SCRATCH']}/mq_libs/gsam/ram_swin_large_14m.pth",
         help="path to checkpoint file",
     )
-    parser.add_argument("--gsam_box_threshold", type=float, default=0.25, help="box threshold")
-    parser.add_argument("--gsam_text_threshold", type=float, default=0.2, help="text threshold")
-    parser.add_argument("--gsam_iou_threshold", type=float, default=0.5, help="iou threshold")
+    parser.add_argument(
+        "--gsam_box_threshold", type=float, default=0.25, help="box threshold"
+    )
+    parser.add_argument(
+        "--gsam_text_threshold", type=float, default=0.2, help="text threshold"
+    )
+    parser.add_argument(
+        "--gsam_iou_threshold", type=float, default=0.5, help="iou threshold"
+    )
 
     parser.add_argument(
         "--ego_hos_seg_twohands_config_file_path",
@@ -157,7 +163,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_folder_path",
         type=str,
-        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/new_frame_features",  # CHANGEHERE
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/frame_features",
     )
     parser.add_argument(
         "--error_folder_path",
@@ -169,9 +175,10 @@ if __name__ == "__main__":
 
     os.makedirs(args.error_folder_path, exist_ok=True)
 
-    ray.init(num_gpus=args.num_devices, num_cpus=args.num_devices)
+    # ray.init(num_gpus=args.num_devices, num_cpus=args.num_devices) # CHANGEHERE
 
-    frame_feature_extractor_pool = ray.util.ActorPool([get_frame_feature_extractor(args=args) for _ in range(args.num_devices)])
+    # frame_feature_extractor_pool = ray.util.ActorPool([get_frame_feature_extractor(args=args) for _ in range(args.num_devices)]) # CHANGEHERE
+    frame_feature_extractor = get_frame_feature_extractor(args=args)
     column_names = get_column_names(args=args)
     output_file_name = get_output_file_name(args=args)
     error_file_name = get_error_file_name(args=args)
@@ -193,10 +200,15 @@ if __name__ == "__main__":
 
     for clip_uid in tqdm(clip_uids):
         try:
-            if os.path.exists(os.path.join(args.output_folder_path, clip_uid, output_file_name)):
-                continue
+            # CHANGEHERE
+            # if os.path.exists(
+            #     os.path.join(args.output_folder_path, clip_uid, output_file_name)
+            # ):
+            #     continue
 
-            input_video_file_path = os.path.join(args.input_folder_path, clip_uid + ".mp4")
+            input_video_file_path = os.path.join(
+                args.input_folder_path, clip_uid + ".mp4"
+            )
             output_subfolder_path = os.path.join(args.output_folder_path, clip_uid)
 
             cap = cv2.VideoCapture(input_video_file_path)
@@ -211,10 +223,17 @@ if __name__ == "__main__":
                 frame_feature_extraction_stride=args.frame_feature_extraction_stride,
                 global_frame_index=global_frame_index,
             )
-            results_list = frame_feature_extractor_pool.map(
-                lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(*current_input),
-                inputs,
-            )
+            results_list = [
+                [frame_feature_extractor.predictor_function(*current_input)]
+                for current_input in inputs
+            ]  # CHANGEHERE
+            # results_list = frame_feature_extractor_pool.map(
+            #     lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(
+            #         *current_input
+            #     ),
+            #     inputs,
+            # )
+            frame_feature_extractor.predictor_function.remote()
             del inputs
             gc.collect()
             torch.cuda.empty_cache()
@@ -228,13 +247,19 @@ if __name__ == "__main__":
                 output_file_name=output_file_name,
             )
         except Exception as e:
-            print(f"{datetime.now():%Y-%m-%d %H:%M:%S%z} | Error with file {clip_uid}.mp4: \n")
+            print(
+                f"{datetime.now():%Y-%m-%d %H:%M:%S%z} | Error with file {clip_uid}.mp4: \n"
+            )
             print(traceback.format_exc())
             e = "-" * 100
             print(e)
-            with open(os.path.join(args.error_folder_path, error_file_name), "a") as error_file_writer:
-                error_file_writer.write(f"{datetime.now():%Y-%m-%d %H:%M:%S%z} | Error with file {clip_uid}.mp4: \n")
+            with open(
+                os.path.join(args.error_folder_path, error_file_name), "a"
+            ) as error_file_writer:
+                error_file_writer.write(
+                    f"{datetime.now():%Y-%m-%d %H:%M:%S%z} | Error with file {clip_uid}.mp4: \n"
+                )
                 error_file_writer.write(traceback.format_exc())
                 error_file_writer.write(e)
 
-    ray.shutdown()
+    # ray.shutdown() # CHANGEHERE

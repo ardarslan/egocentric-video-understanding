@@ -158,32 +158,6 @@ def blip2_dictionary_matching_for_given_clip(
                                 ].append(
                                     (match_type, 0.60)
                                 )
-                            elif label_verb == blip2_verb:
-                                match_type = constants.BLIP2_VERB_LABEL_VERB
-                                if (
-                                    label_index
-                                    not in frame_id_predicted_label_indices_and_scores_dictionary_matching[
-                                        frame_id
-                                    ][
-                                        blip2_question_index
-                                    ].keys()
-                                ):
-                                    frame_id_predicted_label_indices_and_scores_dictionary_matching[
-                                        frame_id
-                                    ][
-                                        blip2_question_index
-                                    ][
-                                        label_index
-                                    ] = []
-                                frame_id_predicted_label_indices_and_scores_dictionary_matching[
-                                    frame_id
-                                ][
-                                    blip2_question_index
-                                ][
-                                    label_index
-                                ].append(
-                                    (match_type, 0.40)
-                                )
                             elif label_noun == blip2_noun:
                                 match_type = constants.BLIP2_NOUN_LABEL_NOUN
                                 if (
@@ -202,6 +176,32 @@ def blip2_dictionary_matching_for_given_clip(
                                         label_index
                                     ] = []
 
+                                frame_id_predicted_label_indices_and_scores_dictionary_matching[
+                                    frame_id
+                                ][
+                                    blip2_question_index
+                                ][
+                                    label_index
+                                ].append(
+                                    (match_type, 0.40)
+                                )
+                            elif label_verb == blip2_verb:
+                                match_type = constants.BLIP2_VERB_LABEL_VERB
+                                if (
+                                    label_index
+                                    not in frame_id_predicted_label_indices_and_scores_dictionary_matching[
+                                        frame_id
+                                    ][
+                                        blip2_question_index
+                                    ].keys()
+                                ):
+                                    frame_id_predicted_label_indices_and_scores_dictionary_matching[
+                                        frame_id
+                                    ][
+                                        blip2_question_index
+                                    ][
+                                        label_index
+                                    ] = []
                                 frame_id_predicted_label_indices_and_scores_dictionary_matching[
                                     frame_id
                                 ][

@@ -8,7 +8,7 @@ from typing import Dict, List, Tuple
 import constants
 
 
-def max_per_label_postprocessing_per_clip(
+def max_per_question_per_label_postprocessing_per_clip(
     clip_id: str,
     frame_id_blip2_question_index_label_index_scores_mapping: Dict[
         int, Dict[int, List[Tuple[int, float]]]
@@ -122,10 +122,15 @@ if __name__ == "__main__":
             os.path.join(output_folder_path, input_file_path.split("/")[-1])
         ):
             continue
-        with open(input_file_path, "rb") as reader:
-            current_clip_id_frame_id_blip2_question_index_label_index_scores_mapping = (
-                pickle.load(reader)
-            )
+
+        try:
+            with open(input_file_path, "rb") as reader:
+                current_clip_id_frame_id_blip2_question_index_label_index_scores_mapping = pickle.load(
+                    reader
+                )
+        except Exception as e:
+            print(input_file_path)
+            raise Exception(e)
 
         current_clip_id_frame_id_blip2_question_index_selected_label_index_score_mapping = (
             dict()
@@ -139,7 +144,7 @@ if __name__ == "__main__":
         ):
             current_clip_id_frame_id_blip2_question_index_selected_label_index_score_mapping[
                 clip_id
-            ] = max_per_label_postprocessing_per_clip(
+            ] = max_per_question_per_label_postprocessing_per_clip(
                 clip_id=clip_id,
                 frame_id_blip2_question_index_label_index_scores_mapping=frame_id_blip2_question_index_label_index_scores_mapping,
                 query_score_type=args.query_score_type,

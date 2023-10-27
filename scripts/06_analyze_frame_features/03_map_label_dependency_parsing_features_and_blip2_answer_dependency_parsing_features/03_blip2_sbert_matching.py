@@ -189,17 +189,17 @@ def get_five_best_dependency_parsing_features(
             dependency_parsing_features_and_scores.append(
                 ("verb_tool", dependency_parsing_feature, score)
             )
-        elif blip2_verb != "NaN" and blip2_noun == "NaN" and blip2_tool == "NaN":
-            dependency_parsing_feature = f"{blip2_verb}"
-            score = 2
-            dependency_parsing_features_and_scores.append(
-                ("verb", dependency_parsing_feature, score)
-            )
         elif blip2_verb == "NaN" and blip2_noun != "NaN" and blip2_tool == "NaN":
             dependency_parsing_feature = f"{blip2_noun}"
-            score = 1
+            score = 2
             dependency_parsing_features_and_scores.append(
                 ("noun", dependency_parsing_feature, score)
+            )
+        elif blip2_verb != "NaN" and blip2_noun == "NaN" and blip2_tool == "NaN":
+            dependency_parsing_feature = f"{blip2_verb}"
+            score = 1
+            dependency_parsing_features_and_scores.append(
+                ("verb", dependency_parsing_feature, score)
             )
     five_best_dependency_parsing_features_and_scores = sorted(
         dependency_parsing_features_and_scores, key=lambda x: -x[-1]

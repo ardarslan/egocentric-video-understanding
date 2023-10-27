@@ -23,4 +23,4 @@ then
    helpFunction
 fi
 
-python3 04_max_per_label_postprocessing.py --predictions_folder_name $PREDICTIONS_FOLDER_NAME
+python3 04_max_per_question_per_label_postprocessing.py --predictions_folder_name $PREDICTIONS_FOLDER_NAME

@@ -8,7 +8,7 @@
             "name": "Python",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/06_analyze_frame_features/03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features/max_per_label_postprocessing.py",
+            "program": "${workspaceFolder}/scripts/04_extract_frame_features/main.py",
             "justMyCode": true,
             "cwd": "${fileDirname}"
         }
