@@ -304,10 +304,10 @@
         ["harvest", "crop", "NaN"]
     ],
     "interact_or_play_with_pet_/_animal": [
-        ["interact", "NaN", "pet"],
-        ["interact", "NaN", "animal"],
-        ["play", "NaN", "pet"],
-        ["play", "NaN", "animal"]
+        ["interact", "pet", "NaN"],
+        ["interact", "animal", "NaN"],
+        ["play", "pet", "NaN"],
+        ["play", "animal", "NaN"]
     ],
     "iron_clothes_or_sheets": [["iron", "cloth", "NaN"], ["iron", "sheet", "NaN"]],
     "knead_/_shape_/_roll-out_dough": [

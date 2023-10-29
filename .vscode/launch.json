@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/scripts/04_extract_frame_features/main.py",
-            "justMyCode": true,
+            "justMyCode": false,
             "cwd": "${fileDirname}"
         }
     ]

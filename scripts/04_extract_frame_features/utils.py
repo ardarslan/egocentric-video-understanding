@@ -5,12 +5,13 @@
 #     BLIPCaptioningFrameFeatureExtractor,
 # )
 # from blip.blip_vqa_frame_feature_extractor import BLIPVQAFrameFeatureExtractor
-from blip2.blip2_captioning_frame_feature_extractor import (
-    BLIP2CaptioningFrameFeatureExtractor,
-)
-from blip2.blip2_vqa_frame_feature_extractor import BLIP2VQAFrameFeatureExtractor
-from gsam.gsam_frame_feature_extractor import GSAMFrameFeatureExtractor
-from ego_hos.ego_hos_frame_feature_extractor import EgoHOSFrameFeatureExtractor
+# from blip2.blip2_captioning_frame_feature_extractor import (
+#     BLIP2CaptioningFrameFeatureExtractor,
+# )
+from blip2_vqa_frame_feature_extractor import BLIP2VQAFrameFeatureExtractor
+
+# from gsam.gsam_frame_feature_extractor import GSAMFrameFeatureExtractor
+# from ego_hos.ego_hos_frame_feature_extractor import EgoHOSFrameFeatureExtractor
 
 
 def get_frame_feature_extractor(args):
@@ -24,14 +25,14 @@ def get_frame_feature_extractor(args):
     #     remote_function = BLIPCaptioningFrameFeatureExtractor.remote
     # elif args.frame_feature_name == "blip_vqa":
     #     remote_function = BLIPVQAFrameFeatureExtractor.remote
-    if args.frame_feature_name == "blip2_captioning":
-        remote_function = BLIP2CaptioningFrameFeatureExtractor.remote
-    elif args.frame_feature_name == "blip2_vqa":
-        remote_function = BLIP2VQAFrameFeatureExtractor  # CHANGEHERE
-    elif args.frame_feature_name == "gsam":
-        remote_function = GSAMFrameFeatureExtractor.remote
-    elif args.frame_feature_name == "ego_hos":
-        remote_function = EgoHOSFrameFeatureExtractor.remote
+    # if args.frame_feature_name == "blip2_captioning":
+    #     remote_function = BLIP2CaptioningFrameFeatureExtractor.remote
+    if args.frame_feature_name == "blip2_vqa":
+        remote_function = BLIP2VQAFrameFeatureExtractor.remote
+    # elif args.frame_feature_name == "gsam":
+    #     remote_function = GSAMFrameFeatureExtractor.remote
+    # elif args.frame_feature_name == "ego_hos":
+    #     remote_function = EgoHOSFrameFeatureExtractor.remote
     else:
         raise Exception(f"{args.frame_feature_name} is not a valid frame feature name.")
     return remote_function(args=args)
@@ -56,14 +57,14 @@ def get_column_names(args):
     #     column_names = BLIPCaptioningFrameFeatureExtractor.column_names
     # elif args.frame_feature_name == "blip_vqa":
     #     column_names = BLIPVQAFrameFeatureExtractor.column_names
-    if args.frame_feature_name == "blip2_captioning":
-        column_names = BLIP2CaptioningFrameFeatureExtractor.column_names
-    elif args.frame_feature_name == "blip2_vqa":
+    # if args.frame_feature_name == "blip2_captioning":
+    #     column_names = BLIP2CaptioningFrameFeatureExtractor.column_names
+    if args.frame_feature_name == "blip2_vqa":
         column_names = BLIP2VQAFrameFeatureExtractor.column_names
-    elif args.frame_feature_name == "gsam":
-        column_names = GSAMFrameFeatureExtractor.column_names
-    elif args.frame_feature_name == "ego_hos":
-        column_names = EgoHOSFrameFeatureExtractor.column_names
+    # elif args.frame_feature_name == "gsam":
+    #     column_names = GSAMFrameFeatureExtractor.column_names
+    # elif args.frame_feature_name == "ego_hos":
+    #     column_names = EgoHOSFrameFeatureExtractor.column_names
     else:
         raise Exception(f"{args.frame_feature_name} is not a valid frame feature name.")
     return column_names

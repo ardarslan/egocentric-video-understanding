@@ -278,6 +278,10 @@ rm -rf ~/.cache
 
 ```
 
+Modify last line of Modify /data/aarslan/mambaforge/envs/mq_data/lib/python3.9/site-packages/transformers/models/blip_2/modeling_blip2.py
+
+from "return outputs" to "return inputs_embeds.detach().cpu().tolist(), outputs".
+
 # 01_04 - Install MQ model packages
 
 rm -rf ~/.cache
@@ -438,14 +442,14 @@ mamba activate mq_data
 chmod +x main.sh
 
 DONE
-./main.sh -f "blip2_vqa" -q "0" -c "4,5,6,7"
+./01_extract_frame_features.sh -f "blip2_vqa" -q "0" -c "4"
 
-RUNNING
-./main.sh -f "gsam" -q "0" -c "6,7"
+./01_extract_frame_features.sh -f "blip2_vqa" -q "1" -c "5"
 
-NOT DONE
-./main.sh -f "ego_hos" -q "0" -c "4,5,6,7"
-```
+./01_extract_frame_features.sh -f "blip2_vqa" -q "2" -c "6"
+
+./01_extract_frame_features.sh -f "blip2_vqa" -q "3" -c "7"
+
 
 # 05_01 - Extract Frames
 

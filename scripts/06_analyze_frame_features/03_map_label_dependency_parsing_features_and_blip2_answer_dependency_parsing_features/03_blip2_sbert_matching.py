@@ -10,13 +10,9 @@ from sentence_transformers import SentenceTransformer
 
 from typing import List, Tuple
 
-import constants
-
 
 def calculate_sbert_cosine_similarities(
-    blip2_sbert_embeddings: List[np.array],
-    label_sbert_embeddings: List[np.array],
-    similarity_type: int,
+    blip2_sbert_embeddings: List[np.array], label_sbert_embeddings: List[np.array]
 ):
     cosine_similarities = []
     for blip2_sbert_embedding in blip2_sbert_embeddings:
@@ -29,7 +25,7 @@ def calculate_sbert_cosine_similarities(
                 )
                 + 1.0
             ) / 2.0
-            cosine_similarities.append((similarity_type, cosine_similarity))
+            cosine_similarities.append(cosine_similarity)
     return cosine_similarities
 
 
@@ -398,12 +394,11 @@ if __name__ == "__main__":
                                     continue
 
                                 blip2_dependency_parsing_feature_label_dependency_parsing_feature = f"blip2_{blip2_dependency_parsing_feature}_label_{label_dependency_parsing_feature}"
-                                cosine_similarities = calculate_sbert_cosine_similarities(
-                                    blip2_sbert_embeddings=blip2_sbert_embeddings,
-                                    label_sbert_embeddings=label_sbert_embeddings,
-                                    similarity_type=constants.blip2_dependency_parsing_feature_label_dependency_parsing_feature_mapping[
-                                        blip2_dependency_parsing_feature_label_dependency_parsing_feature
-                                    ],
+                                cosine_similarities = (
+                                    calculate_sbert_cosine_similarities(
+                                        blip2_sbert_embeddings=blip2_sbert_embeddings,
+                                        label_sbert_embeddings=label_sbert_embeddings,
+                                    )
                                 )
                                 current_clip_id_frame_id_predicted_label_indices_and_scores_dictionary_matching[
                                     clip_id
