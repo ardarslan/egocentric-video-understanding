@@ -407,17 +407,30 @@ mamba deactivate
 
 mamba activate mq_data
 
-DONE
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "0" -c "0,1"
+RUNNING
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "0" -c "0,1"
 
-DONE
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "1" -c "0,1"
+RUNNING
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "1" -c "0,1"
 
-DONE
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "2" -c "0,1"
+RUNNING
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "2" -c "0,1"
 
-DONE
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 50G main.sh -f "blip2_vqa" -q "3" -c "0,1"
+RUNNING
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "3" -c "0,1"
+
+
+RUNNING
+sbatch --time 720 --gres=gpu:1 --cpus-per-task 1 --mem-per-cpu 50G 01_extract_frame_features.sh -f "blip2_vqa" -q "4" -c "0"
+
+RUNNING
+sbatch --time 720 --gres=gpu:1 --cpus-per-task 1 --mem-per-cpu 50G 01_extract_frame_features.sh -f "blip2_vqa" -q "5" -c "0"
+
+RUNNING
+sbatch --time 720 --gres=gpu:1 --cpus-per-task 1 --mem-per-cpu 50G 01_extract_frame_features.sh -f "blip2_vqa" -q "6" -c "0"
+
+RUNNING
+sbatch --time 720 --gres=gpu:1 --cpus-per-task 1 --mem-per-cpu 50G 01_extract_frame_features.sh -f "blip2_vqa" -q "7" -c "0"
 ```
 
 AIT:
