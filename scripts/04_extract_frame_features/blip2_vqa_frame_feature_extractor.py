@@ -1,7 +1,7 @@
 import os
 import sys
 
-import ray
+# import ray   # CHANGEHERE
 import torch
 import numpy as np
 from PIL import Image
@@ -22,7 +22,7 @@ sys.path.insert(
 from constants import question_constant_mapping
 
 
-@ray.remote(num_gpus=1)
+# @ray.remote(num_gpus=1)   # CHANGEHERE
 class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
     def __init__(self, args):
         super().__init__()
