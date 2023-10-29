@@ -202,49 +202,39 @@ if __name__ == "__main__":
         raise Exception(f"{args.quarter_index} is not a valid quarter index.")
 
     for clip_uid in tqdm(clip_uids):
-        try:
-            if os.path.exists(os.path.join(args.output_folder_path, clip_uid, output_file_name)):
-                continue
+        if os.path.exists(os.path.join(args.output_folder_path, clip_uid, output_file_name)):
+            continue
 
-            input_video_file_path = os.path.join(args.input_folder_path, clip_uid + ".mp4")
-            output_subfolder_path = os.path.join(args.output_folder_path, clip_uid)
+        input_video_file_path = os.path.join(args.input_folder_path, clip_uid + ".mp4")
+        output_subfolder_path = os.path.join(args.output_folder_path, clip_uid)
 
-            cap = cv2.VideoCapture(input_video_file_path)
+        cap = cv2.VideoCapture(input_video_file_path)
 
-            global_frame_index = GlobalFrameIndex()
+        global_frame_index = GlobalFrameIndex()
 
-            inputs = FrameFeatureExtractor.get_inputs(
-                cap=cap,
-                batch_size=args.batch_size,
-                frame_feature_name=args.frame_feature_name,
-                output_subfolder_path=output_subfolder_path,
-                frame_feature_extraction_stride=args.frame_feature_extraction_stride,
-                global_frame_index=global_frame_index,
-            )
-            results_list = frame_feature_extractor_pool.map(
-                lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(*current_input),
-                inputs,
-            )
-            del inputs
-            gc.collect()
-            torch.cuda.empty_cache()
-            cap.release()
+        inputs = FrameFeatureExtractor.get_inputs(
+            cap=cap,
+            batch_size=args.batch_size,
+            frame_feature_name=args.frame_feature_name,
+            output_subfolder_path=output_subfolder_path,
+            frame_feature_extraction_stride=args.frame_feature_extraction_stride,
+            global_frame_index=global_frame_index,
+        )
+        results_list = frame_feature_extractor_pool.map(
+            lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(*current_input),
+            inputs,
+        )
+        del inputs
+        gc.collect()
+        torch.cuda.empty_cache()
+        cap.release()
 
-            FrameFeatureExtractor.save_results(
-                input_video_file_path=input_video_file_path,
-                results_list=results_list,
-                output_folder_path=args.output_folder_path,
-                column_names=column_names,
-                output_file_name=output_file_name,
-            )
-        except Exception as e:
-            print(f"{datetime.now():%Y-%m-%d %H:%M:%S%z} | Error with file {clip_uid}.mp4: \n")
-            print(traceback.format_exc())
-            e = "-" * 100
-            print(e)
-            with open(os.path.join(args.error_folder_path, error_file_name), "a") as error_file_writer:
-                error_file_writer.write(f"{datetime.now():%Y-%m-%d %H:%M:%S%z} | Error with file {clip_uid}.mp4: \n")
-                error_file_writer.write(traceback.format_exc())
-                error_file_writer.write(e)
+        FrameFeatureExtractor.save_results(
+            input_video_file_path=input_video_file_path,
+            results_list=results_list,
+            output_folder_path=args.output_folder_path,
+            column_names=column_names,
+            output_file_name=output_file_name,
+        )
 
     ray.shutdown()
