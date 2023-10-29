@@ -407,14 +407,13 @@ mamba deactivate
 
 mamba activate mq_data
 
-RUNNING (CVL)
-sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "0" -c "0,1,2"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "0" -c "0,1"
 
-RUNNING (CVL)
-sbatch --time 720 --gres=gpu:3 --cpus-per-task 3 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "1" -c "0,1,2"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "1" -c "0,1"
 
-RUNNING (CVL)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "2" -c "0,1"
+
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "3" -c "0,1"
 
 RUNNING (AIT)
 ./01_extract_frame_features.sh -f "blip2_vqa" -q "3" -c "6,7"
