@@ -50,7 +50,7 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
     ):
         with torch.no_grad():
             all_results = []
-            for question_index, question in question_constant_mapping.items():
+            for question, question_index in question_constant_mapping.items():
                 if question == "asl":
                     continue
                 preprocessed_frames_batch_dict = self.processor(
