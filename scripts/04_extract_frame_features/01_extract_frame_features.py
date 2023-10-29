@@ -236,5 +236,7 @@ if __name__ == "__main__":
             column_names=column_names,
             output_file_name=output_file_name,
         )
+        del results_list
+        gc.collect()
 
     ray.shutdown()
