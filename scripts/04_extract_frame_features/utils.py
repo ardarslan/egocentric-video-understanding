@@ -28,7 +28,7 @@ def get_frame_feature_extractor(args):
     # if args.frame_feature_name == "blip2_captioning":
     #     remote_function = BLIP2CaptioningFrameFeatureExtractor.remote
     if args.frame_feature_name == "blip2_vqa":
-        remote_function = BLIP2VQAFrameFeatureExtractor  # CHANGEHERE
+        remote_function = BLIP2VQAFrameFeatureExtractor.remote()
     # elif args.frame_feature_name == "gsam":
     #     remote_function = GSAMFrameFeatureExtractor.remote
     # elif args.frame_feature_name == "ego_hos":
