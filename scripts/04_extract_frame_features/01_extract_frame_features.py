@@ -2,10 +2,8 @@ import os
 import gc
 import json
 import argparse
-import traceback
-from datetime import datetime
 
-# import ray # CHANGEHERE
+import ray
 import torch
 from tqdm import tqdm
 import cv2
@@ -179,10 +177,11 @@ if __name__ == "__main__":
 
     os.makedirs(args.error_folder_path, exist_ok=True)
 
-    # ray.init(num_gpus=args.num_devices, num_cpus=args.num_devices) # CHANGEHERE
+    ray.init(num_gpus=args.num_devices, num_cpus=args.num_devices)
 
-    # frame_feature_extractor_pool = ray.util.ActorPool([get_frame_feature_extractor(args=args) for _ in range(args.num_devices)]) # CHANGEHERE
-    frame_feature_extractor = get_frame_feature_extractor(args=args)  # CHANGEHERE
+    frame_feature_extractor_pool = ray.util.ActorPool(
+        [get_frame_feature_extractor(args=args) for _ in range(args.num_devices)]
+    )
     column_names = get_column_names(args=args)
     output_file_name = get_output_file_name(args=args)
     error_file_name = get_error_file_name(args=args)
@@ -203,7 +202,9 @@ if __name__ == "__main__":
         raise Exception(f"{args.quarter_index} is not a valid quarter index.")
 
     for clip_uid in tqdm(clip_uids):
-        if os.path.exists(os.path.join(args.output_folder_path, clip_uid, output_file_name)):
+        if os.path.exists(
+            os.path.join(args.output_folder_path, clip_uid, output_file_name)
+        ):
             continue
 
         input_video_file_path = os.path.join(args.input_folder_path, clip_uid + ".mp4")
@@ -221,11 +222,12 @@ if __name__ == "__main__":
             frame_feature_extraction_stride=args.frame_feature_extraction_stride,
             global_frame_index=global_frame_index,
         )
-        # results_list = frame_feature_extractor_pool.map(
-        #     lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(*current_input),
-        #     inputs,
-        # ) # CHANGEHERE
-        results_list = [[frame_feature_extractor.predictor_function(*current_input)] for current_input in inputs]  # CHANGEHERE
+        results_list = frame_feature_extractor_pool.map(
+            lambda frame_feature_extractor, current_input: frame_feature_extractor.predictor_function.remote(
+                *current_input
+            ),
+            inputs,
+        )
         del inputs
         gc.collect()
         torch.cuda.empty_cache()
@@ -241,4 +243,4 @@ if __name__ == "__main__":
         del results_list
         gc.collect()
 
-    # ray.shutdown() # CHANGEHERE
+    ray.shutdown()

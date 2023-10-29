@@ -1,243 +1,136 @@
 {
-    "\"clean_/_repair_small_equipment_(mower,_trimmer_etc.)\"": [
-        ["clean", "equipment", "NaN"],
-        ["clean", "mower", "NaN"],
-        ["clean", "trimmer", "NaN"],
-        ["clean", "small equipment", "NaN"],
-        ["clean", "item", "NaN"],
-        ["clean", "small item", "NaN"],
-
-        ["repair", "equipment", "NaN"],
-        ["repair", "mower", "NaN"],
-        ["repair", "trimmer", "NaN"],
-        ["repair", "small equipment", "NaN"],
-        ["repair", "item", "NaN"],
-        ["repair", "small item", "NaN"]
-    ],
-    "\"cut_/_chop_/_slice_a_vegetable,_fruit,_or_meat\"": [
-        ["cut", "vegetable", "NaN"],
-        ["cut", "fruit", "NaN"],
-        ["cut", "meat", "NaN"],
-
-        ["chop", "vegetable", "NaN"],
-        ["chop", "fruit", "NaN"],
-        ["chop", "meat", "NaN"],
-
-        ["slice", "vegetable", "NaN"],
-        ["slice", "fruit", "NaN"],
-        ["slice", "meat", "NaN"]
-    ],
+    "\"clean_/_repair_small_equipment_(mower,_trimmer_etc.)\"": ["clean small equipment", "clean mower", "clean trimmer", "repair small equipment", "repair mower", "repair trimmer"],
+    "\"cut_/_chop_/_slice_a_vegetable,_fruit,_or_meat\"": ["cut vegetable", "cut fruit", "cut meat", "chop vegetable", "chop fruit", "chop meat", "slice vegetable", "slice fruit", "slice meat"],
     "\"level_ground_/_soil_(eg._using_rake,_shovel,_etc)\"": [
-        ["rake", "ground", "NaN"],
-        ["shovel", "ground", "NaN"],
-
-        ["level", "ground", "rake"],
-        ["level", "ground", "shovel"],
-        ["level", "soil", "rake"],
-        ["level", "soil", "shovel"],
-
-        ["use", "shovel", "NaN"]
+        "rake ground", "shovel ground", "level ground using rake", "level ground using shovel",
+        "rake soil", "shovel soil", "level soil using rake", "level soil using shovel"
     ],
     "\"make_the_bed_/_arrange_pillows,_sheets_etc._on_bed\"": [
-        ["make", "bed", "NaN"],
-        ["arrange", "bed", "NaN"],
-        ["arrange", "pillow", "NaN"],
-        ["arrange", "sheet", "NaN"]
+        "make the bed",
+        "arrange pillows on bed",
+        "arrange sheets on bed",
     ],
     "\"put_on_safety_equipment_(e.g._gloves,_helmet,_safety_goggles)\"": [
-        ["wear", "safety equipment", "NaN"],
-        ["wear", "glove", "NaN"],
-        ["wear", "helmet", "NaN"],
-        ["wear", "goggles", "NaN"],
-        ["wear", "safety goggles", "NaN"],
-
-        ["put on", "safety equipment", "NaN"],
-        ["put on", "glove", "NaN"],
-        ["put on", "helmet", "NaN"],
-        ["put on", "goggles", "NaN"],
-        ["put on", "safety goggles", "NaN"],
-
-        ["try on", "safety equipment", "NaN"],
-        ["try on", "glove", "NaN"],
-        ["try on", "helmet", "NaN"],
-        ["try on", "goggles", "NaN"],
-        ["try on", "safety goggles", "NaN"],
-
-        ["try out", "safety equipment", "NaN"],
-        ["try out", "glove", "NaN"],
-        ["try out", "helmet", "NaN"],
-        ["try out", "goggles", "NaN"],
-        ["try out", "safety goggles", "NaN"]
+        "put on safety equipment",
+        "put on gloves",
+        "put on helmet",
+        "put on safety goggles"
     ],
     "\"try-out_/_wear_accessories_(e.g._tie,_belt,_scarf)\"": [
-        ["wear", "accessory", "NaN"],
-        ["wear", "tie", "NaN"],
-        ["wear", "scarf", "NaN"],
-        ["wear", "belt", "NaN"],
-
-        ["put on", "accessory", "NaN"],
-        ["put on", "tie", "NaN"],
-        ["put on", "scarf", "NaN"],
-        ["put on", "belt", "NaN"],
-
-        ["try on", "accessory", "NaN"],
-        ["try on", "tie", "NaN"],
-        ["try on", "scarf", "NaN"],
-        ["try on", "belt", "NaN"],
-
-        ["try out", "accessory", "NaN"],
-        ["try out", "tie", "NaN"],
-        ["try out", "scarf", "NaN"],
-        ["try out", "belt", "NaN"]
+        "try out accessories",
+        "try out tie",
+        "try out belt",
+        "try out scarf",
+        "wear accessories",
+        "wear tie",
+        "wear belt",
+        "wear scarf"
     ],
     "\"try-out_/_wear_clothing_items_(e.g._shirt,_jeans,_sweater)\"": [
-        ["wear", "cloth", "NaN"],
-        ["wear", "clothing item", "NaN"],
-        ["wear", "shirt", "NaN"],
-        ["wear", "jeans", "NaN"],
-        ["wear", "sweater", "NaN"],
-
-        ["put on", "cloth", "NaN"],
-        ["put on", "clothing item", "NaN"],
-        ["put on", "shirt", "NaN"],
-        ["put on", "jeans", "NaN"],
-        ["put on", "sweater", "NaN"],
-
-        ["try on", "cloth", "NaN"],
-        ["try on", "clothing item", "NaN"],
-        ["try on", "shirt", "NaN"],
-        ["try on", "jeans", "NaN"],
-        ["try on", "sweater", "NaN"],
-
-        ["try out", "cloth", "NaN"],
-        ["try out", "clothing item", "NaN"],
-        ["try out", "shirt", "NaN"],
-        ["try out", "jeans", "NaN"],
-        ["try out", "sweater", "NaN"]
+        "try out clothing items",
+        "try out shirt",
+        "try out jeans",
+        "try out sweater",
+        "wear clothing items",
+        "wear shirt",
+        "wear jeans",
+        "wear sweater"
     ],
     "arrange_/_organize_clothes_in_closet/dresser": [
-        ["arrange", "cloth", "NaN"],
-        ["arrange", "closet", "NaN"],
-        ["arrange", "dresser", "NaN"],
-
-        ["organize", "cloth", "NaN"],
-        ["organize", "closet", "NaN"],
-        ["organize", "dresser", "NaN"]
+        "arrange clothes in closet",
+        "arrange clothes in dresser",
+        "organize clothes in closet",
+        "organize clothes in dresser"
     ],
     "arrange_/_organize_items_in_fridge": [
-        ["arrange", "fridge", "NaN"],
-        ["arrange", "kitchen", "NaN"],
-
-        ["organize", "fridge", "NaN"],
-        ["organize", "kitchen", "NaN"]
+        "arrange items in fridge",
+        "organize items in fridge"
     ],
     "arrange_/_organize_other_items": [
-        ["arrange", "item", "NaN"],
-        ["organize", "item", "NaN"]
+        "arrange items which are not in fridge",
+        "organize items which are not in fridge"
     ],
     "arrange_pillows_on_couch_/_chair": [
-        ["arrange", "pillow", "NaN"],
-        ["arrange", "couch", "NaN"],
-        ["arrange", "chair", "NaN"],
-
-        ["organize", "pillow", "NaN"],
-        ["organize", "couch", "NaN"],
-        ["organize", "chair", "NaN"]
+        "arrange pillows on couch",
+        "arrange pillows on chair"
     ],
     "browse_through_accessories_on_rack_/_shelf": [
-        ["browse", "accessory", "NaN"],
-        ["look", "accessory", "NaN"]
+        "browse through accessories on rack",
+        "browse through accessories on shelf"
     ],
     "browse_through_clothing_items_on_rack_/_shelf_/_hanger": [
-        ["browse", "cloth", "NaN"],
-        ["browse", "clothing item", "NaN"]
+        "browse through clothing items on rack",
+        "browse through clothing items on shelf",
+        "browse through clothing items on hanger"
     ],
     "browse_through_groceries_or_food_items_on_rack_/_shelf": [
-        ["browse", "grocery", "NaN"],
-        ["browse", "food", "NaN"],
-        ["browse", "food item", "NaN"]
+        "browse through groceries or food items on rack",
+        "browse through groceries or food items on shelf"
     ],
-    "browse_through_other_items_on_rack_/_shelf": [["browse", "item", "NaN"]],
+    "browse_through_other_items_on_rack_/_shelf": ["browse through items other than groceries on rack", "browse through items other than groceries on shelf"],
     "chop_/_cut_wood_pieces_using_tool": [
-        ["chop", "wood", "tool"],
-        ["cut", "wood", "tool"]
+        "chop wood pieces using tool",
+        "cut wood pieces using tool"
     ],
     "clean_/_sweep_floor_with_broom": [
-        ["clean", "floor", "broom"],
-        ["sweep", "floor", "broom"]
+        "clean floor with broom",
+        "sweep floor with broom"
     ],
     "clean_/_wipe_/_oil_metallic_item": [
-        ["clean", "metal", "NaN"],
-        ["clean", "metallic item", "NaN"],
-        ["wipe", "metal", "NaN"],
-        ["wipe", "metallic item", "NaN"],
-        ["oil", "metal", "NaN"],
-        ["oil", "metallic item", "NaN"]
+        "clean metallic item",
+        "wipe metallic item",
+        "oil metallic item"
     ],
     "clean_/_wipe_a_table_or_kitchen_counter": [
-        ["clean", "table", "NaN"],
-        ["clean", "kitchen counter", "NaN"],
-        ["clean", "counter", "NaN"],
-        ["wipe", "table", "NaN"],
-        ["wipe", "counter", "NaN"],
-        ["wipe", "kitchen counter", "NaN"]
+        "clean a table",
+        "clean a kitchen counter",
+        "wipe a table",
+        "wipe a kitchen counter"
     ],
     "clean_/_wipe_kitchen_appliance": [
-        ["clean", "kitchen appliance", "NaN"],
-        ["wipe", "kitchen appliance", "NaN"]
+        "clean kitchen appliance",
+        "wipe kitchen appliance"
     ],
     "clean_/_wipe_other_surface_or_object": [
-        ["clean", "surface", "NaN"],
-        ["wipe", "surface", "NaN"],
-        ["clean", "object", "NaN"],
-        ["wipe", "object", "NaN"]
+        "clean a surface other than a kitchen appliance, table or a kitchen counter",
+        "clean an object other than a kitchen appliance, table or a kitchen counter",
+        "wipe a surface other than a kitchen appliance, table or a kitchen counter",
+        "wipe an object other than a kitchen appliance, table or a kitchen counter"
     ],
     "climb_up_/_down_a_ladder": [
-        ["climb up", "ladder", "NaN"],
-        ["climb down", "ladder", "NaN"],
-        ["climb", "ladder", "NaN"]
+        "climb up a ladder",
+        "climb down a ladder"
     ],
     "collect_/_rake_dry_leaves_on_ground": [
-        ["collect", "leave", "NaN"],
-        ["rake", "leave", "NaN"]
+        "collect dry leaves on ground",
+        "rake dry leaves on ground"
     ],
     "compare_two_clothing_items": [
-        ["compare", "cloth", "NaN"],
-        ["compare", "clothing item", "NaN"]
+        "compare two clothing items",
     ],
     "converse_/_interact_with_someone": [
-        ["converse", "someone", "NaN"],
-        ["interact", "someone", "NaN"],
-        ["speak", "someone", "NaN"],
-        ["talk", "someone", "NaN"]
+        "converse with someone",
+        "interact with someone"
     ],
-    "count_money_before_paying": [["count", "money", "NaN"]],
+    "count_money_before_paying": ["count money before paying"],
     "cut_/_trim_grass_with_a_lawnmower": [
-        ["cut", "grass", "lawnmower"],
-        ["trim", "grass", "lawnmower"]
+        "cut grass with a lawnmower",
+        "trim grass with a lawnmower"
     ],
     "cut_/_trim_grass_with_other_tools": [
-        ["cut", "grass", "tool"],
-        ["trim", "grass", "tool"]
+        "cut grass with a tool other than lawnmower",
+        "trim grass with a tool other than lawnmower"
     ],
-    "cut_dough": [["cut", "dough", "NaN"]],
+    "cut_dough": ["cut dough"],
     "cut_open_a_package_(e.g._with_scissors)": [
-        ["cut", "package", "scissors"],
-        ["open", "package", "scissors"]
+        "cut a package",
+        "open a package"
     ],
-    "cut_other_item_using_tool": [["cut", "item", "tool"]],
+    "cut_other_item_using_tool": ["cut an item which is not a package using a tool"],
     "cut_thread_/_paper_/_cardboard_using_scissors_/_knife_/_cutter": [
-        ["cut", "thread", "scissors"],
-        ["cut", "thread", "knife"],
-        ["cut", "thread", "cutter"],
-        ["cut", "paper", "scissors"],
-        ["cut", "paper", "knife"],
-        ["cut", "paper", "cutter"],
-        ["cut", "cardboard", "scissors"],
-        ["cut", "cardboard", "knife"],
-        ["cut", "cardboard", "cutter"],
-        ["use", "cutter", "NaN"],
-        ["use", "knife", "NaN"]
+        "cut thread using ",
+        "cut paper",
+        "cut cardboard"
     ],
     "cut_tree_branch": [
         ["cut", "tree", "NaN"],
