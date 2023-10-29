@@ -5,7 +5,7 @@ helpFunction()
    echo ""
    echo "Usage: $0 -f FRAME_FEATURE_NAME -q QUARTER_INDEX -c CUDA_VISIBLE_DEVICES "
    echo -e "\t-f One of unidet, ofa, visor_hos, ego_hos, blip_vqa, blip_captioning or gsam."
-   echo -e "\t-q One of 0, 1, 2, 3, 4, 5, 6, 7"
+   echo -e "\t-q One of 0, 1, 2, 3"
    echo -e "\t-c e.g. 0,1,2,3"
    exit 1 # Exit script after printing help
 }

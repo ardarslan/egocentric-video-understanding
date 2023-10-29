@@ -27,9 +27,7 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.processor = Blip2Processor.from_pretrained(
-            os.path.join(os.environ["SCRATCH"], "mq_libs/blip2")
-        )
+        self.processor = Blip2Processor.from_pretrained(os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"))
         self.model = Blip2ForConditionalGeneration.from_pretrained(
             os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
             torch_dtype=torch.float16,
@@ -45,18 +43,14 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
             "blip2_intermediate_layer_embedding",
         ]
 
-    def predictor_function(
-        self, frame_indices_batch: List[int], frames_batch: List[np.array]
-    ):
+    def predictor_function(self, frame_indices_batch: List[int], frames_batch: List[np.array]):
         with torch.no_grad():
             all_results = []
             for question, question_index in question_constant_mapping.items():
                 if question == "asl":
                     continue
                 preprocessed_frames_batch_dict = self.processor(
-                    images=[
-                        Image.fromarray(frame[:, :, ::-1]) for frame in frames_batch
-                    ],
+                    images=[Image.fromarray(frame[:, :, ::-1]) for frame in frames_batch],
                     text=["Question: " + question + " Answer:"] * len(frames_batch),
                     return_tensors="pt",
                 ).to(self.args.device, torch.float16)
@@ -64,9 +58,7 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
                     blip2_intermediate_layer_embeddings,
                     generated_ids,
                 ) = self.model.generate(**preprocessed_frames_batch_dict)
-                blip2_answers = self.processor.batch_decode(
-                    generated_ids, skip_special_tokens=True
-                )
+                blip2_answers = self.processor.batch_decode(generated_ids, skip_special_tokens=True)
                 blip2_answers = [blip2_answer.strip() for blip2_answer in blip2_answers]
                 all_results.extend(
                     [
