@@ -5,6 +5,9 @@ import argparse
 from tqdm import tqdm
 from typing import Dict, List, Tuple
 
+import sys
+
+sys.path.append("../../04_extract_frame_features/")
 import constants
 
 

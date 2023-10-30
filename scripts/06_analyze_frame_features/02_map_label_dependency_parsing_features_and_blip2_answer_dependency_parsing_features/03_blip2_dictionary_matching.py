@@ -5,6 +5,9 @@ import pickle
 import argparse
 from tqdm import tqdm
 
+import sys
+
+sys.path.append("../../04_extract_frame_features/")
 import constants
 
 from typing import Dict, List, Tuple

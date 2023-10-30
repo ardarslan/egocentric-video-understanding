@@ -278,10 +278,6 @@ rm -rf ~/.cache
 
 ```
 
-Modify last line of Modify /data/aarslan/mambaforge/envs/mq_data/lib/python3.9/site-packages/transformers/models/blip_2/modeling_blip2.py
-
-from "return outputs" to "return inputs_embeds.detach().cpu().tolist(), outputs".
-
 # 01_04 - Install MQ model packages
 
 rm -rf ~/.cache
@@ -415,9 +411,6 @@ sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_f
 
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "3" -c "0,1"
 
-RUNNING (AIT)
-./01_extract_frame_features.sh -f "blip2_vqa" -q "3" -c "6,7"
-
 ```
 
 AIT:
@@ -493,13 +486,13 @@ python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe -
 
 mamba activate mq_analysis
 
-cd $CODE/scripts/06_analyze_frame_features/02_extract_blip2_answer_dependency_parsing_features
+cd $CODE/scripts/06_analyze_frame_features/01_extract_blip2_answer_dependency_parsing_features
 
 chmod +x 01_extract_blip2_answer_dependency_parsing_features.sh
 
 sbatch --time 720 --cpus-per-task=24 --mem 40G 01_extract_blip2_answer_dependency_parsing_features.sh
 
-cd $CODE/scripts/06_analyze_frame_features/03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
+cd $CODE/scripts/06_analyze_frame_features/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
 
 sbatch --time 720 --cpus-per-task=24 --mem 200G 01_process_ground_truth_labels.sh
 
@@ -507,11 +500,13 @@ sbatch --time 720 --cpus-per-task=8 --mem 200G 02_process_asl_predictions.sh
 
 sbatch --time 720 --cpus-per-task=8 --mem 40G nodelist=biwirender08 03_blip2_dictionary_matching.sh
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G 04_max_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
+sbatch --time 720 --cpus-per-task=8 --mem 40G nodelist=biwirender08 03_blip2_sbert_matching.sh --backbone
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G ./04_max_per_question_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
 
 sbatch --time 720 --cpus-per-task=24 --mem 200G 04_max_per_label_postprocessing.sh -p blip2_sbert_matching_predictions
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G 05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions
+sbatch --time 720 --cpus-per-task=8 --mem 200G ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2
 
 sbatch --time 720 --cpus-per-task=8 --mem 200G 05_evaluate_predictions.sh -p blip2_sbert_matching_max_per_label_predictions
 
@@ -521,7 +516,7 @@ screen
 
 mamba activate mq_analysis
 
-cd $CODE/scripts/06_analyze_frame_features/03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
+cd $CODE/scripts/06_analyze_frame_features/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
 
 ./03_blip2_sbert_matching.sh -q 0 -c 4 -b sentence-transformers/paraphrase-MiniLM-L6-v2
 

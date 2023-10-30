@@ -10,7 +10,7 @@ from pqdm.processes import pqdm
 from nltk.parse.corenlp import CoreNLPServer, CoreNLPDependencyParser
 import sys
 
-sys.path.append("../03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features")
+sys.path.append("../../04_extract_frame_features/")
 import constants
 
 try:
@@ -38,7 +38,9 @@ dependency_parser = CoreNLPDependencyParser(url="http://localhost:5960")
 
 
 def get_clip_info(clip_id: str):
-    cap = cv2.VideoCapture(os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips", clip_id + ".mp4"))
+    cap = cv2.VideoCapture(
+        os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips", clip_id + ".mp4")
+    )
     num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     cap.release()
@@ -88,7 +90,9 @@ def get_verb_noun_tool_pairs_given_a_blip2_answer(
                 # If current word is "using" and the word before the current word is not "is", then continue.
                 if current_word_address > 0 and verb_word == "using":
                     previous_word_address = current_word_address - 1
-                    previous_word_node = dependency_parser_result.nodes[previous_word_address]
+                    previous_word_node = dependency_parser_result.nodes[
+                        previous_word_address
+                    ]
                     verb_previous_word = previous_word_node["word"]
                     if verb_previous_word != "is":
                         continue
@@ -100,8 +104,12 @@ def get_verb_noun_tool_pairs_given_a_blip2_answer(
                     continue
 
                 if "compound:prt" in current_word_node["deps"].keys():
-                    verb_compound_prt_address = current_word_node["deps"]["compound:prt"][0]
-                    verb_compound_prt_node = dependency_parser_result.nodes[verb_compound_prt_address]
+                    verb_compound_prt_address = current_word_node["deps"][
+                        "compound:prt"
+                    ][0]
+                    verb_compound_prt_node = dependency_parser_result.nodes[
+                        verb_compound_prt_address
+                    ]
                     verb_compound_prt_lemma = verb_compound_prt_node["lemma"]
                     verb_lemma = verb_lemma + " " + verb_compound_prt_lemma
                 verb_lemma = verb_lemma.replace("-", " ")
@@ -113,7 +121,9 @@ def get_verb_noun_tool_pairs_given_a_blip2_answer(
                     tool_node = dependency_parser_result.nodes[tool_address]
                     tool_case_addresses = tool_node["deps"].get("case", [])
                     for tool_case_address in tool_case_addresses:
-                        tool_case_node = dependency_parser_result.nodes[tool_case_address]
+                        tool_case_node = dependency_parser_result.nodes[
+                            tool_case_address
+                        ]
                         if tool_case_node["lemma"] == "with":
                             filtered_tool_addresses.add(tool_address)
 
@@ -126,11 +136,15 @@ def get_verb_noun_tool_pairs_given_a_blip2_answer(
 
                         for using_acl_address in using_node["deps"].get("acl", []):
                             using_acl_node = dependency_parser_result[using_acl_address]
-                            for using_acl_obj_address in using_acl_node["deps"].get("obj", []):
+                            for using_acl_obj_address in using_acl_node["deps"].get(
+                                "obj", []
+                            ):
                                 filtered_tool_addresses.add(using_acl_obj_address)
 
                 # Extract noun addresses.
-                noun_addresses = current_word_node["deps"].get("obj", []) + current_word_node["deps"].get("nsubj:pass", [])
+                noun_addresses = current_word_node["deps"].get(
+                    "obj", []
+                ) + current_word_node["deps"].get("nsubj:pass", [])
 
                 # Extract noun lemmas.
                 noun_lemmas = []
@@ -139,7 +153,9 @@ def get_verb_noun_tool_pairs_given_a_blip2_answer(
                     noun_lemma = noun_node["lemma"]
                     if "compound" in noun_node["deps"]:
                         noun_compound_address = noun_node["deps"]["compound"][0]
-                        noun_compound_node = dependency_parser_result.nodes[noun_compound_address]
+                        noun_compound_node = dependency_parser_result.nodes[
+                            noun_compound_address
+                        ]
                         noun_compound_lemma = noun_compound_node["lemma"]
                         noun_lemma = noun_compound_lemma + " " + noun_lemma
                     noun_lemma = noun_lemma.replace("-", " ")
@@ -153,7 +169,9 @@ def get_verb_noun_tool_pairs_given_a_blip2_answer(
                     tool_lemma = tool_node["lemma"]
                     if "compound" in tool_node["deps"]:
                         tool_compound_address = tool_node["deps"]["compound"][0]
-                        tool_compound_node = dependency_parser_result.nodes[tool_compound_address]
+                        tool_compound_node = dependency_parser_result.nodes[
+                            tool_compound_address
+                        ]
                         tool_compound_lemma = tool_compound_node["lemma"]
                         tool_lemma = tool_compound_lemma + " " + tool_lemma
                     tool_lemma = tool_lemma.replace("-", " ")
@@ -165,14 +183,18 @@ def get_verb_noun_tool_pairs_given_a_blip2_answer(
                     tool_lemmas = ["NaN"]
 
                 # For the current verb, and for each associated noun lemma and tool lemma combination, add them to verb_noun_tool_pairs.
-                for noun_lemma, tool_lemma in itertools.product(noun_lemmas, tool_lemmas):
+                for noun_lemma, tool_lemma in itertools.product(
+                    noun_lemmas, tool_lemmas
+                ):
                     verb_noun_tool_pairs.append((verb_lemma, noun_lemma, tool_lemma))
 
             elif current_word_pos_tag.startswith("NN"):
                 noun_lemma = current_word_node["lemma"]
                 if "compound" in current_word_node["deps"]:
                     noun_compound_address = current_word_node["deps"]["compound"][0]
-                    noun_compound_node = dependency_parser_result.nodes[noun_compound_address]
+                    noun_compound_node = dependency_parser_result.nodes[
+                        noun_compound_address
+                    ]
                     noun_compound_lemma = noun_compound_node["lemma"]
                     noun_lemma = noun_compound_lemma + " " + noun_lemma
 
@@ -199,21 +221,38 @@ def get_verb_noun_tool_pairs_per_clip(
     frame_id_verb_noun_tool_pairs_mapping = dict()
     for frame_id in range(0, num_frames, 6):
         frame_id_verb_noun_tool_pairs_mapping[frame_id] = dict()
-        current_blip2_answers = blip2_vqa_answers_df[blip2_vqa_answers_df["frame_index"] == frame_id]
-        for blip2_question, blip2_constant in constants.blip2_question_constant_mapping.items():
-            blip2_question_index = constants.blip2_question_constant_mapping[blip2_question]
-            blip2_answer = current_blip2_answers[current_blip2_answers["question"] == blip2_question]["answer"].values[0]
+        current_blip2_answers = blip2_vqa_answers_df[
+            blip2_vqa_answers_df["frame_index"] == frame_id
+        ]
+        for blip2_question in constants.question_constant_mapping.keys():
+            blip2_question_index = constants.question_constant_mapping[blip2_question]
+            blip2_answer = current_blip2_answers[
+                current_blip2_answers["question"] == blip2_question
+            ]["answer"].values[0]
             frame_id_verb_noun_tool_pairs_mapping[frame_id][blip2_question_index] = (
                 blip2_answer,
-                get_verb_noun_tool_pairs_given_a_blip2_answer(blip2_answer, dependency_parser),
+                get_verb_noun_tool_pairs_given_a_blip2_answer(
+                    blip2_answer, dependency_parser
+                ),
             )
     return clip_id, frame_id_verb_noun_tool_pairs_mapping
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_folder_path", type=str, default=os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/frame_features"))
-    parser.add_argument("--output_folder_path", type=str, default=os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/analysis_data/dependency_parsing_results"))
+    parser.add_argument(
+        "--input_folder_path",
+        type=str,
+        default=os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/frame_features"),
+    )
+    parser.add_argument(
+        "--output_folder_path",
+        type=str,
+        default=os.path.join(
+            os.environ["SCRATCH"],
+            "ego4d_data/v2/analysis_data/dependency_parsing_results",
+        ),
+    )
     args = parser.parse_args()
 
     clip_ids = os.listdir(args.input_folder_path)
