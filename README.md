@@ -55,6 +55,10 @@ CVL
 ```
 cd $CODE
 
+srun --time 720 --cpus-per-task=2 --gres=gpu:1 --mem=50G --pty bash -i
+
+mamba activate mq_analysis
+
 jupyter notebook --no-browser --port 5998 --ip $(hostname -f)
 ```
 
