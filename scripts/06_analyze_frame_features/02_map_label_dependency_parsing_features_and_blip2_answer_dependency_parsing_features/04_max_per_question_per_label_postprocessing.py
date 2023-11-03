@@ -8,15 +8,13 @@ from typing import Dict, List, Tuple
 import sys
 
 sys.path.append("../../04_extract_frame_features/")
-import constants
 
 
 def max_per_question_per_label_postprocessing_per_clip(
     clip_id: str,
     frame_id_blip2_question_index_label_index_scores_mapping: Dict[
-        int, Dict[int, List[Tuple[int, float]]]
+        int, Dict[int, List[float]]
     ],
-    query_score_type: int,
 ):
     frame_id_blip2_question_index_label_index_max_score_mapping = dict()
     for (
@@ -32,26 +30,14 @@ def max_per_question_per_label_postprocessing_per_clip(
                 blip2_question_index
             ] = dict()
             sum_max_scores = 0.0
-            for label_index, score_tuples in label_index_scores_mapping.items():
-                constant_with_maximum_score = (
-                    constants.query_score_type_constant_mapping[query_score_type]
-                )
-
+            for label_index, scores in label_index_scores_mapping.items():
                 max_score = 0.0
-                for score_tuple in score_tuples:
-                    current_constant = score_tuple[0]
-                    if (
-                        query_score_type == "max_of_all"
-                        or constants.query_score_type_constant_mapping[query_score_type]
-                        == current_constant
-                    ):
-                        current_score = score_tuple[1]
-                        if current_score > max_score:
-                            max_score = current_score
-                            constant_with_maximum_score = current_constant
+                for current_score in scores:
+                    if current_score > max_score:
+                        max_score = current_score
                 frame_id_blip2_question_index_label_index_max_score_mapping[frame_id][
                     blip2_question_index
-                ][label_index] = (constant_with_maximum_score, max_score)
+                ][label_index] = max_score
                 sum_max_scores += max_score
 
             for (
@@ -61,14 +47,16 @@ def max_per_question_per_label_postprocessing_per_clip(
             ].keys():
                 frame_id_blip2_question_index_label_index_max_score_mapping[frame_id][
                     blip2_question_index
-                ][label_index] = (
-                    frame_id_blip2_question_index_label_index_max_score_mapping[
-                        frame_id
-                    ][blip2_question_index][label_index][0],
-                    frame_id_blip2_question_index_label_index_max_score_mapping[
-                        frame_id
-                    ][blip2_question_index][label_index][1]
-                    / sum_max_scores,
+                ][
+                    label_index
+                ] = frame_id_blip2_question_index_label_index_max_score_mapping[
+                    frame_id
+                ][
+                    blip2_question_index
+                ][
+                    label_index
+                ] / float(
+                    sum_max_scores
                 )
 
     return clip_id, frame_id_blip2_question_index_label_index_max_score_mapping
@@ -86,23 +74,6 @@ if __name__ == "__main__":
             "blip2_sbert_matching_paraphrase-MiniLM-L6-v2_predictions",
         ],
         required=True,
-    )
-    parser.add_argument(
-        "--query_score_type",
-        type=str,
-        choices=[
-            "max_of_all",
-            "max_of_blip2_answer_label_verb_noun_tool",
-            "max_of_blip2_answer_label_verb_noun",
-            "max_of_blip2_answer_label_verb",
-            "max_of_blip2_answer_label_noun",
-            "max_of_blip2_verb_noun_tool_label_verb_noun_tool",
-            "max_of_blip2_verb_noun_label_verb_noun",
-            "max_of_blip2_verb_tool_label_verb_tool",
-            "max_of_blip2_verb_label_verb",
-            "max_of_blip2_noun_label_noun",
-        ],
-        default="max_of_all",
     )
     args = parser.parse_args()
 
@@ -150,7 +121,6 @@ if __name__ == "__main__":
             ] = max_per_question_per_label_postprocessing_per_clip(
                 clip_id=clip_id,
                 frame_id_blip2_question_index_label_index_scores_mapping=frame_id_blip2_question_index_label_index_scores_mapping,
-                query_score_type=args.query_score_type,
             )[
                 1
             ]

@@ -8,7 +8,6 @@ from tqdm import tqdm
 import sys
 
 sys.path.append("../../04_extract_frame_features/")
-import constants
 
 from typing import Dict, List, Tuple
 
@@ -42,7 +41,6 @@ def blip2_dictionary_matching_for_given_clip(
                 if label_index == len(distinct_ground_truth_labels):
                     blip2_verb_noun_tool_pairs = blip2_answer_verb_noun_tool_pairs[1]
                     if len(blip2_verb_noun_tool_pairs) == 0:
-                        match_type = constants.BACKGROUND_MATCH
                         if (
                             label_index
                             not in frame_id_predicted_label_indices_and_scores_dictionary_matching[
@@ -60,7 +58,7 @@ def blip2_dictionary_matching_for_given_clip(
                             ] = []
                         frame_id_predicted_label_indices_and_scores_dictionary_matching[
                             frame_id
-                        ][blip2_question_index][label_index].append((match_type, 1.00))
+                        ][blip2_question_index][label_index].append(1.00)
                 else:
                     label = distinct_ground_truth_labels[label_index]
                     label_verb_noun_tools = label_verb_noun_tool_mapping[label]
@@ -82,9 +80,6 @@ def blip2_dictionary_matching_for_given_clip(
                                 and label_noun == blip2_noun
                                 and label_tool == blip2_tool
                             ):
-                                match_type = (
-                                    constants.BLIP2_VERB_NOUN_TOOL_LABEL_VERB_NOUN_TOOL
-                                )
                                 if (
                                     label_index
                                     not in frame_id_predicted_label_indices_and_scores_dictionary_matching[
@@ -107,10 +102,9 @@ def blip2_dictionary_matching_for_given_clip(
                                 ][
                                     label_index
                                 ].append(
-                                    (match_type, 1.00)
+                                    1.00
                                 )
                             elif label_verb == blip2_verb and label_noun == blip2_noun:
-                                match_type = constants.BLIP2_VERB_NOUN_LABEL_VERB_NOUN
                                 if (
                                     label_index
                                     not in frame_id_predicted_label_indices_and_scores_dictionary_matching[
@@ -133,10 +127,9 @@ def blip2_dictionary_matching_for_given_clip(
                                 ][
                                     label_index
                                 ].append(
-                                    (match_type, 0.80)
+                                    0.80
                                 )
                             elif label_verb == blip2_verb and label_tool == blip2_tool:
-                                match_type = constants.BLIP2_VERB_TOOL_LABEL_VERB_TOOL
                                 if (
                                     label_index
                                     not in frame_id_predicted_label_indices_and_scores_dictionary_matching[
@@ -159,10 +152,9 @@ def blip2_dictionary_matching_for_given_clip(
                                 ][
                                     label_index
                                 ].append(
-                                    (match_type, 0.60)
+                                    0.60
                                 )
                             elif label_noun == blip2_noun:
-                                match_type = constants.BLIP2_NOUN_LABEL_NOUN
                                 if (
                                     label_index
                                     not in frame_id_predicted_label_indices_and_scores_dictionary_matching[
@@ -186,10 +178,9 @@ def blip2_dictionary_matching_for_given_clip(
                                 ][
                                     label_index
                                 ].append(
-                                    (match_type, 0.40)
+                                    0.40
                                 )
                             elif label_verb == blip2_verb:
-                                match_type = constants.BLIP2_VERB_LABEL_VERB
                                 if (
                                     label_index
                                     not in frame_id_predicted_label_indices_and_scores_dictionary_matching[
@@ -212,7 +203,7 @@ def blip2_dictionary_matching_for_given_clip(
                                 ][
                                     label_index
                                 ].append(
-                                    (match_type, 0.20)
+                                    0.20
                                 )
     return (
         clip_id,
@@ -227,7 +218,7 @@ if __name__ == "__main__":
         type=str,
         default=os.path.join(
             os.environ["CODE"],
-            "scripts/06_analyze_frame_features/03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features",
+            "scripts/06_analyze_frame_features/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features",
             "label_verb_noun_tool_mapping.json",
         ),
     )

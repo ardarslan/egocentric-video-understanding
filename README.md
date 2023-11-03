@@ -502,17 +502,25 @@ sbatch --time 720 --cpus-per-task=24 --mem 200G 01_process_ground_truth_labels.s
 
 sbatch --time 720 --cpus-per-task=8 --mem 200G 02_process_asl_predictions.sh
 
-sbatch --time 720 --cpus-per-task=8 --mem 40G nodelist=biwirender08 03_blip2_dictionary_matching.sh
+sbatch --time 720 --cpus-per-task=8 --mem 40G nodelist=biwirender08 ./03_blip2_dictionary_matching.sh
 
 sbatch --time 720 --cpus-per-task=8 --mem 40G nodelist=biwirender08 03_blip2_sbert_matching.sh --backbone
 
 sbatch --time 720 --cpus-per-task=8 --mem 200G ./04_max_per_question_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 04_max_per_label_postprocessing.sh -p blip2_sbert_matching_predictions
+sbatch --time 720 --cpus-per-task=24 --mem 200G ./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
 
 sbatch --time 720 --cpus-per-task=8 --mem 200G ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G 05_evaluate_predictions.sh -p blip2_sbert_matching_max_per_label_predictions
+sbatch --time 720 --cpus-per-task=8 --mem 200G ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.4
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.6
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.8
+
+sbatch --time 720 --cpus-per-task=8 --mem 200G ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 1.0
+
+# sbatch --time 720 --cpus-per-task=8 --mem 200G 05_evaluate_predictions.sh -p blip2_sbert_matching_max_per_label_predictions
 
 # 06 - Analyze frame features (AIT)
 

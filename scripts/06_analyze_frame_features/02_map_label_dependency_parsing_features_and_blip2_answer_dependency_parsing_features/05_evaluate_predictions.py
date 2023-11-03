@@ -31,52 +31,43 @@ def median_temporal_aggregation_select_labels(
             updated_frame_id_blip2_question_index_label_index_max_score_mapping[
                 frame_id
             ][blip2_question_index] = dict()
-            for label_index, score_tuple in label_index_scores_mapping.items():
-                current_score = score_tuple[1]
+            for label_index, current_score in label_index_scores_mapping.items():
                 if frame_id == 0:
                     next_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id + 6
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     next_next_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id + 12
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     updated_frame_id_blip2_question_index_label_index_max_score_mapping[
                         frame_id
-                    ][blip2_question_index][label_index] = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id
-                        ][blip2_question_index][label_index][0],
-                        np.median([current_score, next_score, next_next_score]),
+                    ][blip2_question_index][label_index] = np.median(
+                        [current_score, next_score, next_next_score]
                     )
                 elif frame_id == 6:
                     previous_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id - 6
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     next_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id + 6
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     next_next_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id + 12
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     updated_frame_id_blip2_question_index_label_index_max_score_mapping[
                         frame_id
-                    ][blip2_question_index].get(label_index, [0, 0])[1] = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id
-                        ][blip2_question_index][label_index][0],
-                        np.median(
-                            [previous_score, current_score, next_score, next_next_score]
-                        ),
+                    ][blip2_question_index][label_index] = np.median(
+                        [previous_score, current_score, next_score, next_next_score]
                     )
                 elif frame_id == max(
                     list(
@@ -86,22 +77,17 @@ def median_temporal_aggregation_select_labels(
                     previous_previous_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id - 12
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     previous_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id - 6
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     updated_frame_id_blip2_question_index_label_index_max_score_mapping[
                         frame_id
-                    ][blip2_question_index][label_index] = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id
-                        ][blip2_question_index][label_index][0],
-                        np.median(
-                            [previous_previous_score, previous_score, current_score]
-                        ),
+                    ][blip2_question_index][label_index] = np.median(
+                        [previous_previous_score, previous_score, current_score]
                     )
                 elif (
                     frame_id
@@ -115,24 +101,21 @@ def median_temporal_aggregation_select_labels(
                     previous_previous_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id - 12
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     previous_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id - 6
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     next_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id + 6
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     updated_frame_id_blip2_question_index_label_index_max_score_mapping[
                         frame_id
                     ][blip2_question_index][label_index] = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id
-                        ][blip2_question_index][label_index][0],
                         np.median(
                             [
                                 previous_previous_score,
@@ -146,29 +129,26 @@ def median_temporal_aggregation_select_labels(
                     previous_previous_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id - 12
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     previous_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id - 6
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     next_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id + 6
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     next_next_score = (
                         frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id + 12
-                        ][blip2_question_index].get(label_index, [0, 0])[1]
+                        ][blip2_question_index].get(label_index, 0)
                     )
                     updated_frame_id_blip2_question_index_label_index_max_score_mapping[
                         frame_id
                     ][blip2_question_index][label_index] = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id
-                        ][blip2_question_index][label_index][0],
                         np.median(
                             [
                                 previous_previous_score,
@@ -194,8 +174,8 @@ def median_temporal_aggregation_select_labels(
             frame_id_blip2_question_index_selected_label_indices_mapping[frame_id][
                 blip2_question_index
             ] = set()
-            for label_index, score_tuple in label_index_max_score_mapping.items():
-                if score_tuple[1] >= threshold:
+            for label_index, current_score in label_index_max_score_mapping.items():
+                if current_score >= threshold:
                     frame_id_blip2_question_index_selected_label_indices_mapping[
                         frame_id
                     ][blip2_question_index].add(label_index)
@@ -223,8 +203,8 @@ def no_temporal_aggregation_select_labels(
             frame_id_blip2_question_index_selected_label_indices_mapping[frame_id][
                 blip2_question_index
             ] = set()
-            for label_index, score_tuple in label_index_max_score_mapping.items():
-                if score_tuple[1] >= threshold:
+            for label_index, current_score in label_index_max_score_mapping.items():
+                if current_score >= threshold:
                     frame_id_blip2_question_index_selected_label_indices_mapping[
                         frame_id
                     ][blip2_question_index].add(label_index)
@@ -251,8 +231,8 @@ def transfusion_temporal_aggregation_select_labels(
             frame_id_blip2_question_index_selected_label_indices_mapping[frame_id][
                 blip2_question_index
             ] = set()
-            for label_index, score_tuple in label_index_max_score_mapping.items():
-                if score_tuple[1] >= threshold:
+            for label_index, score in label_index_max_score_mapping.items():
+                if score >= threshold:
                     frame_id_blip2_question_index_selected_label_indices_mapping[
                         frame_id
                     ][blip2_question_index].add(label_index)
@@ -314,8 +294,6 @@ if __name__ == "__main__":
         "--temporal_aggregation",
         type=str,
         choices=[
-            # "median_temporal_aggregation",
-            # "transfusion_temporal_aggregation",
             "no_temporal_aggregation",
         ],
         required=True,
