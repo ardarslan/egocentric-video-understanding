@@ -436,7 +436,7 @@ module load cuda/11.3
 
 mamba activate mq_data
 
-chmod +x main.sh
+chmod +x 01_extract_frame_features.sh
 
 DONE
 ./01_extract_frame_features.sh -f "blip2_vqa" -q "0" -c "4"
@@ -504,21 +504,40 @@ sbatch --time 720 --cpus-per-task=8 --mem 200G 02_process_asl_predictions.sh
 
 sbatch --time 720 --cpus-per-task=8 --mem 40G nodelist=biwirender08 ./03_blip2_dictionary_matching.sh
 
-sbatch --time 720 --cpus-per-task=8 --mem 40G nodelist=biwirender08 03_blip2_sbert_matching.sh --backbone
+./03_blip2_sbert_matching.sh -q 0 -c 4 -b sentence-transformers/all-distilroberta-v1
+
+./03_blip2_sbert_matching.sh -q 1 -c 5 -b sentence-transformers/all-distilroberta-v1
+
+./03_blip2_sbert_matching.sh -q 2 -c 6 -b sentence-transformers/all-distilroberta-v1
+
+./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
 
 sbatch --time 720 --cpus-per-task=8 --mem 200G ./04_max_per_question_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
 
 sbatch --time 720 --cpus-per-task=24 --mem 200G ./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2 --current_split val
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.4
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.4 --current_split val
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.6
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.6 --current_split val
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.8
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.8 --current_split val
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 1.0
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 1.0 --current_split val
+
+
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2 --current_split test
+
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.4 --current_split test
+
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.6 --current_split test
+
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.8 --current_split test
+
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 1.0 --current_split test
+
+
 
 # sbatch --time 720 --cpus-per-task=8 --mem 200G 05_evaluate_predictions.sh -p blip2_sbert_matching_max_per_label_predictions
 
@@ -530,15 +549,15 @@ mamba activate mq_analysis
 
 cd $CODE/scripts/06_analyze_frame_features/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
 
-./03_blip2_sbert_matching.sh -q 0 -c 4 -b sentence-transformers/paraphrase-MiniLM-L6-v2
+./03_blip2_sbert_matching.sh -q 0 -c 4 -b sentence-transformers/all-distilroberta-v1
 
-./03_blip2_sbert_matching.sh -q 1 -c 5 -b sentence-transformers/paraphrase-MiniLM-L6-v2
+./03_blip2_sbert_matching.sh -q 1 -c 5 -b sentence-transformers/all-distilroberta-v1
 
-./03_blip2_sbert_matching.sh -q 2 -c 6 -b sentence-transformers/paraphrase-MiniLM-L6-v2
+./03_blip2_sbert_matching.sh -q 2 -c 6 -b sentence-transformers/all-distilroberta-v1
 
-./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/paraphrase-MiniLM-L6-v2
+./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
 
-./04_max_per_label_postprocessing.sh -p blip2_sbert_matching_paraphrase-MiniLM-L6-v2_max_per_label_predictions
+./04_max_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions
 
 
 

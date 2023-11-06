@@ -280,6 +280,7 @@ def transfusion_temporal_aggregation_select_labels(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--current_split", type=str, choices=["train", "val", "test"])
     parser.add_argument(
         "--predictions_folder_name",
         type=str,
@@ -316,6 +317,14 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
+        "--annotations_file_path",
+        type=str,
+        default=os.path.join(
+            os.environ["CODE"],
+            "scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json",
+        ),
+    )
+    parser.add_argument(
         "--output_folder_path",
         type=str,
         default=os.path.join(
@@ -323,6 +332,14 @@ if __name__ == "__main__":
         ),
     )
     args = parser.parse_args()
+
+    with open(args.annotations_file_path, "rb") as reader:
+        annotations = json.load(reader)
+
+    current_split_clip_ids = []
+    for clip_id in annotations.keys():
+        if annotations[clip_id]["subset"] == args.current_split:
+            current_split_clip_ids.append(clip_id)
 
     predictions_folder_path = os.path.join(
         os.environ["SCRATCH"],
@@ -347,87 +364,108 @@ if __name__ == "__main__":
             for (
                 clip_id
             ) in current_predictions_max_per_label_postprocessing_results.keys():
-                frame_id_blip2_question_index_label_index_max_score_mapping = (
-                    current_predictions_max_per_label_postprocessing_results[clip_id]
-                )
-                if args.temporal_aggregation == "no_temporal_aggregation":
-                    frame_id_blip2_question_index_selected_label_indices_mapping = no_temporal_aggregation_select_labels(
-                        frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
-                        threshold=args.threshold,
+                if clip_id in current_split_clip_ids:
+                    frame_id_blip2_question_index_label_index_max_score_mapping = (
+                        current_predictions_max_per_label_postprocessing_results[
+                            clip_id
+                        ]
                     )
-                elif args.temporal_aggregation == "median_temporal_aggregation":
-                    frame_id_blip2_question_index_selected_label_indices_mapping = median_temporal_aggregation_select_labels(
-                        frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
-                        threshold=args.threshold,
-                    )
-                elif args.temporal_aggregation == "transfusion_temporal_aggregation":
-                    frame_id_blip2_question_index_selected_label_indices_mapping = transfusion_temporal_aggregation_select_labels(
-                        frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
-                        threshold=args.threshold,
-                    )
-
-                predictions_one_hot_vectors_dict[clip_id] = dict()
-                for (
-                    frame_id
-                ) in (
-                    frame_id_blip2_question_index_selected_label_indices_mapping.keys()
-                ):
-                    predictions_one_hot_vectors_dict[clip_id][frame_id] = dict()
-                    for (
-                        blip2_question_index
-                    ) in frame_id_blip2_question_index_selected_label_indices_mapping[
-                        frame_id
-                    ].keys():
-                        current_one_hot_vector = np.zeros(
-                            len(distinct_ground_truth_labels) + 1
+                    if args.temporal_aggregation == "no_temporal_aggregation":
+                        frame_id_blip2_question_index_selected_label_indices_mapping = no_temporal_aggregation_select_labels(
+                            frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
+                            threshold=args.threshold,
                         )
+                    elif args.temporal_aggregation == "median_temporal_aggregation":
+                        frame_id_blip2_question_index_selected_label_indices_mapping = median_temporal_aggregation_select_labels(
+                            frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
+                            threshold=args.threshold,
+                        )
+                    elif (
+                        args.temporal_aggregation == "transfusion_temporal_aggregation"
+                    ):
+                        frame_id_blip2_question_index_selected_label_indices_mapping = transfusion_temporal_aggregation_select_labels(
+                            frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
+                            threshold=args.threshold,
+                        )
+
+                    predictions_one_hot_vectors_dict[clip_id] = dict()
+                    for (
+                        frame_id
+                    ) in (
+                        frame_id_blip2_question_index_selected_label_indices_mapping.keys()
+                    ):
+                        predictions_one_hot_vectors_dict[clip_id][frame_id] = dict()
                         for (
-                            label_index
+                            blip2_question_index
                         ) in frame_id_blip2_question_index_selected_label_indices_mapping[
                             frame_id
-                        ][
-                            blip2_question_index
-                        ]:
-                            current_one_hot_vector[label_index] = 1
-                        predictions_one_hot_vectors_dict[clip_id][frame_id][
-                            blip2_question_index
-                        ] = current_one_hot_vector
+                        ].keys():
+                            current_one_hot_vector = np.zeros(
+                                len(distinct_ground_truth_labels) + 1
+                            )
+                            for (
+                                label_index
+                            ) in frame_id_blip2_question_index_selected_label_indices_mapping[
+                                frame_id
+                            ][
+                                blip2_question_index
+                            ]:
+                                current_one_hot_vector[label_index] = 1
+                            predictions_one_hot_vectors_dict[clip_id][frame_id][
+                                blip2_question_index
+                            ] = current_one_hot_vector
 
     with open(args.ground_truth_file_path, "rb") as reader:
         ground_truths = pickle.load(reader)
 
     ground_truth_one_hot_vectors_dict = dict()
     for clip_id, frame_id_ground_truth_labels_mapping in ground_truths.items():
-        ground_truth_one_hot_vectors_dict[clip_id] = dict()
-        for (
-            frame_id,
-            ground_truth_label_indices,
-        ) in frame_id_ground_truth_labels_mapping.items():
-            current_one_hot_vector = np.zeros(len(distinct_ground_truth_labels) + 1)
-            for ground_truth_label_index in ground_truth_label_indices:
-                current_one_hot_vector[ground_truth_label_index] = 1
-            ground_truth_one_hot_vectors_dict[clip_id][
-                frame_id
-            ] = current_one_hot_vector
+        if clip_id in current_split_clip_ids:
+            ground_truth_one_hot_vectors_dict[clip_id] = dict()
+            for (
+                frame_id,
+                ground_truth_label_indices,
+            ) in frame_id_ground_truth_labels_mapping.items():
+                current_one_hot_vector = np.zeros(len(distinct_ground_truth_labels) + 1)
+                for ground_truth_label_index in ground_truth_label_indices:
+                    current_one_hot_vector[ground_truth_label_index] = 1
+                ground_truth_one_hot_vectors_dict[clip_id][
+                    frame_id
+                ] = current_one_hot_vector
 
-    ground_truth_one_hot_vectors_list = []
-    question_index_predicted_one_hot_vectors_list_mapping = dict()
+    ground_truth_one_hot_vectors_list_w_background = []
+    ground_truth_one_hot_vectors_list_wo_background = []
+    question_index_predicted_one_hot_vectors_list_mapping_w_background = dict()
+    question_index_predicted_one_hot_vectors_list_mapping_wo_background = dict()
     for clip_id in ground_truth_one_hot_vectors_dict.keys():
         for frame_id in ground_truth_one_hot_vectors_dict[clip_id].keys():
-            ground_truth_one_hot_vectors_list.append(
+            ground_truth_one_hot_vectors_list_w_background.append(
                 ground_truth_one_hot_vectors_dict[clip_id][frame_id]
             )
+            ground_truth_one_hot_vectors_list_wo_background.append(
+                ground_truth_one_hot_vectors_dict[clip_id][frame_id][:-1]
+            )
+
             for question_index in predictions_one_hot_vectors_dict[clip_id][
                 int((frame_id // 6) * 6)
             ].keys():
                 if (
                     question_index
-                    not in question_index_predicted_one_hot_vectors_list_mapping.keys()
+                    not in question_index_predicted_one_hot_vectors_list_mapping_w_background.keys()
                 ):
-                    question_index_predicted_one_hot_vectors_list_mapping[
+                    question_index_predicted_one_hot_vectors_list_mapping_w_background[
                         question_index
                     ] = []
-                question_index_predicted_one_hot_vectors_list_mapping[
+
+                if (
+                    question_index
+                    not in question_index_predicted_one_hot_vectors_list_mapping_wo_background.keys()
+                ):
+                    question_index_predicted_one_hot_vectors_list_mapping_wo_background[
+                        question_index
+                    ] = []
+
+                question_index_predicted_one_hot_vectors_list_mapping_w_background[
                     question_index
                 ].append(
                     predictions_one_hot_vectors_dict[clip_id][int((frame_id // 6) * 6)][
@@ -435,45 +473,81 @@ if __name__ == "__main__":
                     ]
                 )
 
+                question_index_predicted_one_hot_vectors_list_mapping_wo_background[
+                    question_index
+                ].append(
+                    predictions_one_hot_vectors_dict[clip_id][int((frame_id // 6) * 6)][
+                        question_index
+                    ][:-1]
+                )
+
     os.makedirs(args.output_folder_path, exist_ok=True)
-    for question_index in question_index_predicted_one_hot_vectors_list_mapping.keys():
-        predicted_one_hot_vectors_list = (
-            question_index_predicted_one_hot_vectors_list_mapping[question_index]
+    for (
+        question_index
+    ) in question_index_predicted_one_hot_vectors_list_mapping_w_background.keys():
+        predicted_one_hot_vectors_list_w_background = (
+            question_index_predicted_one_hot_vectors_list_mapping_w_background[
+                question_index
+            ]
         )
-        f1_weighted_average = f1_score(
-            y_true=ground_truth_one_hot_vectors_list,
-            y_pred=predicted_one_hot_vectors_list,
+        predicted_one_hot_vectors_list_wo_background = (
+            question_index_predicted_one_hot_vectors_list_mapping_wo_background[
+                question_index
+            ]
+        )
+        f1_weighted_average_w_background = f1_score(
+            y_true=ground_truth_one_hot_vectors_list_w_background,
+            y_pred=predicted_one_hot_vectors_list_w_background,
             average="weighted",
             zero_division=0,
         )
-        precision_weighted_average = precision_score(
-            y_true=ground_truth_one_hot_vectors_list,
-            y_pred=predicted_one_hot_vectors_list,
+        precision_weighted_average_w_background = precision_score(
+            y_true=ground_truth_one_hot_vectors_list_w_background,
+            y_pred=predicted_one_hot_vectors_list_w_background,
             average="weighted",
             zero_division=0,
         )
-        recall_weighted_average = recall_score(
-            y_true=ground_truth_one_hot_vectors_list,
-            y_pred=predicted_one_hot_vectors_list,
+        recall_weighted_average_w_background = recall_score(
+            y_true=ground_truth_one_hot_vectors_list_w_background,
+            y_pred=predicted_one_hot_vectors_list_w_background,
+            average="weighted",
+            zero_division=0,
+        )
+
+        f1_weighted_average_wo_background = f1_score(
+            y_true=ground_truth_one_hot_vectors_list_wo_background,
+            y_pred=predicted_one_hot_vectors_list_wo_background,
+            average="weighted",
+            zero_division=0,
+        )
+        precision_weighted_average_wo_background = precision_score(
+            y_true=ground_truth_one_hot_vectors_list_wo_background,
+            y_pred=predicted_one_hot_vectors_list_wo_background,
+            average="weighted",
+            zero_division=0,
+        )
+        recall_weighted_average_wo_background = recall_score(
+            y_true=ground_truth_one_hot_vectors_list_wo_background,
+            y_pred=predicted_one_hot_vectors_list_wo_background,
             average="weighted",
             zero_division=0,
         )
 
         f1_per_label = f1_score(
-            y_true=ground_truth_one_hot_vectors_list,
-            y_pred=predicted_one_hot_vectors_list,
+            y_true=ground_truth_one_hot_vectors_list_w_background,
+            y_pred=predicted_one_hot_vectors_list_w_background,
             average=None,
             zero_division=0,
         ).tolist()
         precision_per_label = precision_score(
-            y_true=ground_truth_one_hot_vectors_list,
-            y_pred=predicted_one_hot_vectors_list,
+            y_true=ground_truth_one_hot_vectors_list_w_background,
+            y_pred=predicted_one_hot_vectors_list_w_background,
             average=None,
             zero_division=0,
         ).tolist()
         recall_per_label = recall_score(
-            y_true=ground_truth_one_hot_vectors_list,
-            y_pred=predicted_one_hot_vectors_list,
+            y_true=ground_truth_one_hot_vectors_list_w_background,
+            y_pred=predicted_one_hot_vectors_list_w_background,
             average=None,
             zero_division=0,
         ).tolist()
@@ -488,10 +562,18 @@ if __name__ == "__main__":
             df.append((label, f1, precision, recall))
         df.append(
             (
-                "weighted_average",
-                f1_weighted_average,
-                precision_weighted_average,
-                recall_weighted_average,
+                "weighted_average_w_background",
+                f1_weighted_average_w_background,
+                precision_weighted_average_w_background,
+                recall_weighted_average_w_background,
+            )
+        )
+        df.append(
+            (
+                "weighted_average_wo_background",
+                f1_weighted_average_wo_background,
+                precision_weighted_average_wo_background,
+                recall_weighted_average_wo_background,
             )
         )
 
@@ -502,7 +584,7 @@ if __name__ == "__main__":
         df.to_csv(
             os.path.join(
                 args.output_folder_path,
-                f"{args.predictions_folder_name}__question_index_{question_index}__threshold_{str(args.threshold).replace('.', '')}__{args.temporal_aggregation}.tsv",
+                f"{args.predictions_folder_name}__question_index_{question_index}__threshold_{str(args.threshold).replace('.', '')}__{args.temporal_aggregation}__split__{args.current_split}.tsv",
             ),
             sep="\t",
         )
