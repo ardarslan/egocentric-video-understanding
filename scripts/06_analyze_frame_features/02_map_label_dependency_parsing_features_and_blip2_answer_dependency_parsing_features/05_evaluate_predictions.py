@@ -6,7 +6,7 @@ from tqdm import tqdm
 import pandas as pd
 from sklearn.metrics import f1_score, precision_score, recall_score
 import numpy as np
-from typing import Dict, List
+from typing import Dict, List, Union
 
 
 def median_temporal_aggregation_select_labels(
@@ -187,7 +187,7 @@ def no_temporal_aggregation_select_labels(
     frame_id_blip2_question_index_label_index_max_score_mapping: Dict[
         int, Dict[int, Dict[int, List[int]]]
     ],
-    threshold: float,
+    threshold: Union[float, str],
 ):
     # select labels
     frame_id_blip2_question_index_selected_label_indices_mapping = dict()
@@ -203,11 +203,22 @@ def no_temporal_aggregation_select_labels(
             frame_id_blip2_question_index_selected_label_indices_mapping[frame_id][
                 blip2_question_index
             ] = set()
-            for label_index, current_score in label_index_max_score_mapping.items():
-                if current_score >= threshold:
-                    frame_id_blip2_question_index_selected_label_indices_mapping[
-                        frame_id
-                    ][blip2_question_index].add(label_index)
+            if threshold == "max":
+                label_index_with_max_score = None
+                max_score = -1
+                for label_index, current_score in label_index_max_score_mapping.items():
+                    if current_score > max_score:
+                        label_index_with_max_score = label_index
+                        max_score = current_score
+                frame_id_blip2_question_index_selected_label_indices_mapping[frame_id][
+                    blip2_question_index
+                ] = set([label_index_with_max_score])
+            else:
+                for label_index, current_score in label_index_max_score_mapping.items():
+                    if current_score >= threshold:
+                        frame_id_blip2_question_index_selected_label_indices_mapping[
+                            frame_id
+                        ][blip2_question_index].add(label_index)
     return frame_id_blip2_question_index_selected_label_indices_mapping
 
 
@@ -280,7 +291,7 @@ def transfusion_temporal_aggregation_select_labels(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--current_split", type=str, choices=["train", "val", "test"])
+    parser.add_argument("--split", type=str, choices=["train", "val", "test"])
     parser.add_argument(
         "--predictions_folder_name",
         type=str,
@@ -299,7 +310,7 @@ if __name__ == "__main__":
         ],
         required=True,
     )
-    parser.add_argument("--threshold", type=float, required=True)
+    parser.add_argument("--threshold", required=True)
     parser.add_argument(
         "--label_verb_noun_tool_mapping_file_path",
         type=str,
@@ -338,7 +349,7 @@ if __name__ == "__main__":
 
     current_split_clip_ids = []
     for clip_id in annotations.keys():
-        if annotations[clip_id]["subset"] == args.current_split:
+        if annotations[clip_id]["subset"] == args.split:
             current_split_clip_ids.append(clip_id)
 
     predictions_folder_path = os.path.join(
@@ -584,7 +595,7 @@ if __name__ == "__main__":
         df.to_csv(
             os.path.join(
                 args.output_folder_path,
-                f"{args.predictions_folder_name}__question_index_{question_index}__threshold_{str(args.threshold).replace('.', '')}__{args.temporal_aggregation}__split__{args.current_split}.tsv",
+                f"{args.predictions_folder_name}__question_index_{question_index}__threshold_{str(args.threshold).replace('.', '')}__{args.temporal_aggregation}__split__{args.split}.tsv",
             ),
             sep="\t",
         )

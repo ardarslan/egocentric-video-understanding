@@ -516,13 +516,13 @@ sbatch --time 720 --cpus-per-task=8 --mem 200G ./04_max_per_question_per_label_p
 
 sbatch --time 720 --cpus-per-task=24 --mem 200G ./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
 
-./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2 --current_split val
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
-./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.4 --current_split val
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
 
-./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.6 --current_split val
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
 
-./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.8 --current_split val
+./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
 
 ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 1.0 --current_split val
 
@@ -557,21 +557,7 @@ cd $CODE/scripts/06_analyze_frame_features/02_map_label_dependency_parsing_featu
 
 ./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
 
-./04_max_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions
-
-
-
-
-./03_blip2_sbert_matching.sh -q 0 -c 4 -b sentence-transformers/all-distilroberta-v1
-
-./03_blip2_sbert_matching.sh -q 1 -c 5 -b sentence-transformers/all-distilroberta-v1
-
-./03_blip2_sbert_matching.sh -q 2 -c 6 -b sentence-transformers/all-distilroberta-v1
-
-./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
-
-./04_max_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
-
+./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
 
 
 # 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)

@@ -3,7 +3,7 @@ import gc
 import pickle
 import argparse
 from tqdm import tqdm
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import sys
 
@@ -39,25 +39,6 @@ def max_per_question_per_label_postprocessing_per_clip(
                     blip2_question_index
                 ][label_index] = max_score
                 sum_max_scores += max_score
-
-            for (
-                label_index
-            ) in frame_id_blip2_question_index_label_index_max_score_mapping[frame_id][
-                blip2_question_index
-            ].keys():
-                frame_id_blip2_question_index_label_index_max_score_mapping[frame_id][
-                    blip2_question_index
-                ][
-                    label_index
-                ] = frame_id_blip2_question_index_label_index_max_score_mapping[
-                    frame_id
-                ][
-                    blip2_question_index
-                ][
-                    label_index
-                ] / float(
-                    sum_max_scores
-                )
 
     return clip_id, frame_id_blip2_question_index_label_index_max_score_mapping
 
