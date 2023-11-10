@@ -5,12 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python",
+            "name": "Python: Debug",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/04_extract_frame_features/01_extract_frame_features.py",
+            "purpose": ["debug-test"],
+            "console": "integratedTerminal",
             "justMyCode": false,
-            "cwd": "${fileDirname}"
+            "program": "${workspaceFolder}/scripts/06_analyze_frame_features/06_fine_tune_blip2/fine_tune_blip2.py",
         }
     ]
 }
