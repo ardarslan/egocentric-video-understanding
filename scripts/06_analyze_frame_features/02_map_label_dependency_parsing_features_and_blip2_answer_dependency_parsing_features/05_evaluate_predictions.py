@@ -13,7 +13,7 @@ def median_temporal_aggregation_select_labels(
     frame_id_blip2_question_index_label_index_max_score_mapping: Dict[
         int, Dict[int, Dict[int, List[int]]]
     ],
-    threshold: float,
+    threshold: Union[float, str],
 ):
     # median filtering
     updated_frame_id_blip2_question_index_label_index_max_score_mapping = dict()
@@ -215,7 +215,7 @@ def no_temporal_aggregation_select_labels(
                 ] = set([label_index_with_max_score])
             else:
                 for label_index, current_score in label_index_max_score_mapping.items():
-                    if current_score >= threshold:
+                    if current_score >= float(threshold):
                         frame_id_blip2_question_index_selected_label_indices_mapping[
                             frame_id
                         ][blip2_question_index].add(label_index)

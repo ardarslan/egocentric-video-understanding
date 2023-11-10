@@ -3,7 +3,6 @@ import cv2
 import json
 import torch
 import pickle
-import random
 import argparse
 import numpy as np
 from PIL import Image
@@ -92,60 +91,62 @@ class BLIP2VQAFineTuningDataset(object):
         }
 
     def get_one_sample(self):
-        random_clip_id_index = random.randint(len(self.clip_ids))
-        random_clip_id = self.clip_ids[random_clip_id_index]
-        current_cap =
-        self.success, current_frame = self.current_cap.read()
-        current_label_indices = self.ground_truth_label_indices[
-            self.clip_ids[self.current_clip_index]
-        ][self.current_frame_id]
-        current_labels = [
-            self.distinct_ground_truth_labels[current_label_index]
-            for current_label_index in current_label_indices
-        ]
-        if current_labels[0] == "background":
-            return self.get_current_sample_encodings(
-                current_frame=current_frame, current_label_phrase=""
-            )
-        else:
-            current_label_phrases = [
-                self.label_phrase_mapping[current_label]
-                for current_label in current_labels
-            ]
-            for current_label_phrase in current_label_phrases:
-                return self.get_current_sample_encodings(
-                    current_frame=current_frame,
-                    current_label_phrase=current_label_phrase,
-                )
-        self.current_clip_index += 1
-        if self.current_clip_index < len(self.clip_ids):
-            self.current_cap = cv2.VideoCapture(
-                os.path.join(
-                    os.environ["SCRATCH"],
-                    "ego4d_data/v2/clips",
-                    self.clip_ids[self.current_clip_index] + ".mp4",
-                )
-            )
-            self.current_frame_id = 0
-            self.success, current_frame = self.current_cap.read()
-            current_label_indices = self.ground_truth_label_indices[
-                self.clip_ids[self.current_clip_index]
-            ][self.current_frame_id]
-            current_labels = [
-                self.distinct_ground_truth_labels[current_label_index]
-                for current_label_index in current_label_indices
-            ]
-            current_label_phrases = [
-                self.label_phrase_mapping[current_label]
-                for current_label in current_labels
-            ]
-            for current_label_phrase in current_label_phrases:
-                return self.get_current_sample_encodings(
-                    current_frame=current_frame,
-                    current_label_phrase=current_label_phrase,
-                )
-        else:
-            return None
+
+
+        # random_clip_id_index = random.randint(len(self.clip_ids))
+        # random_clip_id = self.clip_ids[random_clip_id_index]
+        # current_cap =
+        # self.success, current_frame = self.current_cap.read()
+        # current_label_indices = self.ground_truth_label_indices[
+        #     self.clip_ids[self.current_clip_index]
+        # ][self.current_frame_id]
+        # current_labels = [
+        #     self.distinct_ground_truth_labels[current_label_index]
+        #     for current_label_index in current_label_indices
+        # ]
+        # if current_labels[0] == "background":
+        #     return self.get_current_sample_encodings(
+        #         current_frame=current_frame, current_label_phrase=""
+        #     )
+        # else:
+        #     current_label_phrases = [
+        #         self.label_phrase_mapping[current_label]
+        #         for current_label in current_labels
+        #     ]
+        #     for current_label_phrase in current_label_phrases:
+        #         return self.get_current_sample_encodings(
+        #             current_frame=current_frame,
+        #             current_label_phrase=current_label_phrase,
+        #         )
+        # self.current_clip_index += 1
+        # if self.current_clip_index < len(self.clip_ids):
+        #     self.current_cap = cv2.VideoCapture(
+        #         os.path.join(
+        #             os.environ["SCRATCH"],
+        #             "ego4d_data/v2/clips",
+        #             self.clip_ids[self.current_clip_index] + ".mp4",
+        #         )
+        #     )
+        #     self.current_frame_id = 0
+        #     self.success, current_frame = self.current_cap.read()
+        #     current_label_indices = self.ground_truth_label_indices[
+        #         self.clip_ids[self.current_clip_index]
+        #     ][self.current_frame_id]
+        #     current_labels = [
+        #         self.distinct_ground_truth_labels[current_label_index]
+        #         for current_label_index in current_label_indices
+        #     ]
+        #     current_label_phrases = [
+        #         self.label_phrase_mapping[current_label]
+        #         for current_label in current_labels
+        #     ]
+        #     for current_label_phrase in current_label_phrases:
+        #         return self.get_current_sample_encodings(
+        #             current_frame=current_frame,
+        #             current_label_phrase=current_label_phrase,
+        #         )
+        # else:
+        #     return None
 
     def __iter__(self):
         while True:
