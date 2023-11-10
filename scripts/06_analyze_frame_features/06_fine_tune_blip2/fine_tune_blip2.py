@@ -1,42 +1,40 @@
 import os
-import cv2
 import json
 import torch
-import pickle
+import random
 import argparse
 import numpy as np
 from PIL import Image
+from nvidia.dali import pipeline_def
+import nvidia.dali.fn as fn
+import nvidia.dali.types as types
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 
-from typing import Any, Dict, List
+from typing import List
+
+
+@pipeline_def
+def video_pipe(file_list):
+    video, label = fn.readers.video(
+        device="cpu",
+        file_list=file_list,
+        sequence_length=1,
+        shard_id=0,
+        num_shards=1,
+        random_shuffle=True,
+        initial_fill=1024,
+        image_type=types.RGB,
+        dtype=types.FLOAT,
+        file_list_frame_num=True,
+        enable_frame_num=False,
+        enable_timestamps=False,
+        file_list_include_preceding_frame=True,
+    )
+    return video, label
 
 
 class BLIP2VQAFineTuningDataset(object):
     def __init__(self, args: argparse.Namespace, split: str):
-        self.clip_ids = []
-        with open(args.annotations_file_path, "rb") as reader:
-            annotations = json.load(reader)
-            for clip_id in annotations.keys():
-                if annotations[clip_id]["subset"] == split:
-                    self.clip_ids.append(clip_id)
-        self.current_clip_index = 0
-        self.current_cap = cv2.VideoCapture(
-            os.path.join(
-                os.environ["SCRATCH"],
-                "ego4d_data/v2/clips",
-                self.clip_ids[self.current_clip_index] + ".mp4",
-            )
-        )
-        self.current_frame_id = 0
-        with open(
-            os.path.join(
-                os.environ["SCRATCH"],
-                "ego4d_data/v2/analysis_data/ground_truth_labels/ground_truth_labels.pickle",
-            ),
-            "rb",
-        ) as reader:
-            self.ground_truth_label_indices = pickle.load(reader)
-
         with open(
             os.path.join(
                 os.environ["CODE"],
@@ -49,124 +47,63 @@ class BLIP2VQAFineTuningDataset(object):
         self.distinct_ground_truth_labels = sorted(
             list(self.label_phrase_mapping.keys())
         ) + ["background"]
-        self.batch_size = args.batch_size
+
         self.device = args.device
+        self.batch_size = args.batch_size
         self.prompt = args.prompt
-        self.current_batch = []
         self.processor = Blip2Processor.from_pretrained(
             os.path.join(os.environ["SCRATCH"], "mq_libs/blip2")
         )
+        self.split = split
+        self.file_list = os.path.join(
+            os.environ["SCRATCH"],
+            "ego4d_data/v2/analysis_data/ground_truth_labels",
+            f"{self.split}_ground_truth_labels.txt",
+        )
+        self.pipe = video_pipe(
+            batch_size=args.batch_size,
+            num_threads=args.num_data_reader_threads,
+            device_id=0,
+            file_list=self.file_list,
+        )
+        self.pipe.build()
 
-    def collate_fn(self, batch: List[Dict[str, Any]]):
-        result = {}
-        for sample in batch:
-            for key, value in sample.items():
-                if key not in result.keys():
-                    result[key] = [value]
-                else:
-                    result[key].append(value)
-        for key in result.keys():
-            result[key] = torch.vstack(result[key]).to(self.device)
-        return result
+    def get_random_label_phrase(self, label_phrases: List[str]):
+        random_index = random.randint(len(label_phrases))
+        random_label_phrase = label_phrases[random_index]
+        return random_label_phrase
 
-    def get_current_sample_encodings(
-        self, current_frame: np.ndarray, current_label_phrase: str
-    ):
+    def get_batch(self):
+        images, label_indices = self.pipe.run()
         input_encoding = self.processor(
-            images=[Image.fromarray(current_frame[:, :, ::-1])],
-            text=[self.prompt],
+            images=[Image.fromarray(np.array(image)) for image in images],
+            text=[self.prompt] * self.batch_size,
             padding="max_length",
             return_tensors="pt",
         )
+        labels = [
+            self.distinct_ground_truth_labels[label_index[0]]
+            for label_index in label_indices
+        ]
+        label_phrases = [
+            self.get_random_label_phrase(self.label_phrase_mapping[label])
+            for label in labels
+        ]
         output_encoding = self.processor.tokenizer(
-            [current_label_phrase],
+            label_phrases,
             padding=True,
             return_tensors="pt",
         )
-
         return {
-            "input_ids": input_encoding["input_ids"],
-            "pixel_values": input_encoding["pixel_values"],
-            "labels": output_encoding["input_ids"],
+            "input_ids": input_encoding["input_ids"].to(self.device),
+            "pixel_values": input_encoding["pixel_values"].to(self.device),
+            "labels": output_encoding["input_ids"].to(self.device),
         }
-
-    def get_one_sample(self):
-
-
-        # random_clip_id_index = random.randint(len(self.clip_ids))
-        # random_clip_id = self.clip_ids[random_clip_id_index]
-        # current_cap =
-        # self.success, current_frame = self.current_cap.read()
-        # current_label_indices = self.ground_truth_label_indices[
-        #     self.clip_ids[self.current_clip_index]
-        # ][self.current_frame_id]
-        # current_labels = [
-        #     self.distinct_ground_truth_labels[current_label_index]
-        #     for current_label_index in current_label_indices
-        # ]
-        # if current_labels[0] == "background":
-        #     return self.get_current_sample_encodings(
-        #         current_frame=current_frame, current_label_phrase=""
-        #     )
-        # else:
-        #     current_label_phrases = [
-        #         self.label_phrase_mapping[current_label]
-        #         for current_label in current_labels
-        #     ]
-        #     for current_label_phrase in current_label_phrases:
-        #         return self.get_current_sample_encodings(
-        #             current_frame=current_frame,
-        #             current_label_phrase=current_label_phrase,
-        #         )
-        # self.current_clip_index += 1
-        # if self.current_clip_index < len(self.clip_ids):
-        #     self.current_cap = cv2.VideoCapture(
-        #         os.path.join(
-        #             os.environ["SCRATCH"],
-        #             "ego4d_data/v2/clips",
-        #             self.clip_ids[self.current_clip_index] + ".mp4",
-        #         )
-        #     )
-        #     self.current_frame_id = 0
-        #     self.success, current_frame = self.current_cap.read()
-        #     current_label_indices = self.ground_truth_label_indices[
-        #         self.clip_ids[self.current_clip_index]
-        #     ][self.current_frame_id]
-        #     current_labels = [
-        #         self.distinct_ground_truth_labels[current_label_index]
-        #         for current_label_index in current_label_indices
-        #     ]
-        #     current_label_phrases = [
-        #         self.label_phrase_mapping[current_label]
-        #         for current_label in current_labels
-        #     ]
-        #     for current_label_phrase in current_label_phrases:
-        #         return self.get_current_sample_encodings(
-        #             current_frame=current_frame,
-        #             current_label_phrase=current_label_phrase,
-        #         )
-        # else:
-        #     return None
-
-    def __iter__(self):
-        while True:
-            current_sample = self.get_one_sample()
-            if current_sample is None:
-                if len(self.current_batch) > 0:
-                    yield self.collate_fn(self.current_batch)
-                else:
-                    return
-            else:
-                self.current_batch.append(current_sample)
-                if len(self.current_batch) == self.batch_size:
-                    yield self.collate_fn(self.current_batch)
-                    self.current_batch = []
-                else:
-                    continue
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--device", type=str, default="cuda:4")
+parser.add_argument("--device", type=str, default="cuda:7")
+parser.add_argument("--num_data_reader_threads", type=int, default=8)
 parser.add_argument(
     "--prompt", type=str, default="What is the person in this image doing?"
 )
@@ -179,24 +116,27 @@ parser.add_argument(
     ),
 )
 parser.add_argument("--num_epochs", type=int, default=50)
+parser.add_argument("--num_batches_in_one_epoch", type=int, default=100)
 parser.add_argument("--batch_size", type=int, default=4)
 args = parser.parse_args()
 
 model = Blip2ForConditionalGeneration.from_pretrained(
     os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
-    torch_dtype=torch.float16,
+    torch_dtype=torch.float32,
 )
 model.to(args.device)
-
 optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
 
+iftd_train = BLIP2VQAFineTuningDataset(args=args, split="train")
+iftd_val = BLIP2VQAFineTuningDataset(args=args, split="val")
+
 for epoch in range(args.num_epochs):
-    model.train()
-    iftd_train = BLIP2VQAFineTuningDataset(args=args, split="train")
     total_train_loss = 0.0
     total_train_sample_count = 0.0
-    for train_batch in iftd_train:
+    model.train()
+    for _ in range(args.num_batches_in_one_epoch):
         optimizer.zero_grad()
+        train_batch = iftd_train.get_batch()
         outputs = model(
             input_ids=train_batch["input_ids"],
             pixel_values=train_batch["pixel_values"],
@@ -208,12 +148,12 @@ for epoch in range(args.num_epochs):
         train_loss.backward()
         optimizer.step()
 
-    model.eval()
-    iftd_val = BLIP2VQAFineTuningDataset(args=args, split="val")
     total_val_loss = 0.0
     total_val_sample_count = 0.0
+    model.eval()
     with torch.no_grad():
-        for val_batch in iftd_val:
+        for _ in range(args.num_batches_in_one_epoch):
+            val_batch = iftd_val.get_batch()
             outputs = model(
                 input_ids=val_batch["input_ids"],
                 pixel_values=val_batch["pixel_values"],
