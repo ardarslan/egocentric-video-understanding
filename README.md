@@ -370,7 +370,7 @@ python3 -m pip install torch torchvision --index-url https://download.pytorch.or
 
 export TMPDIR=$CODE/tmp
 
-python3 -m spacy download en_core_web_lg
+pip install --extra-index-url https://developer.download.nvidia.com/compute/redist --upgrade nvidia-dali-cuda110
 
 python3 -m ipykernel install --user --name=mq_analysis
 
