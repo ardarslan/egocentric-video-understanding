@@ -55,7 +55,7 @@ CVL
 ```
 cd $CODE
 
-srun --time 720 --cpus-per-task=2 --gres=gpu:1 --mem=50G --pty bash -i
+srun --time 720 --cpus-per-task=2 --gres=gpu:1 --mem=50G --constraint='geforce_gtx_1080_ti' --pty bash -i
 
 mamba activate mq_analysis
 
@@ -364,7 +364,11 @@ cd $CODE/scripts/01_setup_environment
 
 python3 -m pip install -r mq_analysis_requirements.txt
 
-sbatch --time 720 --cpus-per-task=4 --gres=gpu:1 --nodelist=biwirender08 --mem 50G install_torch_torchvision.sh
+export TMPDIR=$SCRATCH/pip_temp
+
+python3 -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+
+export TMPDIR=$CODE/tmp
 
 python3 -m spacy download en_core_web_lg
 
@@ -502,7 +506,7 @@ sbatch --time 720 --cpus-per-task=24 --mem 200G 01_process_ground_truth_labels.s
 
 sbatch --time 720 --cpus-per-task=8 --mem 200G 02_process_asl_predictions.sh
 
-sbatch --time 720 --cpus-per-task=8 --mem 40G nodelist=biwirender08 ./03_blip2_dictionary_matching.sh
+sbatch --time 720 --cpus-per-task=8 --mem 40G 03_blip2_dictionary_matching.sh
 
 ./03_blip2_sbert_matching.sh -q 0 -c 4 -b sentence-transformers/all-distilroberta-v1
 
@@ -588,6 +592,8 @@ cd $CODE/scripts/06_analyze_frame_features/02_map_label_dependency_parsing_featu
 ./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
 
 ./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
+
+
 
 
 # 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
