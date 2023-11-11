@@ -16,7 +16,7 @@ from typing import List
 @pipeline_def
 def video_pipe(file_list):
     video, label = fn.readers.video(
-        device="cpu",
+        device="gpu",
         file_list=file_list,
         sequence_length=1,
         shard_id=0,
@@ -100,29 +100,40 @@ class BLIP2VQAFineTuningDataset(object):
             "labels": output_encoding["input_ids"].to(self.device),
         }
 
+args = argparse.Namespace()
+args.device = "cuda:0"
+args.num_data_reader_threads = 8
+args.prompt = "What is the person in this image doing?"
+args.annotations_file_path = os.path.join(
+    os.environ["CODE"],
+    "scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json",
+)
+args.num_epochs = 50
+args.num_batches_in_one_epoch = 100
+args.batch_size = 4
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--device", type=str, default="cuda:7")
-parser.add_argument("--num_data_reader_threads", type=int, default=8)
-parser.add_argument(
-    "--prompt", type=str, default="What is the person in this image doing?"
-)
-parser.add_argument(
-    "--annotations_file_path",
-    type=str,
-    default=os.path.join(
-        os.environ["CODE"],
-        "scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json",
-    ),
-)
-parser.add_argument("--num_epochs", type=int, default=50)
-parser.add_argument("--num_batches_in_one_epoch", type=int, default=100)
-parser.add_argument("--batch_size", type=int, default=4)
-args = parser.parse_args()
+# parser = argparse.ArgumentParser()
+# parser.add_argument("--device", type=str, default="cuda:0")
+# parser.add_argument("--num_data_reader_threads", type=int, default=8)
+# parser.add_argument(
+#     "--prompt", type=str, default="What is the person in this image doing?"
+# )
+# parser.add_argument(
+#     "--annotations_file_path",
+#     type=str,
+#     default=os.path.join(
+#         os.environ["CODE"],
+#         "scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json",
+#     ),
+# )
+# parser.add_argument("--num_epochs", type=int, default=50)
+# parser.add_argument("--num_batches_in_one_epoch", type=int, default=100)
+# parser.add_argument("--batch_size", type=int, default=4)
+# args = parser.parse_args()
 
 model = Blip2ForConditionalGeneration.from_pretrained(
     os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
-    torch_dtype=torch.float32,
+    torch_dtype=torch.float16,
 )
 model.to(args.device)
 optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
@@ -166,3 +177,4 @@ for epoch in range(args.num_epochs):
     print(
         f"Epoch: {str(epoch).zfill(2)} | Train Loss: {np.round(total_train_loss / total_train_sample_count, 2)} | Val Loss: {np.round(total_val_loss / total_val_sample_count, 2)}"
     )
+

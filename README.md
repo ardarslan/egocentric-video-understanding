@@ -366,7 +366,7 @@ python3 -m pip install -r mq_analysis_requirements.txt
 
 sbatch --time 720 --cpus-per-task=4 --gres=gpu:1 --nodelist=biwirender08 --mem 50G install_torch_torchvision.sh
 
-python3 -m spacy download en_core_web_lg
+pip install --extra-index-url https://developer.download.nvidia.com/compute/redist --upgrade nvidia-dali-cuda110
 
 python3 -m ipykernel install --user --name=mq_analysis
 
