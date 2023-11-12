@@ -291,7 +291,7 @@ def transfusion_temporal_aggregation_select_labels(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--split", type=str, choices=["train", "val", "test"])
+    parser.add_argument("--split", type=str, required=True, choices=["train", "val"])
     parser.add_argument(
         "--predictions_folder_name",
         type=str,
@@ -398,6 +398,51 @@ if __name__ == "__main__":
                             frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
                             threshold=args.threshold,
                         )
+
+                    for (
+                        frame_id
+                    ) in (
+                        frame_id_blip2_question_index_label_index_max_score_mapping.keys()
+                    ):
+                        blip2_question_index_label_index_max_score_mapping = (
+                            frame_id_blip2_question_index_label_index_max_score_mapping[
+                                frame_id
+                            ]
+                        )
+                        label_index_max_max_score_mapping = dict()
+                        for (
+                            blip2_question_index
+                        ) in blip2_question_index_label_index_max_score_mapping.keys():
+                            label_index_max_score_mapping = (
+                                blip2_question_index_label_index_max_score_mapping[
+                                    blip2_question_index
+                                ]
+                            )
+                            for label_index in label_index_max_score_mapping.keys():
+                                if (
+                                    label_index
+                                    not in label_index_max_max_score_mapping.keys()
+                                ):
+                                    label_index_max_max_score_mapping[
+                                        label_index
+                                    ] = label_index_max_score_mapping[label_index]
+                                else:
+                                    label_index_max_max_score_mapping[
+                                        label_index
+                                    ] = max(
+                                        label_index_max_score_mapping[label_index],
+                                        label_index_max_max_score_mapping[label_index],
+                                    )
+
+                        new_key = "_".join(
+                            [
+                                str(key)
+                                for key in blip2_question_index_label_index_max_score_mapping.keys()
+                            ]
+                        )
+                        blip2_question_index_label_index_max_score_mapping[
+                            new_key
+                        ] = label_index_max_max_score_mapping
 
                     predictions_one_hot_vectors_dict[clip_id] = dict()
                     for (
