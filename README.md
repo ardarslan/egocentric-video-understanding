@@ -567,6 +567,7 @@ cd $CODE/scripts/06_analyze_frame_features/02_map_label_dependency_parsing_featu
 
 
 
+sbatch --time 720 --gres=gpu:1 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune_blip2_frame_wise.sh
 
 # 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
 
