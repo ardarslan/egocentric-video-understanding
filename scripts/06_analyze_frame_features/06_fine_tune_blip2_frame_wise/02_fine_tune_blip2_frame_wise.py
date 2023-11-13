@@ -13,6 +13,10 @@ from transformers import Blip2Processor, Blip2ForConditionalGeneration
 
 from typing import List
 
+os.environ[
+    "NVIDIA_DRIVER_CAPABILITIES"
+] = "compute,utility,video,graphics,compat32,utility"
+
 
 @pipeline_def
 def video_pipe(file_list):
