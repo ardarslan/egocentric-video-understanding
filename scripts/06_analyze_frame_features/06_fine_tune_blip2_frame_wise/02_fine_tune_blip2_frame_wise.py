@@ -109,7 +109,7 @@ class BLIP2VQAFineTuningDataset(object):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--device", type=str, default="cuda:7")
+parser.add_argument("--device", type=str, default="cuda:0")
 parser.add_argument("--num_data_reader_threads", type=int, default=1)
 parser.add_argument(
     "--prompt", type=str, default="What is the person in this image doing?"
