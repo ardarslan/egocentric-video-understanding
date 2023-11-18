@@ -57,6 +57,14 @@ cd $CODE
 
 srun --time 720 --cpus-per-task=2 --gres=gpu:1 --mem=50G --constraint='geforce_gtx_1080_ti' --pty bash -i
 
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+
 mamba activate mq_analysis
 
 jupyter notebook --no-browser --port 5998 --ip $(hostname -f)
@@ -146,7 +154,7 @@ export PATH=$JAVA_HOME/bin:$PATH
 
 cd $CODE
 
-wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
+wget https://github.com/mamba-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
 
 chmod +x Mambaforge-Linux-x86_64.sh
 
@@ -356,9 +364,37 @@ python3 -m pip install -r mq_visualization_requirements.txt
 
 # 01_06 - Install MQ analysis packages
 
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+
 mamba deactivate
 
-mamba create -n mq_analysis python=3.9.9
+CONDA_OVERRIDE_CUDA=11.7 mamba create --name mq_analysis gcc=8 gxx=8 pytorch torchvision pytorch-cuda --channel pytorch --channel nvidia
+
+mamba activate mq_analysis
+
+cd $SCRATCH/mq_libs
+
+git clone https://github.com/NVIDIA/DALI_deps
+
+cd DALI_deps
+
+git submodule init
+
+git submodule update --depth 1 --recursive
+
+cd $SCRATCH/mq_libs/DALI_deps/third_party
+
+svn checkout svn://svn.ffmpeg.org/soc/libavfilter
+
+cd libavfilter
+
+./checkout.sh
 
 cd $CODE/scripts/01_setup_environment
 
@@ -366,11 +402,122 @@ python3 -m pip install -r mq_analysis_requirements.txt
 
 export TMPDIR=$SCRATCH/pip_temp
 
-python3 -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
-
 export TMPDIR=$CODE/tmp
 
-pip install --extra-index-url https://developer.download.nvidia.com/compute/redist --upgrade nvidia-dali-cuda110
+cd $SCRATCH/mq_libs/DALI_deps/third_party/FFmpeg/
+
+./configure \
+--prefix=/usr/local \
+--disable-static \
+--disable-programs \
+--disable-doc \
+--disable-avdevice \
+--disable-swresample \
+--disable-postproc \
+--disable-w32threads \
+--disable-os2threads \
+--disable-dct \
+--disable-dwt \
+--disable-error-resilience \
+--disable-lsp \
+--disable-mdct \
+--disable-rdft \
+--disable-fft \
+--disable-faan \
+--disable-pixelutils \
+--disable-autodetect \
+--disable-iconv \
+--enable-shared \
+--enable-avformat \
+--enable-avcodec \
+--enable-avfilter \
+--disable-encoders \
+--disable-hwaccels \
+--disable-muxers \
+--disable-protocols \
+--enable-protocol=file \
+--disable-indevs \
+--disable-outdevs  \
+--disable-devices \
+--disable-filters \
+--disable-bsfs \
+--disable-decoder=ipu \
+--enable-bsf=h264_mp4toannexb,hevc_mp4toannexb,mpeg4_unpack_bframes
+
+sed -i 's/\$\$(M)sed '\''s\/MAJOR\/\$(lib$(NAME)_VERSION_MAJOR)\/'\'' \$\$< | \$(VERSION_SCRIPT_POSTPROCESS_CMD) > \$\$\@/\$\$(M)sed '\''s\/MAJOR\/\$(lib$(NAME)_VERSION_MAJOR)\/'\'' \$\$< | sed '\''s\/\\(\.*{\\)\/DALI_\\1\/'\'' | \$(VERSION_SCRIPT_POSTPROCESS_CMD) > \$\$\@/' ffbuild/library.mak
+
+make
+
+<!-- rm -rf libsndfile
+
+wget http://download.nust.na/pub2/openpkg1/sources/DST/libsndfile/libsndfile-1.0.8.tar.gz
+
+tar -xf libsndfile-1.0.8.tar.gz
+
+rm -rf libsndfile-1.0.8.tar.gz
+
+cd libsndfile-1.0.8
+
+./configure
+
+make -->
+
+pip3 install cmake --upgrade
+
+cd $SCRATCH/mq_libs
+
+git clone --recursive https://github.com/NVIDIA/DALI
+
+cd DALI
+
+mkdir build
+
+cd build
+
+vi cmake_command.sh
+
+Copy the following:
+```
+#!/bin/bash
+
+cmake -DCMAKE_CXX_COMPILER=$(which c++) -DCMAKE_CUDA_COMPILER=$(which nvcc) -DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_BUILD_TYPE=Release ..
+```
+
+chmod +x cmake_command.sh
+
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 10G cmake_command.sh
+
+<!--
+mamba install lmdb
+
+pip3 install lmdb --upgrade
+-->
+
+exit
+
+ssh aarslan@robustus.ee.ethz.ch
+
+mamba activate mq_analysis
+
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+
+<!-- cd $SCRATCH/mq_libs/DALI_deps/third_part/lmdb/libraries/liblmdb
+
+Modify the line prefix = /usr/local to prefix = /srv/beegfs02/scratch/aarslan_data/data/mq_libs/DALI_deps/third_party/lmdb/libraries/liblmdb
+
+make
+
+make install -->
+
+cd $SCRATCH/mq_libs/DALI/build
+
+cmake -DCMAKE_CXX_COMPILER="/usr/bin/clang++-7" -DCMAKE_GCC_COMPILER="/usr/bin/gcc" -BUILD_DALI_NODEPS=ON -DCMAKE_BUILD_TYPE=Release ..
 
 python3 -m ipykernel install --user --name=mq_analysis
 
