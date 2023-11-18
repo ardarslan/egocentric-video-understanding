@@ -381,24 +381,6 @@ if __name__ == "__main__":
                             clip_id
                         ]
                     )
-                    if args.temporal_aggregation == "no_temporal_aggregation":
-                        frame_id_blip2_question_index_selected_label_indices_mapping = no_temporal_aggregation_select_labels(
-                            frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
-                            threshold=args.threshold,
-                        )
-                    elif args.temporal_aggregation == "median_temporal_aggregation":
-                        frame_id_blip2_question_index_selected_label_indices_mapping = median_temporal_aggregation_select_labels(
-                            frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
-                            threshold=args.threshold,
-                        )
-                    elif (
-                        args.temporal_aggregation == "transfusion_temporal_aggregation"
-                    ):
-                        frame_id_blip2_question_index_selected_label_indices_mapping = transfusion_temporal_aggregation_select_labels(
-                            frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
-                            threshold=args.threshold,
-                        )
-
                     for (
                         frame_id
                     ) in (
@@ -440,9 +422,28 @@ if __name__ == "__main__":
                                 for key in blip2_question_index_label_index_max_score_mapping.keys()
                             ]
                         )
-                        frame_id_blip2_question_index_selected_label_indices_mapping[
+
+                        frame_id_blip2_question_index_label_index_max_score_mapping[
                             frame_id
                         ][new_key] = label_index_max_max_score_mapping
+
+                    if args.temporal_aggregation == "no_temporal_aggregation":
+                        frame_id_blip2_question_index_selected_label_indices_mapping = no_temporal_aggregation_select_labels(
+                            frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
+                            threshold=args.threshold,
+                        )
+                    elif args.temporal_aggregation == "median_temporal_aggregation":
+                        frame_id_blip2_question_index_selected_label_indices_mapping = median_temporal_aggregation_select_labels(
+                            frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
+                            threshold=args.threshold,
+                        )
+                    elif (
+                        args.temporal_aggregation == "transfusion_temporal_aggregation"
+                    ):
+                        frame_id_blip2_question_index_selected_label_indices_mapping = transfusion_temporal_aggregation_select_labels(
+                            frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
+                            threshold=args.threshold,
+                        )
 
                     predictions_one_hot_vectors_dict[clip_id] = dict()
                     for (
