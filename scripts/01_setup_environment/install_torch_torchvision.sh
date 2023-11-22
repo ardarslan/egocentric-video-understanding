@@ -1,3 +1,3 @@
 #!/bin/bash
 
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu114
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu110
