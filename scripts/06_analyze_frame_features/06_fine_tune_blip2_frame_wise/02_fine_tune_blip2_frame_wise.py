@@ -1,4 +1,5 @@
 import os
+import gc
 import json
 import torch
 import argparse
@@ -9,7 +10,13 @@ from pathlib import Path
 import nvidia.dali.fn as fn
 import nvidia.dali.types as types
 from nvidia.dali import pipeline_def
-from transformers import Blip2Processor, Blip2ForConditionalGeneration
+
+from accelerate import init_empty_weights, infer_auto_device_map
+from transformers import (
+    Blip2Processor,
+    Blip2ForConditionalGeneration,
+    Blip2PreTrainedModel,
+)
 
 from typing import List
 
@@ -17,19 +24,18 @@ from typing import List
 @pipeline_def
 def video_pipe(file_list):
     video, label = fn.readers.video(
-        device="gpu",
+        device="cpu",
         file_list=file_list,
         sequence_length=1,
         shard_id=0,
         num_shards=1,
         random_shuffle=True,
-        initial_fill=1024,
+        initial_fill=8,
         image_type=types.RGB,
         dtype=types.FLOAT,
         file_list_frame_num=True,
         enable_frame_num=False,
         enable_timestamps=False,
-        file_list_include_preceding_frame=True,
     )
     return video, label
 
@@ -49,7 +55,6 @@ class BLIP2VQAFineTuningDataset(object):
             list(self.label_phrase_mapping.keys())
         ) + ["background"]
 
-        self.device = args.device
         self.batch_size = args.batch_size
         self.prompt = args.prompt
         self.processor = Blip2Processor.from_pretrained(
@@ -64,7 +69,7 @@ class BLIP2VQAFineTuningDataset(object):
         self.pipe = video_pipe(
             batch_size=args.batch_size,
             num_threads=args.num_data_reader_threads,
-            device_id=int(args.device.split(":")[-1]),
+            device_id=0,
             file_list=self.file_list,
         )
         self.pipe.build()
@@ -102,14 +107,14 @@ class BLIP2VQAFineTuningDataset(object):
             return_tensors="pt",
         )
         return {
-            "input_ids": input_encoding["input_ids"].to(self.device),
-            "pixel_values": input_encoding["pixel_values"].to(self.device),
-            "labels": output_encoding["input_ids"].to(self.device),
+            "input_ids": input_encoding["input_ids"].to("cuda"),
+            "pixel_values": input_encoding["pixel_values"].to("cuda"),
+            "labels": output_encoding["input_ids"].to("cuda"),
         }
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--device", type=str, default="cuda:0")
+# parser.add_argument("--device", type=str, default="cuda")
 parser.add_argument("--num_data_reader_threads", type=int, default=1)
 parser.add_argument(
     "--prompt", type=str, default="What is the person in this image doing?"
@@ -133,16 +138,35 @@ parser.add_argument(
 parser.add_argument("--num_epochs", type=int, default=50)
 parser.add_argument("--num_batches_in_one_epoch", type=int, default=100)
 parser.add_argument("--batch_size", type=int, default=1)
+parser.add_argument("--model_dtype", default=torch.float16)
 args = parser.parse_args()
 
 if not os.path.exists(args.best_model_file_path):
     os.makedirs(str(Path(args.best_model_file_path).parent), exist_ok=True)
 
+with init_empty_weights():
+    model = Blip2ForConditionalGeneration.from_pretrained(
+        os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
+        torch_dtype=torch.float16,
+    )
+
+device_map = infer_auto_device_map(
+    model,
+    no_split_module_classes=Blip2PreTrainedModel._no_split_modules,
+    dtype=args.model_dtype,
+)
+
+del model
+gc.collect()
+
 model = Blip2ForConditionalGeneration.from_pretrained(
     os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
-    torch_dtype=torch.float16,
+    device_map=device_map,
+    torch_dtype=args.model_dtype,
 )
-model.to(args.device)
+# model.to(args.device)
+print(set(model.hf_device_map.values()))
+
 optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
 
 iftd_train = BLIP2VQAFineTuningDataset(args=args, split="train")

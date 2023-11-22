@@ -11,7 +11,8 @@
             "purpose": ["debug-test"],
             "console": "integratedTerminal",
             "justMyCode": false,
-            "program": "${workspaceFolder}/scripts/06_analyze_frame_features/06_fine_tune_blip2/02_fine_tune_blip2_frame_wise.py",
+            "env": {"name": "CUDA_VISIBLE_DEVICES", "value": "0,1,2,3"},
+            "program": "${workspaceFolder}/scripts/06_analyze_frame_features/06_fine_tune_blip2_frame_wise/02_fine_tune_blip2_frame_wise.py",
         }
     ]
 }

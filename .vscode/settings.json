@@ -2,7 +2,7 @@
     "python.languageServer": "Pylance",
     "editor.formatOnSave": true,
     "python.linting.lintOnSave": true,
-    "python.defaultInterpreterPath": "${SCRATCH}/mambaforge/envs/mq_analysis/bin/python3",
+    "python.defaultInterpreterPath": "${SCRATCH}/mambaforge/envs/mq_finetune/bin/python3",
     "python.formatting.provider": "none",
     "editor.defaultFormatter": "ms-python.black-formatter",
     "python.linting.pylintEnabled": false,
