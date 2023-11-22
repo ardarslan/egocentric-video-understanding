@@ -11,6 +11,6 @@ nltk
 pqdm
 matplotlib
 sentence_transformers
-sklearn
+scikit-learn
 tensorflow
 tensorflow_hub
