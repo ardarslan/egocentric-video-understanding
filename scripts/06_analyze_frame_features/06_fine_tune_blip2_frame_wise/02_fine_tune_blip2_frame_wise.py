@@ -23,19 +23,19 @@ from typing import List
 
 @pipeline_def
 def video_pipe(file_list):
-    video, label = fn.readers.video(
-        device="cpu",
+    video, label, _, _ = fn.readers.video(
+        device="gpu",
         file_list=file_list,
         sequence_length=1,
         shard_id=0,
         num_shards=1,
         random_shuffle=True,
-        initial_fill=8,
+        initial_fill=4,
         image_type=types.RGB,
         dtype=types.FLOAT,
         file_list_frame_num=True,
-        enable_frame_num=False,
-        enable_timestamps=False,
+        enable_frame_num=True,
+        enable_timestamps=True,
     )
     return video, label
 
@@ -107,9 +107,9 @@ class BLIP2VQAFineTuningDataset(object):
             return_tensors="pt",
         )
         return {
-            "input_ids": input_encoding["input_ids"].to("cuda"),
-            "pixel_values": input_encoding["pixel_values"].to("cuda"),
-            "labels": output_encoding["input_ids"].to("cuda"),
+            "input_ids": input_encoding["input_ids"].to("cuda:7"),
+            "pixel_values": input_encoding["pixel_values"].to("cuda:7"),
+            "labels": output_encoding["input_ids"].to("cuda:7"),
         }
 
 
@@ -164,8 +164,6 @@ model = Blip2ForConditionalGeneration.from_pretrained(
     device_map=device_map,
     torch_dtype=args.model_dtype,
 )
-# model.to(args.device)
-print(set(model.hf_device_map.values()))
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
 

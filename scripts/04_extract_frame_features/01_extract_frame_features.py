@@ -197,7 +197,7 @@ if __name__ == "__main__":
     elif args.quarter_index == 2:
         clip_uids = clip_uids[int(2 * len(clip_uids) / 4) : int(3 * len(clip_uids) / 4)]
     elif args.quarter_index == 3:
-        clip_uids = clip_uids[int(3 * len(clip_uids) / 4) : ]
+        clip_uids = clip_uids[int(3 * len(clip_uids) / 4) :]
     else:
         raise Exception(f"{args.quarter_index} is not a valid quarter index.")
 
