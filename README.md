@@ -313,15 +313,11 @@ For CVL:
 
 mamba deactivate
 
-module load gcc/8.2.0 python_gpu/3.9.9 eth_proxy
-
 mamba activate mq_model
 
 cd $CODE/scripts/01_setup_environment
 
-chmod +x install_torch_torchvision.sh
-
-sbatch --gpus=1 install_torch_torchvision.sh
+python3 -m pip install torch==1.12 torchvision==0.13 --index-url https://download.pytorch.org/whl/cu113
 )
 
 (
@@ -340,13 +336,13 @@ chmod +x install_torch_torchvision.sh
 ./install_torch_torchvision.sh
 )
 
-pip install --upgrade pip
+python3 -m pip install --upgrade pip
 
 cd $CODE/scripts/01_setup_environment
 
-pip install -r mq_model_requirements.txt
+python3 -m pip install -r mq_model_requirements.txt
 
-cd $CODE/scripts/07_reproduce_baseline_results/libs/utils
+cd $CODE/scripts/07_reproduce_mq_experiments/libs/utils
 
 python3 setup.py install
 
@@ -687,11 +683,11 @@ mamba deactivate
 
 mamba activate mq_model
 
-cd $CODE/scripts/07_reproduce_baseline_results
+cd $CODE/scripts/07_reproduce_mq_experiments
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 train.sh
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 60G train.sh
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 test.sh
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 60G test.sh
 
 # 07_02 - Reproduce baseline results (Works in CVL Server, With Ensemble)
 
