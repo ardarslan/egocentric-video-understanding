@@ -331,9 +331,7 @@ mamba activate mq_model
 
 cd $CODE/scripts/01_setup_environment
 
-chmod +x install_torch_torchvision.sh
-
-./install_torch_torchvision.sh
+python3 -m pip install torch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 --index-url https://download.pytorch.org/whl/cu113
 )
 
 python3 -m pip install --upgrade pip
