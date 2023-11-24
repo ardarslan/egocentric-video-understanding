@@ -6,10 +6,10 @@ sample_data
 error_files
 tmp
 *slurm-*.out*
-scripts/07_reproduce_baseline_results/libs/utils/nms_1d_cpu.egg-info
-scripts/07_reproduce_baseline_results/libs/utils/dist
-scripts/07_reproduce_baseline_results/libs/utils/build
-scripts/07_reproduce_baseline_results/submission_final.json
+scripts/07_reproduce_mq_experiments/libs/utils/nms_1d_cpu.egg-info
+scripts/07_reproduce_mq_experiments/libs/utils/dist
+scripts/07_reproduce_mq_experiments/libs/utils/build
+scripts/07_reproduce_mq_experiments/submission_final.json
 scripts/04_extract_frame_features/gsam/gsam
 scripts/06_analyze_frame_features/assets
 nbs*
