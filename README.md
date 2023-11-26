@@ -400,7 +400,7 @@ mamba create --name mq_finetune
 
 mamba activate mq_finetune
 
-mamba install pytorch torchvision torchaudio pytorch-cuda=11.1 -c pytorch-nightly -c nvidia
+mamba install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch-nightly -c nvidia
 
 mamba install numpy tqdm pillow transformers accelerate
 
