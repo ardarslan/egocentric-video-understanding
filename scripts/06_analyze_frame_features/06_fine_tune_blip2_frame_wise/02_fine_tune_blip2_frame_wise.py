@@ -107,9 +107,9 @@ class BLIP2VQAFineTuningDataset(object):
             return_tensors="pt",
         )
         return {
-            "input_ids": input_encoding["input_ids"].to("cuda:7"),
-            "pixel_values": input_encoding["pixel_values"].to("cuda:7"),
-            "labels": output_encoding["input_ids"].to("cuda:7"),
+            "input_ids": input_encoding["input_ids"].to("cuda"),
+            "pixel_values": input_encoding["pixel_values"].to("cuda"),
+            "labels": output_encoding["input_ids"].to("cuda"),
         }
 
 
