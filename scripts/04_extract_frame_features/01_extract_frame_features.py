@@ -46,7 +46,7 @@ if __name__ == "__main__":
         type=str,
         default=os.path.join(
             os.environ["CODE"],
-            "scripts/07_reproduce_baseline_results/data/ego4d",
+            "scripts/07_reproduce_mq_experiments/data/ego4d",
             "ego4d_clip_annotations_v3.json",
         ),
     )
@@ -197,7 +197,7 @@ if __name__ == "__main__":
     elif args.quarter_index == 2:
         clip_uids = clip_uids[int(2 * len(clip_uids) / 4) : int(3 * len(clip_uids) / 4)]
     elif args.quarter_index == 3:
-        clip_uids = clip_uids[int(3 * len(clip_uids) / 4) :]
+        clip_uids = clip_uids[int(3 * len(clip_uids) / 4) : ]
     else:
         raise Exception(f"{args.quarter_index} is not a valid quarter index.")
 
