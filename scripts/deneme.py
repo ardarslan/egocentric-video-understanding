@@ -4,7 +4,6 @@ import ray
 
 ray.init(num_gpus=2, num_cpus=2)
 import torch
-import torch
 
 torch.cuda.empty_cache()
 import numpy as np
@@ -97,4 +96,3 @@ Image.fromarray(frame[:, :, ::-1]).save("/home/aarslan/mq/image.png")
 print(ray.get(results))
 
 ray.shutdown()
-
