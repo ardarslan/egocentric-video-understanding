@@ -378,19 +378,19 @@ python3 -m pip install -r mq_analysis_requirements.txt
 
 # 01_07 - Install MQ finetune packages
 
-<!-- export CODE=/home/aarslan/mq
+export CODE=/home/aarslan/mq
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
 export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 
-export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit -->
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
-export CODE=/local/home/aarslan/mq
+<!-- export CODE=/local/home/aarslan/mq
 
 export SCRATCH=/data/aarslan
 
-export CUDA_HOME=/usr/local/cuda
+export CUDA_HOME=/usr/local/cuda -->
 
 mamba deactivate
 
@@ -400,7 +400,7 @@ mamba create --name mq_finetune
 
 mamba activate mq_finetune
 
-mamba install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch-nightly -c nvidia
+mamba install pytorch torchvision torchaudio pytorch-cuda=11.1 -c pytorch-nightly -c nvidia
 
 mamba install numpy tqdm pillow transformers accelerate
 
