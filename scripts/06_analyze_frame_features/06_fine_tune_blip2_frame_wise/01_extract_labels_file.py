@@ -21,7 +21,7 @@ if __name__ == "__main__":
         type=str,
         default=os.path.join(
             os.environ["CODE"],
-            "scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json",
+            "scripts/07_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json",
         ),
     )
     parser.add_argument("--split", type=str, choices=["train", "val"], required=True)
