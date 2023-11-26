@@ -347,7 +347,7 @@ if __name__ == "__main__":
         metavar="PATH",
         help="path to a checkpoint (default: none)",
     )
-    parser.add_argument("--combine_train", action='store_true')
+    parser.add_argument("--combine_train", type=bool, default=True)
     args = parser.parse_args()
 
     main(args)

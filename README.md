@@ -331,9 +331,7 @@ mamba activate mq_model
 
 cd $CODE/scripts/01_setup_environment
 
-chmod +x install_torch_torchvision.sh
-
-./install_torch_torchvision.sh
+python3 -m pip install torch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 --index-url https://download.pytorch.org/whl/cu113
 )
 
 python3 -m pip install --upgrade pip
@@ -722,7 +720,7 @@ scp aarslan@robustus.ee.ethz.ch:/home/aarslan/mq/scripts/07_reproduce_baseline_r
 
 Login to https://eval.ai/auth/login
 
-Submit submission_final.json to https://eval.ai/web/challenges/challenge-page/1626/leaderboard.
+Submit submission_final.json to https://eval.ai/web/challenges/challenge-page/1626/leaderboard
 
 # 08 - Reproduce our results
 
