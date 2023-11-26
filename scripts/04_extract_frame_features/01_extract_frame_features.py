@@ -36,7 +36,9 @@ if __name__ == "__main__":
         ],
         default="blip2_vqa",
     )
-    parser.add_argument("--quarter_index", type=int, choices=[0, 1, 2, 3], default=0)
+    parser.add_argument(
+        "--quarter_index", type=int, choices=[0, 1, 2, 3, 4, 5, 6, 7], default=0
+    )
     parser.add_argument("--num_devices", type=int, default=torch.cuda.device_count())
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
     parser.add_argument("--batch_size", type=int, default=1)
@@ -191,13 +193,21 @@ if __name__ == "__main__":
         clip_uids = sorted(list(annotations_dict.keys()))
 
     if args.quarter_index == 0:
-        clip_uids = clip_uids[: int(len(clip_uids) / 4)]
+        clip_uids = clip_uids[: int(len(clip_uids) / 8)]
     elif args.quarter_index == 1:
-        clip_uids = clip_uids[int(len(clip_uids) / 4) : int(2 * len(clip_uids) / 4)]
+        clip_uids = clip_uids[int(len(clip_uids) / 8) : int(2 * len(clip_uids) / 8)]
     elif args.quarter_index == 2:
-        clip_uids = clip_uids[int(2 * len(clip_uids) / 4) : int(3 * len(clip_uids) / 4)]
+        clip_uids = clip_uids[int(2 * len(clip_uids) / 8) : int(3 * len(clip_uids) / 8)]
     elif args.quarter_index == 3:
-        clip_uids = clip_uids[int(3 * len(clip_uids) / 4) :]
+        clip_uids = clip_uids[int(3 * len(clip_uids) / 8) : int(4 * len(clip_uids) / 8)]
+    elif args.quarter_index == 4:
+        clip_uids = clip_uids[int(4 * len(clip_uids) / 8) : int(5 * len(clip_uids) / 8)]
+    elif args.quarter_index == 5:
+        clip_uids = clip_uids[int(5 * len(clip_uids) / 8) : int(6 * len(clip_uids) / 8)]
+    elif args.quarter_index == 6:
+        clip_uids = clip_uids[int(6 * len(clip_uids) / 8) : int(7 * len(clip_uids) / 8)]
+    elif args.quarter_index == 7:
+        clip_uids = clip_uids[int(7 * len(clip_uids) / 8) : len(clip_uids)]
     else:
         raise Exception(f"{args.quarter_index} is not a valid quarter index.")
 
