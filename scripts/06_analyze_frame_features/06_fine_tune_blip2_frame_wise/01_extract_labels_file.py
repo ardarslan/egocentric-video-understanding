@@ -37,7 +37,11 @@ if __name__ == "__main__":
     with open(args.input_file_path, "rb") as reader:
         clip_id_frame_id_label_indices_mapping = pickle.load(reader)
 
-    file_list_txt = ""
+    file_path = os.path.join(
+        str(Path(args.input_file_path).parent), f"{args.split}_ground_truth_labels.txt"
+    )
+    dirname, basename = os.path.split(file_path)
+    tf = tempfile.NamedTemporaryFile(prefix=basename, dir=dirname, delete=False)
 
     for (
         clip_id,
@@ -46,12 +50,10 @@ if __name__ == "__main__":
         if clip_id in clip_ids:
             for frame_id, label_indices in frame_id_label_indices_mapping.items():
                 for label_index in label_indices:
-                    file_list_txt += f"{os.path.join(os.environ['SCRATCH'], 'ego4d_data/v2/clips', clip_id + '.mp4')} {label_index} {frame_id} {frame_id + 1}\n"
+                    tf.write(
+                        str.encode(
+                            f"{os.path.join(os.environ['SCRATCH'], 'ego4d_data/v2/clips', clip_id + '.mp4')} {label_index} {frame_id} {frame_id + 1}\n"
+                        )
+                    )
 
-file_path = os.path.join(
-    str(Path(args.input_file_path).parent), f"{args.split}_ground_truth_labels.txt"
-)
-dirname, basename = os.path.split(file_path)
-tf = tempfile.NamedTemporaryFile(prefix=basename, dir=dirname, delete=False)
-tf.write(str.encode(file_list_txt))
-tf.flush()
+    tf.flush()
