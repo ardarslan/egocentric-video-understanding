@@ -61,11 +61,10 @@ class BLIP2VQAFineTuningDataset(object):
             os.path.join(os.environ["SCRATCH"], "mq_libs/blip2")
         )
         self.split = split
-        self.file_list = os.path.join(
-            os.environ["SCRATCH"],
-            "ego4d_data/v2/analysis_data/ground_truth_labels",
-            f"{self.split}_ground_truth_labels.txt",
-        )
+        file_list_name_candidates = os.listdir(os.path.join(os.environ["SCRATCH"],
+            "ego4d_data/v2/analysis_data/ground_truth_labels"))
+        file_list_name = [file_list_name_candidate for file_list_name_candidate in file_list_name_candidates if file_list_name_candidate.startswith(f"{self.split}_ground_truth_labels.txt")][0]
+        self.file_list = os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/analysis_data/ground_truth_labels", file_list_name)
         self.pipe = video_pipe(
             batch_size=args.batch_size,
             num_threads=args.num_data_reader_threads,
