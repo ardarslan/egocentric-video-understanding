@@ -48,6 +48,7 @@ class BLIP2VQAFineTuningDataset(object):
             "rb",
         ) as reader:
             self.ground_truth_labels = pickle.load(reader)
+            print(self.ground_truth_labels.keys())
 
         self.split = split
 
