@@ -64,7 +64,7 @@ class BLIP2VQAFineTuningDataset(object):
         file_names = os.listdir(
             os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips")
         )
-        random_idx = random.randint(len(file_names))
+        random_idx = np.random.randint(len(file_names))
         random_file_name = file_names[random_idx]
         return random_file_name
 
@@ -80,14 +80,14 @@ class BLIP2VQAFineTuningDataset(object):
                 )
             )
             number_of_frames = random_cap.get(cv2.CAP_PROP_FRAME_COUNT)
-            random_frame_index = random.randint(number_of_frames)
+            random_frame_index = np.random.randint(number_of_frames)
             random_cap.set(cv2.CAP_PROP_POS_FRAMES, random_frame_index - 1)
             _, random_frame = random_cap.read()
             random_cap.release()
             current_random_label_indices = self.ground_truth_labels[random_clip_id][
                 random_frame_index
             ]
-            current_random_label_indices_index = random.randint(
+            current_random_label_indices_index = np.random.randint(
                 len(current_random_label_indices)
             )
             current_random_label_index = current_random_label_indices[
