@@ -402,7 +402,7 @@ mamba activate mq_finetune
 
 mamba install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch-nightly -c nvidia
 
-mamba install numpy tqdm pillow transformers accelerate
+pip install numpy tqdm pillow transformers accelerate opencv-python
 
 cd $CODE/scripts/06_analyze_frame_features/06_fine_tune_blip2_frame_wise
 
