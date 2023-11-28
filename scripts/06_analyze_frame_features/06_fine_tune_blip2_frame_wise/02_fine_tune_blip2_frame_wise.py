@@ -172,7 +172,7 @@ if not os.path.exists(args.best_model_file_path):
 
 model = Blip2ForConditionalGeneration.from_pretrained(
     os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
-    # device_map=device_map,
+    device_map="auto",
     torch_dtype=args.model_dtype,
 )
 

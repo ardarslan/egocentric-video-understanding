@@ -386,11 +386,11 @@ export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
-export CODE=/local/home/aarslan/mq
+<!-- export CODE=/local/home/aarslan/mq
 
 export SCRATCH=/data/aarslan
 
-export CUDA_HOME=/usr/local/cuda
+export CUDA_HOME=/usr/local/cuda -->
 
 mamba deactivate
 
