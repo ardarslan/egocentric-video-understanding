@@ -1,15 +1,14 @@
 import os
 import gc
+import cv2
 import json
 import torch
+import random
 import argparse
 import numpy as np
 from tqdm import tqdm
 from PIL import Image
 from pathlib import Path
-import nvidia.dali.fn as fn
-import nvidia.dali.types as types
-from nvidia.dali import pipeline_def
 
 from accelerate import init_empty_weights, infer_auto_device_map
 from transformers import (
@@ -19,25 +18,6 @@ from transformers import (
 )
 
 from typing import List
-
-
-@pipeline_def
-def video_pipe(file_list):
-    video, label, _, _ = fn.readers.video(
-        device="gpu",
-        file_list=file_list,
-        sequence_length=1,
-        shard_id=0,
-        num_shards=1,
-        random_shuffle=True,
-        initial_fill=4,
-        image_type=types.RGB,
-        dtype=types.FLOAT,
-        file_list_frame_num=True,
-        enable_frame_num=True,
-        enable_timestamps=True,
-    )
-    return video, label
 
 
 class BLIP2VQAFineTuningDataset(object):
@@ -60,18 +40,16 @@ class BLIP2VQAFineTuningDataset(object):
         self.processor = Blip2Processor.from_pretrained(
             os.path.join(os.environ["SCRATCH"], "mq_libs/blip2")
         )
+        with open(
+            os.path.join(
+                os.environ["SCRATCH"],
+                "ego4d_data/v2/analysis_data/ground_truth_labels/ground_truth_labels.pickle",
+            ),
+            "rb",
+        ) as reader:
+            self.ground_truth_labels = pickle.load(reader)
+
         self.split = split
-        file_list_name_candidates = os.listdir(os.path.join(os.environ["SCRATCH"],
-            "ego4d_data/v2/analysis_data/ground_truth_labels"))
-        file_list_name = [file_list_name_candidate for file_list_name_candidate in file_list_name_candidates if file_list_name_candidate.startswith(f"{self.split}_ground_truth_labels.txt")][0]
-        self.file_list = os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/analysis_data/ground_truth_labels", file_list_name)
-        self.pipe = video_pipe(
-            batch_size=args.batch_size,
-            num_threads=args.num_data_reader_threads,
-            device_id=0,
-            file_list=self.file_list,
-        )
-        self.pipe.build()
 
     def get_random_label_phrase(self, label_phrases: List[str]):
         if label_phrases is None:
@@ -81,20 +59,54 @@ class BLIP2VQAFineTuningDataset(object):
             random_label_phrase = label_phrases[random_index]
             return random_label_phrase
 
+    def get_random_file_name(self):
+        file_names = os.listdir(
+            os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips")
+        )
+        random_idx = random.randint(len(file_names))
+        random_file_name = file_names[random_idx]
+        return random_file_name
+
+    def get_random_label_indices_and_images(self):
+        random_label_indices = []
+        random_images = []
+        for _ in range(self.batch_size):
+            random_file_name = self.get_random_file_name()
+            random_clip_id = random_file_name.split(".")[0]
+            random_cap = cv2.VideoCapture(
+                os.path.join(
+                    os.environ["SCRATCH"], "ego4d_data/v2/clips", random_file_name
+                )
+            )
+            number_of_frames = random_cap.get(cv2.CAP_PROP_FRAME_COUNT)
+            random_frame_index = random.randint(number_of_frames)
+            random_cap.set(cv2.CAP_PROP_POS_FRAMES, random_frame_index - 1)
+            _, random_frame = random_cap.read()
+            random_cap.release()
+            current_random_label_indices = self.ground_truth_labels[random_clip_id][
+                random_frame_index
+            ]
+            current_random_label_indices_index = random.randint(
+                len(current_random_label_indices)
+            )
+            current_random_label_index = current_random_label_indices[
+                current_random_label_indices_index
+            ]
+            random_label_indices.append(current_random_label_index)
+            random_images.append(Image.fromarray(random_frame[:, :, ::-1]))
+        return random_label_indices, random_images
+
     def get_batch(self):
-        images, label_indices = self.pipe.run()
+        random_label_indices, random_images = self.get_random_label_indices_and_images()
         input_encoding = self.processor(
-            images=[
-                Image.fromarray(np.array(image.as_cpu())[0].astype(np.uint8))
-                for image in images
-            ],
+            images=random_images,
             text=[self.prompt] * self.batch_size,
             padding="max_length",
             return_tensors="pt",
         )
         labels = [
-            self.distinct_ground_truth_labels[int(np.array(label_index.as_cpu())[0])]
-            for label_index in label_indices
+            self.distinct_ground_truth_labels[int(label_index)]
+            for label_index in random_label_indices
         ]
         label_phrases = [
             self.get_random_label_phrase(self.label_phrase_mapping.get(label, None))

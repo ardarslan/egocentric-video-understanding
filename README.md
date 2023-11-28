@@ -404,11 +404,13 @@ mamba install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch-nightl
 
 mamba install numpy tqdm pillow transformers accelerate
 
-python3 -m pip install --extra-index-url https://developer.download.nvidia.com/compute/redist --upgrade nvidia-dali-cuda110
-
 cd $CODE/scripts/06_analyze_frame_features/06_fine_tune_blip2_frame_wise
 
-./02_fine_tune_blip2_frame_wise.sh
+python3 01_extract_labels_file.py --split train
+
+python3 01_extract_labels_file.py --split val
+
+sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune_blip2_frame_wise.sh
 
 <!--
 CONDA_OVERRIDE_CUDA=11.8 mamba create --name mq_finetune python=3.9.9 gcc=9.4.0 gxx=9.4.0 pytorch torchvision pytorch-cuda --channel pytorch --channel nvidia
