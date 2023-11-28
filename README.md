@@ -386,11 +386,11 @@ export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
-<!-- export CODE=/local/home/aarslan/mq
+export CODE=/local/home/aarslan/mq
 
 export SCRATCH=/data/aarslan
 
-export CUDA_HOME=/usr/local/cuda -->
+export CUDA_HOME=/usr/local/cuda
 
 mamba deactivate
 
@@ -411,6 +411,10 @@ python3 01_extract_labels_file.py --split train
 python3 01_extract_labels_file.py --split val
 
 sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune_blip2_frame_wise.sh
+
+
+
+
 
 <!--
 CONDA_OVERRIDE_CUDA=11.8 mamba create --name mq_finetune python=3.9.9 gcc=9.4.0 gxx=9.4.0 pytorch torchvision pytorch-cuda --channel pytorch --channel nvidia
