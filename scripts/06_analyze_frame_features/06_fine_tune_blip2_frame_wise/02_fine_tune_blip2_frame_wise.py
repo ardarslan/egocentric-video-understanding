@@ -2,7 +2,6 @@ import os
 import gc
 import cv2
 import json
-from tqdm import tqdm
 import torch
 import pickle
 import argparse
@@ -189,8 +188,11 @@ model = Blip2ForConditionalGeneration.from_pretrained(
 model.train()
 
 for name, param in model.named_parameters():
-    if not param.requires_grad:
-        print(name, param.data)
+    print(name, param.requires_grad)
+
+# for name, param in model.named_parameters():
+#     if not param.requires_grad:
+#         print(name, param.data)
 
 # optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
 
