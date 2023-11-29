@@ -78,6 +78,13 @@ class BLIP2VQAFineTuningDataset(object):
         for _ in range(self.batch_size):
             random_file_name = self.get_random_file_name()
             random_clip_id = random_file_name.split(".")[0]
+            if not os.path.exists(
+                os.path.join(
+                    os.environ["SCRATCH"], "ego4d_data/v2/clips", random_file_name
+                )
+            ):
+                raise Exception("This clip does not exist.")
+
             random_cap = cv2.VideoCapture(
                 os.path.join(
                     os.environ["SCRATCH"], "ego4d_data/v2/clips", random_file_name
