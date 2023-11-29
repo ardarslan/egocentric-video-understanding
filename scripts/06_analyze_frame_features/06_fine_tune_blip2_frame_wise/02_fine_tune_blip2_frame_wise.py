@@ -178,8 +178,6 @@ device_map = infer_auto_device_map(
     dtype=args.model_dtype,
 )
 
-print(device_map)
-
 # del model
 # gc.collect()
 
