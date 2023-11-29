@@ -410,7 +410,7 @@ python3 01_extract_labels_file.py --split train
 
 python3 01_extract_labels_file.py --split val
 
-sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune_blip2_frame_wise.sh
+sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem-per-cpu 200G ./02_fine_tune_blip2_frame_wise.sh
 
 
 

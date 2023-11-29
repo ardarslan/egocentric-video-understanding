@@ -178,60 +178,62 @@ device_map = infer_auto_device_map(
     dtype=args.model_dtype,
 )
 
-del model
-gc.collect()
+print(device_map)
 
-model = Blip2ForConditionalGeneration.from_pretrained(
-    os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
-    device_map=device_map,
-    torch_dtype=args.model_dtype,
-)
+# del model
+# gc.collect()
 
-optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
+# model = Blip2ForConditionalGeneration.from_pretrained(
+#     os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
+#     device_map=device_map,
+#     torch_dtype=args.model_dtype,
+# )
 
-iftd_train = BLIP2VQAFineTuningDataset(args=args, split="train")
-iftd_val = BLIP2VQAFineTuningDataset(args=args, split="val")
+# optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
 
-best_val_loss = np.inf
+# iftd_train = BLIP2VQAFineTuningDataset(args=args, split="train")
+# iftd_val = BLIP2VQAFineTuningDataset(args=args, split="val")
 
-for epoch in range(1, args.num_epochs + 1):
-    print(f"Running epoch {epoch}...")
-    total_train_loss = 0.0
-    total_train_sample_count = 0.0
-    model.train()
-    for _ in tqdm(range(args.num_batches_in_one_epoch)):
-        optimizer.zero_grad()
-        train_batch = iftd_train.get_batch()
-        outputs = model(
-            input_ids=train_batch["input_ids"],
-            pixel_values=train_batch["pixel_values"],
-            labels=train_batch["labels"],
-        )
-        train_loss = outputs.loss
-        total_train_loss += train_loss.item() * len(train_batch["input_ids"])
-        total_train_sample_count += float(len(train_batch["input_ids"]))
-        train_loss.backward()
-        optimizer.step()
+# best_val_loss = np.inf
 
-    total_val_loss = 0.0
-    total_val_sample_count = 0.0
-    model.eval()
-    with torch.no_grad():
-        for _ in range(args.num_batches_in_one_epoch):
-            val_batch = iftd_val.get_batch()
-            outputs = model(
-                input_ids=val_batch["input_ids"],
-                pixel_values=val_batch["pixel_values"],
-                labels=val_batch["labels"],
-            )
-            val_loss = outputs.loss
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                torch.save(model.state_dict(), args.best_model_file_path)
+# for epoch in range(1, args.num_epochs + 1):
+#     print(f"Running epoch {epoch}...")
+#     total_train_loss = 0.0
+#     total_train_sample_count = 0.0
+#     model.train()
+#     for _ in tqdm(range(args.num_batches_in_one_epoch)):
+#         optimizer.zero_grad()
+#         train_batch = iftd_train.get_batch()
+#         outputs = model(
+#             input_ids=train_batch["input_ids"],
+#             pixel_values=train_batch["pixel_values"],
+#             labels=train_batch["labels"],
+#         )
+#         train_loss = outputs.loss
+#         total_train_loss += train_loss.item() * len(train_batch["input_ids"])
+#         total_train_sample_count += float(len(train_batch["input_ids"]))
+#         train_loss.backward()
+#         optimizer.step()
 
-            total_val_loss += val_loss.item() * len(val_batch["input_ids"])
-            total_val_sample_count += float(len(val_batch["input_ids"]))
+#     total_val_loss = 0.0
+#     total_val_sample_count = 0.0
+#     model.eval()
+#     with torch.no_grad():
+#         for _ in range(args.num_batches_in_one_epoch):
+#             val_batch = iftd_val.get_batch()
+#             outputs = model(
+#                 input_ids=val_batch["input_ids"],
+#                 pixel_values=val_batch["pixel_values"],
+#                 labels=val_batch["labels"],
+#             )
+#             val_loss = outputs.loss
+#             if val_loss < best_val_loss:
+#                 best_val_loss = val_loss
+#                 torch.save(model.state_dict(), args.best_model_file_path)
 
-    print(
-        f"Epoch: {str(epoch).zfill(2)} | Train Loss: {np.round(total_train_loss / total_train_sample_count, 2)} | Val Loss: {np.round(total_val_loss / total_val_sample_count, 2)}"
-    )
+#             total_val_loss += val_loss.item() * len(val_batch["input_ids"])
+#             total_val_sample_count += float(len(val_batch["input_ids"]))
+
+#     print(
+#         f"Epoch: {str(epoch).zfill(2)} | Train Loss: {np.round(total_train_loss / total_train_sample_count, 2)} | Val Loss: {np.round(total_val_loss / total_val_sample_count, 2)}"
+#     )
