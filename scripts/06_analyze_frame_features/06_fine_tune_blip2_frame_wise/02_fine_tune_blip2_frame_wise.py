@@ -166,24 +166,24 @@ args = parser.parse_args()
 if not os.path.exists(args.best_model_file_path):
     os.makedirs(str(Path(args.best_model_file_path).parent), exist_ok=True)
 
-# with init_empty_weights():
-#     model = Blip2ForConditionalGeneration.from_pretrained(
-#         os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
-#         torch_dtype=torch.float16,
-#     )
+with init_empty_weights():
+    model = Blip2ForConditionalGeneration.from_pretrained(
+        os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
+        torch_dtype=torch.float32,
+    )
 
-# device_map = infer_auto_device_map(
-#     model,
-#     no_split_module_classes=Blip2PreTrainedModel._no_split_modules,
-#     dtype=args.model_dtype,
-# )
+device_map = infer_auto_device_map(
+    model,
+    no_split_module_classes=Blip2PreTrainedModel._no_split_modules,
+    dtype=args.model_dtype,
+)
 
-# del model
-# gc.collect()
+del model
+gc.collect()
 
 model = Blip2ForConditionalGeneration.from_pretrained(
     os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
-    device_map="auto",
+    device_map=device_map,
     torch_dtype=args.model_dtype,
 )
 
