@@ -70,7 +70,7 @@ class BLIP2VQAFineTuningDataset(object):
     def get_random_file_name(self):
         random_idx = np.random.randint(len(self.clip_ids))
         random_ground_truth_label_key = self.clip_ids[random_idx]
-        return random_ground_truth_label_key + ".pickle"
+        return random_ground_truth_label_key + ".mp4"
 
     def get_random_label_indices_and_images(self):
         random_label_indices = []
