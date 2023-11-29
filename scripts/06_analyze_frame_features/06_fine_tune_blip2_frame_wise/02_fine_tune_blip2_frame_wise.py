@@ -48,7 +48,7 @@ class BLIP2VQAFineTuningDataset(object):
             "rb",
         ) as reader:
             self.ground_truth_labels = pickle.load(reader)
-            print(self.ground_truth_labels.keys())
+            self.ground_truth_label_keys = list(sorted(self.ground_truth_labels.keys()))
 
         self.split = split
 
@@ -61,12 +61,9 @@ class BLIP2VQAFineTuningDataset(object):
             return random_label_phrase
 
     def get_random_file_name(self):
-        file_names = os.listdir(
-            os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips")
-        )
-        random_idx = np.random.randint(len(file_names))
-        random_file_name = file_names[random_idx]
-        return random_file_name
+        random_idx = np.random.randint(len(self.ground_truth_label_keys))
+        random_ground_truth_label_key = self.ground_truth_label_keys[random_idx]
+        return random_ground_truth_label_key + ".pickle"
 
     def get_random_label_indices_and_images(self):
         random_label_indices = []
