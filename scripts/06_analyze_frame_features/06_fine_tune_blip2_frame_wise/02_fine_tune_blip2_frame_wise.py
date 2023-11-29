@@ -6,6 +6,7 @@ import torch
 import pickle
 import argparse
 import numpy as np
+from tqdm import tqdm
 from PIL import Image
 from pathlib import Path
 
@@ -159,7 +160,7 @@ parser.add_argument(
 parser.add_argument("--num_epochs", type=int, default=50)
 parser.add_argument("--num_batches_in_one_epoch", type=int, default=100)
 parser.add_argument("--batch_size", type=int, default=1)
-parser.add_argument("--model_dtype", default=torch.float16)
+parser.add_argument("--model_dtype", default=torch.float32)
 args = parser.parse_args()
 
 if not os.path.exists(args.best_model_file_path):
@@ -168,7 +169,7 @@ if not os.path.exists(args.best_model_file_path):
 with init_empty_weights():
     model = Blip2ForConditionalGeneration.from_pretrained(
         os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
-        torch_dtype=torch.float16,
+        torch_dtype=torch.float32,
     )
 
 device_map = infer_auto_device_map(
@@ -185,121 +186,123 @@ model = Blip2ForConditionalGeneration.from_pretrained(
     device_map=device_map,
     torch_dtype=args.model_dtype,
 )
-model.train()
 
-for layer_name, layer in model.named_modules():
-    for parameter_name, parameter in layer.named_parameters():
-        # print(layer_name + " " + parameter_name, parameter.requires_grad)
-        if layer_name.startswith("language_model"):
-            assert parameter.requires_grad is True
+optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
+
+iftd_train = BLIP2VQAFineTuningDataset(args=args, split="train")
+iftd_val = BLIP2VQAFineTuningDataset(args=args, split="val")
+
+best_val_loss = np.inf
+
+for epoch in range(1, args.num_epochs + 1):
+    print(f"Running epoch {epoch}...")
+    total_train_loss = 0.0
+    total_train_sample_count = 0.0
+    model.train()
+    for layer_name, layer in model.named_modules():
+        # finetune only qformer and vision_model
+        if layer_name.startswith("qformer") or layer_name.startswith("vision_model"):
+            for parameter_name, parameter in layer.named_parameters():
+                parameter.requires_grad = True
         else:
-            print(layer_name + " " + parameter_name, parameter.requires_grad)
+            for parameter_name, parameter in layer.named_parameters():
+                parameter.requires_grad = False
 
-a = 2
+    for _ in tqdm(range(args.num_batches_in_one_epoch)):
+        optimizer.zero_grad()
+        train_batch = iftd_train.get_batch()
+        outputs = model(
+            input_ids=train_batch["input_ids"],
+            pixel_values=train_batch["pixel_values"],
+            labels=train_batch["labels"],
+        )
+        train_loss = outputs.loss
+        total_train_loss += train_loss.item() * len(train_batch["input_ids"])
+        total_train_sample_count += float(len(train_batch["input_ids"]))
+        train_loss.backward()
+        optimizer.step()
 
-# optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
+    total_val_loss = 0.0
+    total_val_sample_count = 0.0
+    model.eval()
+    for layer_name, layer in model.named_modules():
+        for parameter_name, parameter in layer.named_parameters():
+            parameter.requires_grad = False
 
-# iftd_train = BLIP2VQAFineTuningDataset(args=args, split="train")
-# iftd_val = BLIP2VQAFineTuningDataset(args=args, split="val")
+    with torch.no_grad():
+        for _ in range(args.num_batches_in_one_epoch):
+            val_batch = iftd_val.get_batch()
+            outputs = model(
+                input_ids=val_batch["input_ids"],
+                pixel_values=val_batch["pixel_values"],
+                labels=val_batch["labels"],
+            )
+            val_loss = outputs.loss
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                torch.save(model.state_dict(), args.best_model_file_path)
 
-# best_val_loss = np.inf
+            total_val_loss += val_loss.item() * len(val_batch["input_ids"])
+            total_val_sample_count += float(len(val_batch["input_ids"]))
 
-# for epoch in range(1, args.num_epochs + 1):
-#     print(f"Running epoch {epoch}...")
-#     total_train_loss = 0.0
-#     total_train_sample_count = 0.0
-#     model.train()
-#     for _ in tqdm(range(args.num_batches_in_one_epoch)):
-#         optimizer.zero_grad()
-#         train_batch = iftd_train.get_batch()
-#         outputs = model(
-#             input_ids=train_batch["input_ids"],
-#             pixel_values=train_batch["pixel_values"],
-#             labels=train_batch["labels"],
-#         )
-#         train_loss = outputs.loss
-#         total_train_loss += train_loss.item() * len(train_batch["input_ids"])
-#         total_train_sample_count += float(len(train_batch["input_ids"]))
-#         train_loss.backward()
-#         optimizer.step()
+    print(
+        f"Epoch: {str(epoch).zfill(2)} | Train Loss: {np.round(total_train_loss / total_train_sample_count, 2)} | Val Loss: {np.round(total_val_loss / total_val_sample_count, 2)}"
+    )
 
-#     total_val_loss = 0.0
-#     total_val_sample_count = 0.0
-#     model.eval()
-#     with torch.no_grad():
-#         for _ in range(args.num_batches_in_one_epoch):
-#             val_batch = iftd_val.get_batch()
-#             outputs = model(
-#                 input_ids=val_batch["input_ids"],
-#                 pixel_values=val_batch["pixel_values"],
-#                 labels=val_batch["labels"],
-#             )
-#             val_loss = outputs.loss
-#             if val_loss < best_val_loss:
-#                 best_val_loss = val_loss
-#                 torch.save(model.state_dict(), args.best_model_file_path)
+del model
+gc.collect()
 
-#             total_val_loss += val_loss.item() * len(val_batch["input_ids"])
-#             total_val_sample_count += float(len(val_batch["input_ids"]))
+model = Blip2ForConditionalGeneration.from_pretrained(
+    os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
+    device_map=device_map,
+    torch_dtype=args.model_dtype,
+)
 
-#     print(
-#         f"Epoch: {str(epoch).zfill(2)} | Train Loss: {np.round(total_train_loss / total_train_sample_count, 2)} | Val Loss: {np.round(total_val_loss / total_val_sample_count, 2)}"
-#     )
+optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
 
-# del model
-# gc.collect()
+iftd_train = BLIP2VQAFineTuningDataset(args=args, split="train")
+iftd_val = BLIP2VQAFineTuningDataset(args=args, split="val")
 
-# model = Blip2ForConditionalGeneration.from_pretrained(
-#     os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
-#     device_map=device_map,
-#     torch_dtype=args.model_dtype,
-# )
+best_val_loss = np.inf
 
-# optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
+for epoch in range(1, args.num_epochs + 1):
+    print(f"Running epoch {epoch}...")
+    total_train_loss = 0.0
+    total_train_sample_count = 0.0
+    model.train()
+    for _ in tqdm(range(args.num_batches_in_one_epoch)):
+        optimizer.zero_grad()
+        train_batch = iftd_train.get_batch()
+        outputs = model(
+            input_ids=train_batch["input_ids"],
+            pixel_values=train_batch["pixel_values"],
+            labels=train_batch["labels"],
+        )
+        train_loss = outputs.loss
+        total_train_loss += train_loss.item() * len(train_batch["input_ids"])
+        total_train_sample_count += float(len(train_batch["input_ids"]))
+        train_loss.backward()
+        optimizer.step()
 
-# iftd_train = BLIP2VQAFineTuningDataset(args=args, split="train")
-# iftd_val = BLIP2VQAFineTuningDataset(args=args, split="val")
+    total_val_loss = 0.0
+    total_val_sample_count = 0.0
+    model.eval()
+    with torch.no_grad():
+        for _ in range(args.num_batches_in_one_epoch):
+            val_batch = iftd_val.get_batch()
+            outputs = model(
+                input_ids=val_batch["input_ids"],
+                pixel_values=val_batch["pixel_values"],
+                labels=val_batch["labels"],
+            )
+            val_loss = outputs.loss
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                torch.save(model.state_dict(), args.best_model_file_path)
 
-# best_val_loss = np.inf
+            total_val_loss += val_loss.item() * len(val_batch["input_ids"])
+            total_val_sample_count += float(len(val_batch["input_ids"]))
 
-# for epoch in range(1, args.num_epochs + 1):
-#     print(f"Running epoch {epoch}...")
-#     total_train_loss = 0.0
-#     total_train_sample_count = 0.0
-#     model.train()
-#     for _ in tqdm(range(args.num_batches_in_one_epoch)):
-#         optimizer.zero_grad()
-#         train_batch = iftd_train.get_batch()
-#         outputs = model(
-#             input_ids=train_batch["input_ids"],
-#             pixel_values=train_batch["pixel_values"],
-#             labels=train_batch["labels"],
-#         )
-#         train_loss = outputs.loss
-#         total_train_loss += train_loss.item() * len(train_batch["input_ids"])
-#         total_train_sample_count += float(len(train_batch["input_ids"]))
-#         train_loss.backward()
-#         optimizer.step()
-
-#     total_val_loss = 0.0
-#     total_val_sample_count = 0.0
-#     model.eval()
-#     with torch.no_grad():
-#         for _ in range(args.num_batches_in_one_epoch):
-#             val_batch = iftd_val.get_batch()
-#             outputs = model(
-#                 input_ids=val_batch["input_ids"],
-#                 pixel_values=val_batch["pixel_values"],
-#                 labels=val_batch["labels"],
-#             )
-#             val_loss = outputs.loss
-#             if val_loss < best_val_loss:
-#                 best_val_loss = val_loss
-#                 torch.save(model.state_dict(), args.best_model_file_path)
-
-#             total_val_loss += val_loss.item() * len(val_batch["input_ids"])
-#             total_val_sample_count += float(len(val_batch["input_ids"]))
-
-#     print(
-#         f"Epoch: {str(epoch).zfill(2)} | Train Loss: {np.round(total_train_loss / total_train_sample_count, 2)} | Val Loss: {np.round(total_val_loss / total_val_sample_count, 2)}"
-#     )
+    print(
+        f"Epoch: {str(epoch).zfill(2)} | Train Loss: {np.round(total_train_loss / total_train_sample_count, 2)} | Val Loss: {np.round(total_val_loss / total_val_sample_count, 2)}"
+    )
