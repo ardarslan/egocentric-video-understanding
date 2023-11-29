@@ -131,7 +131,6 @@ class BLIP2VQAFineTuningDataset(object):
 
 parser = argparse.ArgumentParser()
 # parser.add_argument("--device", type=str, default="cuda")
-parser.add_argument("--num_data_reader_threads", type=int, default=1)
 parser.add_argument(
     "--prompt", type=str, default="What is the person in this image doing?"
 )
@@ -140,7 +139,7 @@ parser.add_argument(
     type=str,
     default=os.path.join(
         os.environ["CODE"],
-        "scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json",
+        "scripts/07_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json",
     ),
 )
 parser.add_argument(
