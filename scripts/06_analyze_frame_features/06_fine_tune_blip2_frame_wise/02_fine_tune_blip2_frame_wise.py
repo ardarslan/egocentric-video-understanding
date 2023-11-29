@@ -188,7 +188,7 @@ model = Blip2ForConditionalGeneration.from_pretrained(
 model.train()
 
 for name, layer in model.named_modules():
-    print(name, layer.requires_grad)
+    print(name, layer.requires_grad_)
 
 # optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
 
