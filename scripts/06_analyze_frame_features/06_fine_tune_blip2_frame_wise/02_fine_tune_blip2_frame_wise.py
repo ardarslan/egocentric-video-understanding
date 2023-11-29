@@ -160,7 +160,7 @@ parser.add_argument(
 parser.add_argument("--num_epochs", type=int, default=50)
 parser.add_argument("--num_batches_in_one_epoch", type=int, default=100)
 parser.add_argument("--batch_size", type=int, default=1)
-parser.add_argument("--model_dtype", default=torch32)
+parser.add_argument("--model_dtype", default=torch.float32)
 args = parser.parse_args()
 
 if not os.path.exists(args.best_model_file_path):
