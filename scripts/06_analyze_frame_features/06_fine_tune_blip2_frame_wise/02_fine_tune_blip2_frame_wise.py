@@ -189,7 +189,7 @@ model = Blip2ForConditionalGeneration.from_pretrained(
 model.train()
 
 for name, param in model.named_parameters():
-    if param.requires_grad:
+    if not param.requires_grad:
         print(name, param.data)
 
 # optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
