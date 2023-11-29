@@ -159,7 +159,7 @@ parser.add_argument(
 parser.add_argument("--num_epochs", type=int, default=50)
 parser.add_argument("--num_batches_in_one_epoch", type=int, default=100)
 parser.add_argument("--batch_size", type=int, default=1)
-parser.add_argument("--model_dtype", default=torch.float32)
+parser.add_argument("--model_dtype", default=torch.float16)
 args = parser.parse_args()
 
 if not os.path.exists(args.best_model_file_path):
@@ -168,7 +168,7 @@ if not os.path.exists(args.best_model_file_path):
 with init_empty_weights():
     model = Blip2ForConditionalGeneration.from_pretrained(
         os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
-        torch_dtype=torch.float32,
+        torch_dtype=torch.float16,
     )
 
 device_map = infer_auto_device_map(
@@ -187,8 +187,15 @@ model = Blip2ForConditionalGeneration.from_pretrained(
 )
 model.train()
 
-for name, layer in model.named_modules():
-    print(name, layer.requires_grad_)
+for layer_name, layer in model.named_modules():
+    for parameter_name, parameter in layer.named_parameters():
+        # print(layer_name + " " + parameter_name, parameter.requires_grad)
+        if layer_name.startswith("language_model"):
+            assert parameter.requires_grad is True
+        else:
+            print(layer_name + " " + parameter_name, parameter.requires_grad)
+
+a = 2
 
 # optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
 
