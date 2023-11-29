@@ -48,7 +48,14 @@ class BLIP2VQAFineTuningDataset(object):
             "rb",
         ) as reader:
             self.ground_truth_labels = pickle.load(reader)
-            self.ground_truth_label_keys = list(sorted(self.ground_truth_labels.keys()))
+
+        self.clip_ids = []
+
+        with open(args.annotations_file_path, "r") as reader:
+            annotations = json.load(reader)
+            for clip_id in annotations.keys():
+                if annotations[clip_id]["subset"] == split:
+                    self.clip_ids.append(clip_id)
 
         self.split = split
 
@@ -61,8 +68,8 @@ class BLIP2VQAFineTuningDataset(object):
             return random_label_phrase
 
     def get_random_file_name(self):
-        random_idx = np.random.randint(len(self.ground_truth_label_keys))
-        random_ground_truth_label_key = self.ground_truth_label_keys[random_idx]
+        random_idx = np.random.randint(len(self.clip_ids))
+        random_ground_truth_label_key = self.clip_ids[random_idx]
         return random_ground_truth_label_key + ".pickle"
 
     def get_random_label_indices_and_images(self):
