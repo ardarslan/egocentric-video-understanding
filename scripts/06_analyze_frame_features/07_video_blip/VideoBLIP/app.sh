@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 app.py
+python3 01_fine_tune_video_blip.py

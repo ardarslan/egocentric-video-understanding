@@ -414,15 +414,21 @@ sbatch --time 720 --gres=gpu:8 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune
 
 # 01_08 - Install MQ VideoBLIP packages
 
+export CODE=/local/home/aarslan/mq
+
+export SCRATCH=/data/aarslan
+
+export CUDA_HOME=/usr/local/cuda
+
 mamba deactivate
 
 mamba create --name mq_video_blip python=3.9.9
 
 mamba activate mq_video_blip
 
-python3 -m pip install torch==1.12 torchvision==0.13 --index-url https://download.pytorch.org/whl/cu113
+module load cuda/11.3
 
-mamba install transformers
+mamba install transformers opencv accelerate
 
 python3 -m pip install "git+https://github.com/facebookresearch/pytorchvideo.git"
 
@@ -619,7 +625,7 @@ cd $CODE/scripts/06_analyze_frame_features/02_map_label_dependency_parsing_featu
 
 
 
-sbatch --time 720 --gres=gpu:6 --cpus-per-task 4 --mem-per-cpu 200G app.sh 02_fine_tune_blip2_frame_wise.sh
+sbatch --time 720 --gres=gpu:6 --cpus-per-task 4 --mem-per-cpu 200G ./app.sh 02_fine_tune_blip2_frame_wise.sh
 
 # 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
 
