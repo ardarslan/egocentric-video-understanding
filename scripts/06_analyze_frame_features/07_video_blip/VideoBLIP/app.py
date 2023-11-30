@@ -35,6 +35,8 @@ if __name__ == "__main__":
     # sample a frame every 30 frames, i.e. 1 fps. We assume the video is 30 fps for now.
     frames = clip["video"].unsqueeze(0)
 
+    print(frames.shape)
+
     # construct chat context
     text = "Question: What is the camera wearer doing? Answer:"
 
