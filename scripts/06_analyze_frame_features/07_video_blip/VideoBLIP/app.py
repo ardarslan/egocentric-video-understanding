@@ -21,7 +21,7 @@ if __name__ == "__main__":
     model = VideoBlipForConditionalGeneration.from_pretrained(
         args.model,
         torch_dtype=torch.float16,
-    )
+    ).to(args.device)
 
     video_path_handler = VideoPathHandler()
 
