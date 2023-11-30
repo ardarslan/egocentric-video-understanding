@@ -410,81 +410,21 @@ python3 01_extract_labels_file.py --split train
 
 python3 01_extract_labels_file.py --split val
 
-sbatch --time 720 --gres=gpu:6 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune_blip2_frame_wise.sh
+sbatch --time 720 --gres=gpu:8 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune_blip2_frame_wise.sh
 
+# 01_08 - Install MQ VideoBLIP packages
 
+mamba deactivate
 
+module load cuda/11.3
 
+CONDA_OVERRIDE_CUDA=11.3 mamba create --name mq_video_blip python=3.9.9 pytorch torchvision pytorch-cuda --channel pytorch --channel nvidia
 
-<!--
-CONDA_OVERRIDE_CUDA=11.8 mamba create --name mq_finetune python=3.9.9 gcc=9.4.0 gxx=9.4.0 pytorch torchvision pytorch-cuda --channel pytorch --channel nvidia
+mamba activate mq_video_blip
 
-mamba activate mq_finetune
+mamba install transformers
 
-mamba install cmake libzlib protobuf zlib lmdb libjpeg-turbo zstd zstd-static openjpeg libtiff opencv av ffmpeg libflac libogg libvorbis libopus libsndfile libtar cfitsio
-
-export TMPDIR=$SCRATCH/pip_temp
-
-mamba install cudatoolkit-dev=11.0
-
-cd $SCRATCH/mq_libs
-
-git clone --recursive https://github.com/NVIDIA/DALI
-
-cd DALI
-
-mkdir build
-
-cd build
-
-vi cmake_command.sh
-
-Copy the following:
-```
-#!/bin/bash
-
-cmake -DCMAKE_CUDA_COMPILER=$(which nvcc) -DCMAKE_PREFIX_PATH=$(which protoc) -DCMAKE_CXX_COMPILER=$(which c++) -DCMAKE_C_COMPILER=$(which gcc) -DBUILD_NVJPEG=OFF -DBUILD_LIBSND=OFF -DBUILD_LIBTAR=OFF -DBUILD_JPEG_TURBO=OFF -DCMAKE_BUILD_TYPE=Release ..
-```
-
-chmod +x cmake_command.sh
-
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 10G ./cmake_command.sh
-
-make -->
-
-<!--
-mamba install lmdb
-
-pip3 install lmdb --upgrade
--->
-<!--
-exit
-
-ssh aarslan@robustus.ee.ethz.ch
-
-mamba activate mq_analysis
-
-export CODE=/home/aarslan/mq
-
-export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
-
-export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
-
-export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit -->
-
-<!-- cd $SCRATCH/mq_libs/DALI_deps/third_part/lmdb/libraries/liblmdb
-
-Modify the line prefix = /usr/local to prefix = /srv/beegfs02/scratch/aarslan_data/data/mq_libs/DALI_deps/third_party/lmdb/libraries/liblmdb
-
-make
-
-make install -->
-<!--
-cd $SCRATCH/mq_libs/DALI/build
-
-cmake -DCMAKE_CXX_COMPILER="/usr/bin/clang++-7" -DCMAKE_GCC_COMPILER="/usr/bin/gcc" -BUILD_DALI_NODEPS=ON -DCMAKE_BUILD_TYPE=Release ..
-
-python3 -m ipykernel install --user --name=mq_analysis -->
+python3 -m pip install "git+https://github.com/facebookresearch/pytorchvideo.git"
 
 # 02_01 - Download Ego4D dataset and pre-extracted features
 
@@ -714,7 +654,6 @@ sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender
 sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 test.sh
 
 python merge_submission.py
-
 
 From terminal of your computer run the following lines:
 

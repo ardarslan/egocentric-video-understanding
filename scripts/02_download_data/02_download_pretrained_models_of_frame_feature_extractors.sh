@@ -71,3 +71,9 @@ mv stanford-corenlp-4.5.5 stanford-corenlp
 rm -rf stanford-corenlp-4.5.5.zip
 
 wget https://downloads.cs.stanford.edu/nlp/software/stanford-corenlp-4.5.5-models-english.jar -O stanford-corenlp/stanford-corenlp-4.5.5-models-english.jar
+
+# kpyu/video-blip-opt-2.7b-ego4d
+
+cd $SCRATCH/mq_libs
+
+git clone https://huggingface.co/kpyu/video-blip-opt-2.7b-ego4d
