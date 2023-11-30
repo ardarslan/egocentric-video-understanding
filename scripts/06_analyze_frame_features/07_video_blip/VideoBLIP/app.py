@@ -1,5 +1,6 @@
 import os
 import argparse
+import torch
 from transformers import Blip2Processor
 from pytorchvideo.data.video import VideoPathHandler
 from video_blip.model import VideoBlipForConditionalGeneration, process
@@ -17,8 +18,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     processor = Blip2Processor.from_pretrained(args.model)
-    model = VideoBlipForConditionalGeneration.from_pretrained(args.model).to(
-        args.device
+    model = VideoBlipForConditionalGeneration.from_pretrained(
+        args.model,
+        torch_dtype=torch.float16,
     )
 
     video_path_handler = VideoPathHandler()

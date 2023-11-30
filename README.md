@@ -416,11 +416,11 @@ sbatch --time 720 --gres=gpu:8 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune
 
 mamba deactivate
 
-module load cuda/11.3
-
-CONDA_OVERRIDE_CUDA=11.3 mamba create --name mq_video_blip python=3.9.9 pytorch torchvision pytorch-cuda --channel pytorch --channel nvidia
+mamba create --name mq_video_blip python=3.9.9
 
 mamba activate mq_video_blip
+
+python3 -m pip install torch==1.12 torchvision==0.13 --index-url https://download.pytorch.org/whl/cu113
 
 mamba install transformers
 
@@ -619,7 +619,7 @@ cd $CODE/scripts/06_analyze_frame_features/02_map_label_dependency_parsing_featu
 
 
 
-sbatch --time 720 --gres=gpu:4 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune_blip2_frame_wise.sh
+sbatch --time 720 --gres=gpu:6 --cpus-per-task 4 --mem-per-cpu 200G app.sh 02_fine_tune_blip2_frame_wise.sh
 
 # 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
 

@@ -77,3 +77,9 @@ wget https://downloads.cs.stanford.edu/nlp/software/stanford-corenlp-4.5.5-model
 cd $SCRATCH/mq_libs
 
 git clone https://huggingface.co/kpyu/video-blip-opt-2.7b-ego4d
+
+cd video-blip-opt-2.7b-ego4d
+
+wget https://huggingface.co/kpyu/video-blip-opt-2.7b-ego4d/resolve/main/pytorch_model-00001-of-00002.bin
+
+wget https://huggingface.co/kpyu/video-blip-opt-2.7b-ego4d/resolve/main/pytorch_model-00002-of-00002.bin
