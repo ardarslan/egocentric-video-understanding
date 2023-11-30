@@ -30,10 +30,10 @@ if __name__ == "__main__":
         "ego4d_data/v2/clips",
         "ffe2261f-b973-4fbd-8824-06f8334afdc5.mp4",
     )
-    clip = video_path_handler.video_from_path(video_path).get_clip(0, 10)
+    clip = video_path_handler.video_from_path(video_path).get_clip(0, 0.3)
 
     # sample a frame every 30 frames, i.e. 1 fps. We assume the video is 30 fps for now.
-    frames = clip["video"][:, ::30, ...].unsqueeze(0)
+    frames = clip["video"].unsqueeze(0)
 
     # construct chat context
     text = "Question: What is the camera wearer doing? Answer:"
