@@ -15,8 +15,8 @@ from transformers.modeling_outputs import BaseModelOutputWithPooling
 
 def process(
     processor: Blip2Processor,
-    video: torch.Tensor = None,
-    text: str = None,
+    video: torch.Tensor | None = None,
+    text: str | list[str] | None = None,
 ) -> BatchEncoding:
     """Process videos and texts for VideoBLIP.
 
@@ -42,11 +42,11 @@ class VideoBlipVisionModel(Blip2VisionModel):
 
     def forward(
         self,
-        pixel_values: torch.FloatTensor = None,
-        output_attentions: bool = None,
-        output_hidden_states: bool = None,
-        return_dict: bool = None,
-    ) -> tuple:
+        pixel_values: torch.FloatTensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple | BaseModelOutputWithPooling:
         """Flatten `pixel_values` along the batch and time dimension, pass it
         through the original vision model, then unflatten it back.
 
