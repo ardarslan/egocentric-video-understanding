@@ -12,7 +12,6 @@ from pathlib import Path
 from accelerate import init_empty_weights, infer_auto_device_map
 from transformers import (
     Blip2Processor,
-    Blip2PreTrainedModel,
 )
 
 from typing import List
@@ -134,7 +133,7 @@ parser.add_argument(
         "ego4d_data/v2/analysis_data/best_fine_tuned_blip2_model/best_fine_tuned_video_blip_model.pt",
     ),
 )
-parser.add_argument("--torch_dtype", default=torch.float16)
+parser.add_argument("--torch_dtype", default=torch.float32)
 parser.add_argument("--num_epochs", type=int, default=50)
 parser.add_argument("--num_batches_in_one_epoch", type=int, default=100)
 args = parser.parse_args()
@@ -153,6 +152,8 @@ device_map = infer_auto_device_map(
     no_split_module_classes=VideoBlipForConditionalGeneration._no_split_modules,
     dtype=args.torch_dtype,
 )
+
+print(device_map)
 
 del model
 gc.collect()

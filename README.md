@@ -414,11 +414,87 @@ sbatch --time 720 --gres=gpu:8 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune
 
 # 01_08 - Install MQ VideoBLIP packages
 
-export CODE=/local/home/aarslan/mq
+cd $SCRATCH
 
-export SCRATCH=/data/aarslan
+rm -rf ~/.cache
 
-export CUDA_HOME=/usr/local/cuda
+rm -rf $SCRATCH/pip_cache
+
+rm -rf $SCRATCH/pip_temp
+
+rm -rf $SCRATCH/mambaforge/envs/mq_video_blip
+
+mkdir $SCRATCH/pip_temp
+
+mkdir $SCRATCH/pip_cache
+
+mamba create -n mq_video_blip python=3.11
+
+mamba activate mq_video_blip
+
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+
+cd $CODE
+
+wget https://bootstrap.pypa.io/get-pip.py
+
+python3 get-pip.py --user
+
+rm -rf get-pip.py
+
+python3 -m pip install pipx
+
+python3 -m pipx ensurepath
+
+exit
+
+ssh aarslan@robustus.ee.ethz.ch
+
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+
+mamba deactivate
+
+mamba activate mq_video_blip
+
+cd $CODE/scripts/06_analyze_frame_features/07_video_blip
+
+rm -rf VideoBLIP
+
+git clone git@github.com:yukw777/VideoBLIP.git
+
+cd VideoBLIP
+
+export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+
+export TMPDIR=$SCRATCH/pip_temp
+
+mkdir -p $SCRATCH/pip_cache
+
+export PIP_CACHE_DIR=$SCRATCH/pip_cache
+
+export POETRY_CACHE_DIR=$SCRATCH/poetry_cache
+
+poetry install
+
+poetry shell
+
+cd VideoBLIP
+
+sbatch --time 720 --gres=gpu:6 --cpus-per-task 4 --mem-per-cpu 200G 01_fine_tune_video_blip.sh
+
+<!--
 
 mamba deactivate
 
@@ -426,11 +502,13 @@ mamba create --name mq_video_blip python=3.9.9
 
 mamba activate mq_video_blip
 
-module load cuda/11.3
+export TMPDIR=$SCRATCH/pip_temp
+
+python3 -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu115
 
 mamba install transformers opencv accelerate
 
-python3 -m pip install "git+https://github.com/facebookresearch/pytorchvideo.git"
+python3 -m pip install "git+https://github.com/facebookresearch/pytorchvideo.git" -->
 
 # 02_01 - Download Ego4D dataset and pre-extracted features
 
