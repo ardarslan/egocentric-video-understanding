@@ -686,9 +686,9 @@ export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
-cd $CODE/scripts/07_blip2_embedding_analysis
+mamba activate mq_blip2_embedding_analysis
 
-mamba activate mq_
+cd $CODE/scripts/07_blip2_embedding_analysis
 
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "0" -c "0,1"
 
