@@ -409,11 +409,24 @@ sbatch --time 720 --gres=gpu:8 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune
 
 # 01_07 - Install MQ BLIP2 embedding analysis packages
 
+AIT
+```
 export CODE=/local/home/aarslan/mq
 
 export SCRATCH=/data/aarslan
 
 export CUDA_HOME=/usr/local/cuda
+```
+
+CVL
+```
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
 rm -rf ~/.cache
 
@@ -449,11 +462,13 @@ Open a new terminal
 
 mamba activate mq_blip2_embedding_analysis
 
-export CODE=/local/home/aarslan/mq
+export CODE=/home/aarslan/mq
 
-export SCRATCH=/data/aarslan
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
-export CUDA_HOME=/usr/local/cuda
+export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
 cd $CODE/scripts/07_blip2_embedding_analysis/
 
@@ -466,6 +481,7 @@ cd $CODE/scripts/07_blip2_embedding_analysis/transformers
 git clone https://github.com/huggingface/transformers.git
 
 pip install -e .
+```
 
 # 02_01 - Download Ego4D dataset and pre-extracted features
 
@@ -661,17 +677,26 @@ CUDA_VISIBLE_DEVICES=3,7 python3 01_extract_frame_features.py --frame_feature_na
 CVL
 
 ```
-screen
+
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
 cd $CODE/scripts/07_blip2_embedding_analysis
 
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 0
+mamba activate mq_
 
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 1
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "0" -c "0,1"
 
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 2
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "1" -c "0,1"
 
-CUDA_VISIBLE_DEVICES=3,7 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 3
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "2" -c "0,1"
+
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "3" -c "0,1"
 ```
 
 # 08_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
