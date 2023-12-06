@@ -1,0 +1,3 @@
+lsof -i:5960
+Copy the PID
+pkill -9 PID

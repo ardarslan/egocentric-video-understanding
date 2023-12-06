@@ -80,6 +80,10 @@ git clone https://huggingface.co/kpyu/video-blip-opt-2.7b-ego4d
 
 cd video-blip-opt-2.7b-ego4d
 
+rm -rf pytorch_model-00001-of-00002.bin
+
+rm -rf pytorch_model-00002-of-00002.bin
+
 wget https://huggingface.co/kpyu/video-blip-opt-2.7b-ego4d/resolve/main/pytorch_model-00001-of-00002.bin
 
 wget https://huggingface.co/kpyu/video-blip-opt-2.7b-ego4d/resolve/main/pytorch_model-00002-of-00002.bin

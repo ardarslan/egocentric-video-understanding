@@ -11,8 +11,8 @@
             "purpose": ["debug-test"],
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env": {"name": "CUDA_VISIBLE_DEVICES", "value": "7"},
-            "program": "${workspaceFolder}/scripts/06_analyze_frame_features/06_fine_tune_blip2_frame_wise/02_fine_tune_blip2_frame_wise.py",
+            "env": {"name": "CUDA_VISIBLE_DEVICES", "value": "4,5,7"},
+            "program": "${workspaceFolder}/scripts/07_blip2_embedding_analysis/01_extract_frame_features.py",
         }
     ]
 }

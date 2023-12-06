@@ -43,16 +43,8 @@ question_constant_mapping = {
     "What does the image describe?": 0,
     "What is the person in this picture doing?": 1,
     "What is happening in this picture?": 2,
-<<<<<<< HEAD
-    # "What are the objects that the person is interacting with in this picture?": 3,
-    # "What action the person in this picture is doing?": 4,
-    # "This picture was taken with a camera mounted on the head of a person. What is this person doing?": 5,
-    # "What is the camera wearer doing?": 6,
-=======
-    "What are the objects that the person is interacting with in this picture?": 3,
-    "What action the person in this picture is doing?": 4,
-    "This picture was taken with a camera mounted on the head of a person. What is this person doing?": 5,
-    "What is the camera wearer doing?": 6,
->>>>>>> e7bc84842a1393554a1637d1ead41689a41c8a84
+    "What action the person in this picture is doing?": 3,
+    "This picture was taken with a camera mounted on the head of a person. What is this person doing?": 4,
+    "What is the camera wearer doing?": 5,
     "asl": 7,
 }

@@ -65,7 +65,7 @@ export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
-mamba activate mq_analysis
+mamba activate mq_blip2_caption_analysis
 
 jupyter notebook --no-browser --port 5998 --ip $(hostname -f)
 ```
@@ -340,7 +340,7 @@ cd $CODE/scripts/01_setup_environment
 
 python3 -m pip install -r mq_model_requirements.txt
 
-cd $CODE/scripts/07_reproduce_mq_experiments/libs/utils
+cd $CODE/scripts/08_reproduce_mq_experiments/libs/utils
 
 python3 setup.py install
 
@@ -356,7 +356,7 @@ cd $CODE/scripts/01_setup_environment
 
 python3 -m pip install -r mq_visualization_requirements.txt
 
-# 01_06 - Install MQ analysis packages
+# 01_06 - Install MQ BLIP2 caption analysis packages
 
 export CODE=/home/aarslan/mq
 
@@ -368,14 +368,15 @@ export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
 mamba deactivate
 
-mamba create -n mq_analysis python=3.9.9
+mamba create -n mq_blip2_caption_analysis python=3.9.9
 
-mamba activate mq_analysis
+mamba activate mq_blip2_caption_analysis
 
 cd $CODE/scripts/01_setup_environment
 
-python3 -m pip install -r mq_analysis_requirements.txt
+python3 -m pip install -r mq_blip2_caption_analysis_requirements.txt
 
+<!--
 # 01_07 - Install MQ finetune packages
 
 export CODE=/home/aarslan/mq
@@ -385,12 +386,6 @@ export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
-
-<!-- export CODE=/local/home/aarslan/mq
-
-export SCRATCH=/data/aarslan
-
-export CUDA_HOME=/usr/local/cuda -->
 
 mamba deactivate
 
@@ -404,17 +399,21 @@ mamba install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch-nightl
 
 pip install numpy tqdm pillow transformers accelerate opencv-python
 
-cd $CODE/scripts/06_analyze_frame_features/06_fine_tune_blip2_frame_wise
+cd $CODE/scripts/06_blip2_caption_analysis/06_fine_tune_blip2_frame_wise
 
 python3 01_extract_labels_file.py --split train
 
 python3 01_extract_labels_file.py --split val
 
-sbatch --time 720 --gres=gpu:8 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune_blip2_frame_wise.sh
+sbatch --time 720 --gres=gpu:8 --cpus-per-task 4 --mem-per-cpu 200G 02_fine_tune_blip2_frame_wise.sh -->
 
-# 01_08 - Install MQ VideoBLIP packages
+# 01_07 - Install MQ BLIP2 embedding analysis packages
 
-cd $SCRATCH
+export CODE=/local/home/aarslan/mq
+
+export SCRATCH=/data/aarslan
+
+export CUDA_HOME=/usr/local/cuda
 
 rm -rf ~/.cache
 
@@ -422,23 +421,15 @@ rm -rf $SCRATCH/pip_cache
 
 rm -rf $SCRATCH/pip_temp
 
-rm -rf $SCRATCH/mambaforge/envs/mq_video_blip
+rm -rf $SCRATCH/mambaforge/envs/mq_blip2_embedding_analysis
 
 mkdir $SCRATCH/pip_temp
 
 mkdir $SCRATCH/pip_cache
 
-mamba create -n mq_video_blip python=3.11
+mamba create -n mq_blip2_embedding_analysis python=3.11
 
-mamba activate mq_video_blip
-
-export CODE=/home/aarslan/mq
-
-export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
-
-export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
-
-export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+mamba activate mq_blip2_embedding_analysis
 
 cd $CODE
 
@@ -454,61 +445,27 @@ python3 -m pipx ensurepath
 
 exit
 
-ssh aarslan@robustus.ee.ethz.ch
+Open a new terminal
 
-export CODE=/home/aarslan/mq
+mamba activate mq_blip2_embedding_analysis
 
-export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+export CODE=/local/home/aarslan/mq
 
-export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+export SCRATCH=/data/aarslan
 
-export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+export CUDA_HOME=/usr/local/cuda
 
-mamba deactivate
+cd $CODE/scripts/07_blip2_embedding_analysis/
 
-mamba activate mq_video_blip
+cd EILEV
 
-cd $CODE/scripts/06_analyze_frame_features/07_video_blip
+pip install -e .
 
-rm -rf VideoBLIP
+cd $CODE/scripts/07_blip2_embedding_analysis/transformers
 
-git clone git@github.com:yukw777/VideoBLIP.git
+git clone https://github.com/huggingface/transformers.git
 
-cd VideoBLIP
-
-export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
-
-export TMPDIR=$SCRATCH/pip_temp
-
-mkdir -p $SCRATCH/pip_cache
-
-export PIP_CACHE_DIR=$SCRATCH/pip_cache
-
-export POETRY_CACHE_DIR=$SCRATCH/poetry_cache
-
-poetry install
-
-poetry shell
-
-cd VideoBLIP
-
-sbatch --time 720 --gres=gpu:6 --cpus-per-task 4 --mem-per-cpu 200G 01_fine_tune_video_blip.sh
-
-<!--
-
-mamba deactivate
-
-mamba create --name mq_video_blip python=3.9.9
-
-mamba activate mq_video_blip
-
-export TMPDIR=$SCRATCH/pip_temp
-
-python3 -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu115
-
-mamba install transformers opencv accelerate
-
-python3 -m pip install "git+https://github.com/facebookresearch/pytorchvideo.git" -->
+pip install -e .
 
 # 02_01 - Download Ego4D dataset and pre-extracted features
 
@@ -626,23 +583,24 @@ python3 horizontal_bar_plots.py --clip_id 00e4af86-adca-479f-a20a-402f1bc933a0 -
 python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe --port 8055
 ```
 
-# 06 - Analyze frame features (CVL)
+# 06 - BLIP2 Caption Analysis
 
-mamba activate mq_analysis
+```
+mamba activate mq_blip2_caption_analysis
 
-cd $CODE/scripts/06_analyze_frame_features/01_extract_blip2_answer_dependency_parsing_features
+cd $CODE/scripts/06_blip2_caption_analysis/01_extract_blip2_answer_dependency_parsing_features
 
 chmod +x 01_extract_blip2_answer_dependency_parsing_features.sh
 
 sbatch --time 720 --cpus-per-task=24 --mem 40G 01_extract_blip2_answer_dependency_parsing_features.sh
 
-cd $CODE/scripts/06_analyze_frame_features/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
+cd $CODE/scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G 01_process_ground_truth_labels.sh
+./01_process_ground_truth_labels.sh
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G 02_process_asl_predictions.sh
+./02_process_asl_predictions.sh
 
-sbatch --time 720 --cpus-per-task=8 --mem 40G 03_blip2_dictionary_matching.sh
+./03_blip2_dictionary_matching.sh
 
 ./03_blip2_sbert_matching.sh -q 0 -c 4 -b sentence-transformers/all-distilroberta-v1
 
@@ -652,9 +610,9 @@ sbatch --time 720 --cpus-per-task=8 --mem 40G 03_blip2_dictionary_matching.sh
 
 ./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
 
-sbatch --time 720 --cpus-per-task=8 --mem 200G ./04_max_per_question_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
+./04_max_per_question_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
 
-sbatch --time 720 --cpus-per-task=24 --mem 200G ./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
+./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
 
 ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
@@ -669,7 +627,6 @@ sbatch --time 720 --cpus-per-task=24 --mem 200G ./04_max_per_question_per_label_
 ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 
 
-
 ./05_evaluate_predictions.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
 ./05_evaluate_predictions.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
@@ -681,63 +638,57 @@ sbatch --time 720 --cpus-per-task=24 --mem 200G ./04_max_per_question_per_label_
 ./05_evaluate_predictions.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
 
 ./05_evaluate_predictions.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+```
 
+# 07 - BLIP2 Embedding Analysis
 
-# 06 - Analyze frame features (AIT)
+AIT
 
+```
 screen
 
-mamba activate mq_analysis
+cd $CODE/scripts/07_blip2_embedding_analysis
 
-cd $CODE/scripts/06_analyze_frame_features/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 0
 
-./03_blip2_sbert_matching.sh -q 0 -c 4 -b sentence-transformers/all-distilroberta-v1
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 1
 
-./03_blip2_sbert_matching.sh -q 1 -c 5 -b sentence-transformers/all-distilroberta-v1
+CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 2
 
-./03_blip2_sbert_matching.sh -q 2 -c 6 -b sentence-transformers/all-distilroberta-v1
+CUDA_VISIBLE_DEVICES=3,7 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 3
+```
 
-./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
+CVL
 
-./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
+```
+screen
 
+cd $CODE/scripts/07_blip2_embedding_analysis
 
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 0
 
-sbatch --time 720 --gres=gpu:6 --cpus-per-task 4 --mem-per-cpu 200G ./app.sh 02_fine_tune_blip2_frame_wise.sh
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 1
 
-# 07_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
+CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 2
 
+CUDA_VISIBLE_DEVICES=3,7 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 3
+```
+
+# 08_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
+
+```
 mamba deactivate
 
 mamba activate mq_model
 
-cd $CODE/scripts/07_reproduce_mq_experiments
+cd $CODE/scripts/08_reproduce_mq_experiments
 
 sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 60G train.sh
 
 sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 60G test.sh
 
-# 07_02 - Reproduce baseline results (Works in CVL Server, With Ensemble)
-
-mamba deactivate
-
-mamba activate mq_model
-
-cd $CODE/scripts/07_reproduce_baseline_results
-
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 train_1.sh
-
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 train_2.sh
-
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 train_3.sh
-
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 train_4.sh
-
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 train_5.sh
-
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G --nodelist=biwirender08 test.sh
-
 python merge_submission.py
+```
 
 From terminal of your computer run the following lines:
 
@@ -751,6 +702,6 @@ Login to https://eval.ai/auth/login
 
 Submit submission_final.json to https://eval.ai/web/challenges/challenge-page/1626/leaderboard
 
-# 08 - Reproduce our results
+# 08_02 - Reproduce our results
 
 (NOT IMPLEMENTED YET)

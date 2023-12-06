@@ -58,7 +58,7 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
                     ],
                     text=["Question: " + question + " Answer:"] * len(frames_batch),
                     return_tensors="pt",
-                ).to(self.args.device, torch.float16)
+                ).to(self.args.device)
                 generated_ids = self.model.generate(**preprocessed_frames_batch_dict)
                 blip2_answers = self.processor.batch_decode(
                     generated_ids, skip_special_tokens=True
