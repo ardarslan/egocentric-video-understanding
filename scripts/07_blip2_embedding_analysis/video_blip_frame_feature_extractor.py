@@ -22,7 +22,7 @@ class VideoBLIPFrameFeatureExtractor(FrameFeatureExtractor):
                 "query_tokens": 0,
                 "vision_model": 0,
                 "language_model": 1,
-                "language_projection": 0,
+                "language_projection": 1,
                 "qformer": 0,
             }
         else:
@@ -33,7 +33,7 @@ class VideoBLIPFrameFeatureExtractor(FrameFeatureExtractor):
             device_map=device_map,
             torch_dtype=torch.float16,
         )
-        self.sbert_model = SentenceTransformer("sentence-transformers/all-distilroberta-v1", device="cuda:2")
+        self.sbert_model = SentenceTransformer("sentence-transformers/all-distilroberta-v1", device="cuda:0")
         self.question = "What is the camera wearer doing?"
 
     def predictor_function(

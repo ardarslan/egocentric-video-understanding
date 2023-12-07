@@ -22,9 +22,9 @@ class FrameFeatureExtractor(object):
                 "first_word_last_layer_hidden_state"
             ]
         elif args.frame_feature_name == "video_blip":
-            self.number_of_frames_per_input = 11
-            self.target_fps = 5.45454545
-            self.window_center_frame_stride = 11
+            self.number_of_frames_per_input = 9
+            self.target_fps = 6.6666666
+            self.window_center_frame_stride = 9
             self.column_names = [
                 "frame_index",
                 "question",

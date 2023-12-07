@@ -667,19 +667,24 @@ cd $CODE/scripts/07_blip2_embedding_analysis
 
 mamba activate mq_blip2_embedding_analysis
 
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 0
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 0 --split train
 
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 1
-
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 2
-
-CUDA_VISIBLE_DEVICES=3,7 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 3
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 1 --split train
 ```
+
+<!--
+CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 2 --split train
+
+CUDA_VISIBLE_DEVICES=3,7 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 3 --split train
+
+CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 4 --split train
+
+CUDA_VISIBLE_DEVICES=3,7 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 5 --split train
+-->
 
 CVL
 
 ```
-
 export CODE=/home/aarslan/mq
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
@@ -692,13 +697,13 @@ mamba activate mq_blip2_embedding_analysis
 
 cd $CODE/scripts/07_blip2_embedding_analysis
 
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "0" -c "0,1"
-
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "1" -c "0,1"
-
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "2" -c "0,1"
 
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "3" -c "0,1"
+
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "4" -c "0,1"
+
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 2 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "5" -c "0,1"
 ```
 
 # 08_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
