@@ -20,7 +20,7 @@ class VideoBLIPFrameFeatureExtractor(FrameFeatureExtractor):
         if torch.cuda.device_count() > 1:
             device_map = {
                 "query_tokens": 0,
-                "vision_model":0,
+                "vision_model": 0,
                 "language_model": 1,
                 "language_projection": 0,
                 "qformer": 0,
@@ -36,18 +36,6 @@ class VideoBLIPFrameFeatureExtractor(FrameFeatureExtractor):
         self.sbert_model = SentenceTransformer("sentence-transformers/all-distilroberta-v1", device="cuda:2")
         self.question = "What is the camera wearer doing?"
 
-    @property
-    def column_names(self):
-        return [
-            "frame_index",
-            "question",
-            "caption",
-            "caption_sbert_embedding",
-            "language_model_input",
-            "first_word_first_layer_hidden_state",
-            "first_word_last_layer_hidden_state"
-        ]
-
     def predictor_function(
         self, frame_index: int, frames: List[np.array] # (T, H, W, C), np.uint8, BGR, 1 fps
     ):
@@ -55,10 +43,9 @@ class VideoBLIPFrameFeatureExtractor(FrameFeatureExtractor):
             raise Exception("Number of frames should be at most 10.")
         with torch.no_grad():
             # sample a frame every 30 frames, i.e. 1 fps. We assume the video is 30 fps for now.
-            frames = torch.vstack(frames).to(self.video_blip_model.device) # (T, H, W, C), torch.int, BGR, 1 fps
-            frames = frames[:, :, :, ::-1] # (T, H, W, C), torch.int, RGB, 1 fps
+            frames = torch.tensor(np.stack([frame[:, :, ::-1] for frame in frames], axis=0), device="cuda") # (T, H, W, C), torch.int, BGR, 1 fps
             frames = frames.permute((3, 0, 1, 2)) # (C, T, H, W), torch.int, RGB, 1 fps
-            model_input = process(self.processor, video=frames, text=self.question).to(self.video_blip_model.device)
+            model_input = process(self.processor, video=frames, text=self.question).to("cuda")
             results = self.video_blip_model.generate(
                 **model_input,
                 num_beams=4,

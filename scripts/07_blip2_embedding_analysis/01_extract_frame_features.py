@@ -25,10 +25,13 @@ if __name__ == "__main__":
             "blip2_vqa",
             "video_blip"
         ],
-        default="blip2_vqa"
+        default="video_blip"
     )
     parser.add_argument(
-        "--quarter_index", type=int, choices=[0, 1, 2, 3], default=0
+        "--split", type=str, choices=["train"] # CHANGE HERE
+    )
+    parser.add_argument(
+        "--quarter_index", type=int, choices=[0, 1, 2, 3, 4, 5], default=0 # CHANGE HERE
     )
     parser.add_argument("--num_devices", type=int, default=torch.cuda.device_count())
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
@@ -68,16 +71,33 @@ if __name__ == "__main__":
 
     with open(args.annotations_json_file_path, "r") as annotations_json_file:
         annotations_dict = json.load(annotations_json_file)
-        clip_uids = sorted(list(annotations_dict.keys()))
+        all_clip_uids = sorted(list(annotations_dict.keys()))
+        clip_uids = [clip_uid for clip_uid in all_clip_uids if annotations_dict[clip_uid]["subset"] == args.split]
 
     if args.quarter_index == 0:
-        clip_uids = clip_uids[: int(len(clip_uids) / 4)]
+        clip_uids = clip_uids[: int(len(clip_uids) / 12)]
     elif args.quarter_index == 1:
-        clip_uids = clip_uids[int(len(clip_uids) / 4) : int(2 * len(clip_uids) / 4)]
+        clip_uids = clip_uids[int(len(clip_uids) / 12) : int(2 * len(clip_uids) / 12)]
     elif args.quarter_index == 2:
-        clip_uids = clip_uids[int(2 * len(clip_uids) / 4) : int(3 * len(clip_uids) / 4)]
+        clip_uids = clip_uids[int(2 * len(clip_uids) / 12) : int(3 * len(clip_uids) / 12)]
     elif args.quarter_index == 3:
-        clip_uids = clip_uids[int(3 * len(clip_uids) / 4) : ]
+        clip_uids = clip_uids[int(3 * len(clip_uids) / 12) : int(4 * len(clip_uids) / 12)]
+    elif args.quarter_index == 4:
+        clip_uids = clip_uids[int(4 * len(clip_uids) / 12) : int(5 * len(clip_uids) / 12)]
+    elif args.quarter_index == 5:
+        clip_uids = clip_uids[int(5 * len(clip_uids) / 12) : int(6 * len(clip_uids) / 12)]
+    elif args.quarter_index == 6:
+        clip_uids = clip_uids[int(6 * len(clip_uids) / 12) : int(7 * len(clip_uids) / 12)]
+    elif args.quarter_index == 7:
+        clip_uids = clip_uids[int(7 * len(clip_uids) / 12) : int(8 * len(clip_uids) / 12)]
+    elif args.quarter_index == 8:
+        clip_uids = clip_uids[int(8 * len(clip_uids) / 12) : int(9 * len(clip_uids) / 12)]
+    elif args.quarter_index == 9:
+        clip_uids = clip_uids[int(9 * len(clip_uids) / 12) : int(10 * len(clip_uids) / 12)]
+    elif args.quarter_index == 10:
+        clip_uids = clip_uids[int(10 * len(clip_uids) / 12) : int(11 * len(clip_uids) / 12)]
+    elif args.quarter_index == 11:
+        clip_uids = clip_uids[int(11 * len(clip_uids) / 12) : ]
     else:
         raise Exception(f"{args.quarter_index} is not a valid quarter index.")
 
