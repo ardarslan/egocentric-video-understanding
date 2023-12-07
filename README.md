@@ -697,13 +697,13 @@ mamba activate mq_blip2_embedding_analysis
 
 cd $CODE/scripts/07_blip2_embedding_analysis
 
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "2" -s train
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "2" -s "train"
 
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "3" -s train
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "3" -s "train"
 
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "4" -s train
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "4" -s "train"
 
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "5" -s train
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "5" -s "train"
 ```
 
 # 08_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
