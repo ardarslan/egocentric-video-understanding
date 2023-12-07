@@ -23,7 +23,7 @@ class FrameFeatureExtractor(object):
             ]
         elif args.frame_feature_name == "video_blip":
             self.number_of_frames_per_input = 9
-            self.target_fps = 6.6666666
+            self.target_fps = 4.5
             self.window_center_frame_stride = 9
             self.column_names = [
                 "frame_index",
@@ -36,14 +36,13 @@ class FrameFeatureExtractor(object):
             ]
 
     def get_new_input(self, current_input_start_frame_index: int, cap: cv2.VideoCapture):
-        if self.number_of_frames_per_input % 2 != 1:
-            raise Exception("number_of_frames_per_input should be odd.")
-
         original_fps = cap.get(cv2.CAP_PROP_FPS)
         if self.number_of_frames_per_input > 1:
-            cursor_stride_in_same_window = int(original_fps / float(self.target_fps))
+            cursor_stride_in_same_window = int(np.round(original_fps / float(self.target_fps)))
+            current_input_center_frame_index = int(np.round(current_input_start_frame_index + original_fps / float(self.target_fps) * self.number_of_frames_per_input / 2))
+        else:
+            current_input_center_frame_index = current_input_start_frame_index
 
-        current_input_center_frame_index = int(current_input_start_frame_index + ((self.number_of_frames_per_input - 1) * original_fps / 2))
         current_input = {
             "frame_index": current_input_center_frame_index,
             "frames": []
