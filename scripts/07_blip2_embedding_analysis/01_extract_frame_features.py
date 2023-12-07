@@ -75,29 +75,17 @@ if __name__ == "__main__":
         clip_uids = [clip_uid for clip_uid in all_clip_uids if annotations_dict[clip_uid]["subset"] == args.split]
 
     if args.quarter_index == 0:
-        clip_uids = clip_uids[: int(len(clip_uids) / 12)]
+        clip_uids = clip_uids[: int(len(clip_uids) / 24)]
     elif args.quarter_index == 1:
-        clip_uids = clip_uids[int(len(clip_uids) / 12) : int(2 * len(clip_uids) / 12)]
+        clip_uids = clip_uids[int(len(clip_uids) / 24) : int(2 * len(clip_uids) / 24)]
     elif args.quarter_index == 2:
-        clip_uids = clip_uids[int(2 * len(clip_uids) / 12) : int(3 * len(clip_uids) / 12)]
+        clip_uids = clip_uids[int(2 * len(clip_uids) / 24) : int(3 * len(clip_uids) / 24)]
     elif args.quarter_index == 3:
-        clip_uids = clip_uids[int(3 * len(clip_uids) / 12) : int(4 * len(clip_uids) / 12)]
+        clip_uids = clip_uids[int(3 * len(clip_uids) / 24) : int(4 * len(clip_uids) / 24)]
     elif args.quarter_index == 4:
-        clip_uids = clip_uids[int(4 * len(clip_uids) / 12) : int(5 * len(clip_uids) / 12)]
+        clip_uids = clip_uids[int(4 * len(clip_uids) / 24) : int(5 * len(clip_uids) / 24)]
     elif args.quarter_index == 5:
-        clip_uids = clip_uids[int(5 * len(clip_uids) / 12) : int(6 * len(clip_uids) / 12)]
-    elif args.quarter_index == 6:
-        clip_uids = clip_uids[int(6 * len(clip_uids) / 12) : int(7 * len(clip_uids) / 12)]
-    elif args.quarter_index == 7:
-        clip_uids = clip_uids[int(7 * len(clip_uids) / 12) : int(8 * len(clip_uids) / 12)]
-    elif args.quarter_index == 8:
-        clip_uids = clip_uids[int(8 * len(clip_uids) / 12) : int(9 * len(clip_uids) / 12)]
-    elif args.quarter_index == 9:
-        clip_uids = clip_uids[int(9 * len(clip_uids) / 12) : int(10 * len(clip_uids) / 12)]
-    elif args.quarter_index == 10:
-        clip_uids = clip_uids[int(10 * len(clip_uids) / 12) : int(11 * len(clip_uids) / 12)]
-    elif args.quarter_index == 11:
-        clip_uids = clip_uids[int(11 * len(clip_uids) / 12) : ]
+        clip_uids = clip_uids[int(5 * len(clip_uids) / 24) : int(6 * len(clip_uids) / 24)]
     else:
         raise Exception(f"{args.quarter_index} is not a valid quarter index.")
 
