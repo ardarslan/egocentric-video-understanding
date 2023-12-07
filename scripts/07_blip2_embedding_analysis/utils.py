@@ -12,8 +12,8 @@ def get_frame_feature_extractor(args):
     return frame_feature_extractor(args=args)
 
 
-def get_output_file_name(args):
-    return args.frame_feature_name + "_features.tsv"
+def get_output_file_name_wo_ext(args):
+    return args.frame_feature_name + "_features"
 
 
 def get_error_file_name(args):

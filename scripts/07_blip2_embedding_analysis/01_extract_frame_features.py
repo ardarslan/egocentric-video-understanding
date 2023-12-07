@@ -9,7 +9,7 @@ torch.cuda.empty_cache()
 from tqdm import tqdm
 from utils import (
     get_frame_feature_extractor,
-    get_output_file_name,
+    get_output_file_name_wo_ext,
     get_error_file_name,
 )
 from frame_feature_extractor import FrameFeatureExtractor
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         default="video_blip"
     )
     parser.add_argument(
-        "--split", type=str, choices=["train"] # CHANGE HERE
+        "--split", type=str, choices=["val"] # CHANGE HERE
     )
     parser.add_argument(
         "--quarter_index", type=int, choices=[0, 1, 2, 3, 4, 5], default=0 # CHANGE HERE
@@ -66,38 +66,22 @@ if __name__ == "__main__":
 
     frame_feature_extractor = get_frame_feature_extractor(args=args)
     column_names = frame_feature_extractor.column_names
-    output_file_name = get_output_file_name(args=args)
+    output_file_name_wo_ext = get_output_file_name_wo_ext(args=args)
     error_file_name = get_error_file_name(args=args)
 
     with open(args.annotations_json_file_path, "r") as annotations_json_file:
         annotations_dict = json.load(annotations_json_file)
         all_clip_uids = sorted(list(annotations_dict.keys()))
         clip_uids = [clip_uid for clip_uid in all_clip_uids if annotations_dict[clip_uid]["subset"] == args.split]
-
-    if args.quarter_index == 0:
-        clip_uids = clip_uids[: int(len(clip_uids) / 24)]
-    elif args.quarter_index == 1:
-        clip_uids = clip_uids[int(len(clip_uids) / 24) : int(2 * len(clip_uids) / 24)]
-    elif args.quarter_index == 2:
-        clip_uids = clip_uids[int(2 * len(clip_uids) / 24) : int(3 * len(clip_uids) / 24)]
-    elif args.quarter_index == 3:
-        clip_uids = clip_uids[int(3 * len(clip_uids) / 24) : int(4 * len(clip_uids) / 24)]
-    elif args.quarter_index == 4:
-        clip_uids = clip_uids[int(4 * len(clip_uids) / 24) : int(5 * len(clip_uids) / 24)]
-    elif args.quarter_index == 5:
-        clip_uids = clip_uids[int(5 * len(clip_uids) / 24) : int(6 * len(clip_uids) / 24)]
-    else:
-        raise Exception(f"{args.quarter_index} is not a valid quarter index.")
+        clip_uids = clip_uids[int(args.quarter_index * len(clip_uids) / 12) : int((args.quarter_index + 1) * len(clip_uids) / 12)]
 
     for clip_uid in tqdm(clip_uids):
-        if os.path.exists(
-            os.path.join(args.output_folder_path, clip_uid, output_file_name)
-        ):
-            continue
         input_video_file_path = os.path.join(args.input_folder_path, clip_uid + ".mp4")
         cap = cv2.VideoCapture(input_video_file_path)
 
         results_list = []
+
+        file_name_counter = 0
 
         current_input_start_frame_index = 0
         while True:
@@ -112,14 +96,25 @@ if __name__ == "__main__":
             del current_input
             gc.collect()
 
-        FrameFeatureExtractor.save_results(
-            input_video_file_path=input_video_file_path,
-            results_list=results_list,
-            output_folder_path=args.output_folder_path,
-            column_names=column_names,
-            output_file_name=output_file_name,
-        )
-        del results_list
+            if len(results_list) == 100:
+                FrameFeatureExtractor.save_results(
+                    input_video_file_path=input_video_file_path,
+                    results_list=results_list,
+                    output_folder_path=args.output_folder_path,
+                    column_names=column_names,
+                    output_file_name=output_file_name_wo_ext + "_" + str(file_name_counter).zfill(6) + ".tsv",
+                )
+                results_list = []
+                file_name_counter += 1
+
+        if len(results_list) > 0:
+            FrameFeatureExtractor.save_results(
+                input_video_file_path=input_video_file_path,
+                results_list=results_list,
+                output_folder_path=args.output_folder_path,
+                column_names=column_names,
+                output_file_name=output_file_name_wo_ext + "_" + str(file_name_counter).zfill(6) + ".tsv",
+            )
 
         cap.release()
         gc.collect()
