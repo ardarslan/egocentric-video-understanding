@@ -76,12 +76,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ground_truth_action_instances_file_path",
         type=str,
-        default=f"{os.environ['CODE']}/scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json",
+        default=f"{os.environ['CODE']}/scripts/07_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json",
     )
     parser.add_argument(
         "--asl_predicted_action_instances_file_path",
         type=str,
-        default=f"{os.environ['CODE']}/scripts/07_reproduce_baseline_results/submission_final.json",
+        default=f"{os.environ['CODE']}/scripts/07_reproduce_mq_experiments/submission_final.json",
     )
     parser.add_argument(
         "--prediction_type",
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     with open(
         os.path.join(
             os.environ["CODE"],
-            "scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json",
+            "scripts/07_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json",
         ),
         "r",
     ) as reader:

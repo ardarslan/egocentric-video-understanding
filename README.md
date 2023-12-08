@@ -89,7 +89,7 @@ mamba deactivate
 
 mamba activate mq_model
 
-cd $CODE/scripts/07_reproduce_baseline_results
+cd $CODE/scripts/07_reproduce_mq_experiments
 
 python -m pdb train.py
 
@@ -727,7 +727,7 @@ From terminal of your computer run the following lines:
 ```
 cd ~/Desktop
 
-scp aarslan@robustus.ee.ethz.ch:/home/aarslan/mq/scripts/07_reproduce_baseline_results/submission_final.json submission_final.json
+scp aarslan@robustus.ee.ethz.ch:/home/aarslan/mq/scripts/07_reproduce_mq_experiments/submission_final.json submission_final.json
 ```
 
 Login to https://eval.ai/auth/login

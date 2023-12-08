@@ -17,6 +17,6 @@ def compare_anno(anno_path_old, anno_path_new):
 
 if __name__ == "__main__":
     compare_anno(
-        f"{os.environ['CODE']}/scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json",
-        f"{os.environ['CODE']}/scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations.json",
+        f"{os.environ['CODE']}/scripts/07_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json",
+        f"{os.environ['CODE']}/scripts/07_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations.json",
     )

@@ -85,12 +85,17 @@ if __name__ == "__main__":
 
         current_input_start_frame_index = 0
         while True:
-            current_input_start_frame_index, current_input = frame_feature_extractor.get_new_input(
-                current_input_start_frame_index=current_input_start_frame_index, cap=cap
-            )
+            if os.path.exists(os.path.join(args.output_folder_path, output_file_name_wo_ext + "_" + str(file_name_counter).zfill(6) + ".tsv")):
+                current_input_start_frame_index += 100 * frame_feature_extractor.window_center_frame_stride
+                results_list = []
+                file_name_counter += 1
+                continue
+
+            current_input_start_frame_index, current_input = frame_feature_extractor.get_new_input(current_input_start_frame_index=current_input_start_frame_index, cap=cap)
 
             if current_input is None:
                 break
+
             current_result = frame_feature_extractor.predictor_function(**current_input)
             results_list.append(current_result)
             del current_input

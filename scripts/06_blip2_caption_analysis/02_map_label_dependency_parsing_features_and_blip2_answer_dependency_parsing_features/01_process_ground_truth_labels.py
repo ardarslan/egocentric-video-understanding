@@ -8,7 +8,7 @@ from pathlib import Path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_file_path", type=str, default=os.path.join(os.environ["CODE"], "scripts/07_reproduce_baseline_results/data/ego4d/ego4d_clip_annotations_v3.json"))
+    parser.add_argument("--input_file_path", type=str, default=os.path.join(os.environ["CODE"], "scripts/07_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json"))
     parser.add_argument(
         "--label_verb_noun_tool_mapping_file_path",
         type=str,

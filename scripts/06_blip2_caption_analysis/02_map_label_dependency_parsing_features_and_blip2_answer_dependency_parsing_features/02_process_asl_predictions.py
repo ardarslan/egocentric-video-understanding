@@ -3,14 +3,18 @@ import cv2
 import json
 import argparse
 import pickle
-import constants
 from tqdm import tqdm
 from pathlib import Path
+
+import sys
+sys.path.append("../04_extract_frame_features/")
+
+import constants
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_file_path", type=str, default=os.path.join(os.environ["CODE"], "scripts/07_reproduce_baseline_results/submission_final.json"))
+    parser.add_argument("--input_file_path", type=str, default=os.path.join(os.environ["CODE"], "scripts/07_reproduce_mq_experiments/submission_final.json"))
     parser.add_argument(
         "--label_verb_noun_tool_mapping_file_path",
         type=str,
@@ -55,12 +59,10 @@ if __name__ == "__main__":
                 if frame_time >= annotation_start_time and frame_time <= annotation_end_time:
                     if annotation_label_index not in clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]].keys():
                         clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]][annotation_label_index] = []
-                    match_type = constants.ASL_MATCH
-                    clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]][annotation_label_index].append((match_type, annotation_score))
+                    clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]][annotation_label_index].append(annotation_score)
 
             if len(clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]].keys()) == 0:
-                match_type = constants.BACKGROUND_MATCH
-                clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]][len(distinct_ground_truth_labels)] = [(match_type, 1.0)]
+                clip_id_frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][constants.question_constant_mapping["asl"]][len(distinct_ground_truth_labels)] = [1.0]
 
     with open(args.output_file_path, "wb") as writer:
         pickle.dump(clip_id_frame_id_asl_predicted_label_indices_mapping, writer)
