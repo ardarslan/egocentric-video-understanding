@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
         current_input_start_frame_index = 0
         while True:
-            if os.path.exists(os.path.join(args.output_folder_path, output_file_name_wo_ext + "_" + str(file_name_counter).zfill(6) + ".tsv")):
+            if os.path.exists(os.path.join(args.output_folder_path, clip_uid, output_file_name_wo_ext + "_" + str(file_name_counter).zfill(6) + ".tsv")):
                 current_input_start_frame_index += 100 * frame_feature_extractor.window_center_frame_stride
                 results_list = []
                 file_name_counter += 1
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
             if len(results_list) == 100:
                 FrameFeatureExtractor.save_results(
-                    input_video_file_path=input_video_file_path,
+                    clip_uid=clip_uid,
                     results_list=results_list,
                     output_folder_path=args.output_folder_path,
                     column_names=column_names,
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
         if len(results_list) > 0:
             FrameFeatureExtractor.save_results(
-                input_video_file_path=input_video_file_path,
+                clip_uid=clip_uid,
                 results_list=results_list,
                 output_folder_path=args.output_folder_path,
                 column_names=column_names,

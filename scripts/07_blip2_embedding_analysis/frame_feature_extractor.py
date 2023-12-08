@@ -67,7 +67,7 @@ class FrameFeatureExtractor(object):
 
     @staticmethod
     def save_results(
-        input_video_file_path,
+        clip_uid,
         results_list,
         output_folder_path,
         column_names,
@@ -78,15 +78,13 @@ class FrameFeatureExtractor(object):
             columns=column_names,
         )
 
-        input_video_file_name_wo_ext = input_video_file_path.split("/")[-1][:-4]
-
         os.makedirs(
-            os.path.join(output_folder_path, input_video_file_name_wo_ext),
+            os.path.join(output_folder_path, clip_uid),
             exist_ok=True,
         )
         results_df.to_csv(
             os.path.join(
-                output_folder_path, input_video_file_name_wo_ext, output_file_name
+                output_folder_path, clip_uid, output_file_name
             ),
             index=False,
             sep="\t",
