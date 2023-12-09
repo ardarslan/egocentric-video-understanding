@@ -85,7 +85,7 @@ def index(request):
     with open(
         os.path.join(
             os.environ["CODE"],
-            "scripts/07_reproduce_mq_experiments/data/ego4d",
+            "scripts/08_reproduce_mq_experiments/data/ego4d",
             "ego4d_clip_annotations_v3.json",
         ),
         "r",
@@ -752,7 +752,7 @@ class VideoDataReader(viewsets.ViewSet):
         if cls.ground_truths_dict is None:
             ground_truth_json_file_path = os.path.join(
                 os.environ["CODE"],
-                "scripts/07_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json",
+                "scripts/08_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json",
             )
             with open(
                 ground_truth_json_file_path, "r"
@@ -797,7 +797,7 @@ class VideoDataReader(viewsets.ViewSet):
                 if cls.asl_baseline_predictions_dict is None:
                     asl_baseline_predictions_file_path = os.path.join(
                         os.environ["CODE"],
-                        "scripts/07_reproduce_mq_experiments/submission_final.json",
+                        "scripts/08_reproduce_mq_experiments/submission_final.json",
                     )
                     with open(
                         asl_baseline_predictions_file_path, "r"
@@ -809,7 +809,7 @@ class VideoDataReader(viewsets.ViewSet):
                 if cls.ground_truths_dict is None:
                     ground_truth_json_file_path = os.path.join(
                         os.environ["CODE"],
-                        "scripts/07_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json",
+                        "scripts/08_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json",
                     )
                     with open(
                         ground_truth_json_file_path, "r"

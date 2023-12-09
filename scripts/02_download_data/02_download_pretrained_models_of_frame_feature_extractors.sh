@@ -72,18 +72,18 @@ rm -rf stanford-corenlp-4.5.5.zip
 
 wget https://downloads.cs.stanford.edu/nlp/software/stanford-corenlp-4.5.5-models-english.jar -O stanford-corenlp/stanford-corenlp-4.5.5-models-english.jar
 
-# kpyu/video-blip-opt-2.7b-ego4d
+# video-blip-flan-t5-xl-ego4d
 
 cd $SCRATCH/mq_libs
 
-git clone https://huggingface.co/kpyu/video-blip-opt-2.7b-ego4d
+git clone https://huggingface.co/kpyu/video-blip-flan-t5-xl-ego4d
 
-cd video-blip-opt-2.7b-ego4d
+cd video-blip-flan-t5-xl-ego4d
 
 rm -rf pytorch_model-00001-of-00002.bin
 
 rm -rf pytorch_model-00002-of-00002.bin
 
-wget https://huggingface.co/kpyu/video-blip-opt-2.7b-ego4d/resolve/main/pytorch_model-00001-of-00002.bin
+wget https://huggingface.co/kpyu/video-blip-flan-t5-xl-ego4d/resolve/main/pytorch_model-00001-of-00002.bin
 
-wget https://huggingface.co/kpyu/video-blip-opt-2.7b-ego4d/resolve/main/pytorch_model-00002-of-00002.bin
+wget https://huggingface.co/kpyu/video-blip-flan-t5-xl-ego4d/resolve/main/pytorch_model-00002-of-00002.bin

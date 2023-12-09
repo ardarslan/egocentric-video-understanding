@@ -89,7 +89,7 @@ mamba deactivate
 
 mamba activate mq_model
 
-cd $CODE/scripts/07_reproduce_mq_experiments
+cd $CODE/scripts/08_reproduce_mq_experiments
 
 python -m pdb train.py
 
@@ -358,13 +358,19 @@ python3 -m pip install -r mq_visualization_requirements.txt
 
 # 01_06 - Install MQ BLIP2 caption analysis packages
 
-export CODE=/home/aarslan/mq
+<!-- export CODE=/home/aarslan/mq
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
 export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
 
-export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit -->
+
+export CODE=/local/home/aarslan/mq
+
+export SCRATCH=/data/aarslan
+
+export CUDA_HOME=/usr/local/cuda
 
 mamba deactivate
 
@@ -727,7 +733,7 @@ From terminal of your computer run the following lines:
 ```
 cd ~/Desktop
 
-scp aarslan@robustus.ee.ethz.ch:/home/aarslan/mq/scripts/07_reproduce_mq_experiments/submission_final.json submission_final.json
+scp aarslan@robustus.ee.ethz.ch:/home/aarslan/mq/scripts/08_reproduce_mq_experiments/submission_final.json submission_final.json
 ```
 
 Login to https://eval.ai/auth/login

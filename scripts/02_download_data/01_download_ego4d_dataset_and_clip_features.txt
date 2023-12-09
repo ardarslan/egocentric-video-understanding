@@ -49,7 +49,7 @@ python3 $CODE/scripts/02_download_data/clip_feature_extractor.py --annotations_f
 python3 $CODE/scripts/02_download_data/extract_clip_thumbnails.py --input_folder_path $SCRATCH/ego4d_data/v2/clips/ --output_folder_path $CODE/scripts/05_visualize_frame_features/webserver/static/img/video_thumbnails/mini --max_width 320 --max_height 240
 
 
-python3 $CODE/scripts/07_reproduce_mq_experiments/convert_annotation.py --input_annotation_folder_path $SCRATCH/ego4d_data/v2/annotations/ --video_features_folder_path $SCRATCH/ego4d_data/v2/ --ego4d_json_path $SCRATCH/ego4d_data/ego4d.json --output_annotation_file_path $CODE/scripts/07_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json
+python3 $CODE/scripts/08_reproduce_mq_experiments/convert_annotation.py --input_annotation_folder_path $SCRATCH/ego4d_data/v2/annotations/ --video_features_folder_path $SCRATCH/ego4d_data/v2/ --ego4d_json_path $SCRATCH/ego4d_data/ego4d.json --output_annotation_file_path $CODE/scripts/08_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json
 
 rm -rf omnivore_video_swinl
 

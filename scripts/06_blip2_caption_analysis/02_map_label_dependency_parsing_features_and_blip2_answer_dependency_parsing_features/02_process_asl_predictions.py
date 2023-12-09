@@ -7,19 +7,19 @@ from tqdm import tqdm
 from pathlib import Path
 
 import sys
-sys.path.append("../04_extract_frame_features/")
+sys.path.append("../../04_extract_frame_features/")
 
 import constants
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_file_path", type=str, default=os.path.join(os.environ["CODE"], "scripts/07_reproduce_mq_experiments/submission_final.json"))
+    parser.add_argument("--input_file_path", type=str, default=os.path.join(os.environ["CODE"], "scripts/08_reproduce_mq_experiments/submission_final.json"))
     parser.add_argument(
         "--label_verb_noun_tool_mapping_file_path",
         type=str,
         default=os.path.join(
-            os.environ["CODE"], "scripts/06_analyze_frame_features/03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features/label_verb_noun_tool_mapping.json"
+            os.environ["CODE"], "scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features/label_verb_noun_tool_mapping.json"
         ),
     )
     parser.add_argument("--output_file_path", type=str, default=os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/analysis_data/asl_predictions", "asl_predictions.pickle"))

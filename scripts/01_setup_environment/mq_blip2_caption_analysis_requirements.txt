@@ -1,0 +1,16 @@
+spacy
+black
+pandas
+opencv_python
+ipykernel
+torchtext
+gdown
+flake8
+gensim
+nltk
+pqdm
+matplotlib
+sentence_transformers
+scikit-learn
+tensorflow
+tensorflow_hub

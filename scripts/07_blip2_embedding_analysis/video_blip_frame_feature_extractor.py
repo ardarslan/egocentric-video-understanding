@@ -14,7 +14,7 @@ class VideoBLIPFrameFeatureExtractor(FrameFeatureExtractor):
     def __init__(self, args):
         super().__init__(args=args)
         self.processor = Blip2Processor.from_pretrained(
-            os.path.join(os.environ["SCRATCH"], "mq_libs/video-blip-opt-2.7b-ego4d")
+            os.path.join(os.environ["SCRATCH"], "mq_libs/video-blip-flan-t5-xl-ego4d")
         )
 
         if torch.cuda.device_count() > 1:
@@ -29,7 +29,7 @@ class VideoBLIPFrameFeatureExtractor(FrameFeatureExtractor):
             device_map = "auto"
 
         self.video_blip_model = VideoBlipForConditionalGeneration.from_pretrained(
-            os.path.join(os.environ["SCRATCH"], "mq_libs/video-blip-opt-2.7b-ego4d"),
+            os.path.join(os.environ["SCRATCH"], "mq_libs/video-blip-flan-t5-xl-ego4d"),
             device_map=device_map,
             torch_dtype=torch.float16,
         )
