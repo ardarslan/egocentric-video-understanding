@@ -56,9 +56,9 @@ class VideoBLIPFrameFeatureExtractor(FrameFeatureExtractor):
                 do_sample=True,
             )
             caption_token_ids = results.pop("caption_token_ids")
+            results["frame_index"] = frame_index
             results["caption"] = self.processor.batch_decode(caption_token_ids, skip_special_tokens=True)[
                 0
             ].strip()
             results["caption_sbert_embedding"] = self.sbert_model.encode([results["caption"]])[0].ravel().tolist()
-            results["frame_index"] = frame_index
-            return (results["frame_index"], self.question, results["caption"], results["caption_sbert_embedding"], results["language_model_input"], results["first_word_first_layer_hidden_state"], results["first_word_last_layer_hidden_state"])
+            return (results["frame_index"], self.question, results["caption"], results["caption_sbert_embedding"], results["encoder_output"])

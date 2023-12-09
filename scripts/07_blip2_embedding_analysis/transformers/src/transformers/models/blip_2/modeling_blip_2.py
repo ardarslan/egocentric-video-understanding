@@ -1834,14 +1834,8 @@ class Blip2ForConditionalGeneration(Blip2PreTrainedModel):
         )
 
         caption_token_ids = outputs["sequences"]
-        decoder_hidden_states = outputs["hidden_states"]
-        first_word_decoder_hidden_state = decoder_hidden_states[0]
-        first_word_first_layer_hidden_state = first_word_decoder_hidden_state[0][0].cpu().numpy().ravel().tolist()
-        first_word_last_layer_hidden_state = first_word_decoder_hidden_state[-1][0].cpu().numpy().ravel().tolist()
-        inputs_embeds = inputs_embeds[0].cpu().numpy().ravel().tolist()
+        encoder_output = outputs["encoder_hidden_states"]["last_hidden_state"].cpu().numpy().ravel().tolist()
         return {
             "caption_token_ids": caption_token_ids,
-            "language_model_input": inputs_embeds,
-            "first_word_first_layer_hidden_state": first_word_first_layer_hidden_state,
-            "first_word_last_layer_hidden_state": first_word_last_layer_hidden_state
+            "encoder_output": encoder_output
         }

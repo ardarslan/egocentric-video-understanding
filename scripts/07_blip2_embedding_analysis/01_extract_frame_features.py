@@ -28,13 +28,11 @@ if __name__ == "__main__":
         default="video_blip"
     )
     parser.add_argument(
-        "--split", type=str, choices=["val"] # CHANGE HERE
+        "--split", type=str, default="val", choices=["val"] # CHANGE HERE
     )
     parser.add_argument(
         "--quarter_index", type=int, choices=[0, 1, 2, 3, 4, 5], default=0 # CHANGE HERE
     )
-    parser.add_argument("--num_devices", type=int, default=torch.cuda.device_count())
-    parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
     parser.add_argument(
         "--annotations_json_file_path",
         type=str,

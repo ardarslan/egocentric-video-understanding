@@ -1556,7 +1556,7 @@ class GenerationMixin:
 
         # 4. Define other model kwargs
         model_kwargs["output_attentions"] = generation_config.output_attentions
-        model_kwargs["output_hidden_states"] = True
+        model_kwargs["output_hidden_states"] = generation_config.output_hidden_states
         # decoder-only models with inputs_embeds forwarding must use caching (otherwise we can't detect whether we are
         # generating the first new token or not, and we only want to use the embeddings for the first new token)
         if not self.config.is_encoder_decoder and model_input_name == "inputs_embeds":
@@ -1839,7 +1839,7 @@ class GenerationMixin:
                 pad_token_id=generation_config.pad_token_id,
                 eos_token_id=generation_config.eos_token_id,
                 output_scores=generation_config.output_scores,
-                return_dict_in_generate=True,
+                return_dict_in_generate=generation_config.return_dict_in_generate,
                 synced_gpus=synced_gpus,
                 **model_kwargs,
             )
@@ -3589,7 +3589,7 @@ class GenerationMixin:
                     scores=scores,
                     beam_indices=sequence_outputs["beam_indices"],
                     encoder_attentions=encoder_attentions,
-                    encoder_hidden_states=encoder_hidden_states,
+                    encoder_hidden_states=model_kwargs.get("encoder_outputs"),
                     decoder_attentions=decoder_attentions,
                     cross_attentions=cross_attentions,
                     decoder_hidden_states=decoder_hidden_states,

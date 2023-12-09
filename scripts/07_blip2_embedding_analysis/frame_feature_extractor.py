@@ -17,9 +17,7 @@ class FrameFeatureExtractor(object):
                 "question",
                 "caption",
                 "caption_sbert_embedding",
-                "language_model_input",
-                "first_word_first_layer_hidden_state",
-                "first_word_last_layer_hidden_state"
+                "encoder_output"
             ]
         elif args.frame_feature_name == "video_blip":
             self.number_of_frames_per_input = 9
@@ -30,9 +28,7 @@ class FrameFeatureExtractor(object):
                 "question",
                 "caption",
                 "caption_sbert_embedding",
-                "language_model_input",
-                "first_word_first_layer_hidden_state",
-                "first_word_last_layer_hidden_state"
+                "encoder_output"
             ]
 
     def get_new_input(self, current_input_start_frame_index: int, cap: cv2.VideoCapture):
