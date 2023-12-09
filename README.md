@@ -484,8 +484,6 @@ pip install -e .
 
 cd $CODE/scripts/07_blip2_embedding_analysis/transformers
 
-git clone https://github.com/huggingface/transformers.git
-
 pip install -e .
 ```
 
