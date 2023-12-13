@@ -24,14 +24,14 @@ mkdir -p ego_hos/twohands_cb_to_obj2_ccda
 
 gdown 1JdewAV1XJyR9reVxEVrwwCH-MwQD6Aqy -O ego_hos/twohands_cb_to_obj2_ccda/best_mIoU_iter_32000.pth
 
-# blip2
-git clone https://huggingface.co/Salesforce/blip2-opt-2.7b
+# blip2-flan-t5-xl
+git clone https://huggingface.co/Salesforce/blip2-flan-t5-xl
 
-mv blip2-opt-2.7b blip2
+cd blip2-flan-t5-xl
 
-wget https://huggingface.co/Salesforce/blip2-opt-2.7b/resolve/main/pytorch_model-00001-of-00002.bin -O blip2/pytorch_model-00001-of-00002.bin
+wget https://huggingface.co/Salesforce/blip2-flan-t5-xl/blob/main/pytorch_model-00001-of-00002.bin
 
-wget https://huggingface.co/Salesforce/blip2-opt-2.7b/resolve/main/pytorch_model-00002-of-00002.bin -O blip2/pytorch_model-00002-of-00002.bin
+wget https://huggingface.co/Salesforce/blip2-flan-t5-xl/blob/main/pytorch_model-00002-of-00002.bin
 
 # word2vec
 mkdir word2vec

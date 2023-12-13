@@ -17,7 +17,7 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
         super().__init__(args=args)
         self.args = args
         self.processor = Blip2Processor.from_pretrained(
-            os.path.join(os.environ["SCRATCH"], "mq_libs/blip2")
+            os.path.join(os.environ["SCRATCH"], "mq_libs/blip2-flan-t5-xl")
         )
 
         if torch.cuda.device_count() > 1:
@@ -32,7 +32,7 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
             device_map = "auto"
 
         self.blip2_vqa_model = Blip2ForConditionalGeneration.from_pretrained(
-            os.path.join(os.environ["SCRATCH"], "mq_libs/blip2"),
+            os.path.join(os.environ["SCRATCH"], "mq_libs/blip2-flan-t5-xl"),
             device_map=device_map,
             torch_dtype=torch.float16,
         )
@@ -57,4 +57,4 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
             )[0].strip()
             results["caption_sbert_embedding"] = self.sbert_model.encode([results["caption"]])[0].ravel().tolist()
             results["frame_index"] = frame_index
-            return (results["frame_index"], self.question, results["caption"], results["caption_sbert_embedding"], results["language_model_input"], results["first_word_first_layer_hidden_state"], results["first_word_last_layer_hidden_state"])
+            return (results["frame_index"], self.question, results["caption"], results["caption_sbert_embedding"], results["encoder_output"])
