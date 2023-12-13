@@ -29,9 +29,9 @@ git clone https://huggingface.co/Salesforce/blip2-flan-t5-xl
 
 cd blip2-flan-t5-xl
 
-wget https://huggingface.co/Salesforce/blip2-flan-t5-xl/blob/main/pytorch_model-00001-of-00002.bin
+wget https://huggingface.co/Salesforce/blip2-flan-t5-xl/resolve/main/pytorch_model-00001-of-00002.bin
 
-wget https://huggingface.co/Salesforce/blip2-flan-t5-xl/blob/main/pytorch_model-00002-of-00002.bin
+wget https://huggingface.co/Salesforce/blip2-flan-t5-xl/resolve/main/pytorch_model-00002-of-00002.bin
 
 # word2vec
 mkdir word2vec

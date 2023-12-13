@@ -2647,7 +2647,7 @@ class GenerationMixin:
                     sequences=input_ids,
                     scores=scores,
                     encoder_attentions=encoder_attentions,
-                    encoder_hidden_states=encoder_hidden_states,
+                    encoder_hidden_states=model_kwargs.get("encoder_outputs"),
                     decoder_attentions=decoder_attentions,
                     cross_attentions=cross_attentions,
                     decoder_hidden_states=decoder_hidden_states,

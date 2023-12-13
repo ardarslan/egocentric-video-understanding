@@ -36,7 +36,7 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
             device_map=device_map,
             torch_dtype=torch.float16,
         )
-        self.sbert_model = SentenceTransformer("sentence-transformers/all-distilroberta-v1", device="cuda:0")
+        self.sbert_model = SentenceTransformer("sentence-transformers/all-distilroberta-v1", device="cuda:0") # cuda:0
         self.question = "Question: What is the person in this picture doing? Answer:"
 
     def predictor_function(

@@ -25,7 +25,7 @@ if __name__ == "__main__":
             "blip2_vqa",
             "video_blip"
         ],
-        default="video_blip"
+        default="blip2_vqa"
     )
     parser.add_argument(
         "--split", type=str, default="val", choices=["val"] # CHANGE HERE

@@ -675,7 +675,9 @@ CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_na
 
 CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 1 --split val
 
-CUDA_VISIBLE_DEVICES=0,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 0 --split val
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 0 --split val
+
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 1 --split val
 ```
 
 <!--
