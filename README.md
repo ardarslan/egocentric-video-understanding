@@ -17,7 +17,9 @@ ssh aarslan@ait-server-03
 ```
 cd
 
-git clone git@github.com:ardarslan/mq.git
+git clone git@github.com:ardarslan/moments-querying.git
+
+mv moments-querying mq
 ```
 
 # Check resource availability
@@ -671,24 +673,28 @@ cd $CODE/scripts/07_blip2_embedding_analysis
 
 mamba activate mq_blip2_embedding_analysis
 
+(DONE)
 CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 0 --split val
 
+(DONE)
 CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 1 --split val
 
+(DONE)
 CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 0 --split val
 
+(DONE)
 CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 1 --split val
+
+
+(RUNNING)
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 6 --split val
+
+(RUNNING)
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 7 --split val
+
+
+
 ```
-
-<!--
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 2 --split train
-
-CUDA_VISIBLE_DEVICES=3,7 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 3 --split train
-
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 4 --split train
-
-CUDA_VISIBLE_DEVICES=3,7 python3 01_extract_frame_features.py --frame_feature_name video_blip --quarter_index 5 --split train
--->
 
 CVL
 

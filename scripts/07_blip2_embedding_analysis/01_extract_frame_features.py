@@ -31,7 +31,7 @@ if __name__ == "__main__":
         "--split", type=str, default="val", choices=["val"] # CHANGE HERE
     )
     parser.add_argument(
-        "--quarter_index", type=int, choices=[0, 1, 2, 3, 4, 5], default=0 # CHANGE HERE
+        "--quarter_index", type=int, default=0 # CHANGE HERE
     )
     parser.add_argument(
         "--annotations_json_file_path",
