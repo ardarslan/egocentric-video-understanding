@@ -66,10 +66,7 @@ def get_verb_noun_tool_pairs_given_a_blip2_answer(
     try:
         dependency_parser_results = dependency_parser.parse(blip2_answer_clean_splitted)
         dependency_parser_result = dependency_parser_results.__next__()
-    except Exception as e:
-        traceback.print_exc()
-        e = ""
-        e = e + ""
+    except Exception as _:
         return []
 
     using_addresses = []

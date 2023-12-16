@@ -28,10 +28,10 @@ if __name__ == "__main__":
         default="blip2_vqa"
     )
     parser.add_argument(
-        "--split", type=str, default="val", choices=["val"] # CHANGE HERE
+        "--split", type=str, required=True, choices=["train", "val", "test"]
     )
     parser.add_argument(
-        "--quarter_index", type=int, default=0 # CHANGE HERE
+        "--quarter_index", type=int, required=True, choices=[0,1,2,3,4,5,6,7,8,9,10,11]
     )
     parser.add_argument(
         "--annotations_json_file_path",
