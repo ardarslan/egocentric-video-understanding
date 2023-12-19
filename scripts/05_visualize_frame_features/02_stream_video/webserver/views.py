@@ -113,7 +113,7 @@ def index(request):
                 os.environ["SCRATCH"],
                 "ego4d_data/v2/frame_features",
                 clip_file_name.split(".")[0],
-                "blip2_vqa_features.tsv",
+                "blip2_vqa_features_000000.tsv",
             )
         )
         and (len(annotations_dict[clip_file_name.split(".")[0]]["annotations"]) > 0)
@@ -146,7 +146,6 @@ class VideoDataReader(viewsets.ViewSet):
         "blip2_describe": "What does the image describe?",
         "blip2_do": "What is the person in this picture doing?",
         "blip2_happen": "What is happening in this picture?",
-        "blip2_captioning": "Image Caption",
     }
 
     # @classmethod

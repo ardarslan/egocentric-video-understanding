@@ -12,7 +12,8 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "env": {},
-            "program": "${workspaceFolder}/scripts/07_blip2_embedding_analysis/01_extract_frame_features.py",
+            "args": ["runserver", "5960"],
+            "program": "${workspaceFolder}/scripts/05_visualize_frame_features/02_stream_video/manage.py",
         }
     ]
 }

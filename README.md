@@ -63,7 +63,7 @@ export CODE=/home/aarslan/mq
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
-export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
@@ -128,7 +128,7 @@ export CODE=/home/aarslan/mq
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
-export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
@@ -364,7 +364,7 @@ python3 -m pip install -r mq_visualization_requirements.txt
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
-export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit -->
 
@@ -432,9 +432,11 @@ export CODE=/home/aarslan/mq
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
-export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+
+export TMPDIR=$SCRATCH/pip_temp
 
 rm -rf ~/.cache
 
@@ -474,9 +476,11 @@ export CODE=/home/aarslan/mq
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
-export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+
+export TMPDIR=$SCRATCH/pip_temp
 
 cd $CODE/scripts/07_blip2_embedding_analysis/
 
@@ -516,7 +520,7 @@ export CODE=/home/aarslan/mq
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
-export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
@@ -706,7 +710,18 @@ CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_na
 (DONE)
 CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 11 --split val
 
-blip2_vqa train done or running: 0,1
+
+(RUNNING)
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 4 --split train
+
+(RUNNING)
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 5 --split train
+
+(RUNNING)
+CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 6 --split train
+
+
+blip2_vqa train done or running: 0,1,2,3,4,5,6
 blip2_vqa val done or running: 0,1,2,3,4,5,6,7,8,9,10,11
 
 ```
@@ -718,7 +733,7 @@ export CODE=/home/aarslan/mq
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
-export SCRATCH=/srv/beegfs02/scratch/aarslan_data/data
+export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
@@ -740,16 +755,16 @@ sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_f
 
 
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "2" -s "val"
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "3" -s "val"
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "4" -s "val"
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "5" -s "val"
 
 
@@ -758,6 +773,12 @@ sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_f
 
 (RUNNING)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "1" -s "train"
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "2" -s "train"
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "3" -s "train"
 
 
 ```
@@ -771,9 +792,9 @@ mamba activate mq_model
 
 cd $CODE/scripts/08_reproduce_mq_experiments
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 60G train.sh
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G train.sh
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 60G test.sh
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G test.sh
 
 python merge_submission.py
 ```

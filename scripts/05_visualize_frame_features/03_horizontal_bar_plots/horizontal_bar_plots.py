@@ -14,9 +14,7 @@ import sys
 sys.path.append("../")
 from utils import extract_frames
 
-sys.path.append(
-    "../../06_analyze_frame_features/03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features"
-)
+sys.path.append("../../04_extract_frame_features/")
 import constants
 
 
@@ -40,7 +38,7 @@ def generate_random_color():
 
 def get_blip2_answer(current_blip2_rows, blip2_question):
     answer = current_blip2_rows[current_blip2_rows["question"] == blip2_question][
-        "answer"
+        "caption"
     ]
     if len(answer) == 0:
         return "NaN"
@@ -69,7 +67,7 @@ if __name__ == "__main__":
         type=str,
         default=os.path.join(
             os.environ["CODE"],
-            "scripts/06_analyze_frame_features/03_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features",
+            "scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features",
             "label_verb_noun_tool_mapping.json",
         ),
     )
@@ -92,21 +90,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--question_index",
         type=int,
-        default=0,
+        default=1,
         choices=[0, 1, 2, 3, 4, 5, 6],
     )
     parser.add_argument(
         "--threshold",
         type=float,
         default=0.5,
-    )
-    parser.add_argument(
-        "--clip_id_file_name_mapping_file_path",
-        type=str,
-        default=os.path.join(
-            os.environ["SCRATCH"],
-            "ego4d_data/v2/analysis_data/max_per_label_predictions_clip_id_file_name_mapping.tsv",
-        ),
     )
     parser.add_argument(
         "--blip2_dictionary_matching_predicted_action_instances_folder_path",
@@ -119,9 +109,9 @@ if __name__ == "__main__":
         default=f"{os.environ['SCRATCH']}/ego4d_data/v2/analysis_data/blip2_sbert_matching_max_per_label_predictions",
     )
     parser.add_argument(
-        "--dependency_parsing_results_file_path",
+        "--dependency_parsing_results_folder_path",
         type=str,
-        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/analysis_data/dependency_parsing_results/dependency_parsing_results.pickle",
+        default=f"{os.environ['SCRATCH']}/ego4d_data/v2/analysis_data/dependency_parsing_results",
     )
     parser.add_argument(
         "--assets_path",
@@ -156,7 +146,7 @@ if __name__ == "__main__":
                 os.environ["SCRATCH"],
                 "ego4d_data/v2/frame_features",
                 args.clip_id,
-                "blip2_vqa_features.tsv",
+                "blip2_vqa_features_000000.tsv",
             )
         )
     ):
@@ -187,7 +177,12 @@ if __name__ == "__main__":
         axis=0,
     )
 
-    with open(args.dependency_parsing_results_file_path, "rb") as reader:
+    with open(
+        os.path.join(
+            args.dependency_parsing_results_folder_path, args.clip_id + ".pickle"
+        ),
+        "rb",
+    ) as reader:
         dependency_parsing_results = pickle.load(reader)[args.clip_id]
 
     cap = cv2.VideoCapture(
@@ -294,13 +289,9 @@ if __name__ == "__main__":
         distinct_ground_truth_labels = sorted(
             list(label_verb_noun_tool_mapping.keys())
         ) + ["background"]
-        clip_id_file_name_mapping = dict(
-            pd.read_csv(args.clip_id_file_name_mapping_file_path, sep="\t").values
-        )
-        file_name = clip_id_file_name_mapping[args.clip_id]
         file_path = os.path.join(
             args.blip2_dictionary_matching_predicted_action_instances_folder_path,
-            file_name,
+            args.clip_id + ".pickle",
         )
         with open(file_path, "rb") as reader:
             current_clip_id_frame_id_blip2_question_index_label_index_max_score_mapping = pickle.load(
@@ -325,7 +316,7 @@ if __name__ == "__main__":
                     ]
                 )
                 for label_index, max_score in label_index_max_score_mapping.items():
-                    if max_score[1] >= args.threshold:
+                    if max_score >= args.threshold:
                         assigned_to_an_action_category = True
                         label = distinct_ground_truth_labels[label_index]
                         frame_id_predicted_action_categories_mapping[
@@ -333,7 +324,7 @@ if __name__ == "__main__":
                         ].append(
                             (
                                 label,
-                                max_score[1],
+                                max_score,
                             )
                         )
                 frame_id_predicted_action_categories_mapping[current_frame_id] = sorted(
