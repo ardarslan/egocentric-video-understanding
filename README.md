@@ -636,6 +636,8 @@ cd $CODE/scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_featu
 
 ./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
 
+./04_max_per_question_per_label_postprocessing.sh -p asl_predictions
+
 ./04_max_per_question_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
 
 ./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
@@ -721,7 +723,7 @@ CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_na
 CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 6 --split train
 
 
-blip2_vqa train done or running: 0,1,2,3,4,5,6
+blip2_vqa train done or running: 0,1,2,3,4,5,6,7
 blip2_vqa val done or running: 0,1,2,3,4,5,6,7,8,9,10,11
 
 ```
@@ -767,12 +769,12 @@ sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_f
 (DONE)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "5" -s "val"
 
-
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "0" -s "train"
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "1" -s "train"
+
 
 (RUNNING)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "2" -s "train"
@@ -780,12 +782,27 @@ sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_f
 (RUNNING)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "3" -s "train"
 
+(RUNNING)
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "7" -s "train"
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "8" -s "train"
+
 
 ```
 
 # 08_01 - Reproduce baseline results (Works in CVL Server, Without Ensemble)
 
 ```
+
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+
 mamba deactivate
 
 mamba activate mq_model
@@ -804,12 +821,12 @@ From terminal of your computer run the following lines:
 ```
 cd ~/Desktop
 
-scp aarslan@robustus.ee.ethz.ch:/home/aarslan/mq/scripts/08_reproduce_mq_experiments/submission_final.json submission_final.json
+scp aarslan@robustus.ee.ethz.ch:/home/aarslan/mq/scripts/08_reproduce_mq_experiments/asl_original_predictions.json asl_original_predictions.json
 ```
 
 Login to https://eval.ai/auth/login
 
-Submit submission_final.json to https://eval.ai/web/challenges/challenge-page/1626/leaderboard
+Submit asl_original_predictions.json to https://eval.ai/web/challenges/challenge-page/1626/leaderboard
 
 # 08_02 - Reproduce our results
 

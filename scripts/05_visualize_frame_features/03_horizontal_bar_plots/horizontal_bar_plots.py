@@ -79,7 +79,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--asl_predicted_action_instances_file_path",
         type=str,
-        default=f"{os.environ['CODE']}/scripts/08_reproduce_mq_experiments/submission_final.json",
+        default=f"{os.environ['CODE']}/scripts/08_reproduce_mq_experiments/asl_original_predictions.json",
     )
     parser.add_argument(
         "--prediction_type",

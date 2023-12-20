@@ -23,6 +23,6 @@ if __name__ == "__main__":
     data_submission["detect_results"] = det1["results"]
     data_submission["retrieve_results"] = det1["results"]
 
-    submission_file = "submission_final.json"
+    submission_file = "asl_original_predictions.json"
     with open(submission_file, "w") as fp:
         json.dump(data_submission, fp)

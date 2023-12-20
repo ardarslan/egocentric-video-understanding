@@ -143,9 +143,7 @@ class VideoDataReader(viewsets.ViewSet):
     clip_id_fps_mapping = {}
 
     blip2_vqa_feature_name_question_mapping = {
-        "blip2_describe": "What does the image describe?",
-        "blip2_do": "What is the person in this picture doing?",
-        "blip2_happen": "What is happening in this picture?",
+        "blip2_do": "Question: What is the person in this picture doing? Answer:",
     }
 
     # @classmethod
@@ -673,42 +671,15 @@ class VideoDataReader(viewsets.ViewSet):
 
     @classmethod
     def get_blip2_answers(cls, request, clip_id, frame_id):
-        if (
-            "blip2" not in cls.feature_name_clip_id_mapping.keys()
-            or cls.feature_name_clip_id_mapping["blip2"] != clip_id
-        ):
-            existing_blip2_feature_file_paths = [
-                os.path.join(
-                    os.environ["SCRATCH"],
-                    f"ego4d_data/v2/frame_features/{clip_id}",
-                    file_name,
-                )
-                for file_name in os.listdir(
-                    os.path.join(
-                        os.environ["SCRATCH"],
-                        f"ego4d_data/v2/frame_features/{clip_id}",
-                    )
-                )
-                if file_name.startswith("blip2_")
-            ]
-            blip2_feature_dfs = pd.concat(
-                [
-                    pd.read_csv(
-                        existing_blip2_feature_file_path,
-                        sep="\t",
-                    )
-                    for existing_blip2_feature_file_path in existing_blip2_feature_file_paths
-                ],
-                axis=0,
-            )
+        existing_blip2_feature_file_path = os.path.join(
+            os.environ["SCRATCH"],
+            f"ego4d_data/v2/frame_features/{clip_id}",
+            f"blip2_vqa_features_{str(frame_id // 600).zfill(6)}.tsv",
+        )
 
-            cls.feature_name_feature_df_mapping["blip2"] = blip2_feature_dfs
-            cls.feature_name_clip_id_mapping["blip2"] = clip_id
+        df = pd.read_csv(existing_blip2_feature_file_path, sep="\t")
 
-        current_clip_frame_rows = cls.feature_name_feature_df_mapping["blip2"]
-        current_clip_frame_rows = current_clip_frame_rows[
-            current_clip_frame_rows["frame_index"] == int((frame_id // 6) * 6)
-        ]
+        current_clip_frame_rows = df[df["frame_index"] == int((frame_id // 6) * 6)]
 
         blip2_answers = (
             [
@@ -727,14 +698,14 @@ class VideoDataReader(viewsets.ViewSet):
                     current_clip_frame_rows["question"]
                     == cls.blip2_vqa_feature_name_question_mapping[blip2_answer]
                 ),
-                "answer",
+                "caption",
             ]
             if len(current_answer) == 0:
                 blip2_answers_dict[blip2_answer] = "NaN"
             else:
                 blip2_answers_dict[blip2_answer] = current_answer.values[0]
 
-        return HttpResponse(json.dumps(blip2_answers_dict))
+            return HttpResponse(json.dumps(blip2_answers_dict))
 
     @classmethod
     def get_action_categories(cls, request, clip_id, frame_id):
@@ -796,7 +767,7 @@ class VideoDataReader(viewsets.ViewSet):
                 if cls.asl_baseline_predictions_dict is None:
                     asl_baseline_predictions_file_path = os.path.join(
                         os.environ["CODE"],
-                        "scripts/08_reproduce_mq_experiments/submission_final.json",
+                        "scripts/08_reproduce_mq_experiments/asl_original_predictions.json",
                     )
                     with open(
                         asl_baseline_predictions_file_path, "r"

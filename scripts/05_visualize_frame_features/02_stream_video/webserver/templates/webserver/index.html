@@ -373,8 +373,8 @@
       /* window.enabled_bounding_box_feature_names = ["visor_hos",
                                                    "unidet",
                                                    "unidet_visor_hos"]; */
-      window.all_blip2_feature_names = ["blip2_describe", "blip2_do", "blip2_happen"]
-      window.enabled_blip2_feature_names = ["blip2_describe", "blip2_do", "blip2_happen"]
+      window.all_blip2_feature_names = ["blip2_do"]
+      window.enabled_blip2_feature_names = ["blip2_do"]
       window.all_action_category_names = ["ground_truth_action_category", "asl_baseline_predicted_action_category"]
       window.enabled_action_category_names = ["ground_truth_action_category", "asl_baseline_predicted_action_category"]
 
@@ -815,23 +815,8 @@
               </div>
 
               <div>
-                <input type="checkbox" id="layer-selection-box-blip2-describe" onclick="javascript:toggleBLIP2Feature('blip2_describe', this.checked);" checked="true" />
-                <label for="layer-selection-box-blip2-describe"> 🖼️ BLIP2 (What does the image describe?): </label> <span id="current-blip2-describe-answer">?</span>
-              </div>
-
-              <div>
                 <input type="checkbox" id="layer-selection-box-blip2-do" onclick="javascript:toggleBLIP2Feature('blip2_do', this.checked);" checked="true" />
                 <label for="layer-selection-box-blip2-do"> 🖼️ BLIP2 (What is the person in this picture doing?): </label> <span id="current-blip2-do-answer">?</span>
-              </div>
-
-              <div>
-                <input type="checkbox" id="layer-selection-box-blip2-happen" onclick="javascript:toggleBLIP2Feature('blip2_happen', this.checked);" checked="true" />
-                <label for="layer-selection-box-blip2-happen"> 🖼️ BLIP2 (What is happening in this picture?): </label> <span id="current-blip2-happen-answer">?</span>
-              </div>
-
-              <div>
-                <input type="checkbox" id="layer-selection-box-blip2-captioning" onclick="javascript:toggleBLIP2Feature('blip2_captioning', this.checked);" checked="true" />
-                <label for="layer-selection-box-blip2-captioning"> 🖼️ BLIP2 (Image Captioning): </label> <span id="current-blip2-captioning-answer">?</span>
               </div>
 
             <div class="grid-control">
@@ -855,10 +840,7 @@
       byId('seeker-speed-select').value = "1";
       byId('layer-selection-box-ground-truth-action-category').checked = true;
       byId('layer-selection-box-asl-baseline-predicted-action-category').checked = true;
-      byId('layer-selection-box-blip2-describe').checked = true;
-      byId('layer-selection-box-blip2-happen').checked = true;
       byId('layer-selection-box-blip2-do').checked = true;
-      byId('layer-selection-box-blip2-captioning').checked = true;
 
       recomputeGrid();
       selectVideo("0076e425-bdb6-48b3-b4d3-695089ac9800");

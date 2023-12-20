@@ -3,7 +3,7 @@ import os
 
 result_det = "submission.json"
 result_rev = result_det
-submission_file = "submission_final.json"
+submission_file = "asl_original_predictions.json"
 
 with open(result_det, "r") as fobj:
     data_det = json.load(fobj)
