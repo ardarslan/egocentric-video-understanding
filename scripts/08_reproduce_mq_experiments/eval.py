@@ -252,10 +252,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Train a point-based transformer for action localization"
     )
-    parser.add_argument("config", type=str, metavar="DIR", help="path to a config file")
-    parser.add_argument("ckpt", type=str, metavar="DIR", help="path to a checkpoint")
     parser.add_argument(
-        "-t",
+        "--config", type=str, metavar="DIR", help="path to a config file"
+    )
+    parser.add_argument("--ckpt", type=str, metavar="DIR", help="path to a checkpoint")
+    parser.add_argument(
         "--topk",
         default=-1,
         type=int,

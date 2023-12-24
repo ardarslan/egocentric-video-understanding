@@ -721,6 +721,9 @@ CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_na
 (DONE)
 CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 6 --split train
 
+(DONE)
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 0 --split test
+
 
 (RUNNING)
 CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 10 --split train
@@ -729,11 +732,12 @@ CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_na
 CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 11 --split train
 
 (RUNNING)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 0 --split test
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 2 --split test
+
 
 blip2_vqa train done or running: 0,1,2,3,4,5,6,7,8,9,10,11
 blip2_vqa val done or running: 0,1,2,3,4,5,6,7,8,9,10,11
-blip2_vqa test done or running: 0,1,2
+blip2_vqa test done or running: 0,1,2,3
 
 ```
 
@@ -790,6 +794,9 @@ sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_f
 (DONE)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "3" -s "train"
 
+(DONE)
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "1" -s "test"
+
 
 (RUNNING)
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "7" -s "train"
@@ -801,7 +808,7 @@ sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_f
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "9" -s "train"
 
 (RUNNING)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "1" -s "test"
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "3" -s "test"
 
 
 ```
