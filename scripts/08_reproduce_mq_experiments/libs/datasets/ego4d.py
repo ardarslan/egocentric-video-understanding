@@ -23,6 +23,7 @@ class Ego4dDataset(Dataset):
         is_training,  # if in training mode
         split,  # split, a tuple/list allowing concat of subsets
         video_feat_folder,  # folder for features
+        frame_feat_folder,
         json_file,  # json file for annotations
         feat_stride,  # temporal stride of the feats
         num_frames,  # number of frames for each feat
