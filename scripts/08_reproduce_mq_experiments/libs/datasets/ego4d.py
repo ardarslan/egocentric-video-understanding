@@ -22,7 +22,7 @@ class Ego4dDataset(Dataset):
         self,
         is_training,  # if in training mode
         split,  # split, a tuple/list allowing concat of subsets
-        feat_folder,  # folder for features
+        video_feat_folder,  # folder for features
         json_file,  # json file for annotations
         feat_stride,  # temporal stride of the feats
         num_frames,  # number of frames for each feat
@@ -41,8 +41,8 @@ class Ego4dDataset(Dataset):
         assert os.path.exists(json_file)
         assert isinstance(split, tuple) or isinstance(split, list)
         assert crop_ratio == None or len(crop_ratio) == 2
-        self.feat_folder = feat_folder
-        # self.use_hdf5 = '.hdf5' in feat_folder
+        self.video_feat_folder = video_feat_folder
+        # self.use_hdf5 = '.hdf5' in video_feat_folder
         if file_prefix is not None:
             self.file_prefix = file_prefix
         else:
@@ -184,9 +184,9 @@ class Ego4dDataset(Dataset):
         # feats = feats.permute(1,0)      # [t,c]
 
         # egovlp
-        if isinstance(self.feat_folder, str):
+        if isinstance(self.video_feat_folder, str):
             filename = os.path.join(
-                self.feat_folder, self.file_prefix + clip_name + self.file_ext
+                self.video_feat_folder, self.file_prefix + clip_name + self.file_ext
             )
             feats = torch.load(filename)
             # case 1: variable length features for training
@@ -242,7 +242,7 @@ class Ego4dDataset(Dataset):
                 feats = resize_feats.squeeze(0)  # [d,192]       upsample到一个fixed length
         else:
             all_features = []
-            for f_t in self.feat_folder:
+            for f_t in self.video_feat_folder:
                 filename = os.path.join(
                     f_t, self.file_prefix + clip_name + self.file_ext
                 )
