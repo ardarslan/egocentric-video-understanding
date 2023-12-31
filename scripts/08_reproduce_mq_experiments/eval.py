@@ -36,13 +36,6 @@ def valid_performance(args):
         ckpt_file_list = sorted(glob.glob(os.path.join(args.ckpt, "*.pth.tar")))
         ckpt_file = ckpt_file_list[-1]
 
-    cfg["output_folder"] = os.path.join(os.environ["SCRATCH"], cfg["output_folder"])
-    feat_folder_names = cfg["dataset"]["feat_folder"]
-    cfg["dataset"]["feat_folder"] = [
-        os.path.join(os.environ["SCRATCH"], feat_folder_name)
-        for feat_folder_name in feat_folder_names
-    ]
-
     if args.topk > 0:
         cfg["model"]["test_cfg"]["max_seg_num"] = args.topk
     # pprint(cfg)
@@ -157,7 +150,13 @@ def main(args):
 
     if args.topk > 0:
         cfg["model"]["test_cfg"]["max_seg_num"] = args.topk
-    pprint(cfg)
+
+    cfg["output_folder"] = os.path.join(os.environ["SCRATCH"], cfg["output_folder"])
+    feat_folder_names = cfg["dataset"]["feat_folder"]
+    cfg["dataset"]["feat_folder"] = [
+        os.path.join(os.environ["SCRATCH"], feat_folder_name)
+        for feat_folder_name in feat_folder_names
+    ]
 
     # prep for output folder (based on time stamp)
     if not os.path.exists(cfg["output_folder"]):
