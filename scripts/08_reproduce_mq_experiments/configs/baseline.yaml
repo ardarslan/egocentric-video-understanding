@@ -65,4 +65,4 @@ test_cfg: {
   nms_sigma: 0.99,
   duration_thresh: 0.01,
 }
-output_folder: ego4d_asl_features
+output_folder: checkpoints
