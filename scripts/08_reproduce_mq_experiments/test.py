@@ -29,10 +29,10 @@ def main(args):
         raise ValueError("Config file does not exist.")
 
     cfg["ckpt"] = os.path.join(os.environ["SCRATCH"], args.ckpt)
-    feat_folder_names = cfg["dataset"]["feat_folder"]
-    cfg["dataset"]["feat_folder"] = [
-        os.path.join(os.environ["SCRATCH"], feat_folder_name)
-        for feat_folder_name in feat_folder_names
+    video_feat_folder_names = cfg["dataset"]["video_feat_folder"]
+    cfg["dataset"]["video_feat_folder"] = [
+        os.path.join(os.environ["SCRATCH"], video_feat_folder_name)
+        for video_feat_folder_name in video_feat_folder_names
     ]
 
     assert len(cfg["val_split"]) > 0, "Test set must be specified!"

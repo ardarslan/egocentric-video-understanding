@@ -612,6 +612,12 @@ python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe -
 # 06 - BLIP2 Caption Analysis
 
 ```
+export CODE=/local/home/aarslan/mq
+
+export SCRATCH=/data/aarslan
+
+export CUDA_HOME=/usr/local/cuda
+
 mamba activate mq_blip2_caption_analysis
 
 cd $CODE/scripts/06_blip2_caption_analysis/01_extract_blip2_answer_dependency_parsing_features
@@ -636,11 +642,26 @@ cd $CODE/scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_featu
 
 ./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
 
+
 ./04_max_per_question_per_label_postprocessing.sh -p asl_predictions
 
 ./04_max_per_question_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
 
 ./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
+
+
+./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+
+./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+
+./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+
+./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
+
+./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
+
+./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+
 
 ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 

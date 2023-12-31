@@ -56,13 +56,10 @@ def main(args):
         for video_feat_folder_name in video_feat_folder_names
     ]
 
-    # for feat_folder_name in :
-    # ['ego4d_data/v2/egovlp_egonce',
-    #  'ego4d_data/v2/slowfast_clip',
-    #  'ego4d_data/v2/omnivore_clip',
-    #  'ego4d_data/v2/internvideo']
+    cfg["dataset"]["frame_feat_folder"] = [
+        os.path.join(os.environ["SCRATCH"], cfg["frame_feat_folder"])
+    ]
 
-    # prep for output folder (based on time stamp)
     if not os.path.exists(cfg["output_folder"]):
         os.mkdir(cfg["output_folder"])
     cfg_filename = os.path.basename(args.config).replace(".yaml", "")

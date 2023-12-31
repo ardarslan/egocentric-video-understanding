@@ -296,6 +296,7 @@ if __name__ == "__main__":
         "--predictions_folder_name",
         type=str,
         choices=[
+            "asl_max_per_label_predictions",
             "blip2_dictionary_matching_max_per_label_predictions",
             "blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions",
             "blip2_sbert_matching_paraphrase-MiniLM-L6-v2_max_per_label_predictions",
@@ -316,7 +317,7 @@ if __name__ == "__main__":
         type=str,
         default=os.path.join(
             os.environ["CODE"],
-            "scripts/06_analyze_frame_features/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features/label_verb_noun_tool_mapping.json",
+            "scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features/label_verb_noun_tool_mapping.json",
         ),
     )
     parser.add_argument(
@@ -494,7 +495,7 @@ if __name__ == "__main__":
     ground_truth_one_hot_vectors_list_wo_background = []
     question_index_predicted_one_hot_vectors_list_mapping_w_background = dict()
     question_index_predicted_one_hot_vectors_list_mapping_wo_background = dict()
-    for clip_id in ground_truth_one_hot_vectors_dict.keys():
+    for clip_id in predictions_one_hot_vectors_dict.keys():
         for frame_id in ground_truth_one_hot_vectors_dict[clip_id].keys():
             ground_truth_one_hot_vectors_list_w_background.append(
                 ground_truth_one_hot_vectors_dict[clip_id][frame_id]
