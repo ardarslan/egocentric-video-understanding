@@ -879,4 +879,18 @@ Submit asl_original_predictions.json to https://eval.ai/web/challenges/challenge
 
 # 08_03 - Evaluate on validation split
 
-python3 eval.py --config /home/aarslan/mq/scripts/08_reproduce_mq_experiments/configs/baseline.yaml --topk 1 --ckpt /srv/beegfs-benderdata/scratch/aarslan_data/data/baseline_outputs/baseline/epoch_011.pth.tar
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+
+mamba activate mq_model
+
+cd $CODE/scripts/08_reproduce_mq_experiments
+
+chmod +x val.sh
+
+sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G val.sh
