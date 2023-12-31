@@ -50,10 +50,10 @@ def main(args):
     # pprint(cfg)
 
     cfg["output_folder"] = os.path.join(os.environ["SCRATCH"], cfg["output_folder"])
-    feat_folder_names = cfg["dataset"]["feat_folder"]
-    cfg["dataset"]["feat_folder"] = [
-        os.path.join(os.environ["SCRATCH"], feat_folder_name)
-        for feat_folder_name in feat_folder_names
+    video_feat_folder_names = cfg["dataset"]["video_feat_folder"]
+    cfg["dataset"]["video_feat_folder"] = [
+        os.path.join(os.environ["SCRATCH"], video_feat_folder_name)
+        for video_feat_folder_name in video_feat_folder_names
     ]
 
     # for feat_folder_name in :

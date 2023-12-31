@@ -1,6 +1,6 @@
 dataset_name: ego4d
-train_split: ['train', 'val']
-val_split: ['train', 'val', 'test']
+train_split: ['train']
+val_split: ['val']
 init_rand_seed: 0
 dataset: {
   json_file: ./data/ego4d/ego4d_clip_annotations_v3.json,
@@ -38,8 +38,8 @@ opt: {
   weight_decay: 0.05,
 }
 loader: {
-  batch_size: 1,
-  num_workers: 0
+  batch_size: 2,
+  num_workers: 4
 }
 train_cfg: {
   init_loss_norm: 100,
@@ -64,4 +64,4 @@ test_cfg: {
   nms_sigma: 0.99,
   duration_thresh: 0.01,
 }
-output_folder: baseline_outputs
+output_folder: ego4d_asl_features
