@@ -67,7 +67,9 @@ export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
-mamba activate mq_blip2_caption_analysis
+mamba activate mq_model
+
+mamba install jupyter
 
 jupyter notebook --no-browser --port 5998 --ip $(hostname -f)
 ```

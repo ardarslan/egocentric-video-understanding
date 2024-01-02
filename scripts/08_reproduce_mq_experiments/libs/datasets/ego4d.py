@@ -1,9 +1,8 @@
-import sys
-
 import os
 import json
-import h5py
+from ast import literal_eval
 import numpy as np
+import pandas as pd
 
 import torch
 from torch.utils.data import Dataset
@@ -12,8 +11,6 @@ from torch.nn import functional as F
 from .datasets import register_dataset
 from .data_utils import truncate_feats
 from ..utils import remove_duplicate_annotations
-import pickle as pkl
-from transformers import CLIPTokenizer
 
 
 @register_dataset("ego4d")
@@ -23,7 +20,7 @@ class Ego4dDataset(Dataset):
         is_training,  # if in training mode
         split,  # split, a tuple/list allowing concat of subsets
         video_feat_folder,  # folder for features
-        frame_feat_folder,
+        frame_feat_names,
         json_file,  # json file for annotations
         feat_stride,  # temporal stride of the feats
         num_frames,  # number of frames for each feat
@@ -43,6 +40,7 @@ class Ego4dDataset(Dataset):
         assert isinstance(split, tuple) or isinstance(split, list)
         assert crop_ratio == None or len(crop_ratio) == 2
         self.video_feat_folder = video_feat_folder
+        self.frame_feat_names = frame_feat_names
         # self.use_hdf5 = '.hdf5' in video_feat_folder
         if file_prefix is not None:
             self.file_prefix = file_prefix
@@ -345,6 +343,66 @@ class Ego4dDataset(Dataset):
         # prompts = [x[:77] for x in prompts]
         # prompts = self.tokenizer(prompts, padding='max_length', max_length=77, return_tensors='pt')
         # prompts = self.tokenizer(pos_prompt[:77], padding='max_length', max_length=77, return_tensors='pt')
+
+        frame_feats = [[]] * len(self.frame_feat_names)
+
+        blip2_vqa_feature_file_names = [
+            file_name
+            for file_name in os.listdir(
+                os.path.join(
+                    os.environ["SCRATCH"], "ego4d_data/v2/frame_features", clip_name
+                )
+            )
+            if file_name.startswith("blip2_vqa")
+        ]
+        for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
+            current_df = pd.read_csv(
+                os.path.join(
+                    os.environ["SCRATCH"],
+                    "ego4d_data/v2/frame_features",
+                    current_blip2_vqa_feature_file_name,
+                ),
+                sep="\t",
+            )
+            current_df = current_df[
+                current_df["question"]
+                == "Question: What is the person in this picture doing? Answer:"
+            ]
+
+            for frame_feat_name in self.frame_feat_names:
+                if frame_feat_name == "blip2_llm_encoder_output":
+                    for encoder_output in current_df["encoder_output"].values:
+                        for _ in range(6):
+                            frame_feats[0].append(
+                                np.array(literal_eval(encoder_output))  # (94208,)
+                            )
+
+                elif frame_feat_name == "blip2_caption_sbert_embedding":
+                    for caption_sbert_embedding in current_df[
+                        "caption_sbert_embedding"
+                    ].values:
+                        for _ in range(6):
+                            frame_feats[1].append(
+                                np.array(
+                                    literal_eval(caption_sbert_embedding)
+                                )  # (768,)
+                            )
+
+        for i in range(len(frame_feats)):
+            frame_feats[i] = np.hstack(
+                frame_feats[i]
+            )  # Now each frame_feats[i] has shape (T, )
+
+        if len(frame_feats) > 0:
+            frame_feats = np.vstack(
+                frame_feats
+            )  # frame_feats has shape (len(self.frame_feat_names), T)
+            frame_feats = torch.tensor(frame_feats)
+            print("Before feats.shape:", feats.shape)
+            print("frame_feats.shape:", frame_feats.shape)
+            feats = torch.cat([feats, frame_feats], dim=0)
+            print("After feats.shape:", feats.shape)
+            raise Exception("asd")
 
         # return a data dict
         data_dict = {

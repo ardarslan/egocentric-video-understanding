@@ -56,10 +56,6 @@ def main(args):
         for video_feat_folder_name in video_feat_folder_names
     ]
 
-    cfg["dataset"]["frame_feat_folder"] = [
-        os.path.join(os.environ["SCRATCH"], cfg["frame_feat_folder"])
-    ]
-
     if not os.path.exists(cfg["output_folder"]):
         os.mkdir(cfg["output_folder"])
     cfg_filename = os.path.basename(args.config).replace(".yaml", "")

@@ -4,12 +4,15 @@ val_split: ['val']
 init_rand_seed: 0
 dataset: {
   json_file: ./data/ego4d/ego4d_clip_annotations_v3.json,
-  video_feat_folder: [],
+  video_feat_folder: ['ego4d_data/v2/egovlp_egonce',
+                      'ego4d_data/v2/slowfast_clip',
+                      'ego4d_data/v2/omnivore_clip',
+                      'ego4d_data/v2/internvideo'],
   frame_feat_names: ["blip2_caption_sbert_embedding"],
   file_prefix: ,
   file_ext: .pt,
   num_classes: 110,
-  input_dim: [768],
+  input_dim: [256, 2304, 1536, 1024, 768],
   feat_stride: 1,
   num_frames: 1,
   trunc_thresh: 0.3,
@@ -25,9 +28,9 @@ model: {
   # 1024 -> 512 -> 256  -> 128 -> 64 -> 32 -> 16 -> 8 -> 4 -> 2
   # shrink the model for reduced input feature channels
   n_head: 16,
-  embd_dim: [512],
-  fpn_dim: 512,
-  head_dim: 512,
+  embd_dim: [256, 128, 128, 512, 512],
+  fpn_dim: 1536,
+  head_dim: 1536,
   use_abs_pe: True,
 }
 opt: {
