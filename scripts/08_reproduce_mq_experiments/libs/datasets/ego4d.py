@@ -360,6 +360,7 @@ class Ego4dDataset(Dataset):
                 os.path.join(
                     os.environ["SCRATCH"],
                     "ego4d_data/v2/frame_features",
+                    clip_name,
                     current_blip2_vqa_feature_file_name,
                 ),
                 sep="\t",
