@@ -55,10 +55,6 @@ Use remote-ssh extension of your local VS Code.
 CVL
 
 ```
-cd $CODE
-
-srun --time 720 --cpus-per-task=2 --gres=gpu:1 --mem=50G --constraint='geforce_gtx_1080_ti' --pty bash -i
-
 export CODE=/home/aarslan/mq
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
@@ -67,9 +63,15 @@ export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
 
 export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
+cd $CODE
+
+srun --time 720 --cpus-per-task=2 --gres=gpu:1 --mem=50G --constraint='geforce_gtx_1080_ti' --pty bash -i
+
 mamba activate mq_model
 
 mamba install jupyter
+
+python -m ipykernel install --user --name=mq_model
 
 jupyter notebook --no-browser --port 5998 --ip $(hostname -f)
 ```
@@ -158,15 +160,15 @@ export PATH=$JAVA_HOME/bin:$PATH
 
 cd $CODE
 
-wget https://github.com/mamba-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
+curl -L -O https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
 
-chmod +x Mambaforge-Linux-x86_64.sh
+chmod +x Miniforge3-Linux-x86_64.sh
 
 rm -rf $SCRATCH/mambaforge
 
-./Mambaforge-Linux-x86_64.sh (Use $SCRATCH/mambaforge for mambaforge path)
+./Miniforge3-Linux-x86_64.sh (Use $SCRATCH/miniforge for mambaforge path)
 
-rm -rf Mambaforge-Linux-x86_64.sh
+rm -rf Miniforge3-Linux-x86_64.sh
 
 exit
 
