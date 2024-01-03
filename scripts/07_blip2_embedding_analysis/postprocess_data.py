@@ -40,24 +40,24 @@ if __name__ == "__main__":
                 sep="\t",
                 usecols=[
                     "frame_index",
-                    "blip2_llm_encoder_output",
-                    "blip2_caption_sbert_embedding",
+                    "encoder_output",
+                    "caption_sbert_embedding",
                 ],
             )
-            current_df[["frame_index", "blip2_llm_encoder_output"]].to_csv(
+            current_df[["frame_index", "encoder_output"]].to_csv(
                 os.path.join(
                     args.output_folder_path,
                     clip_id,
-                    "blip2_llm_encoder_output",
+                    "encoder_output",
                     file_name,
                 ),
                 sep="\t",
             )
-            current_df[["frame_index", "blip2_caption_sbert_embedding"]].to_csv(
+            current_df[["frame_index", "caption_sbert_embedding"]].to_csv(
                 os.path.join(
                     args.output_folder_path,
                     clip_id,
-                    "blip2_caption_sbert_embedding",
+                    "caption_sbert_embedding",
                     file_name,
                 ),
                 sep="\t",
