@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from tqdm import tqdm
 import argparse
+import gc
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -29,18 +30,32 @@ if __name__ == "__main__":
     ]
 
     for clip_id in tqdm(clip_ids):
+        os.makedirs(
+            os.path.join(args.output_folder_path, clip_id, "encoder_output"),
+            exist_ok=True,
+        )
+        os.makedirs(
+            os.path.join(args.output_folder_path, clip_id, "caption_sbert_embedding"),
+            exist_ok=True,
+        )
         file_names = os.listdir(os.path.join(args.input_folder_path, clip_id))
         for file_name in file_names:
-            os.makedirs(
-                os.path.join(args.output_folder_path, clip_id, "encoder_output"),
-                exist_ok=True,
-            )
-            os.makedirs(
+            if os.path.exists(
                 os.path.join(
-                    args.output_folder_path, clip_id, "caption_sbert_embedding"
-                ),
-                exist_ok=True,
-            )
+                    args.output_folder_path,
+                    clip_id,
+                    "caption_sbert_embedding",
+                    file_name,
+                )
+            ) and os.path.exists(
+                os.path.join(
+                    args.output_folder_path,
+                    clip_id,
+                    "caption_sbert_embedding",
+                    file_name,
+                )
+            ):
+                continue
             current_df = pd.read_csv(
                 os.path.join(args.input_folder_path, clip_id, file_name),
                 sep="\t",
@@ -69,3 +84,4 @@ if __name__ == "__main__":
                 sep="\t",
             )
             del current_df
+            gc.collect()
