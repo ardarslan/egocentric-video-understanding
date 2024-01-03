@@ -920,3 +920,23 @@ cd $CODE/scripts/08_reproduce_mq_experiments
 chmod +x val.sh
 
 sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G val.sh
+
+
+# Postprocess Data
+
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 0
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 1
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 2
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 3
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 4
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 5
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 6
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 7
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 8
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 9
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 10
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 11
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 12
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 13
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 14
+sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 15

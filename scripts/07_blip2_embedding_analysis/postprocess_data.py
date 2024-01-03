@@ -25,8 +25,11 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    clip_ids = sorted(os.listdir(args.input_folder_path))[
-        int(args.quarter_index / 16.0) : int((args.quarter_index + 1) / 16.0)
+    clip_ids = sorted(os.listdir(args.input_folder_path))
+    clip_ids = clip_ids[
+        int(len(clip_ids) * args.quarter_index / 16.0) : int(
+            len(clip_ids) * (args.quarter_index + 1) / 16.0
+        )
     ]
 
     for clip_id in tqdm(clip_ids):
