@@ -9,7 +9,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--quarter_index",
         type=int,
-        choices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        choices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
     )
     parser.add_argument(
         "--input_folder_path",
@@ -27,8 +27,8 @@ if __name__ == "__main__":
 
     clip_ids = sorted(os.listdir(args.input_folder_path))
     clip_ids = clip_ids[
-        int(len(clip_ids) * args.quarter_index / 16.0) : int(
-            len(clip_ids) * (args.quarter_index + 1) / 16.0
+        int(len(clip_ids) * args.quarter_index / 10.0) : int(
+            len(clip_ids) * (args.quarter_index + 1) / 10.0
         )
     ]
 
