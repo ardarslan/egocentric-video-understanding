@@ -24,14 +24,12 @@ if __name__ == "__main__":
         file_names = os.listdir(os.path.join(args.input_folder_path, clip_id))
         for file_name in file_names:
             os.makedirs(
-                os.path.join(
-                    args.output_folder_path, clip_id, "blip2_llm_encoder_output"
-                ),
+                os.path.join(args.output_folder_path, clip_id, "encoder_output"),
                 exist_ok=True,
             )
             os.makedirs(
                 os.path.join(
-                    args.output_folder_path, clip_id, "blip2_caption_sbert_embedding"
+                    args.output_folder_path, clip_id, "caption_sbert_embedding"
                 ),
                 exist_ok=True,
             )
