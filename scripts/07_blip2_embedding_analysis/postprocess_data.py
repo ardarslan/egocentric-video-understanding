@@ -47,7 +47,7 @@ if __name__ == "__main__":
                 os.path.join(
                     args.output_folder_path,
                     clip_id,
-                    "caption_sbert_embedding",
+                    "encoder_output",
                     file_name,
                 )
             ) and os.path.exists(
