@@ -69,10 +69,6 @@ srun --time 720 --cpus-per-task=2 --gres=gpu:1 --mem=50G --constraint='geforce_g
 
 mamba activate mq_model
 
-mamba install jupyter
-
-python -m ipykernel install --user --name=mq_model
-
 jupyter notebook --no-browser --port 5998 --ip $(hostname -f)
 ```
 
@@ -324,6 +320,11 @@ mamba activate mq_model
 cd $CODE/scripts/01_setup_environment
 
 python3 -m pip install torch==1.12 torchvision==0.13 --index-url https://download.pytorch.org/whl/cu113
+
+mamba install jupyter
+
+python -m ipykernel install --user --name=mq_model
+
 )
 
 (
