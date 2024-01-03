@@ -4,7 +4,7 @@ helpFunction()
 {
    echo ""
    echo "Usage: $0 -q QUARTER_INDEX"
-   echo -e "\t-q One of 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15."
+   echo -e "\t-q One of 0,1,2,3,4,5,6,7,8,9."
    exit 1 # Exit script after printing help
 }
 
