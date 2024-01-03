@@ -6,6 +6,11 @@ import argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--quarter_index",
+        type=int,
+        choices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    )
+    parser.add_argument(
         "--input_folder_path",
         type=str,
         default=os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/frame_features"),
@@ -19,7 +24,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    clip_ids = os.listdir(args.input_folder_path)
+    clip_ids = sorted(os.listdir(args.input_folder_path))[
+        int(args.quarter_index / 16) : int((args.quarter_index + 1) / 16)
+    ]
+
     for clip_id in tqdm(clip_ids):
         file_names = os.listdir(os.path.join(args.input_folder_path, clip_id))
         for file_name in file_names:
