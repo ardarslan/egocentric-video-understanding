@@ -346,15 +346,17 @@ class Ego4dDataset(Dataset):
 
         frame_feats = [[]] * len(self.frame_feat_names)
 
-        blip2_vqa_feature_file_names = [
-            file_name
-            for file_name in os.listdir(
-                os.path.join(
-                    os.environ["SCRATCH"], "ego4d_data/v2/frame_features", clip_name
+        blip2_vqa_feature_file_names = sorted(
+            [
+                file_name
+                for file_name in os.listdir(
+                    os.path.join(
+                        os.environ["SCRATCH"], "ego4d_data/v2/frame_features", clip_name
+                    )
                 )
-            )
-            if file_name.startswith("blip2_vqa")
-        ]
+                if file_name.startswith("blip2_vqa")
+            ]
+        )
         for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
             current_df = pd.read_csv(
                 os.path.join(
