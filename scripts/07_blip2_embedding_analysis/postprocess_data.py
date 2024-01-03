@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     clip_ids = os.listdir(args.input_folder_path)
     for clip_id in tqdm(clip_ids):
-        file_names = os.listdir(args.input_folder_path, clip_id)
+        file_names = os.listdir(os.path.join(args.input_folder_path, clip_id))
         for file_name in file_names:
             os.makedirs(
                 os.path.join(
