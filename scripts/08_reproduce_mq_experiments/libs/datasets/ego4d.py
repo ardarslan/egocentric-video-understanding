@@ -358,9 +358,7 @@ class Ego4dDataset(Dataset):
         if "caption_sbert_embedding" in self.frame_feat_names:
             frame_feats = []
 
-            for current_blip2_vqa_feature_file_name in tqdm(
-                blip2_vqa_feature_file_names
-            ):
+            for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
                 current_df = pd.read_csv(
                     os.path.join(
                         os.environ["SCRATCH"],
@@ -387,11 +385,8 @@ class Ego4dDataset(Dataset):
                     frame_feats.append(caption_sbert_embedding)  # (1, 768)
 
             frame_feats = np.vstack(frame_feats).transpose()
-            print("frame_feats.shape:", frame_feats.shape)
-            print("Initial feats.shape:", feats.shape)
             frame_feats = torch.tensor(frame_feats)
             feats = torch.cat([feats, frame_feats], dim=0)
-            print("Final feats.shape:", feats.shape)
 
         # return a data dict
         data_dict = {

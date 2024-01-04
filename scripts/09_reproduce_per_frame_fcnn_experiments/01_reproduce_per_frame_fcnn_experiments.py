@@ -30,5 +30,3 @@ train_dataset = make_dataset(
 train_loader = make_data_loader(train_dataset, True, rng_generator, **cfg["loader"])
 
 for batch in train_loader:
-    a = 2
-    break
