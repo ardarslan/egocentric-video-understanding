@@ -376,8 +376,12 @@ class Ego4dDataset(Dataset):
                         encoder_output = np.array(literal_eval(encoder_output))[
                             None, ...
                         ]
-                        assert index == 0
-                        assert encoder_output.shape[1] == 94208
+                        if index != 0:
+                            raise Exception("Index should have been 0.")
+                        if encoder_output.shape[1] != 94208:
+                            raise Exception(
+                                "encoder_output.shape[1] should have been 94208."
+                            )
                         frame_feats[index].append(encoder_output)  # (1, 94208)
                     frame_feats[index] = np.vstack(frame_feats[index]).transpose()
 
@@ -401,8 +405,12 @@ class Ego4dDataset(Dataset):
                         caption_sbert_embedding = np.array(
                             literal_eval(caption_sbert_embedding)
                         )[None, ...]
-                        assert index == 1
-                        assert caption_sbert_embedding.shape[1] == 768
+                        if index != 1:
+                            raise Exception("Index should have been 1.")
+                        if caption_sbert_embedding.shape[1] != 768:
+                            raise Exception(
+                                "caption_sbert_embedding.shape[1] should have been 768."
+                            )
                         frame_feats[index].append(caption_sbert_embedding)  # (1, 768)
                     frame_feats[index] = np.vstack(frame_feats[index]).transpose()
 
