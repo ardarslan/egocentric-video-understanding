@@ -356,8 +356,7 @@ class Ego4dDataset(Dataset):
         )
 
         if "caption_sbert_embedding" in self.frame_feat_names:
-            frame_feats = []
-
+            current_frame_feats = []
             for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
                 current_df = pd.read_csv(
                     os.path.join(
@@ -382,11 +381,39 @@ class Ego4dDataset(Dataset):
                         raise Exception(
                             "caption_sbert_embedding.shape[1] should have been 768."
                         )
-                    frame_feats.append(caption_sbert_embedding)  # (1, 768)
+                    current_frame_feats.append(caption_sbert_embedding)  # (1, 768)
 
-            frame_feats = np.vstack(frame_feats).transpose()
-            frame_feats = torch.tensor(frame_feats)
-            feats = torch.cat([feats, frame_feats], dim=0)
+            current_frame_feats = np.vstack(current_frame_feats).transpose()
+            current_frame_feats = torch.tensor(current_frame_feats)
+            feats = torch.cat([feats, current_frame_feats], dim=0)
+
+        if "encoder_output" in self.frame_feat_names:
+            current_frame_feats = []
+            for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
+                current_df = pd.read_csv(
+                    os.path.join(
+                        os.environ["SCRATCH"],
+                        "ego4d_data/v2/postprocessed_frame_features",
+                        clip_name,
+                        "encoder_output",
+                        current_blip2_vqa_feature_file_name,
+                    ),
+                    sep="\t",
+                )
+                current_df = current_df[
+                    current_df["frame_index"].apply(lambda x: x in frame_indices)
+                ]
+                for encoder_output in current_df["encoder_output"].values:
+                    encoder_output = np.array(literal_eval(encoder_output))[None, ...]
+                    if encoder_output.shape[1] != 94208:
+                        raise Exception(
+                            "encoder_output.shape[1] should have been 94208."
+                        )
+                    current_frame_feats.append(encoder_output)  # (1, 94208)
+
+            current_frame_feats = np.vstack(current_frame_feats).transpose()
+            current_frame_feats = torch.tensor(current_frame_feats)
+            feats = torch.cat([feats, current_frame_feats], dim=0)
 
         # return a data dict
         data_dict = {
