@@ -395,7 +395,7 @@ class Ego4dDataset(Dataset):
                             np.array([literal_eval(encoder_output)])  # (1, 768)
                         )
 
-        for i in range(len(frame_feats)):
+        for i in range(len(self.frame_feat_names)):
             frame_feats[i] = np.vstack(
                 frame_feats[i]
             ).transpose()  # Now each frame_feats[i] has shape (C, T)
