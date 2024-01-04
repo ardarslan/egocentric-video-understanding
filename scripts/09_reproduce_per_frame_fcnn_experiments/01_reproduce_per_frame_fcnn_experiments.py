@@ -13,7 +13,7 @@ from libs.core import load_config
 from libs.utils import fix_random_seed
 from libs.datasets import make_dataset, make_data_loader
 
-config = "/home/aarslan/mq/scripts/08_reproduce_mq_experiments/configs/proposed_features_v6.yaml"
+config = "/home/aarslan/mq/scripts/08_reproduce_mq_experiments/configs/proposed_features_v5.yaml"
 
 cfg = load_config(config)
 cfg["loader"]["num_workers"] = 0

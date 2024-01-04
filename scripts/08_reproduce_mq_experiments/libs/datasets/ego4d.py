@@ -340,8 +340,6 @@ class Ego4dDataset(Dataset):
             for i in range(1, 1025)
         ]
 
-        frame_feats = [[]] * len(self.frame_feat_names)
-
         blip2_vqa_feature_file_names = sorted(
             [
                 file_name
@@ -357,75 +355,42 @@ class Ego4dDataset(Dataset):
             ]
         )
 
-        for index, frame_feat_name in enumerate(self.frame_feat_names):
+        if "caption_sbert_embedding" in self.frame_feat_names:
+            frame_feats = []
+
             for current_blip2_vqa_feature_file_name in tqdm(
                 blip2_vqa_feature_file_names
             ):
-                if frame_feat_name == "encoder_output":
-                    current_df = pd.read_csv(
-                        os.path.join(
-                            os.environ["SCRATCH"],
-                            "ego4d_data/v2/postprocessed_frame_features",
-                            clip_name,
-                            "encoder_output",
-                            current_blip2_vqa_feature_file_name,
-                        ),
-                        sep="\t",
-                    )
-                    current_df = current_df[
-                        current_df["frame_index"].isin(frame_indices)
-                    ]
-                    for encoder_output in current_df["encoder_output"].values:
-                        encoder_output = np.array(literal_eval(encoder_output))[
-                            None, ...
-                        ]
-                        if index != 0:
-                            raise Exception("Index should have been 0.")
-                        if encoder_output.shape[1] != 94208:
-                            raise Exception(
-                                "encoder_output.shape[1] should have been 94208."
-                            )
-                        frame_feats[index].append(encoder_output)  # (1, 94208)
+                current_df = pd.read_csv(
+                    os.path.join(
+                        os.environ["SCRATCH"],
+                        "ego4d_data/v2/postprocessed_frame_features",
+                        clip_name,
+                        "caption_sbert_embedding",
+                        current_blip2_vqa_feature_file_name,
+                    ),
+                    sep="\t",
+                )
+                current_df = current_df[current_df["frame_index"].isin(frame_indices)]
+                for caption_sbert_embedding in current_df[
+                    "caption_sbert_embedding"
+                ].values:
+                    caption_sbert_embedding = np.array(
+                        literal_eval(caption_sbert_embedding)
+                    )[None, ...]
+                    if caption_sbert_embedding.shape[1] != 768:
+                        raise Exception(
+                            "caption_sbert_embedding.shape[1] should have been 768."
+                        )
+                    frame_feats.append(caption_sbert_embedding)  # (1, 768)
 
-                elif frame_feat_name == "caption_sbert_embedding":
-                    current_df = pd.read_csv(
-                        os.path.join(
-                            os.environ["SCRATCH"],
-                            "ego4d_data/v2/postprocessed_frame_features",
-                            clip_name,
-                            "caption_sbert_embedding",
-                            current_blip2_vqa_feature_file_name,
-                        ),
-                        sep="\t",
-                    )
-                    current_df = current_df[
-                        current_df["frame_index"].isin(frame_indices)
-                    ]
-                    for caption_sbert_embedding in current_df[
-                        "caption_sbert_embedding"
-                    ].values:
-                        caption_sbert_embedding = np.array(
-                            literal_eval(caption_sbert_embedding)
-                        )[None, ...]
-                        if index != 1:
-                            raise Exception("Index should have been 1.")
-                        if caption_sbert_embedding.shape[1] != 768:
-                            raise Exception(
-                                "caption_sbert_embedding.shape[1] should have been 768."
-                            )
-                        frame_feats[index].append(caption_sbert_embedding)  # (1, 768)
-
-            pdb.set_trace()
-            frame_feats[index] = np.vstack(frame_feats[index])
-
-        if len(self.frame_feat_names) > 0:
-            frame_feats = np.vstack(frame_feats)
-            frame_feats = torch.tensor(frame_feats)
-            print("Before feats.shape:", feats.shape)
-            print("frame_feats.shape:", frame_feats.shape)
-            feats = torch.cat([feats, frame_feats], dim=0)
-            print("After feats.shape:", feats.shape)
-            raise Exception("asd")
+                frame_feats = np.vstack(frame_feats).transpose()
+                frame_feats = torch.tensor(frame_feats)
+                print("Before feats.shape:", feats.shape)
+                print("frame_feats.shape:", frame_feats.shape)
+                feats = torch.cat([feats, frame_feats], dim=0)
+                print("After feats.shape:", feats.shape)
+                raise Exception("asd")
 
         # return a data dict
         data_dict = {
