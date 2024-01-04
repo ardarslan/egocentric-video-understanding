@@ -302,7 +302,7 @@ class Ego4dDataset(Dataset):
                     )  # [d,192]       upsample到一个fixed length
 
                 all_features.append(feats)
-            feats = torch.cat(all_features, dim=0)
+                feats = torch.cat(all_features, dim=0)
 
         # convert time stamp (in second) into temporal feature grids
         # ok to have small negative values here
