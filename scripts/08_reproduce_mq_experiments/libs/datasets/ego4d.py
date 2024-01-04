@@ -388,10 +388,10 @@ class Ego4dDataset(Dataset):
 
             frame_feats = np.vstack(frame_feats).transpose()
             print("frame_feats.shape:", frame_feats.shape)
-            print("feats.shape:", feats.shape)
+            print("Initial feats.shape:", feats.shape)
             frame_feats = torch.tensor(frame_feats)
             feats = torch.cat([feats, frame_feats], dim=0)
-            print("feats.shape:", feats.shape)
+            print("Final feats.shape:", feats.shape)
 
         # return a data dict
         data_dict = {
