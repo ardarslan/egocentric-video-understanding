@@ -336,7 +336,7 @@ class Ego4dDataset(Dataset):
             segments, labels = None, None
 
         frame_indices = [
-            int((30 * i * clip_info["duration"] / 1024.0) // 6 * 6)
+            int(((30 * i * clip_info["duration"] / 1024.0) // 6) * 6)
             for i in range(1, 1025)
         ]
 
