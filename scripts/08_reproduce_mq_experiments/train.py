@@ -312,7 +312,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--config",
-        default="./configs/baseline.yaml",
+        default="./configs/proposed_features_v2.yaml",
         type=str,
         help="path to a config file",
     )

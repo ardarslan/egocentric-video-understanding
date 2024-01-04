@@ -414,8 +414,6 @@ class Ego4dDataset(Dataset):
             current_frame_feats = torch.tensor(current_frame_feats)
             feats = torch.cat([feats, current_frame_feats], dim=0)
 
-        print(feats.shape)
-
         # return a data dict
         data_dict = {
             "video_id": clip_info["id"],
