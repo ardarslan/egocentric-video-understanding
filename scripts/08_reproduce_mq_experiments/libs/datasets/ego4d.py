@@ -390,9 +390,9 @@ class Ego4dDataset(Dataset):
                     current_df = current_df[
                         current_df["frame_index"].isin(frame_indices)
                     ]
-                    for encoder_output in current_df["caption_sbert_embedding"].values:
+                    for caption_sbert_embedding in current_df["caption_sbert_embedding"].values:
                         frame_feats[index].append(
-                            np.array([literal_eval(encoder_output)])  # (1, 768)
+                            np.array([literal_eval(caption_sbert_embedding)])  # (1, 768)
                         )
 
         print("len(frame_feats[0]):", len(frame_feats[0]))
