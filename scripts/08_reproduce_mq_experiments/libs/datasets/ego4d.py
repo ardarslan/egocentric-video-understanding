@@ -356,8 +356,10 @@ class Ego4dDataset(Dataset):
             ]
         )
 
-        for current_blip2_vqa_feature_file_name in tqdm(blip2_vqa_feature_file_names):
-            for index, frame_feat_name in enumerate(self.frame_feat_names):
+        for index, frame_feat_name in enumerate(self.frame_feat_names):
+            for current_blip2_vqa_feature_file_name in tqdm(
+                blip2_vqa_feature_file_names
+            ):
                 if frame_feat_name == "encoder_output":
                     current_df = pd.read_csv(
                         os.path.join(
@@ -411,12 +413,6 @@ class Ego4dDataset(Dataset):
                                 "caption_sbert_embedding.shape[1] should have been 768."
                             )
                         frame_feats[index].append(caption_sbert_embedding)  # (1, 768)
-
-        print("len(frame_feats):", len(frame_feats))
-        print("len(frame_feats[0]):", len(frame_feats[0]))
-        print("len(frame_feats[1]):", len(frame_feats[1]))
-
-        for index in range(len(frame_feats)):
             frame_feats[index] = np.vstack(frame_feats[index])
 
         if len(self.frame_feat_names) > 0:
