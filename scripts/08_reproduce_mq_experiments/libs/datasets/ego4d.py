@@ -383,7 +383,6 @@ class Ego4dDataset(Dataset):
                                 "encoder_output.shape[1] should have been 94208."
                             )
                         frame_feats[index].append(encoder_output)  # (1, 94208)
-                    frame_feats[index] = np.vstack(frame_feats[index]).transpose()
 
                 elif frame_feat_name == "caption_sbert_embedding":
                     current_df = pd.read_csv(
@@ -412,7 +411,13 @@ class Ego4dDataset(Dataset):
                                 "caption_sbert_embedding.shape[1] should have been 768."
                             )
                         frame_feats[index].append(caption_sbert_embedding)  # (1, 768)
-                    frame_feats[index] = np.vstack(frame_feats[index]).transpose()
+
+        print("len(frame_feats):", len(frame_feats))
+        print("len(frame_feats[0]):", len(frame_feats[0]))
+        print("len(frame_feats[1]):", len(frame_feats[1]))
+
+        for index in range(len(frame_feats)):
+            frame_feats[index] = np.vstack(frame_feats[index])
 
         if len(self.frame_feat_names) > 0:
             frame_feats = np.vstack(frame_feats)
