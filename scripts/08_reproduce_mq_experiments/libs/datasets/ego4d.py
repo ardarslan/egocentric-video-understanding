@@ -388,13 +388,9 @@ class Ego4dDataset(Dataset):
                         )
                     frame_feats.append(caption_sbert_embedding)  # (1, 768)
 
-                frame_feats = np.vstack(frame_feats).transpose()
-                frame_feats = torch.tensor(frame_feats)
-                print("Before feats.shape:", feats.shape)
-                print("frame_feats.shape:", frame_feats.shape)
-                feats = torch.cat([feats, frame_feats], dim=0)
-                print("After feats.shape:", feats.shape)
-                raise Exception("asd")
+            frame_feats = np.vstack(frame_feats).transpose()
+            frame_feats = torch.tensor(frame_feats)
+            feats = torch.cat([feats, frame_feats], dim=0)
 
         # return a data dict
         data_dict = {
