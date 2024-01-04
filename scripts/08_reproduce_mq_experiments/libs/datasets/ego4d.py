@@ -372,9 +372,9 @@ class Ego4dDataset(Dataset):
                         current_df["frame_index"].isin(frame_indices)
                     ]
                     for encoder_output in current_df["encoder_output"].values:
-                        encoder_output = np.array([literal_eval(encoder_output)])
+                        encoder_output = np.array(literal_eval(encoder_output))
                         assert index == 0
-                        assert encoder_output.shape[1] == 94208
+                        assert encoder_output.shape[0] == 94208
                         frame_feats[index].append(encoder_output)  # (1, 94208)
 
                 elif frame_feat_name == "caption_sbert_embedding":
@@ -395,14 +395,14 @@ class Ego4dDataset(Dataset):
                         "caption_sbert_embedding"
                     ].values:
                         caption_sbert_embedding = np.array(
-                            [literal_eval(caption_sbert_embedding)]
+                            literal_eval(caption_sbert_embedding)
                         )
                         assert index == 1
-                        assert caption_sbert_embedding.shape[1] == 768
+                        assert caption_sbert_embedding.shape[0] == 768
                         frame_feats[index].append(caption_sbert_embedding)  # (1, 768)
 
         for i in range(len(self.frame_feat_names)):
-            frame_feats[i] = np.vstack(
+            frame_feats[i] = np.array(
                 frame_feats[i]
             ).transpose()  # Now each frame_feats[i] has shape (C, T)
 
