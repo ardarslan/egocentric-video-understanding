@@ -391,7 +391,9 @@ class Ego4dDataset(Dataset):
 
         if "encoder_output" in self.frame_feat_names:
             current_frame_feats = []
-            for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
+            for current_blip2_vqa_feature_file_name in tqdm(
+                blip2_vqa_feature_file_names
+            ):
                 current_df = pd.read_csv(
                     os.path.join(
                         os.environ["SCRATCH"],
@@ -416,6 +418,8 @@ class Ego4dDataset(Dataset):
             current_frame_feats = np.vstack(current_frame_feats).transpose()
             current_frame_feats = torch.tensor(current_frame_feats)
             feats = torch.cat([feats, current_frame_feats], dim=0)
+
+        print(feats.shape)
 
         # return a data dict
         data_dict = {
