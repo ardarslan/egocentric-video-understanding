@@ -339,7 +339,6 @@ class Ego4dDataset(Dataset):
             int(((30 * i * clip_info["duration"] / 1024.0) // 6) * 6)
             for i in range(1, 1025)
         ]
-        pdb.set_trace()
 
         blip2_vqa_feature_file_names = sorted(
             [
@@ -372,7 +371,6 @@ class Ego4dDataset(Dataset):
                     ),
                     sep="\t",
                 )
-                pdb.set_trace()
                 current_df = current_df[
                     current_df["frame_index"].apply(lambda x: x in frame_indices)
                 ]
@@ -389,8 +387,11 @@ class Ego4dDataset(Dataset):
                     frame_feats.append(caption_sbert_embedding)  # (1, 768)
 
             frame_feats = np.vstack(frame_feats).transpose()
+            print("frame_feats.shape:", frame_feats.shape)
+            print("feats.shape:", feats.shape)
             frame_feats = torch.tensor(frame_feats)
             feats = torch.cat([feats, frame_feats], dim=0)
+            print("feats.shape:", feats.shape)
 
         # return a data dict
         data_dict = {
