@@ -395,6 +395,11 @@ class Ego4dDataset(Dataset):
                             np.array([literal_eval(encoder_output)])  # (1, 768)
                         )
 
+        print("len(frame_feats[0]):", len(frame_feats[0]))
+        print("len(frame_feats[1]):", len(frame_feats[1]))
+        print("[a.shape for a in frame_feats[0]]:", [a.shape for a in frame_feats[0]])
+        print("[b.shape for b in frame_feats[1]]:", [b.shape for b in frame_feats[1]])
+
         for i in range(len(self.frame_feat_names)):
             frame_feats[i] = np.vstack(
                 frame_feats[i]
