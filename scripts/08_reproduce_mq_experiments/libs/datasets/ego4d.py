@@ -339,6 +339,7 @@ class Ego4dDataset(Dataset):
             int(((30 * i * clip_info["duration"] / 1024.0) // 6) * 6)
             for i in range(1, 1025)
         ]
+        pdb.set_trace()
 
         blip2_vqa_feature_file_names = sorted(
             [
@@ -371,7 +372,10 @@ class Ego4dDataset(Dataset):
                     ),
                     sep="\t",
                 )
-                current_df = current_df[current_df["frame_index"].isin(frame_indices)]
+                pdb.set_trace()
+                current_df = current_df[
+                    current_df["frame_index"].apply(lambda x: x in frame_indices)
+                ]
                 for caption_sbert_embedding in current_df[
                     "caption_sbert_embedding"
                 ].values:
