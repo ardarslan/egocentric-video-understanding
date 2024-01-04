@@ -1,4 +1,5 @@
 import os
+import pdb
 import json
 from ast import literal_eval
 import numpy as np
@@ -413,6 +414,8 @@ class Ego4dDataset(Dataset):
                                 "caption_sbert_embedding.shape[1] should have been 768."
                             )
                         frame_feats[index].append(caption_sbert_embedding)  # (1, 768)
+
+            pdb.set_trace()
             frame_feats[index] = np.vstack(frame_feats[index])
 
         if len(self.frame_feat_names) > 0:
