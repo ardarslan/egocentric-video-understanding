@@ -32,7 +32,6 @@ from libs.utils import (
     valid_one_epoch,
 )
 import logging
-from eval import valid_performance
 
 ################################################################################
 
