@@ -372,9 +372,10 @@ class Ego4dDataset(Dataset):
                         current_df["frame_index"].isin(frame_indices)
                     ]
                     for encoder_output in current_df["encoder_output"].values:
-                        frame_feats[index].append(
-                            np.array([literal_eval(encoder_output)])  # (1, 94208)
-                        )
+                        encoder_output = np.array([literal_eval(encoder_output)])
+                        assert index == 0
+                        assert encoder_output.shape[1] == 94208
+                        frame_feats[index].append(encoder_output)  # (1, 94208)
 
                 elif frame_feat_name == "caption_sbert_embedding":
                     current_df = pd.read_csv(
@@ -390,10 +391,15 @@ class Ego4dDataset(Dataset):
                     current_df = current_df[
                         current_df["frame_index"].isin(frame_indices)
                     ]
-                    for caption_sbert_embedding in current_df["caption_sbert_embedding"].values:
-                        frame_feats[index].append(
-                            np.array([literal_eval(caption_sbert_embedding)])  # (1, 768)
+                    for caption_sbert_embedding in current_df[
+                        "caption_sbert_embedding"
+                    ].values:
+                        caption_sbert_embedding = np.array(
+                            [literal_eval(caption_sbert_embedding)]
                         )
+                        assert index == 1
+                        assert caption_sbert_embedding.shape[1] == 768
+                        frame_feats[index].append(caption_sbert_embedding)  # (1, 768)
 
         print("len(frame_feats[0]):", len(frame_feats[0]))
         print("len(frame_feats[1]):", len(frame_feats[1]))
