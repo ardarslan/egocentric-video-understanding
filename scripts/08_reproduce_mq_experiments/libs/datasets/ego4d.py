@@ -3,6 +3,7 @@ import json
 from ast import literal_eval
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 import torch
 from torch.utils.data import Dataset
@@ -355,7 +356,7 @@ class Ego4dDataset(Dataset):
             ]
         )
 
-        for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
+        for current_blip2_vqa_feature_file_name in tqdm(blip2_vqa_feature_file_names):
             for index, frame_feat_name in enumerate(self.frame_feat_names):
                 if frame_feat_name == "encoder_output":
                     current_df = pd.read_csv(
@@ -372,9 +373,11 @@ class Ego4dDataset(Dataset):
                         current_df["frame_index"].isin(frame_indices)
                     ]
                     for encoder_output in current_df["encoder_output"].values:
-                        encoder_output = literal_eval(encoder_output)
+                        encoder_output = np.array(literal_eval(encoder_output))[
+                            None, ...
+                        ]
                         assert index == 0
-                        assert len(encoder_output) == 94208
+                        assert encoder_output.shape[1] == 94208
                         frame_feats[index].append(encoder_output)  # (1, 94208)
 
                 elif frame_feat_name == "caption_sbert_embedding":
@@ -394,13 +397,15 @@ class Ego4dDataset(Dataset):
                     for caption_sbert_embedding in current_df[
                         "caption_sbert_embedding"
                     ].values:
-                        caption_sbert_embedding = literal_eval(caption_sbert_embedding)
+                        caption_sbert_embedding = np.array(
+                            literal_eval(caption_sbert_embedding)
+                        )[None, ...]
                         assert index == 1
-                        assert len(caption_sbert_embedding) == 768
+                        assert caption_sbert_embedding.shape[1] == 768
                         frame_feats[index].append(caption_sbert_embedding)  # (1, 768)
 
         for i in range(len(self.frame_feat_names)):
-            frame_feats[i] = np.array(
+            frame_feats[i] = np.vstack(
                 frame_feats[i]
             ).transpose()  # Now each frame_feats[i] has shape (C, T)
 
