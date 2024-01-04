@@ -357,7 +357,9 @@ class Ego4dDataset(Dataset):
 
         if "caption_sbert_embedding" in self.frame_feat_names:
             current_frame_feats = []
-            for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
+            for current_blip2_vqa_feature_file_name in tqdm(
+                blip2_vqa_feature_file_names
+            ):
                 current_df = pd.read_csv(
                     os.path.join(
                         os.environ["SCRATCH"],

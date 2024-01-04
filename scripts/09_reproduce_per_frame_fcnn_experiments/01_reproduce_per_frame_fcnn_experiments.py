@@ -13,7 +13,7 @@ from libs.core import load_config
 from libs.utils import fix_random_seed
 from libs.datasets import make_dataset, make_data_loader
 
-config = "/home/aarslan/mq/scripts/08_reproduce_mq_experiments/configs/proposed_features_v5.yaml"
+config = "/home/aarslan/mq/scripts/08_reproduce_mq_experiments/configs/proposed_features_v6.yaml"
 
 cfg = load_config(config)
 cfg["loader"]["num_workers"] = 0
@@ -30,3 +30,7 @@ train_dataset = make_dataset(
 train_loader = make_data_loader(train_dataset, True, rng_generator, **cfg["loader"])
 
 for batch in train_loader:
+    a = 2
+    break
+
+# for batch in val_loader:
