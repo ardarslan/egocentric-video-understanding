@@ -340,20 +340,24 @@ class Ego4dDataset(Dataset):
             for i in range(1, 1025)
         ]
 
-        blip2_vqa_feature_file_names = sorted(
-            [
-                file_name
-                for file_name in os.listdir(
-                    os.path.join(
-                        os.environ["SCRATCH"],
-                        "ego4d_data/v2/postprocessed_frame_features",
-                        clip_name,
-                        "caption_sbert_embedding",
+        if (
+            "caption_sbert_embedding" in self.frame_feat_names
+            or "encoder_output" in self.frame_feat_names
+        ):
+            blip2_vqa_feature_file_names = sorted(
+                [
+                    file_name
+                    for file_name in os.listdir(
+                        os.path.join(
+                            os.environ["SCRATCH"],
+                            "ego4d_data/v2/postprocessed_frame_features",
+                            clip_name,
+                            "caption_sbert_embedding",
+                        )
                     )
-                )
-                if file_name.startswith("blip2_vqa")
-            ]
-        )
+                    if file_name.startswith("blip2_vqa")
+                ]
+            )
 
         if "caption_sbert_embedding" in self.frame_feat_names:
             current_frame_feats = []
