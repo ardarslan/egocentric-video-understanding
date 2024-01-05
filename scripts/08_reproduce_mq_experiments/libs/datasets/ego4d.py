@@ -376,9 +376,9 @@ class Ego4dDataset(Dataset):
                 for caption_sbert_embedding in current_df[
                     "caption_sbert_embedding"
                 ].values:
-                    caption_sbert_embedding = np.round(
-                        np.array(literal_eval(caption_sbert_embedding))[None, ...], 4
-                    )
+                    caption_sbert_embedding = np.array(
+                        literal_eval(caption_sbert_embedding)
+                    )[None, ...]
                     if caption_sbert_embedding.shape[1] != 768:
                         raise Exception(
                             "caption_sbert_embedding.shape[1] should have been 768."
@@ -408,9 +408,7 @@ class Ego4dDataset(Dataset):
                     current_df["frame_index"].apply(lambda x: x in frame_indices)
                 ]
                 for encoder_output in current_df["encoder_output"].values:
-                    encoder_output = np.round(
-                        np.array(literal_eval(encoder_output))[None, ...], 4
-                    )
+                    encoder_output = np.array(literal_eval(encoder_output))[None, ...]
                     if encoder_output.shape[1] != 94208:
                         raise Exception(
                             "encoder_output.shape[1] should have been 94208."
