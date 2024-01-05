@@ -5,7 +5,7 @@
     "attn_type": "bi",
     "bi_data": false,
     "clamp_len": -1,
-    "d_head": 96,
+    "d_head": 128,
     "d_inner": 4096,
     "d_model": 2048,
     "dropout": 0.1,
