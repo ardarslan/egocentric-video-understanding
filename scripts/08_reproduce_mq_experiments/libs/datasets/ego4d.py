@@ -361,9 +361,7 @@ class Ego4dDataset(Dataset):
 
         if "caption_sbert_embedding" in self.frame_feat_names:
             current_frame_feats = []
-            for current_blip2_vqa_feature_file_name in tqdm(
-                blip2_vqa_feature_file_names
-            ):
+            for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
                 current_df = pd.read_csv(
                     os.path.join(
                         os.environ["SCRATCH"],
@@ -390,14 +388,12 @@ class Ego4dDataset(Dataset):
                     current_frame_feats.append(caption_sbert_embedding)  # (1, 768)
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
-            current_frame_feats = torch.tensor(current_frame_feats)
+            current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.dtype)
             feats = torch.cat([feats, current_frame_feats], dim=0)
 
         if "encoder_output" in self.frame_feat_names:
             current_frame_feats = []
-            for current_blip2_vqa_feature_file_name in tqdm(
-                blip2_vqa_feature_file_names
-            ):
+            for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
                 current_df = pd.read_csv(
                     os.path.join(
                         os.environ["SCRATCH"],
@@ -422,7 +418,7 @@ class Ego4dDataset(Dataset):
                     current_frame_feats.append(encoder_output)  # (1, 94208)
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
-            current_frame_feats = torch.tensor(current_frame_feats)
+            current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.dtype)
             feats = torch.cat([feats, current_frame_feats], dim=0)
 
         # return a data dict
