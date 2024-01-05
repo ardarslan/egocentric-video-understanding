@@ -311,7 +311,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--config",
-        default="./configs/proposed_features_v5.yaml",
+        default="./configs/ego4d_asl_features.yaml",
         type=str,
         help="path to a config file",
     )
