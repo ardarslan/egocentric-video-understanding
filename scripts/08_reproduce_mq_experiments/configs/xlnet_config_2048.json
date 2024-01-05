@@ -6,7 +6,7 @@
     "bi_data": false,
     "clamp_len": -1,
     "d_head": 128,
-    "d_inner": 2048,
+    "d_inner": 1024,
     "d_model": 2048,
     "dropout": 0.1,
     "end_n_top": 5,
