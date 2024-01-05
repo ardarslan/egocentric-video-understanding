@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 import torch
+from tqdm import tqdm
 from torch.utils.data import Dataset
 from torch.nn import functional as F
 
@@ -356,7 +357,9 @@ class Ego4dDataset(Dataset):
 
         if "caption_sbert_embedding" in self.frame_feat_names:
             current_frame_feats = []
-            for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
+            for current_blip2_vqa_feature_file_name in tqdm(
+                blip2_vqa_feature_file_names
+            ):
                 current_df = pd.read_csv(
                     os.path.join(
                         os.environ["SCRATCH"],
@@ -373,9 +376,9 @@ class Ego4dDataset(Dataset):
                 for caption_sbert_embedding in current_df[
                     "caption_sbert_embedding"
                 ].values:
-                    caption_sbert_embedding = np.array(
-                        literal_eval(caption_sbert_embedding)
-                    )[None, ...]
+                    caption_sbert_embedding = np.round(
+                        np.array(literal_eval(caption_sbert_embedding))[None, ...], 4
+                    )
                     if caption_sbert_embedding.shape[1] != 768:
                         raise Exception(
                             "caption_sbert_embedding.shape[1] should have been 768."
@@ -388,7 +391,9 @@ class Ego4dDataset(Dataset):
 
         if "encoder_output" in self.frame_feat_names:
             current_frame_feats = []
-            for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
+            for current_blip2_vqa_feature_file_name in tqdm(
+                blip2_vqa_feature_file_names
+            ):
                 current_df = pd.read_csv(
                     os.path.join(
                         os.environ["SCRATCH"],
@@ -403,7 +408,9 @@ class Ego4dDataset(Dataset):
                     current_df["frame_index"].apply(lambda x: x in frame_indices)
                 ]
                 for encoder_output in current_df["encoder_output"].values:
-                    encoder_output = np.array(literal_eval(encoder_output))[None, ...]
+                    encoder_output = np.round(
+                        np.array(literal_eval(encoder_output))[None, ...], 4
+                    )
                     if encoder_output.shape[1] != 94208:
                         raise Exception(
                             "encoder_output.shape[1] should have been 94208."
