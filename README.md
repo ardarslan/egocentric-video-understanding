@@ -924,6 +924,8 @@ sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G val.sh
 
 # Postprocess Data
 
+mamba activate mq_model
+
 sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 0
 sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 1
 sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 2
