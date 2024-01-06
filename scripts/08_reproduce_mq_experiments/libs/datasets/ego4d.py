@@ -265,7 +265,6 @@ class Ego4dDataset(Dataset):
                 )
                 # center the features
                 num_frames = feat_stride
-                print(feat_stride, num_frames)
             # case 3: fixed length features for input
             else:
                 # deal with fixed length feature, recompute feat_stride, num_frames
@@ -303,6 +302,7 @@ class Ego4dDataset(Dataset):
             all_features.append(feats)
             feats = torch.cat(all_features, dim=0)
 
+        print(feat_stride, num_frames, flush=True)
         # convert time stamp (in second) into temporal feature grids
         # ok to have small negative values here
         if clip_info["segments"] is not None:
