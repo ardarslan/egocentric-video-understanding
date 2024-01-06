@@ -245,7 +245,7 @@ class Ego4dDataset(Dataset):
         else:
             if len(self.video_feat_folder) == 0:
                 video_feat_folder = [
-                    "ego4d_data/v2/internvideo",
+                    os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/internvideo"),
                 ]
             else:
                 video_feat_folder = self.video_feat_folder
@@ -404,7 +404,7 @@ class Ego4dDataset(Dataset):
                     current_frame_feats.append(current_frame_feats[-1])
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
-            current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.float32)
+            current_frame_feats = torch.tensor(current_frame_feats, dtype=torch.float32)
             concatenated_feats.append(current_frame_feats)
 
         if "encoder_output" in self.frame_feat_names:
