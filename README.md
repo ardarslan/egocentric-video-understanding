@@ -938,3 +938,5 @@ sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_d
 sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 7
 sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 8
 sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 9
+
+sbatch --time 720 --cpus-per-task 4 --gres=gpu:0 --mem-per-cpu 50G incremental_pca.sh
