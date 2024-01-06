@@ -388,9 +388,7 @@ class Ego4dDataset(Dataset):
                     current_frame_feats.append(caption_sbert_embedding)  # (1, 768)
 
             if len(current_frame_feats) != 1024:
-                print(clip_name)
-                time.sleep(4)
-                raise Exception("asd")
+                raise Exception(clip_name)
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
             current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.dtype)
@@ -423,9 +421,7 @@ class Ego4dDataset(Dataset):
                     current_frame_feats.append(encoder_output)  # (1, 94208)
 
             if len(current_frame_feats) != 1024:
-                print(clip_name)
-                time.sleep(4)
-                raise Exception("asd")
+                raise Exception(clip_name)
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
             current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.dtype)
