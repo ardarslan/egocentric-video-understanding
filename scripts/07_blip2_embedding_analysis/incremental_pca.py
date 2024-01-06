@@ -4,9 +4,8 @@ import json
 import argparse
 import numpy as np
 import pandas as pd
-from ast import literal_eval
 from tqdm import tqdm
-
+from ast import literal_eval
 
 from sklearn.decomposition import IncrementalPCA
 
@@ -43,20 +42,20 @@ if __name__ == "__main__":
         current_file_names = os.listdir(
             os.path.join(args.input_folder_path, clip_id, "encoder_output")
         )
+        current_embeddings = []
         for current_file_name in sorted(current_file_names):
             current_file_path = os.path.join(
                 args.input_folder_path, clip_id, "encoder_output", current_file_name
             )
             current_df = pd.read_csv(current_file_path, sep="\t")
-            if len(current_df) == 1:
-                continue
-            current_embeddings = np.array(
+            current_embeddings.extend(
                 [
                     literal_eval(current_embedding)
                     for current_embedding in current_df["encoder_output"].values
                 ]
             )
-            inc_pca.partial_fit(current_embeddings)
+        current_embeddings = np.array(current_embeddings)
+        inc_pca.partial_fit(current_embeddings)
 
     cumsum = np.cumsum(inc_pca.explained_variance_ratio_)
     n_components = np.argmax(cumsum >= 0.95) + 1
@@ -69,18 +68,20 @@ if __name__ == "__main__":
         current_file_names = os.listdir(
             os.path.join(args.input_folder_path, clip_id, "encoder_output")
         )
-        for current_file_name in current_file_names:
+        current_embeddings = []
+        for current_file_name in sorted(current_file_names):
             current_file_path = os.path.join(
                 args.input_folder_path, clip_id, "encoder_output", current_file_name
             )
             current_df = pd.read_csv(current_file_path, sep="\t")
-            current_embeddings = np.array(
+            current_embeddings.extend(
                 [
                     literal_eval(current_embedding)
-                    for current_embedding in current_df["encoder_output"]
+                    for current_embedding in current_df["encoder_output"].values
                 ]
             )
-            inc_pca.partial_fit(current_embeddings)
+        current_embeddings = np.array(current_embeddings)
+        inc_pca.partial_fit(current_embeddings)
 
     for clip_id in clip_ids:
         current_file_names = os.listdir(
