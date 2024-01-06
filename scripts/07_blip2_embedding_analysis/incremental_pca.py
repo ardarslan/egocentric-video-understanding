@@ -48,13 +48,13 @@ if __name__ == "__main__":
                 args.input_folder_path, clip_id, "encoder_output", current_file_name
             )
             current_df = pd.read_csv(current_file_path, sep="\t")
+            print(current_df.shape)
             current_embeddings = np.array(
                 [
                     literal_eval(current_embedding)
                     for current_embedding in current_df["encoder_output"].values
                 ]
             )
-            print(current_embeddings.shape)
             inc_pca.partial_fit(current_embeddings)
 
     cumsum = np.cumsum(inc_pca.explained_variance_ratio_)
