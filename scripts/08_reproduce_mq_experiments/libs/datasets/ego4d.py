@@ -335,11 +335,6 @@ class Ego4dDataset(Dataset):
         else:
             segments, labels = None, None
 
-        frame_indices = [
-            int(((30 * i * clip_info["duration"] / 1024.0) // 6) * 6)
-            for i in range(1, 1025)
-        ]
-
         if (
             "caption_sbert_embedding" in self.frame_feat_names
             or "encoder_output" in self.frame_feat_names
@@ -372,6 +367,12 @@ class Ego4dDataset(Dataset):
                     ),
                     sep="\t",
                 )
+
+                frame_indices = [
+                    int(((30 * i * clip_info["duration"] / 1024.0) // 6) * 6)
+                    for i in range(1, 1025)
+                ]
+
                 current_df = current_df[
                     current_df["frame_index"].apply(lambda x: x in frame_indices)
                 ]
@@ -388,7 +389,8 @@ class Ego4dDataset(Dataset):
                     current_frame_feats.append(caption_sbert_embedding)  # (1, 768)
 
             if len(current_frame_feats) != 1024:
-                raise Exception(clip_name)
+                for _ in range(1024 - len(current_frame_feats)):
+                    current_frame_feats.append(current_frame_feats[-1])
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
             current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.dtype)
@@ -421,7 +423,8 @@ class Ego4dDataset(Dataset):
                     current_frame_feats.append(encoder_output)  # (1, 94208)
 
             if len(current_frame_feats) != 1024:
-                raise Exception(clip_name)
+                for _ in range(1024 - len(current_frame_feats)):
+                    current_frame_feats.append(current_frame_feats[-1])
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
             current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.dtype)
