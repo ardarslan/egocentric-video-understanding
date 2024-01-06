@@ -387,6 +387,9 @@ class Ego4dDataset(Dataset):
                         )
                     current_frame_feats.append(caption_sbert_embedding)  # (1, 768)
 
+            if len(current_frame_feats) != 1024:
+                pdb.set_trace()
+
             current_frame_feats = np.vstack(current_frame_feats).transpose()
             current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.dtype)
             feats = torch.cat([feats, current_frame_feats], dim=0)
@@ -416,6 +419,9 @@ class Ego4dDataset(Dataset):
                             "encoder_output.shape[1] should have been 94208."
                         )
                     current_frame_feats.append(encoder_output)  # (1, 94208)
+
+            if len(current_frame_feats) != 1024:
+                pdb.set_trace()
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
             current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.dtype)
