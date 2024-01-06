@@ -51,10 +51,9 @@ if __name__ == "__main__":
             current_embeddings = np.array(
                 [
                     literal_eval(current_embedding)
-                    for current_embedding in current_df["encoder_output"]
+                    for current_embedding in current_df["encoder_output"].values
                 ]
             )
-            print(current_embeddings.shape)
             inc_pca.partial_fit(current_embeddings)
 
     cumsum = np.cumsum(inc_pca.explained_variance_ratio_)
