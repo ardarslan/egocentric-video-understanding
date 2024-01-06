@@ -32,64 +32,61 @@ if __name__ == "__main__":
         )
     ]
 
-    try:
-        for clip_id in tqdm(clip_ids):
-            os.makedirs(
-                os.path.join(args.output_folder_path, clip_id, "encoder_output"),
-                exist_ok=True,
-            )
-            os.makedirs(
+    for clip_id in tqdm(clip_ids):
+        os.makedirs(
+            os.path.join(args.output_folder_path, clip_id, "encoder_output"),
+            exist_ok=True,
+        )
+        os.makedirs(
+            os.path.join(args.output_folder_path, clip_id, "caption_sbert_embedding"),
+            exist_ok=True,
+        )
+        file_names = os.listdir(os.path.join(args.input_folder_path, clip_id))
+        for file_name in file_names:
+            if os.path.exists(
                 os.path.join(
-                    args.output_folder_path, clip_id, "caption_sbert_embedding"
-                ),
-                exist_ok=True,
+                    args.output_folder_path,
+                    clip_id,
+                    "encoder_output",
+                    file_name,
+                )
+            ) and os.path.exists(
+                os.path.join(
+                    args.output_folder_path,
+                    clip_id,
+                    "caption_sbert_embedding",
+                    file_name,
+                )
+            ):
+                continue
+            current_df = pd.read_csv(
+                os.path.join(args.input_folder_path, clip_id, file_name),
+                sep="\t",
+                usecols=[
+                    "frame_index",
+                    "encoder_output",
+                    "caption_sbert_embedding",
+                ],
             )
-            file_names = os.listdir(os.path.join(args.input_folder_path, clip_id))
-            for file_name in file_names:
-                if os.path.exists(
-                    os.path.join(
-                        args.output_folder_path,
-                        clip_id,
-                        "encoder_output",
-                        file_name,
-                    )
-                ) and os.path.exists(
-                    os.path.join(
-                        args.output_folder_path,
-                        clip_id,
-                        "caption_sbert_embedding",
-                        file_name,
-                    )
-                ):
-                    continue
-                current_df = pd.read_csv(
-                    os.path.join(args.input_folder_path, clip_id, file_name),
-                    sep="\t",
-                    usecols=[
-                        "frame_index",
-                        "encoder_output",
-                        "caption_sbert_embedding",
-                    ],
-                )
-                current_df[["frame_index", "encoder_output"]].to_csv(
-                    os.path.join(
-                        args.output_folder_path,
-                        clip_id,
-                        "encoder_output",
-                        file_name,
-                    ),
-                    sep="\t",
-                )
-                current_df[["frame_index", "caption_sbert_embedding"]].to_csv(
-                    os.path.join(
-                        args.output_folder_path,
-                        clip_id,
-                        "caption_sbert_embedding",
-                        file_name,
-                    ),
-                    sep="\t",
-                )
-                del current_df
-                gc.collect()
-    except:
-        print(clip_id, file_name)
+            current_df[["frame_index", "encoder_output"]].to_csv(
+                os.path.join(
+                    args.output_folder_path,
+                    clip_id,
+                    "encoder_output",
+                    file_name,
+                ),
+                sep="\t",
+                index=False,
+            )
+            current_df[["frame_index", "caption_sbert_embedding"]].to_csv(
+                os.path.join(
+                    args.output_folder_path,
+                    clip_id,
+                    "caption_sbert_embedding",
+                    file_name,
+                ),
+                sep="\t",
+                index=False,
+            )
+            del current_df
+            gc.collect()
