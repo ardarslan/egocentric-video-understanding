@@ -1,10 +1,12 @@
 import os
+import gc
 import json
+import argparse
 import numpy as np
+import pandas as pd
 from ast import literal_eval
 from tqdm import tqdm
-import argparse
-import pandas as pd
+
 
 from sklearn.decomposition import IncrementalPCA
 
@@ -94,3 +96,28 @@ if __name__ == "__main__":
                 ]
             )
             current_embeddings = inc_pca.transform(current_embeddings)
+            frame_indices = current_df["frame_index"].tolist()
+            del current_df
+            gc.collect()
+            current_df = pd.DataFrame.from_dict(
+                {
+                    "frame_index": frame_indices,
+                    "encoder_output_pca": [
+                        current_embedding for current_embedding in current_embeddings
+                    ],
+                }
+            )
+            os.makedirs(
+                os.path.join(args.input_folder_path, clip_id, "encoder_output_pca"),
+                exist_ok=True,
+            )
+            current_df.to_csv(
+                os.path.join(
+                    args.input_folder_path,
+                    clip_id,
+                    "encoder_output_pca",
+                    current_file_name,
+                ),
+                sep="\t",
+                index=False,
+            )
