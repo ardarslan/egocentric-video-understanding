@@ -1,5 +1,5 @@
 import os
-import pdb
+import time
 import json
 from ast import literal_eval
 import numpy as np
@@ -389,6 +389,7 @@ class Ego4dDataset(Dataset):
 
             if len(current_frame_feats) != 1024:
                 print(clip_name)
+                time.sleep(4)
                 raise Exception("asd")
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
@@ -423,6 +424,7 @@ class Ego4dDataset(Dataset):
 
             if len(current_frame_feats) != 1024:
                 print(clip_name)
+                time.sleep(4)
                 raise Exception("asd")
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
