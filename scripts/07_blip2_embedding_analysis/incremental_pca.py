@@ -35,7 +35,7 @@ if __name__ == "__main__":
     with open(args.annotations_file_path, "r") as reader:
         annotations = json.load(reader)
 
-    inc_pca = IncrementalPCA(n_components=1000)
+    inc_pca = IncrementalPCA(n_components=256)
     for clip_id in tqdm(clip_ids):
         if annotations[clip_id]["subset"] not in ["train", "val"]:
             continue
