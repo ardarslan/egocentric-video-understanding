@@ -245,9 +245,6 @@ class Ego4dDataset(Dataset):
         else:
             if len(self.video_feat_folder) == 0:
                 video_feat_folder = [
-                    "ego4d_data/v2/egovlp_egonce",
-                    "ego4d_data/v2/slowfast_clip",
-                    "ego4d_data/v2/omnivore_clip",
                     "ego4d_data/v2/internvideo",
                 ]
             else:
@@ -315,7 +312,9 @@ class Ego4dDataset(Dataset):
 
                 all_features.append(feats)
                 feats = torch.cat(all_features, dim=0)
-        concatenated_feats.append(feats)
+
+        if len(self.video_feat_folder) > 0:
+            concatenated_feats.append(feats)
 
         # convert time stamp (in second) into temporal feature grids
         # ok to have small negative values here
