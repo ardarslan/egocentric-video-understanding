@@ -9,7 +9,7 @@ dataset: {
   file_prefix: ,
   file_ext: .pt,
   num_classes: 110,
-  input_dim: [94208, 768],
+  input_dim: [96408, 768],
   feat_stride: 1,
   num_frames: 1,
   trunc_thresh: 0.3,
@@ -25,9 +25,9 @@ model: {
   # 1024 -> 512 -> 256  -> 128 -> 64 -> 32 -> 16 -> 8 -> 4 -> 2
   # shrink the model for reduced input feature channels
   n_head: 16,
-  embd_dim: [512, 512],
-  fpn_dim: 1024,
-  head_dim: 1024,
+  embd_dim: [256, 256],
+  fpn_dim: 512,
+  head_dim: 512,
   use_abs_pe: True,
 }
 opt: {
@@ -37,7 +37,7 @@ opt: {
 }
 loader: {
   batch_size: 1,
-  num_workers: 0
+  num_workers: 4
 }
 train_cfg: {
   init_loss_norm: 100,
