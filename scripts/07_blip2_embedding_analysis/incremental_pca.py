@@ -43,12 +43,13 @@ if __name__ == "__main__":
         current_file_names = os.listdir(
             os.path.join(args.input_folder_path, clip_id, "encoder_output")
         )
-        for current_file_name in current_file_names:
+        for current_file_name in sorted(current_file_names):
             current_file_path = os.path.join(
                 args.input_folder_path, clip_id, "encoder_output", current_file_name
             )
             current_df = pd.read_csv(current_file_path, sep="\t")
-            print(clip_id, current_file_name, current_df.shape)
+            if len(current_df) == 1:
+                continue
             current_embeddings = np.array(
                 [
                     literal_eval(current_embedding)
