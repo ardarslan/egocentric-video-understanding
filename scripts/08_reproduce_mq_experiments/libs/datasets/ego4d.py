@@ -183,69 +183,13 @@ class Ego4dDataset(Dataset):
         # video_data[:, :num_frms] = win_data[:, :num_frms]
         # feats = video_data[:, :num_frms]
         # feats = feats.permute(1,0)      # [t,c]
+        concatenated_feats = []
 
-        # # egovlp
-        # if isinstance(self.video_feat_folder, str):
-        #     filename = os.path.join(
-        #         self.video_feat_folder, self.file_prefix + clip_name + self.file_ext
-        #     )
-        #     feats = torch.load(filename)
-        #     # case 1: variable length features for training
-        #     if self.feat_stride > 0 and (not self.force_upsampling):
-        #         # var length features
-        #         feat_stride, num_frames = self.feat_stride, self.num_frames
-        #         # only apply down sampling here
-        #         if self.downsample_rate > 1:
-        #             feats = feats[:: self.downsample_rate, :]
-        #             feat_stride = self.feat_stride * self.downsample_rate
-        #     # case 2: variable length features for input, yet resized for training
-        #     elif (
-        #         self.feat_stride > 0 and self.force_upsampling
-        #     ):  # activitynet 会upsample到fixed length
-        #         feat_stride = (
-        #             float((feats.shape[0] - 1) * self.feat_stride + self.num_frames)
-        #             / self.max_seq_len
-        #         )
-        #         # center the features
-        #         num_frames = feat_stride
-        #     # case 3: fixed length features for input
-        #     else:
-        #         # deal with fixed length feature, recompute feat_stride, num_frames
-        #         seq_len = feats.shape[0]
-        #         assert seq_len <= self.max_seq_len
-        #         if self.force_upsampling:
-        #             # reset to max_seq_len
-        #             seq_len = self.max_seq_len
-        #         feat_stride = clip_info["duration"] * clip_info["fps"] / seq_len
-        #         # center the features
-        #         num_frames = feat_stride
-
-        #     # T x C -> C x T
-        #     feats = feats.permute(1, 0)
-
-        #     # resize the features if needed
-        #     if (feats.shape[-1] != self.max_seq_len) and self.force_upsampling:
-        #         resize_feats = F.interpolate(
-        #             feats.unsqueeze(0),
-        #             size=self.max_seq_len,
-        #             mode="linear",
-        #             align_corners=False,
-        #         )
-        #         segmentation_labels = (
-        #             F.interpolate(
-        #                 segmentation_labels.unsqueeze(0).unsqueeze(0),
-        #                 size=(self.max_seq_len, self.num_classes),
-        #                 mode="nearest",
-        #             )
-        #             .squeeze(0)
-        #             .squeeze(0)
-        #         )
-        #         feats = resize_feats.squeeze(0)  # [d,192]       upsample到一个fixed length
-        # else:
-
-        all_features = []
-        for f_t in self.video_feat_folder:
-            filename = os.path.join(f_t, self.file_prefix + clip_name + self.file_ext)
+        # egovlp
+        if isinstance(self.video_feat_folder, str):
+            filename = os.path.join(
+                self.video_feat_folder, self.file_prefix + clip_name + self.file_ext
+            )
             feats = torch.load(filename)
             # case 1: variable length features for training
             if self.feat_stride > 0 and (not self.force_upsampling):
@@ -298,11 +242,81 @@ class Ego4dDataset(Dataset):
                     .squeeze(0)
                 )
                 feats = resize_feats.squeeze(0)  # [d,192]       upsample到一个fixed length
+        else:
+            if len(self.video_feat_folder) == 0:
+                video_feat_folder = [
+                    "ego4d_data/v2/egovlp_egonce",
+                    "ego4d_data/v2/slowfast_clip",
+                    "ego4d_data/v2/omnivore_clip",
+                    "ego4d_data/v2/internvideo",
+                ]
+            else:
+                video_feat_folder = self.video_feat_folder
 
-            all_features.append(feats)
-            feats = torch.cat(all_features, dim=0)
+            all_features = []
+            for f_t in video_feat_folder:
+                filename = os.path.join(
+                    f_t, self.file_prefix + clip_name + self.file_ext
+                )
+                feats = torch.load(filename)
+                # case 1: variable length features for training
+                if self.feat_stride > 0 and (not self.force_upsampling):
+                    # var length features
+                    feat_stride, num_frames = self.feat_stride, self.num_frames
+                    # only apply down sampling here
+                    if self.downsample_rate > 1:
+                        feats = feats[:: self.downsample_rate, :]
+                        feat_stride = self.feat_stride * self.downsample_rate
+                # case 2: variable length features for input, yet resized for training
+                elif (
+                    self.feat_stride > 0 and self.force_upsampling
+                ):  # activitynet 会upsample到fixed length
+                    feat_stride = (
+                        float((feats.shape[0] - 1) * self.feat_stride + self.num_frames)
+                        / self.max_seq_len
+                    )
+                    # center the features
+                    num_frames = feat_stride
+                # case 3: fixed length features for input
+                else:
+                    # deal with fixed length feature, recompute feat_stride, num_frames
+                    seq_len = feats.shape[0]
+                    assert seq_len <= self.max_seq_len
+                    if self.force_upsampling:
+                        # reset to max_seq_len
+                        seq_len = self.max_seq_len
+                    feat_stride = clip_info["duration"] * clip_info["fps"] / seq_len
+                    # center the features
+                    num_frames = feat_stride
 
-        print(feat_stride, num_frames, flush=True)
+                # T x C -> C x T
+                feats = feats.permute(1, 0)
+
+                # resize the features if needed
+                if (feats.shape[-1] != self.max_seq_len) and self.force_upsampling:
+                    resize_feats = F.interpolate(
+                        feats.unsqueeze(0),
+                        size=self.max_seq_len,
+                        mode="linear",
+                        align_corners=False,
+                    )
+                    segmentation_labels = (
+                        F.interpolate(
+                            segmentation_labels.unsqueeze(0).unsqueeze(0),
+                            size=(self.max_seq_len, self.num_classes),
+                            mode="nearest",
+                        )
+                        .squeeze(0)
+                        .squeeze(0)
+                    )
+                    feats = resize_feats.squeeze(
+                        0
+                    )  # [d,192]       upsample到一个fixed length
+
+                all_features.append(feats)
+                feats = torch.cat(all_features, dim=0)
+        concatenated_feats.append(feats)
+
         # convert time stamp (in second) into temporal feature grids
         # ok to have small negative values here
         if clip_info["segments"] is not None:
@@ -391,8 +405,8 @@ class Ego4dDataset(Dataset):
                     current_frame_feats.append(current_frame_feats[-1])
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
-            current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.dtype)
-            feats = torch.cat([feats, current_frame_feats], dim=0)
+            current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.float32)
+            concatenated_feats.append(current_frame_feats)
 
         if "encoder_output" in self.frame_feat_names:
             current_frame_feats = []
@@ -425,13 +439,14 @@ class Ego4dDataset(Dataset):
                     current_frame_feats.append(current_frame_feats[-1])
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
-            current_frame_feats = torch.tensor(current_frame_feats, dtype=feats.dtype)
-            feats = torch.cat([feats, current_frame_feats], dim=0)
+            current_frame_feats = torch.tensor(current_frame_feats, dtype=torch.float32)
+            concatenated_feats.append(current_frame_feats)
 
+        concatenated_feats = torch.vstack(concatenated_feats)
         # return a data dict
         data_dict = {
             "video_id": clip_info["id"],
-            "feats": feats,  # C x T
+            "feats": concatenated_feats,  # C x T
             "segments": segments,  # N x 2
             "labels": labels,  # N
             "fps": clip_info["fps"],
