@@ -17,6 +17,8 @@ config = "/home/aarslan/mq/scripts/08_reproduce_mq_experiments/configs/proposed_
 
 cfg = load_config(config)
 cfg["loader"]["num_workers"] = 0
+cfg["dataset_name"] = "ego4d_per_frame"
+
 for i in range(len(cfg["dataset"]["video_feat_folder"])):
     cfg["dataset"]["video_feat_folder"][i] = os.path.join(
         os.environ["SCRATCH"], cfg["dataset"]["video_feat_folder"][i]

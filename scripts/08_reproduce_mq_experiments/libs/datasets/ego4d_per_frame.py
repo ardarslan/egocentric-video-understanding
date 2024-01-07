@@ -188,7 +188,6 @@ class Ego4dDataset(Dataset):
         else:
             video_feat_folder = self.video_feat_folder
 
-        all_features = []
         for f_t in video_feat_folder:
             filename = os.path.join(f_t, self.file_prefix + clip_name + self.file_ext)
             feats = torch.load(filename)
@@ -244,11 +243,8 @@ class Ego4dDataset(Dataset):
                 )
                 feats = resize_feats.squeeze(0)  # [d,192]       upsample到一个fixed length
 
-            all_features.append(feats)
-            feats = torch.cat(all_features, dim=0)
-
-        if len(self.video_feat_folder) > 0:
-            concatenated_feats.append(feats[:, frame_index])
+            if len(self.video_feat_folder) > 0:
+                concatenated_feats.append(feats[:, frame_index])
 
         # convert time stamp (in second) into temporal feature grids
         # ok to have small negative values here
@@ -329,7 +325,7 @@ class Ego4dDataset(Dataset):
                         raise Exception(
                             "len(caption_sbert_embedding) should have been 768."
                         )
-                concatenated_feats.append(caption_sbert_embedding)
+                    concatenated_feats.append(caption_sbert_embedding)  # (768, )
 
         if "encoder_output" in self.frame_feat_names:
             for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
@@ -359,6 +355,14 @@ class Ego4dDataset(Dataset):
         concatenated_feats = torch.hstack(concatenated_feats)
 
         segmentation_labels = segmentation_labels[frame_index, :]
+        if segmentation_labels.sum() == 0:
+            segmentation_labels = torch.hstack(
+                segmentation_labels, torch.tensor([1], dtype=segmentation_labels.dtype)
+            )
+        else:
+            segmentation_labels = torch.hstack(
+                segmentation_labels, torch.tensor([0], dtype=segmentation_labels.dtype)
+            )
 
         return {
             "feats": concatenated_feats,  # (SumOfFeatureDimensions, )
