@@ -15,7 +15,7 @@ from .data_utils import truncate_feats
 from ..utils import remove_duplicate_annotations
 
 
-@register_dataset("ego4d")
+@register_dataset("ego4d_per_frame")
 class Ego4dDataset(Dataset):
     def __init__(
         self,
