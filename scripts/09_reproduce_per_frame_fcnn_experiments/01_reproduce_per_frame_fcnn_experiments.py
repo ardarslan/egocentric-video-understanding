@@ -31,8 +31,17 @@ train_dataset = make_dataset(
 )
 train_loader = make_data_loader(train_dataset, True, rng_generator, **cfg["loader"])
 
+val_dataset = make_dataset(
+    cfg["dataset_name"], False, cfg["val_split"], **cfg["dataset"]
+)
+# set bs = 1, and disable shuffle
+val_loader = make_data_loader(val_dataset, False, None, 1, cfg["loader"]["num_workers"])
+
 for batch in train_loader:
-    a = 2
+    print(batch["feats"].shape, batch["segmentation_labels"].shape)
     break
+
+    # a = 2
+    # break
 
 # for batch in val_loader:
