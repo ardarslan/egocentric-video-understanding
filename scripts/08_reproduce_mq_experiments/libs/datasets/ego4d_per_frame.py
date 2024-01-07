@@ -347,6 +347,7 @@ class Ego4dDataset(Dataset):
                         "encoder_output"
                     ]
                     encoder_output = np.round(np.array(literal_eval(encoder_output)), 4)
+                    encoder_output = torch.tensor(encoder_output, dtype=torch.float32)
 
                     if len(encoder_output) != 94208:
                         raise Exception("len(encoder_output) should have been 94208.")
