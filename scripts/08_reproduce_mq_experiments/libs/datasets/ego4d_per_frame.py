@@ -244,7 +244,7 @@ class Ego4dDataset(Dataset):
                 feats = resize_feats.squeeze(0)  # [d,192]       upsample到一个fixed length
 
             if len(self.video_feat_folder) > 0:
-                concatenated_feats.append(feats[:, frame_index])
+                concatenated_feats.append(feats[:, idx % 1024])
 
         # convert time stamp (in second) into temporal feature grids
         # ok to have small negative values here
@@ -354,7 +354,7 @@ class Ego4dDataset(Dataset):
 
         concatenated_feats = torch.hstack(concatenated_feats)
 
-        segmentation_labels = segmentation_labels[frame_index, :]
+        segmentation_labels = segmentation_labels[idx % 1024, :]
         if segmentation_labels.sum() == 0:
             segmentation_labels = torch.hstack(
                 segmentation_labels, torch.tensor([1], dtype=segmentation_labels.dtype)
