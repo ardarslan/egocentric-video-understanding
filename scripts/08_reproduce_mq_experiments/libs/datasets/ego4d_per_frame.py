@@ -357,11 +357,17 @@ class Ego4dDataset(Dataset):
         segmentation_labels = segmentation_labels[idx % 1024, :]
         if segmentation_labels.sum() == 0:
             segmentation_labels = torch.hstack(
-                segmentation_labels, torch.tensor([1], dtype=segmentation_labels.dtype)
+                [
+                    segmentation_labels,
+                    torch.tensor([1], dtype=segmentation_labels.dtype),
+                ]
             )
         else:
             segmentation_labels = torch.hstack(
-                segmentation_labels, torch.tensor([0], dtype=segmentation_labels.dtype)
+                [
+                    segmentation_labels,
+                    torch.tensor([0], dtype=segmentation_labels.dtype),
+                ]
             )
 
         return {
