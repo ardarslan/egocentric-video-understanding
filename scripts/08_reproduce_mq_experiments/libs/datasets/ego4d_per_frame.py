@@ -164,39 +164,33 @@ class Ego4dDataset(Dataset):
         return dict_db, label_dict
 
     def __len__(self):
-        return len(self.data_list)
+        return len(self.data_list) * 1024
 
     def __getitem__(self, idx):
         # directly return a (truncated) data point (so it is very fast!)
         # auto batching will be disabled in the subsequent dataloader
         # instead the model will need to decide how to batch / preporcess the data
-        clip_info = self.data_list[idx]
-        video_name = clip_info["parent_video_id"]
+
+        clip_info = self.data_list[idx // 1024]
         clip_name = clip_info["id"]
         segmentation_labels = clip_info["segmentation_labels"]
 
-        frame_indices = [
-            int(((30 * i * clip_info["duration"] / 1024.0) // 6) * 6)
-            for i in range(
-                0, 1024
-            )  # This range was (1, 1025) while producing the results in the thesis.
-        ]
+        frame_index = int(
+            ((30 * (idx % 1024) * clip_info["duration"] / 1024.0) // 6) * 6
+        )
 
-        # self.input_feat_dim = 3840          # if add egovlp
-
-        # video_data = torch.zeros(self.input_feat_dim, self.temporal_scale)
-        # win_data = v_data[:, clip_start: clip_end+1]
-        # num_frms = min(win_data.shape[-1], self.temporal_scale)
-        # video_data[:, :num_frms] = win_data[:, :num_frms]
-        # feats = video_data[:, :num_frms]
-        # feats = feats.permute(1,0)      # [t,c]
         concatenated_feats = []
 
-        # egovlp
-        if isinstance(self.video_feat_folder, str):
-            filename = os.path.join(
-                self.video_feat_folder, self.file_prefix + clip_name + self.file_ext
-            )
+        if len(self.video_feat_folder) == 0:
+            video_feat_folder = [
+                os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/internvideo"),
+            ]
+        else:
+            video_feat_folder = self.video_feat_folder
+
+        all_features = []
+        for f_t in video_feat_folder:
+            filename = os.path.join(f_t, self.file_prefix + clip_name + self.file_ext)
             feats = torch.load(filename)
             # case 1: variable length features for training
             if self.feat_stride > 0 and (not self.force_upsampling):
@@ -249,79 +243,12 @@ class Ego4dDataset(Dataset):
                     .squeeze(0)
                 )
                 feats = resize_feats.squeeze(0)  # [d,192]       upsample到一个fixed length
-        else:
-            if len(self.video_feat_folder) == 0:
-                video_feat_folder = [
-                    os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/internvideo"),
-                ]
-            else:
-                video_feat_folder = self.video_feat_folder
 
-            all_features = []
-            for f_t in video_feat_folder:
-                filename = os.path.join(
-                    f_t, self.file_prefix + clip_name + self.file_ext
-                )
-                feats = torch.load(filename)
-                # case 1: variable length features for training
-                if self.feat_stride > 0 and (not self.force_upsampling):
-                    # var length features
-                    feat_stride, num_frames = self.feat_stride, self.num_frames
-                    # only apply down sampling here
-                    if self.downsample_rate > 1:
-                        feats = feats[:: self.downsample_rate, :]
-                        feat_stride = self.feat_stride * self.downsample_rate
-                # case 2: variable length features for input, yet resized for training
-                elif (
-                    self.feat_stride > 0 and self.force_upsampling
-                ):  # activitynet 会upsample到fixed length
-                    feat_stride = (
-                        float((feats.shape[0] - 1) * self.feat_stride + self.num_frames)
-                        / self.max_seq_len
-                    )
-                    # center the features
-                    num_frames = feat_stride
-                # case 3: fixed length features for input
-                else:
-                    # deal with fixed length feature, recompute feat_stride, num_frames
-                    seq_len = feats.shape[0]
-                    assert seq_len <= self.max_seq_len
-                    if self.force_upsampling:
-                        # reset to max_seq_len
-                        seq_len = self.max_seq_len
-                    feat_stride = clip_info["duration"] * clip_info["fps"] / seq_len
-                    # center the features
-                    num_frames = feat_stride
-
-                # T x C -> C x T
-                feats = feats.permute(1, 0)
-
-                # resize the features if needed
-                if (feats.shape[-1] != self.max_seq_len) and self.force_upsampling:
-                    resize_feats = F.interpolate(
-                        feats.unsqueeze(0),
-                        size=self.max_seq_len,
-                        mode="linear",
-                        align_corners=False,
-                    )
-                    segmentation_labels = (
-                        F.interpolate(
-                            segmentation_labels.unsqueeze(0).unsqueeze(0),
-                            size=(self.max_seq_len, self.num_classes),
-                            mode="nearest",
-                        )
-                        .squeeze(0)
-                        .squeeze(0)
-                    )
-                    feats = resize_feats.squeeze(
-                        0
-                    )  # [d,192]       upsample到一个fixed length
-
-                all_features.append(feats)
-                feats = torch.cat(all_features, dim=0)
+            all_features.append(feats)
+            feats = torch.cat(all_features, dim=0)
 
         if len(self.video_feat_folder) > 0:
-            concatenated_feats.append(feats)
+            concatenated_feats.append(feats[:, frame_index])
 
         # convert time stamp (in second) into temporal feature grids
         # ok to have small negative values here
@@ -373,7 +300,6 @@ class Ego4dDataset(Dataset):
             )
 
         if "caption_sbert_embedding" in self.frame_feat_names:
-            current_frame_feats = []
             for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
                 current_df = pd.read_csv(
                     os.path.join(
@@ -386,31 +312,26 @@ class Ego4dDataset(Dataset):
                     sep="\t",
                 )
 
-                current_df = current_df[
-                    current_df["frame_index"].apply(lambda x: x in frame_indices)
-                ]
-                for caption_sbert_embedding in current_df[
-                    "caption_sbert_embedding"
-                ].values:
+                current_df = current_df[current_df["frame_index"] == frame_index]
+                if len(current_df) == 0:
+                    continue
+                else:
+                    caption_sbert_embedding = current_df.reset_index(drop=True).iloc[0][
+                        "caption_sbert_embedding"
+                    ]
                     caption_sbert_embedding = np.round(
-                        np.array(literal_eval(caption_sbert_embedding))[None, ...], 4
+                        np.array(literal_eval(caption_sbert_embedding)), 4
                     )
-                    if caption_sbert_embedding.shape[1] != 768:
+                    caption_sbert_embedding = torch.tensor(
+                        caption_sbert_embedding, dtype=torch.float32
+                    )
+                    if len(caption_sbert_embedding) != 768:
                         raise Exception(
-                            "caption_sbert_embedding.shape[1] should have been 768."
+                            "len(caption_sbert_embedding) should have been 768."
                         )
-                    current_frame_feats.append(caption_sbert_embedding)  # (1, 768)
-
-            # if len(current_frame_feats) != 1024:                         # This part was not commented out while producing the results in the thesis.
-            #     for _ in range(1024 - len(current_frame_feats)):
-            #         current_frame_feats.append(current_frame_feats[-1])
-
-            current_frame_feats = np.vstack(current_frame_feats).transpose()
-            current_frame_feats = torch.tensor(current_frame_feats, dtype=torch.float32)
-            concatenated_feats.append(current_frame_feats)
+                concatenated_feats.append(caption_sbert_embedding)
 
         if "encoder_output" in self.frame_feat_names:
-            current_frame_feats = []
             for current_blip2_vqa_feature_file_name in blip2_vqa_feature_file_names:
                 current_df = pd.read_csv(
                     os.path.join(
@@ -422,47 +343,24 @@ class Ego4dDataset(Dataset):
                     ),
                     sep="\t",
                 )
+                current_df = current_df[current_df["frame_index"] == frame_index]
+                if len(current_df) == 0:
+                    continue
+                else:
+                    encoder_output = current_df.reset_index(drop=True).iloc[0][
+                        "encoder_output"
+                    ]
+                    encoder_output = np.round(np.array(literal_eval(encoder_output)), 4)
 
-                current_df = current_df[
-                    current_df["frame_index"].apply(lambda x: x in frame_indices)
-                ]
-                for encoder_output in current_df["encoder_output"].values:
-                    encoder_output = np.round(
-                        np.array(literal_eval(encoder_output))[None, ...], 4
-                    )
-                    if encoder_output.shape[1] != 94208:
-                        raise Exception(
-                            "encoder_output.shape[1] should have been 94208."
-                        )
-                    current_frame_feats.append(encoder_output)  # (1, 94208)
+                    if len(encoder_output) != 94208:
+                        raise Exception("len(encoder_output) should have been 94208.")
+                    concatenated_feats.append(encoder_output)  # (94208, )
 
-            # if len(current_frame_feats) != 1024:                         # This part was not commented out while producing the results in the thesis.
-            #     for _ in range(1024 - len(current_frame_feats)):
-            #         current_frame_feats.append(current_frame_feats[-1])
+        concatenated_feats = torch.hstack(concatenated_feats)
 
-            current_frame_feats = np.vstack(current_frame_feats).transpose()
-            current_frame_feats = torch.tensor(current_frame_feats, dtype=torch.float32)
-            concatenated_feats.append(current_frame_feats)
+        segmentation_labels = segmentation_labels[frame_index, :]
 
-        concatenated_feats = torch.vstack(concatenated_feats)
-        # return a data dict
-        data_dict = {
-            "video_id": clip_info["id"],
-            "feats": concatenated_feats,  # C x T
-            "segments": segments,  # N x 2
-            "labels": labels,  # N
-            "fps": clip_info["fps"],
-            "duration": clip_info["duration"],
-            "feat_stride": feat_stride,
-            "feat_num_frames": num_frames,
-            "segmentation_labels": segmentation_labels,
+        return {
+            "feats": concatenated_feats,  # (SumOfFeatureDimensions, )
+            "segmentation_labels": segmentation_labels,  # (NumberOfActionCategories, )
         }
-
-        # no truncation is needed
-        # truncate the features during training             truncate一下，并且保证有action在里面（iou大于threshold）
-        if self.is_training and (segments is not None):
-            data_dict = truncate_feats(
-                data_dict, self.max_seq_len, self.trunc_thresh, self.crop_ratio
-            )
-
-        return data_dict
