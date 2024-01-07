@@ -12,7 +12,7 @@ dataset: {
   file_prefix: ,
   file_ext: .pt,
   num_classes: 110,
-  input_dim: [256, 2304, 1536, 1024, 96408, 768],
+  input_dim: [256, 2304, 1536, 1024, 94208, 768],
   feat_stride: 1,
   num_frames: 1,
   trunc_thresh: 0.3,

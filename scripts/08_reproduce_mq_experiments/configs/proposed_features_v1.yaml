@@ -9,7 +9,7 @@ dataset: {
   file_prefix: ,
   file_ext: .pt,
   num_classes: 110,
-  input_dim: [96408],
+  input_dim: [94208],
   feat_stride: 1,
   num_frames: 1,
   trunc_thresh: 0.3,
