@@ -8,7 +8,7 @@ dataset: {
                       'ego4d_data/v2/slowfast_clip',
                       'ego4d_data/v2/omnivore_clip',
                       'ego4d_data/v2/internvideo'],
-  frame_feat_names: ["encoder_output_pca"],
+  frame_feat_names: ["encoder_output"],
   file_prefix: ,
   file_ext: .pt,
   num_classes: 110,
