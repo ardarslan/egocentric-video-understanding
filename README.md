@@ -892,7 +892,7 @@ From terminal of your computer run the following lines:
 ```
 cd ~/Desktop
 
-scp aarslan@robustus.ee.ethz.ch:/home/aarslan/mq/scripts/08_reproduce_mq_experiments/asl_original_predictions.json asl_original_predictions.json
+scp aarslan@robustus.ee.ethz.ch:/home/aarslan/mq/scripts/08_reproduce_mq_experiments/asl_ego4d_features.json asl_ego4d_features.json
 ```
 
 Login to https://eval.ai/auth/login
