@@ -38,12 +38,9 @@ val_dataset = make_dataset(
 val_loader = make_data_loader(val_dataset, False, None, 1, cfg["loader"]["num_workers"])
 
 for batch in train_loader:
-    print(
-        batch[0].keys(), batch[0]["feats"].shape, batch[0]["segmentation_labels"].shape
-    )
-    break
-
+    # batch[0].keys(), batch[0]["feats"].shape, batch[0]["segmentation_labels"]
     # a = 2
     # break
+
 
 # for batch in val_loader:
