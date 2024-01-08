@@ -56,7 +56,6 @@ if __name__ == "__main__":
         args.config_file_name_wo_ext + ".yaml",
     )
     cfg = load_config(config_file_path)
-    cfg["loader"]["num_workers"] = 0
     cfg["dataset_name"] = "ego4d_per_frame"
 
     for i in range(len(cfg["dataset"]["video_feat_folder"])):
@@ -117,7 +116,7 @@ if __name__ == "__main__":
         for batch in tqdm(train_first_part_data_loader):
             optimizer.zero_grad()
             yhat = model(batch["feats"])
-            y = model(batch["segmentation_labels"])
+            y = batch["segmentation_labels"]
             loss = criterion(yhat, y)
             loss.backward()
             optimizer.step()
@@ -132,7 +131,7 @@ if __name__ == "__main__":
         with torch.no_grad():
             for batch in tqdm(train_second_part_data_loader):
                 yhat = model(batch["feats"])
-                y = model(batch["segmentation_labels"])
+                y = batch["segmentation_labels"]
                 loss = criterion(yhat, y)
                 total_train_second_part_loss += (
                     float(loss.detach().cpu().numpy()) * batch["feats"].shape[0]
@@ -145,7 +144,7 @@ if __name__ == "__main__":
         with torch.no_grad():
             for batch in tqdm(val_data_loader):
                 yhat = model(batch["feats"])
-                y = model(batch["segmentation_labels"])
+                y = batch["segmentation_labels"]
                 loss = criterion(yhat, y)
                 total_val_loss += float(loss.cpu().numpy()) * batch["feats"].shape[0]
                 total_val_sample_count += float(batch["feats"].shape[0])

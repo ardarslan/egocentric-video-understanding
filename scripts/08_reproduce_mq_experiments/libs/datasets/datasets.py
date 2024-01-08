@@ -1,6 +1,7 @@
 import os
 import torch
 from .data_utils import trivial_batch_collator, worker_init_reset_seed
+from torch.utils.data.dataloader import default_collate
 
 datasets = {}
 
@@ -21,15 +22,27 @@ def make_dataset(name, is_training, split, **kwargs):
     return dataset
 
 
-def make_data_loader(dataset, is_training, generator, batch_size, num_workers):
+def make_data_loader(
+    dataset,
+    is_training,
+    generator,
+    batch_size,
+    num_workers,
+    trivial_batch_collator="trivial_batch_collator",
+):
     """
     A simple dataloder builder
     """
+    if trivial_batch_collator == "trivial_batch_collator":
+        collate_fn = trivial_batch_collator
+    else:
+        collate_fn = default_collate
+
     loader = torch.utils.data.DataLoader(
         dataset,
         batch_size=batch_size,
         num_workers=num_workers,
-        collate_fn=trivial_batch_collator,
+        collate_fn=collate_fn,
         worker_init_fn=(worker_init_reset_seed if is_training else None),
         shuffle=is_training,
         drop_last=is_training,
