@@ -27,20 +27,35 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num_nonlinear_layers", type=int, default=0)
+    parser.add_argument("--num_nonlinear_layers", type=int, required=True)
     parser.add_argument(
-        "--config",
+        "--config_file_name_wo_ext",
         type=str,
-        default="/home/aarslan/mq/scripts/08_reproduce_mq_experiments/configs/asl_ego4d_features.yaml",
+        required=True,
     )
     parser.add_argument(
         "--device",
         type=str,
         default="cuda:0",
     )
+    parser.add_argument(
+        "--output_folder_path",
+        type=str,
+        default=os.path.join(
+            os.environ["SCRATCH"],
+            "ego4d_data/v2/analysis_data/per_frame_fcnn_experiment_results",
+        ),
+    )
     args = parser.parse_args()
 
-    cfg = load_config(args.config)
+    os.makedirs(args.output_folder_path, exist_ok=True)
+
+    config_file_path = os.path.join(
+        os.environ["CODE"],
+        "scripts/08_reproduce_mq_experiments/configs",
+        args.config_file_name_wo_ext + ".yaml",
+    )
+    cfg = load_config(config_file_path)
     cfg["loader"]["num_workers"] = 0
     cfg["dataset_name"] = "ego4d_per_frame"
 
@@ -284,7 +299,10 @@ if __name__ == "__main__":
         ],
     )
     evaluation_metrics_df.to_csv(
-        f"evaluation_metrics__config_{args.config.split('/')[-1].split('.')[0]}___num_nonlinear_layers_{args.num_nonlinear_layers}.tsv",
+        os.path.join(
+            args.output_folder_path,
+            f"evaluation_metrics__config_{args.config_file_name_wo_ext}___num_nonlinear_layers_{args.num_nonlinear_layers}.tsv",
+        ),
         sep="\t",
         index=False,
     )
