@@ -13,6 +13,7 @@ sys.path.append("../08_reproduce_mq_experiments/")
 
 import torch
 import argparse
+from tqdm import tqdm
 
 from libs.core import load_config
 from libs.utils import fix_random_seed
@@ -79,7 +80,7 @@ if __name__ == "__main__":
         total_train_loss = 0.0
         total_train_sample_count = 0.0
 
-        for batch in train_data_loader:
+        for batch in tqdm(train_data_loader):
             optimizer.zero_grad()
             yhat = model(batch["feats"])
             y = model(batch["segmentation_labels"])
@@ -94,7 +95,7 @@ if __name__ == "__main__":
         total_val_loss = 0.0
         total_val_sample_count = 0.0
         with torch.no_grad():
-            for batch in val_data_loader:
+            for batch in tqdm(val_data_loader):
                 yhat = model(batch["feats"])
                 y = model(batch["segmentation_labels"])
                 loss = criterion(yhat, y)
