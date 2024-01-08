@@ -11,6 +11,7 @@ class MLP(nn.Module):
         hidden_dimension: int,
         num_nonlinear_layers: int,
     ):
+        super().__init__()
         self.input_dimension = input_dimension
         self.output_dimension = output_dimension
         self.hidden_dimension = hidden_dimension
