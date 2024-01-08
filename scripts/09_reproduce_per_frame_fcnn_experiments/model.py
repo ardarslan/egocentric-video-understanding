@@ -3,7 +3,7 @@ import torch.nn as nn
 from layer import NonLinearLayer, OutputLayer
 
 
-class MLP(object):
+class MLP(nn.Module):
     def __init__(
         self,
         input_dimension: int,
