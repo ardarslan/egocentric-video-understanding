@@ -648,6 +648,8 @@ cd $CODE/scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_featu
 ./03_blip2_sbert_matching.sh -q 3 -c 7 -b sentence-transformers/all-distilroberta-v1
 
 
+./04_max_per_question_per_label_postprocessing.sh -p asl_ego4d_features
+
 ./04_max_per_question_per_label_postprocessing.sh -p asl_predictions
 
 ./04_max_per_question_per_label_postprocessing.sh -p blip2_dictionary_matching_predictions
@@ -655,17 +657,21 @@ cd $CODE/scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_featu
 ./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
 
 
-./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+(RUNNING)
+./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
-./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+(RUNNING)
+./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
 
-./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+(RUNNING)
+./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
 
-./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
+(RUNNING)
+./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
 
-./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
+./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
 
-./05_evaluate_predictions.sh -p asl_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 
 
 ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val

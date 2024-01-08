@@ -19,7 +19,7 @@ if __name__ == "__main__":
         type=str,
         default=os.path.join(
             os.environ["CODE"],
-            "scripts/08_reproduce_mq_experiments/asl_ego4d_features.json",
+            "scripts/08_reproduce_mq_experiments/proposed_features_v5.json",
         ),
     )
     parser.add_argument(
@@ -35,7 +35,7 @@ if __name__ == "__main__":
         type=str,
         default=os.path.join(
             os.environ["SCRATCH"],
-            "ego4d_data/v2/analysis_data/asl_ego4d_features",
+            "ego4d_data/v2/analysis_data/proposed_features_v5",
         ),
     )
     parser.add_argument(
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         frame_id_asl_predicted_label_indices_mapping = dict()
         frame_id_asl_predicted_label_indices_mapping[clip_id] = dict()
         fps = 30.0
-        num_frames = int(duration * 30.0)
+        num_frames = int(math.ceil(duration * fps))
         for frame_id in range(num_frames):
             frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id] = dict()
             frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][
@@ -85,8 +85,8 @@ if __name__ == "__main__":
                 annotation_label
             )
             for frame_id in range(
-                int(math.ceil(annotation_start_time * 30.0)),
-                int(math.floor(annotation_end_time * 30.0) + 1),
+                int(math.ceil(annotation_start_time * fps)),
+                int(math.floor(annotation_end_time * fps)),
             ):
                 if (
                     annotation_label_index
@@ -96,11 +96,11 @@ if __name__ == "__main__":
                 ):
                     frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][
                         constants.question_constant_mapping["asl"]
-                    ].append(annotation_score)
+                    ][annotation_label_index].append(annotation_score)
                 else:
                     frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][
                         constants.question_constant_mapping["asl"]
-                    ] = [annotation_score]
+                    ][annotation_label_index] = [annotation_score]
 
         for frame_id in range(num_frames):
             if (

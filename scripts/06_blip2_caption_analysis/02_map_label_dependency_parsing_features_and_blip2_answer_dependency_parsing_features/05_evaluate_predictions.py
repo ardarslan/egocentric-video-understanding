@@ -296,7 +296,7 @@ if __name__ == "__main__":
         "--predictions_folder_name",
         type=str,
         choices=[
-            "asl_max_per_label_predictions",
+            "asl_ego4d_features_max_per_label_predictions",
             "blip2_dictionary_matching_max_per_label_predictions",
             "blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions",
             "blip2_sbert_matching_paraphrase-MiniLM-L6-v2_max_per_label_predictions",

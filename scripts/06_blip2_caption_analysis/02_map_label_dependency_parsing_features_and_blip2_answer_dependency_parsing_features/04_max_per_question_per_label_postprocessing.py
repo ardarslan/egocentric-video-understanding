@@ -50,6 +50,9 @@ if __name__ == "__main__":
         type=str,
         choices=[
             "asl_predictions",
+            "asl_ego4d_features",
+            "proposed_features_v2",
+            "proposed_features_v5",
             "blip2_dictionary_matching_predictions",
             "blip2_sbert_matching_all-distilroberta-v1_predictions",
             "blip2_sbert_matching_paraphrase-MiniLM-L6-v2_predictions",
