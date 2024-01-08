@@ -80,17 +80,30 @@ if __name__ == "__main__":
     train_second_part_dataset = Subset(train_dataset, train_second_part_indices)
 
     train_first_part_data_loader = make_data_loader(
-        train_first_part_dataset, True, rng_generator, **cfg["loader"]
+        train_first_part_dataset,
+        True,
+        rng_generator,
+        collate_fn="default_collator",
+        **cfg["loader"],
     )
     train_second_part_data_loader = make_data_loader(
-        train_second_part_dataset, True, rng_generator, **cfg["loader"]
+        train_second_part_dataset,
+        True,
+        rng_generator,
+        collate_fn="default_collator",
+        **cfg["loader"],
     )
 
     val_dataset = make_dataset(
         cfg["dataset_name"], False, cfg["val_split"], **cfg["dataset"]
     )
     val_data_loader = make_data_loader(
-        val_dataset, False, None, 1, cfg["loader"]["num_workers"]
+        val_dataset,
+        False,
+        None,
+        1,
+        cfg["loader"]["num_workers"],
+        collate_fn="default_collator",
     )
 
     model = MLP(

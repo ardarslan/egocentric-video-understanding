@@ -28,15 +28,17 @@ def make_data_loader(
     generator,
     batch_size,
     num_workers,
-    trivial_batch_collator="trivial_batch_collator",
+    collate_fn="trivial_batch_collator",
 ):
     """
     A simple dataloder builder
     """
-    if trivial_batch_collator == "trivial_batch_collator":
+    if collate_fn == "trivial_batch_collator":
         collate_fn = trivial_batch_collator
-    else:
+    elif collate_fn == "default_collator":
         collate_fn = default_collate
+    else:
+        raise Exception("Not a valid collate fn.")
 
     loader = torch.utils.data.DataLoader(
         dataset,
