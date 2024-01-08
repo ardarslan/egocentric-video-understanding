@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 
 os.environ["CODE"] = "/home/aarslan/mq"
 os.environ["SLURM_CONF"] = "/home/sladmcvl/slurm/slurm.conf"
@@ -18,6 +19,7 @@ from tqdm import tqdm
 from libs.core import load_config
 from libs.utils import fix_random_seed
 from libs.datasets import make_dataset, make_data_loader
+from torch.utils.data import Subset
 
 from model import MLP
 from sklearn.metrics import f1_score, precision_score, recall_score
@@ -29,7 +31,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config",
         type=str,
-        default="/home/aarslan/mq/scripts/08_reproduce_mq_experiments/configs/proposed_features_v6.yaml",
+        default="/home/aarslan/mq/scripts/08_reproduce_mq_experiments/configs/asl_ego4d_features.yaml",
     )
     parser.add_argument(
         "--device",
@@ -52,8 +54,22 @@ if __name__ == "__main__":
     train_dataset = make_dataset(
         cfg["dataset_name"], True, cfg["train_split"], **cfg["dataset"]
     )
-    train_data_loader = make_data_loader(
-        train_dataset, True, rng_generator, **cfg["loader"]
+    num_train_indices = len(train_dataset)
+    num_train_first_part_indices = int(0.75 * num_train_indices)
+
+    train_first_part_indices = [i for i in range(num_train_first_part_indices)]
+    train_second_part_indices = [
+        i for i in range(num_train_first_part_indices, num_train_indices)
+    ]
+
+    train_first_part_dataset = Subset(train_dataset, train_first_part_indices)
+    train_second_part_dataset = Subset(train_dataset, train_second_part_indices)
+
+    train_first_part_data_loader = make_data_loader(
+        train_first_part_dataset, True, rng_generator, **cfg["loader"]
+    )
+    train_second_part_data_loader = make_data_loader(
+        train_second_part_dataset, True, rng_generator, **cfg["loader"]
     )
 
     val_dataset = make_dataset(
@@ -76,24 +92,41 @@ if __name__ == "__main__":
 
     criterion = torch.nn.BCEWithLogitsLoss()
 
-    for epoch in range(1, args.num_epochs + 1):
-        total_train_loss = 0.0
-        total_train_sample_count = 0.0
+    best_train_second_part_loss = np.inf
+    best_model = None
 
-        for batch in tqdm(train_data_loader):
+    for epoch in range(1, 16):
+        total_train_first_part_loss = 0.0
+        total_train_first_part_sample_count = 0.0
+        model.train()
+        for batch in tqdm(train_first_part_data_loader):
             optimizer.zero_grad()
             yhat = model(batch["feats"])
             y = model(batch["segmentation_labels"])
             loss = criterion(yhat, y)
             loss.backward()
             optimizer.step()
-            total_train_loss += (
+            total_train_first_part_loss += (
                 float(loss.detach().cpu().numpy()) * batch["feats"].shape[0]
             )
-            total_train_sample_count += float(batch["feats"].shape[0])
+            total_train_first_part_sample_count += float(batch["feats"].shape[0])
+
+        total_train_second_part_loss = 0.0
+        total_train_second_part_sample_count = 0.0
+        model.eval()
+        with torch.no_grad():
+            for batch in tqdm(train_second_part_data_loader):
+                yhat = model(batch["feats"])
+                y = model(batch["segmentation_labels"])
+                loss = criterion(yhat, y)
+                total_train_second_part_loss += (
+                    float(loss.detach().cpu().numpy()) * batch["feats"].shape[0]
+                )
+                total_train_second_part_sample_count += float(batch["feats"].shape[0])
 
         total_val_loss = 0.0
         total_val_sample_count = 0.0
+        model.eval()
         with torch.no_grad():
             for batch in tqdm(val_data_loader):
                 yhat = model(batch["feats"])
@@ -102,11 +135,19 @@ if __name__ == "__main__":
                 total_val_loss += float(loss.cpu().numpy()) * batch["feats"].shape[0]
                 total_val_sample_count += float(batch["feats"].shape[0])
 
-        current_train_loss = total_train_loss / total_train_sample_count
+        current_train_first_part_loss = (
+            total_train_first_part_loss / total_train_first_part_sample_count
+        )
+        current_train_second_part_loss = (
+            total_train_second_part_loss / total_train_second_part_sample_count
+        )
+        if current_train_second_part_loss < best_train_second_part_loss:
+            best_model = deepcopy(model)
+
         current_val_loss = total_val_loss / total_val_sample_count
 
         print(
-            f"Epoch: {epoch}, Train Loss: {np.round(current_train_loss)}, Val Loss: {np.round(current_val_loss)}"
+            f"Epoch: {epoch}, Train First Part Loss: {np.round(current_train_first_part_loss, 2)}, Train Second Part Loss: {np.round(current_train_second_part_loss, 2)}, Val Loss: {np.round(current_val_loss, 2)}"
         )
 
     thresholds = [0.2, 0.4, 0.6, 0.8, 1.0, "max"]
@@ -122,8 +163,10 @@ if __name__ == "__main__":
             "val_yhat_b_thresholdeds": [],
         }
 
+    best_model.eval()
     for batch in val_data_loader:
-        current_val_yhat_wbs = model(batch["feats"])
+        with torch.no_grad():
+            current_val_yhat_wbs = best_model(batch["feats"])
         current_val_y_wbs = batch["segmentation_labels"]
         for current_val_yhat_wb, current_val_y_wb in zip(
             current_val_yhat_wbs, current_val_y_wbs
@@ -240,4 +283,8 @@ if __name__ == "__main__":
             "b_recall_score",
         ],
     )
-    evaluation_metrics_df.to_csv("evaluation_metrics.tsv", sep="\t", index=False)
+    evaluation_metrics_df.to_csv(
+        f"evaluation_metrics__config_{args.config.split('/')[-1].split('.')[0]}___num_nonlinear_layers_{args.num_nonlinear_layers}.tsv",
+        sep="\t",
+        index=False,
+    )

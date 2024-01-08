@@ -4,22 +4,18 @@ from typing import Any, Dict
 
 
 class NonLinearLayer(nn.Module):
-    def __init__(
-        self, cfg: Dict[str, Any], input_dimension: int, output_dimension: int
-    ):
+    def __init__(self, input_dimension: int, output_dimension: int):
         super().__init__()
-        self.cfg = cfg
         self.activation = nn.LeakyReLU(inplace=True)
         self.linear = nn.Linear(input_dimension, output_dimension, bias=False)
         self.normalization = nn.BatchNorm1d(num_features=output_dimension)
-        self.dropout = nn.Dropout(cfg["dropout"])
+        self.dropout = nn.Dropout(0.2)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         y = self.linear(x)
         y = self.normalization(y)
         y = self.activation(y)
-        if self.cfg["dropout"] > 0.0:
-            y = self.dropout(y)
+        y = self.dropout(y)
         return y
 
 
