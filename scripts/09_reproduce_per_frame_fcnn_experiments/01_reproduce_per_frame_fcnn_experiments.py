@@ -128,8 +128,8 @@ if __name__ == "__main__":
         model.train()
         for batch in tqdm(train_first_part_data_loader):
             optimizer.zero_grad()
-            yhat = model(batch["feats"])
-            y = batch["segmentation_labels"]
+            yhat = model(batch["feats"].to(args.device))
+            y = batch["segmentation_labels"].to(args.device)
             loss = criterion(yhat, y)
             loss.backward()
             optimizer.step()
@@ -143,8 +143,8 @@ if __name__ == "__main__":
         model.eval()
         with torch.no_grad():
             for batch in tqdm(train_second_part_data_loader):
-                yhat = model(batch["feats"])
-                y = batch["segmentation_labels"]
+                yhat = model(batch["feats"].to(args.device))
+                y = batch["segmentation_labels"].to(args.device)
                 loss = criterion(yhat, y)
                 total_train_second_part_loss += (
                     float(loss.detach().cpu().numpy()) * batch["feats"].shape[0]
@@ -156,8 +156,8 @@ if __name__ == "__main__":
         model.eval()
         with torch.no_grad():
             for batch in tqdm(val_data_loader):
-                yhat = model(batch["feats"])
-                y = batch["segmentation_labels"]
+                yhat = model(batch["feats"].to(args.device))
+                y = batch["segmentation_labels"].to(args.device)
                 loss = criterion(yhat, y)
                 total_val_loss += float(loss.cpu().numpy()) * batch["feats"].shape[0]
                 total_val_sample_count += float(batch["feats"].shape[0])
@@ -193,8 +193,8 @@ if __name__ == "__main__":
     best_model.eval()
     for batch in val_data_loader:
         with torch.no_grad():
-            current_val_yhat_wbs = best_model(batch["feats"])
-        current_val_y_wbs = batch["segmentation_labels"]
+            current_val_yhat_wbs = best_model(batch["feats"].to(args.device))
+        current_val_y_wbs = batch["segmentation_labels"].to(args.device)
         for current_val_yhat_wb, current_val_y_wb in zip(
             current_val_yhat_wbs, current_val_y_wbs
         ):
