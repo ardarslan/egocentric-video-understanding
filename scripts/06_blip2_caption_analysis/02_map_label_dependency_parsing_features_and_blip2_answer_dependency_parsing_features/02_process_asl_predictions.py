@@ -20,7 +20,7 @@ if __name__ == "__main__":
         type=str,
         default=os.path.join(
             os.environ["CODE"],
-            "scripts/08_reproduce_mq_experiments/asl_original_predictions.json",
+            "scripts/08_reproduce_mq_experiments/asl_ego4d_features.json",
         ),
     )
     parser.add_argument(
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         type=str,
         default=os.path.join(
             os.environ["CODE"],
-"scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features/label_verb_noun_tool_mapping.json",
+            "scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_features_and_blip2_answer_dependency_parsing_features/label_verb_noun_tool_mapping.json",
         ),
     )
     parser.add_argument(
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         type=str,
         default=os.path.join(
             os.environ["SCRATCH"],
-            "ego4d_data/v2/analysis_data/asl_predictions",
+            "ego4d_data/v2/analysis_data/asl_ego4d_features",
         ),
     )
     args = parser.parse_args()
