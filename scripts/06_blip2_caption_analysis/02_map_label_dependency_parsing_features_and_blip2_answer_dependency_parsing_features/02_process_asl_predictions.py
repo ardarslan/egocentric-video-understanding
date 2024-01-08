@@ -1,7 +1,8 @@
 import os
 import json
-import argparse
+import math
 import pickle
+import argparse
 from tqdm import tqdm
 
 import sys
@@ -74,32 +75,34 @@ if __name__ == "__main__":
             frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][
                 constants.question_constant_mapping["asl"]
             ] = dict()
-            frame_time = frame_id / float(fps)
-            for annotation in asl_predictions[clip_id]:
-                annotation_start_time = annotation["segment"][0]
-                annotation_end_time = annotation["segment"][1]
-                annotation_label = annotation["label"]
-                annotation_score = annotation["score"]
-                annotation_label_index = distinct_ground_truth_labels.index(
-                    annotation_label
-                )
+
+        for annotation in asl_predictions[clip_id]:
+            annotation_start_time = annotation["segment"][0]
+            annotation_end_time = annotation["segment"][1]
+            annotation_label = annotation["label"]
+            annotation_score = annotation["score"]
+            annotation_label_index = distinct_ground_truth_labels.index(
+                annotation_label
+            )
+            for frame_id in range(
+                int(math.ceil(annotation_start_time * 30.0)),
+                int(math.floor(annotation_end_time * 30.0) + 1),
+            ):
                 if (
-                    frame_time >= annotation_start_time
-                    and frame_time <= annotation_end_time
+                    annotation_label_index
+                    in frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][
+                        constants.question_constant_mapping["asl"]
+                    ].keys()
                 ):
-                    if (
-                        annotation_label_index
-                        not in frame_id_asl_predicted_label_indices_mapping[clip_id][
-                            frame_id
-                        ][constants.question_constant_mapping["asl"]].keys()
-                    ):
-                        frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][
-                            constants.question_constant_mapping["asl"]
-                        ][annotation_label_index] = []
                     frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][
                         constants.question_constant_mapping["asl"]
-                    ][annotation_label_index].append(annotation_score)
+                    ].append(annotation_score)
+                else:
+                    frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][
+                        constants.question_constant_mapping["asl"]
+                    ] = [annotation_score]
 
+        for frame_id in range(num_frames):
             if (
                 len(
                     frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][
@@ -112,10 +115,10 @@ if __name__ == "__main__":
                     constants.question_constant_mapping["asl"]
                 ][len(distinct_ground_truth_labels)] = [1.0]
 
-            output_file_path = os.path.join(
-                args.output_folder_path,
-                clip_id + ".pickle",
-            )
+        output_file_path = os.path.join(
+            args.output_folder_path,
+            clip_id + ".pickle",
+        )
 
-            with open(output_file_path, "wb") as writer:
-                pickle.dump(frame_id_asl_predicted_label_indices_mapping, writer)
+        with open(output_file_path, "wb") as writer:
+            pickle.dump(frame_id_asl_predicted_label_indices_mapping, writer)
