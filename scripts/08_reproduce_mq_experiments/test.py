@@ -118,13 +118,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config",
         type=str,
-        default="configs/ego4d_asl_features.yaml",
+        default="configs/proposed_features_v2.yaml",
         help="path to a config file",
     )
     parser.add_argument(
         "--ckpt",
         type=str,
-        default="checkpoints/ego4d_asl_features/epoch_011.pth.tar",
+        default="checkpoints/proposed_features_v2/epoch_011.pth.tar",
         help="path to a checkpoint",
     )
     parser.add_argument(
