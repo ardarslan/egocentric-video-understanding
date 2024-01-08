@@ -3,7 +3,7 @@ import os
 
 result_det = "submission.json"
 result_rev = result_det
-submission_file = "proposed_features_v2.json"
+submission_file = "proposed_features_v5.json"
 
 with open(result_det, "r") as fobj:
     data_det = json.load(fobj)
