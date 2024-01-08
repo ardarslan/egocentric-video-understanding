@@ -365,19 +365,19 @@ python3 -m pip install -r mq_visualization_requirements.txt
 
 # 01_06 - Install MQ BLIP2 caption analysis packages
 
-<!-- export CODE=/home/aarslan/mq
+export CODE=/home/aarslan/mq
 
 export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
 
 export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
 
-export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit -->
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
-export CODE=/local/home/aarslan/mq
+<!-- export CODE=/local/home/aarslan/mq
 
 export SCRATCH=/data/aarslan
 
-export CUDA_HOME=/usr/local/cuda
+export CUDA_HOME=/usr/local/cuda -->
 
 mamba deactivate
 

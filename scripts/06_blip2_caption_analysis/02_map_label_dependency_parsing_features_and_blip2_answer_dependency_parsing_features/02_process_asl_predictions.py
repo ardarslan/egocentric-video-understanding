@@ -1,10 +1,8 @@
 import os
-import cv2
 import json
 import argparse
 import pickle
 from tqdm import tqdm
-from pathlib import Path
 
 import sys
 
@@ -39,6 +37,14 @@ if __name__ == "__main__":
             "ego4d_data/v2/analysis_data/asl_ego4d_features",
         ),
     )
+    parser.add_argument(
+        "--annotations_file_path",
+        type=str,
+        default=os.path.join(
+            os.environ["CODE"],
+            "scripts/08_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json",
+        ),
+    )
     args = parser.parse_args()
 
     with open(
@@ -46,6 +52,9 @@ if __name__ == "__main__":
         "r",
     ) as reader:
         asl_predictions = json.load(reader)["detect_results"]
+
+    with open(args.annotations_file_path, "r") as reader:
+        annotations = json.load(reader)
 
     with open(args.label_verb_noun_tool_mapping_file_path, "r") as reader:
         label_verb_noun_tool_mapping = json.load(reader)
@@ -55,14 +64,11 @@ if __name__ == "__main__":
     os.makedirs(args.output_folder_path, exist_ok=True)
 
     for clip_id in tqdm(list(asl_predictions.keys())):
+        duration = annotations[clip_id]["duration"]
         frame_id_asl_predicted_label_indices_mapping = dict()
         frame_id_asl_predicted_label_indices_mapping[clip_id] = dict()
-        cap = cv2.VideoCapture(
-            os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/clips", f"{clip_id}.mp4")
-        )
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        cap.release()
+        fps = 30.0
+        num_frames = duration * 30.0
         for frame_id in range(num_frames):
             frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id] = dict()
             frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][
