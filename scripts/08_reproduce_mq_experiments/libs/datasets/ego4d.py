@@ -178,7 +178,7 @@ class Ego4dDataset(Dataset):
         frame_indices = [
             int(((30 * i * clip_info["duration"] / 1024.0) // 6) * 6)
             for i in range(
-                0, 1024
+                1, 1025
             )  # This range was (1, 1025) while producing the results in the thesis.
         ]
 
@@ -401,11 +401,11 @@ class Ego4dDataset(Dataset):
                         )
                     current_frame_feats.append(caption_sbert_embedding)  # (1, 768)
 
-            # if (
-            #     len(current_frame_feats) != 1024
-            # ):  # This part was not commented out while producing the results in the thesis.
-            #     for _ in range(1024 - len(current_frame_feats)):
-            #         current_frame_feats.append(current_frame_feats[-1])
+            if (
+                len(current_frame_feats) != 1024
+            ):  # This part was not commented out while producing the results in the thesis.
+                for _ in range(1024 - len(current_frame_feats)):
+                    current_frame_feats.append(current_frame_feats[-1])
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
             current_frame_feats = torch.tensor(current_frame_feats, dtype=torch.float32)
@@ -438,11 +438,11 @@ class Ego4dDataset(Dataset):
                         )
                     current_frame_feats.append(encoder_output)  # (1, 94208)
 
-            # if (
-            #     len(current_frame_feats) != 1024
-            # ):  # This part was not commented out while producing the results in the thesis.
-            #     for _ in range(1024 - len(current_frame_feats)):
-            #         current_frame_feats.append(current_frame_feats[-1])
+            if (
+                len(current_frame_feats) != 1024
+            ):  # This part was not commented out while producing the results in the thesis.
+                for _ in range(1024 - len(current_frame_feats)):
+                    current_frame_feats.append(current_frame_feats[-1])
 
             current_frame_feats = np.vstack(current_frame_feats).transpose()
             current_frame_feats = torch.tensor(current_frame_feats, dtype=torch.float32)
