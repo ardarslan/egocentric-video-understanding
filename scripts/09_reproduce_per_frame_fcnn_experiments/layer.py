@@ -20,11 +20,8 @@ class NonLinearLayer(nn.Module):
 
 
 class OutputLayer(nn.Module):
-    def __init__(
-        self, cfg: Dict[str, Any], input_dimension: int, output_dimension: int
-    ):
+    def __init__(self, input_dimension: int, output_dimension: int):
         super().__init__()
-        self.cfg = cfg
         self.linear = nn.Linear(input_dimension, output_dimension)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
