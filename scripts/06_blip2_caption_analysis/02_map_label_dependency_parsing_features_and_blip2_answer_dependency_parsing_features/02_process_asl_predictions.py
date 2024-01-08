@@ -68,7 +68,7 @@ if __name__ == "__main__":
         frame_id_asl_predicted_label_indices_mapping = dict()
         frame_id_asl_predicted_label_indices_mapping[clip_id] = dict()
         fps = 30.0
-        num_frames = duration * 30.0
+        num_frames = int(duration * 30.0)
         for frame_id in range(num_frames):
             frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id] = dict()
             frame_id_asl_predicted_label_indices_mapping[clip_id][frame_id][
