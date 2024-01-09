@@ -617,11 +617,19 @@ python3 horizontal_bar_plots.py --clip_id 003c5ae8-3abd-4824-8efb-21a9a4f8eafe -
 # 06 - BLIP2 Caption Analysis
 
 ```
-export CODE=/local/home/aarslan/mq
+<!-- export CODE=/local/home/aarslan/mq
 
 export SCRATCH=/data/aarslan
 
-export CUDA_HOME=/usr/local/cuda
+export CUDA_HOME=/usr/local/cuda -->
+
+export CODE=/home/aarslan/mq
+
+export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
+
+export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
+
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 
 mamba activate mq_blip2_caption_analysis
 
@@ -658,20 +666,47 @@ cd $CODE/scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_featu
 
 
 (RUNNING)
-./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+./05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
 (RUNNING)
-./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+./05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
 
 (RUNNING)
-./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+./05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+
+
 
 (RUNNING)
-./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
 
-./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
 
-./05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+
+
+
+(RUNNING)
+sbatch 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+
+(RUNNING)
+sbatch 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+
+(RUNNING)
+sbatch 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+
+
+<!--
+(RUNNING)
+./05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+
+(RUNNING)
+./05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+
+(RUNNING)
+./05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val -->
+
 
 
 ./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val

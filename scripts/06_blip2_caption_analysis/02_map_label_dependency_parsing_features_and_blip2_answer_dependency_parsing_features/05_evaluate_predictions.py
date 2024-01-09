@@ -9,178 +9,178 @@ import numpy as np
 from typing import Dict, List, Union
 
 
-def median_temporal_aggregation_select_labels(
-    frame_id_blip2_question_index_label_index_max_score_mapping: Dict[
-        int, Dict[int, Dict[int, List[int]]]
-    ],
-    threshold: Union[float, str],
-):
-    # median filtering
-    updated_frame_id_blip2_question_index_label_index_max_score_mapping = dict()
-    for (
-        frame_id,
-        blip2_question_index_label_index_scores_mapping,
-    ) in frame_id_blip2_question_index_label_index_max_score_mapping.items():
-        updated_frame_id_blip2_question_index_label_index_max_score_mapping[
-            frame_id
-        ] = dict()
-        for (
-            blip2_question_index,
-            label_index_scores_mapping,
-        ) in blip2_question_index_label_index_scores_mapping.items():
-            updated_frame_id_blip2_question_index_label_index_max_score_mapping[
-                frame_id
-            ][blip2_question_index] = dict()
-            for label_index, current_score in label_index_scores_mapping.items():
-                if frame_id == 0:
-                    next_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id + 6
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    next_next_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id + 12
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    updated_frame_id_blip2_question_index_label_index_max_score_mapping[
-                        frame_id
-                    ][blip2_question_index][label_index] = np.median(
-                        [current_score, next_score, next_next_score]
-                    )
-                elif frame_id == 6:
-                    previous_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id - 6
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    next_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id + 6
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    next_next_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id + 12
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    updated_frame_id_blip2_question_index_label_index_max_score_mapping[
-                        frame_id
-                    ][blip2_question_index][label_index] = np.median(
-                        [previous_score, current_score, next_score, next_next_score]
-                    )
-                elif frame_id == max(
-                    list(
-                        frame_id_blip2_question_index_label_index_max_score_mapping.keys()
-                    )
-                ):
-                    previous_previous_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id - 12
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    previous_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id - 6
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    updated_frame_id_blip2_question_index_label_index_max_score_mapping[
-                        frame_id
-                    ][blip2_question_index][label_index] = np.median(
-                        [previous_previous_score, previous_score, current_score]
-                    )
-                elif (
-                    frame_id
-                    == max(
-                        list(
-                            frame_id_blip2_question_index_label_index_max_score_mapping.keys()
-                        )
-                    )
-                    - 6
-                ):
-                    previous_previous_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id - 12
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    previous_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id - 6
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    next_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id + 6
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    updated_frame_id_blip2_question_index_label_index_max_score_mapping[
-                        frame_id
-                    ][blip2_question_index][label_index] = (
-                        np.median(
-                            [
-                                previous_previous_score,
-                                previous_score,
-                                current_score,
-                                next_score,
-                            ]
-                        ),
-                    )
-                else:
-                    previous_previous_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id - 12
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    previous_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id - 6
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    next_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id + 6
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    next_next_score = (
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id + 12
-                        ][blip2_question_index].get(label_index, 0)
-                    )
-                    updated_frame_id_blip2_question_index_label_index_max_score_mapping[
-                        frame_id
-                    ][blip2_question_index][label_index] = (
-                        np.median(
-                            [
-                                previous_previous_score,
-                                previous_score,
-                                current_score,
-                                next_score,
-                                next_next_score,
-                            ]
-                        ),
-                    )
+# def median_temporal_aggregation_select_labels(
+#     frame_id_blip2_question_index_label_index_max_score_mapping: Dict[
+#         int, Dict[int, Dict[int, List[int]]]
+#     ],
+#     threshold: Union[float, str],
+# ):
+#     # median filtering
+#     updated_frame_id_blip2_question_index_label_index_max_score_mapping = dict()
+#     for (
+#         frame_id,
+#         blip2_question_index_label_index_scores_mapping,
+#     ) in frame_id_blip2_question_index_label_index_max_score_mapping.items():
+#         updated_frame_id_blip2_question_index_label_index_max_score_mapping[
+#             frame_id
+#         ] = dict()
+#         for (
+#             blip2_question_index,
+#             label_index_scores_mapping,
+#         ) in blip2_question_index_label_index_scores_mapping.items():
+#             updated_frame_id_blip2_question_index_label_index_max_score_mapping[
+#                 frame_id
+#             ][blip2_question_index] = dict()
+#             for label_index, current_score in label_index_scores_mapping.items():
+#                 if frame_id == 0:
+#                     next_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id + 6
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     next_next_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id + 12
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     updated_frame_id_blip2_question_index_label_index_max_score_mapping[
+#                         frame_id
+#                     ][blip2_question_index][label_index] = np.median(
+#                         [current_score, next_score, next_next_score]
+#                     )
+#                 elif frame_id == 6:
+#                     previous_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id - 6
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     next_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id + 6
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     next_next_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id + 12
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     updated_frame_id_blip2_question_index_label_index_max_score_mapping[
+#                         frame_id
+#                     ][blip2_question_index][label_index] = np.median(
+#                         [previous_score, current_score, next_score, next_next_score]
+#                     )
+#                 elif frame_id == max(
+#                     list(
+#                         frame_id_blip2_question_index_label_index_max_score_mapping.keys()
+#                     )
+#                 ):
+#                     previous_previous_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id - 12
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     previous_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id - 6
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     updated_frame_id_blip2_question_index_label_index_max_score_mapping[
+#                         frame_id
+#                     ][blip2_question_index][label_index] = np.median(
+#                         [previous_previous_score, previous_score, current_score]
+#                     )
+#                 elif (
+#                     frame_id
+#                     == max(
+#                         list(
+#                             frame_id_blip2_question_index_label_index_max_score_mapping.keys()
+#                         )
+#                     )
+#                     - 6
+#                 ):
+#                     previous_previous_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id - 12
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     previous_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id - 6
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     next_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id + 6
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     updated_frame_id_blip2_question_index_label_index_max_score_mapping[
+#                         frame_id
+#                     ][blip2_question_index][label_index] = (
+#                         np.median(
+#                             [
+#                                 previous_previous_score,
+#                                 previous_score,
+#                                 current_score,
+#                                 next_score,
+#                             ]
+#                         ),
+#                     )
+#                 else:
+#                     previous_previous_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id - 12
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     previous_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id - 6
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     next_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id + 6
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     next_next_score = (
+#                         frame_id_blip2_question_index_label_index_max_score_mapping[
+#                             frame_id + 12
+#                         ][blip2_question_index].get(label_index, 0)
+#                     )
+#                     updated_frame_id_blip2_question_index_label_index_max_score_mapping[
+#                         frame_id
+#                     ][blip2_question_index][label_index] = (
+#                         np.median(
+#                             [
+#                                 previous_previous_score,
+#                                 previous_score,
+#                                 current_score,
+#                                 next_score,
+#                                 next_next_score,
+#                             ]
+#                         ),
+#                     )
 
-    # select labels
-    frame_id_blip2_question_index_selected_label_indices_mapping = dict()
-    for (
-        frame_id,
-        blip2_question_index_label_index_max_score_mapping,
-    ) in updated_frame_id_blip2_question_index_label_index_max_score_mapping.items():
-        frame_id_blip2_question_index_selected_label_indices_mapping[frame_id] = dict()
-        for (
-            blip2_question_index,
-            label_index_max_score_mapping,
-        ) in blip2_question_index_label_index_max_score_mapping.items():
-            frame_id_blip2_question_index_selected_label_indices_mapping[frame_id][
-                blip2_question_index
-            ] = set()
-            for label_index, current_score in label_index_max_score_mapping.items():
-                if current_score >= threshold:
-                    frame_id_blip2_question_index_selected_label_indices_mapping[
-                        frame_id
-                    ][blip2_question_index].add(label_index)
+#     # select labels
+#     frame_id_blip2_question_index_selected_label_indices_mapping = dict()
+#     for (
+#         frame_id,
+#         blip2_question_index_label_index_max_score_mapping,
+#     ) in updated_frame_id_blip2_question_index_label_index_max_score_mapping.items():
+#         frame_id_blip2_question_index_selected_label_indices_mapping[frame_id] = dict()
+#         for (
+#             blip2_question_index,
+#             label_index_max_score_mapping,
+#         ) in blip2_question_index_label_index_max_score_mapping.items():
+#             frame_id_blip2_question_index_selected_label_indices_mapping[frame_id][
+#                 blip2_question_index
+#             ] = set()
+#             for label_index, current_score in label_index_max_score_mapping.items():
+#                 if current_score >= threshold:
+#                     frame_id_blip2_question_index_selected_label_indices_mapping[
+#                         frame_id
+#                     ][blip2_question_index].add(label_index)
 
-    return frame_id_blip2_question_index_selected_label_indices_mapping
+#     return frame_id_blip2_question_index_selected_label_indices_mapping
 
 
 def no_temporal_aggregation_select_labels(
@@ -222,71 +222,71 @@ def no_temporal_aggregation_select_labels(
     return frame_id_blip2_question_index_selected_label_indices_mapping
 
 
-def transfusion_temporal_aggregation_select_labels(
-    frame_id_blip2_question_index_label_index_max_score_mapping: Dict[
-        int, Dict[int, Dict[int, List[int]]]
-    ],
-    threshold: float,
-):
-    # select labels
-    frame_id_blip2_question_index_selected_label_indices_mapping = dict()
-    for (
-        frame_id,
-        blip2_question_index_label_index_max_score_mapping,
-    ) in frame_id_blip2_question_index_label_index_max_score_mapping.items():
-        frame_id_blip2_question_index_selected_label_indices_mapping[frame_id] = dict()
-        for (
-            blip2_question_index,
-            label_index_max_score_mapping,
-        ) in blip2_question_index_label_index_max_score_mapping.items():
-            frame_id_blip2_question_index_selected_label_indices_mapping[frame_id][
-                blip2_question_index
-            ] = set()
-            for label_index, score in label_index_max_score_mapping.items():
-                if score >= threshold:
-                    frame_id_blip2_question_index_selected_label_indices_mapping[
-                        frame_id
-                    ][blip2_question_index].add(label_index)
+# def transfusion_temporal_aggregation_select_labels(
+#     frame_id_blip2_question_index_label_index_max_score_mapping: Dict[
+#         int, Dict[int, Dict[int, List[int]]]
+#     ],
+#     threshold: float,
+# ):
+#     # select labels
+#     frame_id_blip2_question_index_selected_label_indices_mapping = dict()
+#     for (
+#         frame_id,
+#         blip2_question_index_label_index_max_score_mapping,
+#     ) in frame_id_blip2_question_index_label_index_max_score_mapping.items():
+#         frame_id_blip2_question_index_selected_label_indices_mapping[frame_id] = dict()
+#         for (
+#             blip2_question_index,
+#             label_index_max_score_mapping,
+#         ) in blip2_question_index_label_index_max_score_mapping.items():
+#             frame_id_blip2_question_index_selected_label_indices_mapping[frame_id][
+#                 blip2_question_index
+#             ] = set()
+#             for label_index, score in label_index_max_score_mapping.items():
+#                 if score >= threshold:
+#                     frame_id_blip2_question_index_selected_label_indices_mapping[
+#                         frame_id
+#                     ][blip2_question_index].add(label_index)
 
-    # transfusion filtering
-    for (
-        frame_id,
-        blip2_question_index_selected_label_indices_mapping,
-    ) in frame_id_blip2_question_index_selected_label_indices_mapping.items():
-        for (
-            blip2_question_index,
-            selected_label_indices,
-        ) in blip2_question_index_selected_label_indices_mapping.items():
-            for selected_label_index in selected_label_indices:
-                if (
-                    frame_id
-                    < len(
-                        frame_id_blip2_question_index_selected_label_indices_mapping.keys()
-                    )
-                    - 12
-                ):
-                    next_selected_label_indices = (
-                        frame_id_blip2_question_index_selected_label_indices_mapping[
-                            frame_id + 6
-                        ][blip2_question_index]
-                    )
-                    next_next_selected_label_indices = (
-                        frame_id_blip2_question_index_selected_label_indices_mapping[
-                            frame_id + 12
-                        ][blip2_question_index]
-                    )
-                    if (selected_label_index in next_next_selected_label_indices) and (
-                        selected_label_index not in next_selected_label_indices
-                    ):
-                        next_selected_label_indices = frame_id_blip2_question_index_selected_label_indices_mapping[
-                            frame_id + 6
-                        ][
-                            blip2_question_index
-                        ].add(
-                            selected_label_index
-                        )
+#     # transfusion filtering
+#     for (
+#         frame_id,
+#         blip2_question_index_selected_label_indices_mapping,
+#     ) in frame_id_blip2_question_index_selected_label_indices_mapping.items():
+#         for (
+#             blip2_question_index,
+#             selected_label_indices,
+#         ) in blip2_question_index_selected_label_indices_mapping.items():
+#             for selected_label_index in selected_label_indices:
+#                 if (
+#                     frame_id
+#                     < len(
+#                         frame_id_blip2_question_index_selected_label_indices_mapping.keys()
+#                     )
+#                     - 12
+#                 ):
+#                     next_selected_label_indices = (
+#                         frame_id_blip2_question_index_selected_label_indices_mapping[
+#                             frame_id + 6
+#                         ][blip2_question_index]
+#                     )
+#                     next_next_selected_label_indices = (
+#                         frame_id_blip2_question_index_selected_label_indices_mapping[
+#                             frame_id + 12
+#                         ][blip2_question_index]
+#                     )
+#                     if (selected_label_index in next_next_selected_label_indices) and (
+#                         selected_label_index not in next_selected_label_indices
+#                     ):
+#                         next_selected_label_indices = frame_id_blip2_question_index_selected_label_indices_mapping[
+#                             frame_id + 6
+#                         ][
+#                             blip2_question_index
+#                         ].add(
+#                             selected_label_index
+#                         )
 
-    return frame_id_blip2_question_index_selected_label_indices_mapping
+#     return frame_id_blip2_question_index_selected_label_indices_mapping
 
 
 if __name__ == "__main__":
@@ -297,6 +297,8 @@ if __name__ == "__main__":
         type=str,
         choices=[
             "asl_ego4d_features_max_per_label_predictions",
+            "proposed_features_v2_max_per_label_predictions",
+            "proposed_features_v5_max_per_label_predictions",
             "blip2_dictionary_matching_max_per_label_predictions",
             "blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions",
             "blip2_sbert_matching_paraphrase-MiniLM-L6-v2_max_per_label_predictions",
@@ -392,59 +394,59 @@ if __name__ == "__main__":
                                 frame_id
                             ]
                         )
-                        label_index_max_max_score_mapping = dict()
-                        for (
-                            blip2_question_index
-                        ) in blip2_question_index_label_index_max_score_mapping.keys():
-                            label_index_max_score_mapping = (
-                                blip2_question_index_label_index_max_score_mapping[
-                                    blip2_question_index
-                                ]
-                            )
-                            for label_index in label_index_max_score_mapping.keys():
-                                if (
-                                    label_index
-                                    not in label_index_max_max_score_mapping.keys()
-                                ):
-                                    label_index_max_max_score_mapping[
-                                        label_index
-                                    ] = label_index_max_score_mapping[label_index]
-                                else:
-                                    label_index_max_max_score_mapping[
-                                        label_index
-                                    ] = max(
-                                        label_index_max_score_mapping[label_index],
-                                        label_index_max_max_score_mapping[label_index],
-                                    )
+                        # label_index_max_max_score_mapping = dict()
+                        # for (
+                        #     blip2_question_index
+                        # ) in blip2_question_index_label_index_max_score_mapping.keys():
+                        #     label_index_max_score_mapping = (
+                        #         blip2_question_index_label_index_max_score_mapping[
+                        #             blip2_question_index
+                        #         ]
+                        #     )
+                        #     for label_index in label_index_max_score_mapping.keys():
+                        #         if (
+                        #             label_index
+                        #             not in label_index_max_max_score_mapping.keys()
+                        #         ):
+                        #             label_index_max_max_score_mapping[
+                        #                 label_index
+                        #             ] = label_index_max_score_mapping[label_index]
+                        #         else:
+                        #             label_index_max_max_score_mapping[
+                        #                 label_index
+                        #             ] = max(
+                        #                 label_index_max_score_mapping[label_index],
+                        #                 label_index_max_max_score_mapping[label_index],
+                        #             )
 
-                        new_key = "_".join(
-                            [
-                                str(key)
-                                for key in blip2_question_index_label_index_max_score_mapping.keys()
-                            ]
-                        )
+                        # new_key = "_".join(
+                        #     [
+                        #         str(key)
+                        #         for key in blip2_question_index_label_index_max_score_mapping.keys()
+                        #     ]
+                        # )
 
-                        frame_id_blip2_question_index_label_index_max_score_mapping[
-                            frame_id
-                        ][new_key] = label_index_max_max_score_mapping
+                        # frame_id_blip2_question_index_label_index_max_score_mapping[
+                        #     frame_id
+                        # ][new_key] = label_index_max_max_score_mapping
 
                     if args.temporal_aggregation == "no_temporal_aggregation":
                         frame_id_blip2_question_index_selected_label_indices_mapping = no_temporal_aggregation_select_labels(
                             frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
                             threshold=args.threshold,
                         )
-                    elif args.temporal_aggregation == "median_temporal_aggregation":
-                        frame_id_blip2_question_index_selected_label_indices_mapping = median_temporal_aggregation_select_labels(
-                            frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
-                            threshold=args.threshold,
-                        )
-                    elif (
-                        args.temporal_aggregation == "transfusion_temporal_aggregation"
-                    ):
-                        frame_id_blip2_question_index_selected_label_indices_mapping = transfusion_temporal_aggregation_select_labels(
-                            frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
-                            threshold=args.threshold,
-                        )
+                    # elif args.temporal_aggregation == "median_temporal_aggregation":
+                    #     frame_id_blip2_question_index_selected_label_indices_mapping = median_temporal_aggregation_select_labels(
+                    #         frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
+                    #         threshold=args.threshold,
+                    #     )
+                    # elif (
+                    #     args.temporal_aggregation == "transfusion_temporal_aggregation"
+                    # ):
+                    #     frame_id_blip2_question_index_selected_label_indices_mapping = transfusion_temporal_aggregation_select_labels(
+                    #         frame_id_blip2_question_index_label_index_max_score_mapping=frame_id_blip2_question_index_label_index_max_score_mapping,
+                    #         threshold=args.threshold,
+                    #     )
 
                     predictions_one_hot_vectors_dict[clip_id] = dict()
                     for (
