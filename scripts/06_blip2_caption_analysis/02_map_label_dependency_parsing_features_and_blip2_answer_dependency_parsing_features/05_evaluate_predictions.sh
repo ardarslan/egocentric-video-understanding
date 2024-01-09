@@ -9,6 +9,8 @@ helpFunction()
    echo "Usage: $0 -s SPLIT"
    echo -e "\t-p One of
    'asl_max_per_label_predictions',
+   'proposed_features_v2_max_per_label_predictions',
+   'proposed_features_v5_max_per_label_predictions',
    'blip2_dictionary_matching_max_per_label_predictions',
    'blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions',
    'blip2_sbert_matching_paraphrase-MiniLM-L6-v2_max_per_label_predictions'"
