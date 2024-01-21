@@ -706,6 +706,27 @@ sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictio
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 
 
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+
+
+
+
 <!--
 (RUNNING)
 ./05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
