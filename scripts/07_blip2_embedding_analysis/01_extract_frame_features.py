@@ -2,9 +2,11 @@ import os
 import gc
 import cv2
 import json
-import argparse
-
 import torch
+
+import argparse
+import numpy as np
+
 torch.cuda.empty_cache()
 from tqdm import tqdm
 from utils import (
@@ -12,7 +14,6 @@ from utils import (
     get_output_file_name_wo_ext,
     get_error_file_name,
 )
-from frame_feature_extractor import FrameFeatureExtractor
 
 
 if __name__ == "__main__":
@@ -21,17 +22,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "--frame_feature_name",
         type=str,
-        choices=[
-            "blip2_vqa",
-            "video_blip"
-        ],
-        default="blip2_vqa"
+        choices=["blip2_vqa", "video_blip"],
+        required=True,
     )
     parser.add_argument(
-        "--split", type=str, required=True, choices=["train", "val", "test"]
+        "--split", type=str, choices=["train", "val", "test"], required=True
     )
     parser.add_argument(
-        "--quarter_index", type=int, required=True, choices=[0,1,2,3,4,5,6,7,8,9,10,11]
+        "--quarter_index",
+        type=int,
+        required=True,
+        choices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
     )
     parser.add_argument(
         "--annotations_json_file_path",
@@ -70,54 +71,56 @@ if __name__ == "__main__":
     with open(args.annotations_json_file_path, "r") as annotations_json_file:
         annotations_dict = json.load(annotations_json_file)
         all_clip_uids = sorted(list(annotations_dict.keys()))
-        clip_uids = [clip_uid for clip_uid in all_clip_uids if annotations_dict[clip_uid]["subset"] == args.split]
-        clip_uids = clip_uids[int(args.quarter_index * len(clip_uids) / 12) : int((args.quarter_index + 1) * len(clip_uids) / 12)]
+        clip_uids = [
+            clip_uid
+            for clip_uid in all_clip_uids
+            if annotations_dict[clip_uid]["subset"] == args.split
+        ]
+        clip_uids = clip_uids[
+            int(args.quarter_index * len(clip_uids) / 12) : int(
+                (args.quarter_index + 1) * len(clip_uids) / 12
+            )
+        ]
 
     for clip_uid in tqdm(clip_uids):
         input_video_file_path = os.path.join(args.input_folder_path, clip_uid + ".mp4")
         cap = cv2.VideoCapture(input_video_file_path)
 
-        results_list = []
+        caption_sbert_embeddings = []
+        encoder_outputs = []
 
-        file_name_counter = 0
-
-        current_input_start_frame_index = 0
+        current_embedding_index = 0
         while True:
-            if os.path.exists(os.path.join(args.output_folder_path, clip_uid, output_file_name_wo_ext + "_" + str(file_name_counter).zfill(6) + ".tsv")):
-                current_input_start_frame_index += 100 * frame_feature_extractor.window_center_frame_stride
-                results_list = []
-                file_name_counter += 1
-                continue
-
-            current_input_start_frame_index, current_input = frame_feature_extractor.get_new_input(current_input_start_frame_index=current_input_start_frame_index, cap=cap)
+            (
+                current_embedding_index,
+                current_input,
+            ) = frame_feature_extractor.get_new_input(
+                current_embedding_index=current_embedding_index, cap=cap
+            )
 
             if current_input is None:
                 break
 
-            current_result = frame_feature_extractor.predictor_function(**current_input)
-            results_list.append(current_result)
+            (
+                caption_sbert_embedding,
+                encoder_output,
+            ) = frame_feature_extractor.predictor_function(**current_input)
+
+            caption_sbert_embeddings.append(caption_sbert_embedding)
+            encoder_outputs.append(encoder_output)
+
             del current_input
             gc.collect()
 
-            if len(results_list) == 100:
-                FrameFeatureExtractor.save_results(
-                    clip_uid=clip_uid,
-                    results_list=results_list,
-                    output_folder_path=args.output_folder_path,
-                    column_names=column_names,
-                    output_file_name=output_file_name_wo_ext + "_" + str(file_name_counter).zfill(6) + ".tsv",
-                )
-                results_list = []
-                file_name_counter += 1
+        caption_sbert_embeddings = torch.tensor(np.vstack(caption_sbert_embeddings))
+        encoder_outputs = torch.tensor(np.vstack(encoder_outputs))
 
-        if len(results_list) > 0:
-            FrameFeatureExtractor.save_results(
-                clip_uid=clip_uid,
-                results_list=results_list,
-                output_folder_path=args.output_folder_path,
-                column_names=column_names,
-                output_file_name=output_file_name_wo_ext + "_" + str(file_name_counter).zfill(6) + ".tsv",
-            )
+        frame_feature_extractor.save_results(
+            caption_sbert_embeddings=caption_sbert_embeddings,
+            encoder_outputs=encoder_outputs,
+            output_folder_path=args.output_folder_path,
+            clip_uid=clip_uid,
+        )
 
         cap.release()
         gc.collect()

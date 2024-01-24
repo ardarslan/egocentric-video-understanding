@@ -36,11 +36,13 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
             device_map=device_map,
             torch_dtype=torch.float16,
         )
-        self.sbert_model = SentenceTransformer("sentence-transformers/all-distilroberta-v1", device="cuda:0") # cuda:0
+        self.sbert_model = SentenceTransformer(
+            "sentence-transformers/all-distilroberta-v1", device="cuda:0"
+        )  # cuda:0
         self.question = "Question: What is the person in this picture doing? Answer:"
 
     def predictor_function(
-        self, frame_index: int, frames: List[np.array] # (T, H, C, W), np.uint8, BGR
+        self, frame_index: int, frames: List[np.array]  # (T, H, C, W), np.uint8, BGR
     ):
         if len(frames) != 1:
             raise Exception("Number of frames should be 1.")
@@ -52,9 +54,15 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
             ).to(self.blip2_vqa_model.device)
             results = self.blip2_vqa_model.generate(**model_input)
             caption_token_ids = results.pop("caption_token_ids")
-            results["caption"] = self.processor.batch_decode(
-                caption_token_ids, skip_special_tokens=True
-            )[0].strip()
-            results["caption_sbert_embedding"] = self.sbert_model.encode([results["caption"]])[0].ravel().tolist()
-            results["frame_index"] = frame_index
-            return (results["frame_index"], self.question, results["caption"], results["caption_sbert_embedding"], results["encoder_output"])
+            # results["caption"] = self.processor.batch_decode(
+            #     caption_token_ids, skip_special_tokens=True
+            # )[0].strip()
+
+            caption_sbert_embedding = self.sbert_model.encode([results["caption"]])[
+                0
+            ].ravel()
+            encoder_output = results["encoder_output"]
+            return (
+                caption_sbert_embedding,
+                encoder_output,
+            )
