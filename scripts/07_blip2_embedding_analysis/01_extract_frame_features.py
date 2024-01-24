@@ -113,13 +113,13 @@ if __name__ == "__main__":
 
         caption_sbert_embeddings = torch.tensor(np.vstack(caption_sbert_embeddings))[
             :1024, :
-        ]
+        ].T
         assert (
-            caption_sbert_embeddings.shape[0] == 1024
+            caption_sbert_embeddings.shape[1] == 1024
         ), "caption_sbert_embeddings's shape is lower than 1024"
-        encoder_outputs = torch.tensor(np.vstack(encoder_outputs))[:1024, :]
+        encoder_outputs = torch.tensor(np.vstack(encoder_outputs))[:1024, :].T
         assert (
-            encoder_outputs.shape[0] == 1024
+            encoder_outputs.shape[1] == 1024
         ), "caption_sbert_embeddings's shape is lower than 1024"
 
         frame_feature_extractor.save_results(
