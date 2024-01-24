@@ -111,8 +111,16 @@ if __name__ == "__main__":
             del current_input
             gc.collect()
 
-        caption_sbert_embeddings = torch.tensor(np.vstack(caption_sbert_embeddings))
-        encoder_outputs = torch.tensor(np.vstack(encoder_outputs))
+        caption_sbert_embeddings = torch.tensor(np.vstack(caption_sbert_embeddings))[
+            :1024, :
+        ]
+        assert (
+            caption_sbert_embeddings.shape[0] == 1024
+        ), "caption_sbert_embeddings's shape is lower than 1024"
+        encoder_outputs = torch.tensor(np.vstack(encoder_outputs))[:1024, :]
+        assert (
+            encoder_outputs.shape[0] == 1024
+        ), "caption_sbert_embeddings's shape is lower than 1024"
 
         frame_feature_extractor.save_results(
             caption_sbert_embeddings=caption_sbert_embeddings,
