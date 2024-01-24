@@ -813,17 +813,7 @@ CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_na
 (NOT DONE)
 CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 11 --split train
 
-
-
-
-
-
-
-
-
-
-
-
+```
 
 
 (DONE)
