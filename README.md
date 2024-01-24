@@ -815,92 +815,6 @@ CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_na
 
 ```
 
-
-(DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 4 --split train
-
-(DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 5 --split train
-
-(DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 6 --split train
-
-(DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 7 --split train
-
-
-
-
-
-
-
-
-
-
-
-
-
-(DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 6 --split val
-
-(DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 7 --split val
-
-(DONE)
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 8 --split val
-
-
-
-(DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 9 --split val
-
-(DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 10 --split val
-
-(DONE)
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 11 --split val
-
-(DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 5 --split train
-
-(DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 4 --split train
-
-(DONE)
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 6 --split train
-
-(DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 0 --split test
-
-(DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 10 --split train
-
-(DONE)
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 11 --split train
-
-(DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 2 --split test
-
-(DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 4 --split test
-
-
-(RUNNING)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 5 --split test
-
-(RUNNING)
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 6 --split test
-
-(RUNNING)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 9 --split test
-
-
-blip2_vqa train done or running: 0,1,2,3,4,5,6,7,8,9,10,11
-blip2_vqa val done or running: 0,1,2,3,4,5,6,7,8,9,10,11
-blip2_vqa test done or running: 0,1,2,3,4,5,6,7,8,9,10,11
-
-```
-
 CVL
 
 ```
@@ -916,71 +830,42 @@ mamba activate mq_blip2_embedding_analysis
 
 cd $CODE/scripts/07_blip2_embedding_analysis
 
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "2" -s "val"
 
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "3" -s "val"
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 0 --split val
 
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "4" -s "val"
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 1 --split val
 
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "video_blip" -q "5" -s "val"
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 2 --split val
 
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 3 --split val
 
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 4 --split val
 
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "2" -s "val"
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 5 --split val
 
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "3" -s "val"
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 6 --split val
 
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "4" -s "val"
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 7 --split val
 
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "5" -s "val"
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 8 --split val
 
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "0" -s "train"
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 9 --split val
 
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "1" -s "train"
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 10 --split val
 
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "2" -s "train"
-
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "3" -s "train"
-
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "1" -s "test"
-
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "7" -s "train"
-
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "8" -s "train"
-
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "3" -s "test"
-
-(DONE)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "9" -s "train"
-
-
-(RUNNING)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "10" -s "test"
-
-(RUNNING)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "7" -s "test"
-
-(RUNNING)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "8" -s "test"
-
-(RUNNING)
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G 01_extract_frame_features.sh -f "blip2_vqa" -q "11" -s "test"
+(NOT DONE)
+CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 11 --split val
 
 ```
 
