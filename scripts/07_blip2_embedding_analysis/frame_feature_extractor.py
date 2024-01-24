@@ -93,11 +93,11 @@ class FrameFeatureExtractor(object):
         torch.save(
             caption_sbert_embeddings,
             os.path.join(
-                output_folder_path, "caption_sbert_embeddings", clip_uid + ".pickle"
+                output_folder_path, "caption_sbert_embeddings", clip_uid + ".pt"
             ),
         )
 
         torch.save(
             encoder_outputs,
-            os.path.join(output_folder_path, "encoder_outputs", clip_uid + ".pickle"),
+            os.path.join(output_folder_path, "encoder_outputs", clip_uid + ".pt"),
         )
