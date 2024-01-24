@@ -64,7 +64,6 @@ if __name__ == "__main__":
     os.makedirs(args.error_folder_path, exist_ok=True)
 
     frame_feature_extractor = get_frame_feature_extractor(args=args)
-    column_names = frame_feature_extractor.column_names
     output_file_name_wo_ext = get_output_file_name_wo_ext(args=args)
     error_file_name = get_error_file_name(args=args)
 

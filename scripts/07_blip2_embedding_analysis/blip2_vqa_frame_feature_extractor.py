@@ -92,10 +92,10 @@ class BLIP2VQAFrameFeatureExtractor(FrameFeatureExtractor):
                 return_tensors="pt",
             ).to(self.blip2_vqa_model.device)
             results = self.blip2_vqa_model.generate(**model_input)
-            # caption_token_ids = results.pop("caption_token_ids")
-            # results["caption"] = self.processor.batch_decode(
-            #     caption_token_ids, skip_special_tokens=True
-            # )[0].strip()
+            caption_token_ids = results.pop("caption_token_ids")
+            results["caption"] = self.processor.batch_decode(
+                caption_token_ids, skip_special_tokens=True
+            )[0].strip()
 
             caption_sbert_embedding = self.sbert_model.encode([results["caption"]])[
                 0
