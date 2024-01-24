@@ -82,6 +82,15 @@ if __name__ == "__main__":
         ]
 
     for clip_uid in tqdm(clip_uids):
+        if os.path.exists(
+            os.path.join(
+                args.output_folder_path, "caption_sbert_embeddings", clip_uid + ".pt"
+            )
+        ) and os.path.exists(
+            os.path.join(args.output_folder_path, "encoder_output", clip_uid + ".pt")
+        ):
+            continue
+
         input_video_file_path = os.path.join(args.input_folder_path, clip_uid + ".mp4")
         cap = cv2.VideoCapture(input_video_file_path)
 
