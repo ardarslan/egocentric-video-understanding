@@ -831,41 +831,41 @@ mamba activate mq_blip2_embedding_analysis
 cd $CODE/scripts/07_blip2_embedding_analysis
 
 
-(NOT DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 0 --split val
+(RUNNING)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 0 -s val
+
+(RUNNING)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 1 -s val
+
+(RUNNING)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 2 -s val
+
+(RUNNING)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 3 -s val
 
 (NOT DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 1 --split val
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 4 -s val
 
 (NOT DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 2 --split val
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 5 -s val
 
 (NOT DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 3 --split val
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 6 -s val
 
 (NOT DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 4 --split val
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 7 -s val
 
 (NOT DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 5 --split val
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 8 -s val
 
 (NOT DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 6 --split val
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 9 -s val
 
 (NOT DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 7 --split val
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 10 -s val
 
 (NOT DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 8 --split val
-
-(NOT DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 9 --split val
-
-(NOT DONE)
-CUDA_VISIBLE_DEVICES=0,4 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 10 --split val
-
-(NOT DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 11 --split val
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 11 -s val
 
 ```
 
