@@ -831,28 +831,28 @@ mamba activate mq_blip2_embedding_analysis
 cd $CODE/scripts/07_blip2_embedding_analysis
 
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 0 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 1 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 2 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 3 -s val
 
-(NOT DONE)
+(RUNNING)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 4 -s val
 
-(NOT DONE)
+(RUNNING)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 5 -s val
 
-(NOT DONE)
+(RUNNING)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 6 -s val
 
-(NOT DONE)
+(RUNNING)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 7 -s val
 
 (NOT DONE)
