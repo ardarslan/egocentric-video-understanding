@@ -87,7 +87,7 @@ if __name__ == "__main__":
                 args.output_folder_path, "caption_sbert_embeddings", clip_uid + ".pt"
             )
         ) and os.path.exists(
-            os.path.join(args.output_folder_path, "encoder_output", clip_uid + ".pt")
+            os.path.join(args.output_folder_path, "encoder_outputs", clip_uid + ".pt")
         ):
             continue
 
