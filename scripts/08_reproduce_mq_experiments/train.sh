@@ -1,3 +1,3 @@
-#!/bin/bash
+#!/bin/sh
 
-python train.py
+python3 train.py

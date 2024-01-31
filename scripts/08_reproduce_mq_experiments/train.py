@@ -32,6 +32,7 @@ from libs.utils import (
     valid_one_epoch,
 )
 import logging
+from test import valid_performance
 
 ################################################################################
 
@@ -55,6 +56,7 @@ def main(args):
         for video_feat_folder_name in video_feat_folder_names
     ]
 
+    # prep for output folder (based on time stamp)
     if not os.path.exists(cfg["output_folder"]):
         os.mkdir(cfg["output_folder"])
     cfg_filename = os.path.basename(args.config).replace(".yaml", "")
@@ -309,12 +311,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Train a point-based transformer for action localization"
     )
-    parser.add_argument(
-        "--config",
-        default="./configs/proposed_features_v5.yaml",
-        type=str,
-        help="path to a config file",
-    )
+    parser.add_argument("--config", default="configs/proposed_features_v1.yaml", type=str)
     parser.add_argument(
         "-p",
         "--print-freq",
@@ -339,7 +336,7 @@ if __name__ == "__main__":
         metavar="PATH",
         help="path to a checkpoint (default: none)",
     )
-    parser.add_argument("--combine_train", type=bool, default=True)
+    parser.add_argument("--combine_train", action="store_true")
     args = parser.parse_args()
 
     main(args)

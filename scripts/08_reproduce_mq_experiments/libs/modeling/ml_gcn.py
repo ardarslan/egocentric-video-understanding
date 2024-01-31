@@ -5,7 +5,6 @@ import math
 from transformers import BertModel, BertTokenizer
 import numpy as np
 
-
 class GraphConvolution(nn.Module):
     """
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
@@ -19,11 +18,11 @@ class GraphConvolution(nn.Module):
         if bias:
             self.bias = Parameter(torch.Tensor(1, 1, out_features))
         else:
-            self.register_parameter("bias", None)
+            self.register_parameter('bias', None)
         self.reset_parameters()
 
     def reset_parameters(self):
-        stdv = 1.0 / math.sqrt(self.weight.size(1))
+        stdv = 1. / math.sqrt(self.weight.size(1))
         self.weight.data.uniform_(-stdv, stdv)
         if self.bias is not None:
             self.bias.data.uniform_(-stdv, stdv)
@@ -37,22 +36,15 @@ class GraphConvolution(nn.Module):
             return output
 
     def __repr__(self):
-        return (
-            self.__class__.__name__
-            + " ("
-            + str(self.in_features)
-            + " -> "
-            + str(self.out_features)
-            + ")"
-        )
-
+        return self.__class__.__name__ + ' (' \
+               + str(self.in_features) + ' -> ' \
+               + str(self.out_features) + ')'
 
 def gen_A(num_classes, t, adj_file):
     import pickle
-
-    result = pickle.load(open(adj_file, "rb"))
-    _adj = result["adj"]
-    _nums = result["nums"]
+    result = pickle.load(open(adj_file, 'rb'))
+    _adj = result['adj']
+    _nums = result['nums']
     _nums = _nums[:, np.newaxis]
     # _adj = _adj / _nums
     # import ipdb;ipdb.set_trace()
@@ -62,18 +54,14 @@ def gen_A(num_classes, t, adj_file):
     _adj = _adj + np.identity(num_classes, np.int)
     return _adj
 
-
 def gen_adj(A):
     D = torch.pow(A.sum(1).float(), -0.5)
     D = torch.diag(D)
     adj = torch.matmul(torch.matmul(A, D).t(), D)
     return adj
 
-
 def move_to_cuda(obj):
-    return {key: obj[key].cuda() for key in obj}
-
-
+    return {key:obj[key].cuda() for key in obj}
 class LabelGCN(nn.Module):
     def __init__(self, num_classes, in_channel=300, t=0, adj_file=None):
         super(LabelGCN, self).__init__()
@@ -81,6 +69,7 @@ class LabelGCN(nn.Module):
         # self.pooling = nn.MaxPool2d(14, 14)
         # self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         # self.lang_model = BertModel.from_pretrained('bert-base-uncased', output_hidden_states=True)
+
 
         self.gc1 = GraphConvolution(in_channel, 1024)
         self.gc2 = GraphConvolution(1024, 2048)
@@ -119,7 +108,7 @@ class LabelTransformer(nn.Module):
     def forward(self, word_embedding):
         word_embedding = torch.from_numpy(word_embedding).cuda()
         word_embedding = word_embedding.float()
-        x = word_embedding.unsqueeze(1)  # [#c, 1, d]
+        x = word_embedding.unsqueeze(1)     # [#c, 1, d]
         out = self.trm_encoder(x)
-        out = out.squeeze(1)  # [#c, d]
-        return out.transpose(0, 1)
+        out = out.squeeze(1)                # [#c, d]
+        return out.transpose(0,1)

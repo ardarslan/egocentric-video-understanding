@@ -32,7 +32,7 @@ cd ../..
     *   In our submission, we finally use [InternVideo](https://arxiv.org/abs/2211.09529), [EgoVLP](https://github.com/showlab/EgoVLP), Slowfast and Omnivore features, where only combination of InternVideo and EgoVLP can achieve good results.
 
 * Ego4D Video Features Preparation
-    * By using `python convert_annotation.py` to convert official annotation to the processed one. And put it into `data/ego4d`.
+    * By using `python convert_annotation.py` to convert official annotation to the processed one. And put it into `data/ego4d`. 
     * Create config file such as `baseline.yaml` corrsponding to training. And put it into `configs/`
     * In `baseline.yaml`, you can specify annotation json_file, video features, training split and validation split, e.t.c.
 
@@ -52,8 +52,8 @@ cd ../..
 
 ## Submission (to Leaderboard test-set server)
 * `python infer.py --config configs/baseline.yaml --ckpt your_checkpoint` to finally generate `submission.json` of detection results.
-* Then `python merge_submission.py` to generate `asl_original_predictions.json` which is results of both detection and retrieval.
-* Upload `asl_original_predictions.json` to the [Ego4D MQ test-server](https://eval.ai/web/challenges/challenge-page/1626/leaderboard)
+* Then `python merge_submission.py` to generate `submission_final.json` which is results of both detection and retrieval.
+* Upload `submission_final.json` to the [Ego4D MQ test-server](https://eval.ai/web/challenges/challenge-page/1626/leaderboard)
 
 
 ## Acknowledgement
@@ -69,11 +69,19 @@ Our model are based on [Actionformer](https://github.com/happyharrycn/actionform
   year={2023}
 }
 
-@article{shao2023action,
-  title={Action Sensitivity Learning for Temporal Action Localization},
-  author={Shao, Jiayi and Wang, Xiaohan and Quan, Ruijie and Zheng, Junjun and Yang, Jiang and Yang, Yi},
-  journal={arXiv preprint arXiv:2305.15701},
-  year={2023}
+@InProceedings{Shao_2023_ICCV,
+    author    = {Shao, Jiayi and Wang, Xiaohan and Quan, Ruijie and Zheng, Junjun and Yang, Jiang and Yang, Yi},
+    title     = {Action Sensitivity Learning for Temporal Action Localization},
+    booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+    month     = {October},
+    year      = {2023},
+    pages     = {13457-13469}
 }
 
 ```
+
+
+
+
+
+

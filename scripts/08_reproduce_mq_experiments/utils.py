@@ -6,7 +6,7 @@ from sklearn.metrics import precision_recall_fscore_support, average_precision_s
 import numpy as np
 
 
-def softmax(x, ax):
+def softmax(x,ax):
     """Compute softmax values for each sets of scores in x."""
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum(axis=ax)
@@ -16,22 +16,16 @@ def conditional_t(y_pred, y_gt, y_gt_mask, thresh=0.5, avg=True):
     n_samples, n_classes = y_pred.shape
     assert y_pred.shape == y_gt.shape
 
-    prec, rec = (
-        np.ones((n_classes, n_classes)) * -1.0,
-        np.ones((n_classes, n_classes)) * -1.0,
-    )
+    prec, rec = np.ones((n_classes, n_classes)) * -1.0, np.ones((n_classes, n_classes)) * -1.0
     maps = np.ones((n_classes, n_classes)) * -1.0
     n_occurs = np.zeros((n_classes, n_classes))
 
     for c_j in range(n_classes):
-        y_gt_sub = y_gt[
-            y_gt_mask[:, c_j] == 1
-        ]  # contains the subset of samples where c_j exists
+        y_gt_sub = y_gt[y_gt_mask[:, c_j] == 1]  # contains the subset of samples where c_j exists
         y_pred_sub = y_pred[y_gt_mask[:, c_j] == 1]
 
-        pr_j, re_j, f1_j, n_j = precision_recall_fscore_support(
-            y_gt_sub, (y_pred_sub >= thresh).astype(np.uint8), average=None
-        )
+        pr_j, re_j, f1_j, n_j = precision_recall_fscore_support(y_gt_sub, (y_pred_sub >= thresh).astype(np.uint8),
+                                                                average=None)
         map_j = average_precision_score(y_gt_sub, y_pred_sub, average=None)
 
         for c_i in range(n_classes):
@@ -53,12 +47,7 @@ def conditional_t(y_pred, y_gt, y_gt_mask, thresh=0.5, avg=True):
                 maps[c_i, c_j] = map_j[c_i]
 
     if avg:
-        return (
-            np.mean(prec[prec != -1]),
-            np.mean(rec[rec != -1]),
-            n_occurs,
-            np.mean(maps[maps != -1]),
-        )
+        return np.mean(prec[prec != -1]), np.mean(rec[rec != -1]), n_occurs, np.mean(maps[maps != -1])
     else:
         return prec, rec, n_occurs, maps
 
@@ -76,9 +65,7 @@ def standard_metric(y_pred, y_gt, thresh=0.5):
 
     y_gt = np.concatenate(y_gt, 0)
 
-    pr, re, _, n = precision_recall_fscore_support(
-        y_gt, (y_pred >= thresh).astype(np.uint8), average=None
-    )
+    pr, re, _, n = precision_recall_fscore_support(y_gt, (y_pred >= thresh).astype(np.uint8), average=None)
     maps = average_precision_score(y_gt, y_pred, average=None)
 
     return pr, re, n, maps
@@ -87,7 +74,7 @@ def standard_metric(y_pred, y_gt, thresh=0.5):
 def conditional_metric(y_pred, y_gt, t=0, thresh=0.5, avg=True):
     """
     The official implementation of the action-conditional metrics.
-
+    
     y_pred is a list of un-thresholded predictions [(T1, C), (T2, C), ...]. Each element of the list is a different video, where the shape is (Time, #Classes).
     y_gt is a list of binary ground-truth labels [(T1, C), (T2, C), ...]. Each element of the list is a different video, where the shape is (Time, #Classes).
     t is an integer. If =0, measures in-timestep coocurrence. If >0, it measures conditional score of succeeding
@@ -112,6 +99,7 @@ def conditional_metric(y_pred, y_gt, t=0, thresh=0.5, avg=True):
     else:
         y_gt_mask = []
         for vid_y_gt in y_gt:
+
             if t > 0:  # looks at previous t time-steps
                 cumsum = np.cumsum(vid_y_gt, 0)
                 rolled = np.roll(cumsum, t, 0)
@@ -124,7 +112,7 @@ def conditional_metric(y_pred, y_gt, t=0, thresh=0.5, avg=True):
                 cumsum = np.cumsum(vid_y_gt_flipped, 0)
                 rolled = np.roll(cumsum, t, 0)
 
-                rolled[: 0 - t] = 0
+                rolled[:0 - t] = 0
                 n_in_last_t = cumsum - rolled
 
                 n_in_last_t = np.flip(n_in_last_t, 0)
@@ -144,14 +132,12 @@ def conditional_metric(y_pred, y_gt, t=0, thresh=0.5, avg=True):
         return conditional_t(y_pred, y_gt, y_gt_mask, thresh, avg)
 
 
-def resize(
-    input,
-    size=None,
-    scale_factor=None,
-    mode="nearest",
-    align_corners=None,
-    warning=True,
-):
+def resize(input,
+           size=None,
+           scale_factor=None,
+           mode='nearest',
+           align_corners=None,
+           warning=True):
     if isinstance(size, torch.Size):
         size = tuple(int(x) for x in size)
     return F.interpolate(input, size, scale_factor, mode)
@@ -164,10 +150,10 @@ def sampled_25(probs, labels, mask):
     valid_t = int(sum(mask))
     p1_ = probs[:valid_t, :]
     l1_ = labels[:valid_t, :]
-    sc = valid_t / 25.0
-    p1 = p1_[1 :: int(sc), :][:25, :]
-    l1 = l1_[1 :: int(sc), :][:25, :]
-    return p1, l1
+    sc = valid_t / 25.
+    p1 = p1_[1::int(sc), :][:25, :]
+    l1 = l1_[1::int(sc), :][:25, :]
+    return p1, l1 
 
 
 def sampled_25_inference(probs, labels, apm):
@@ -175,77 +161,77 @@ def sampled_25_inference(probs, labels, apm):
     Approximate version of the charades evaluation function
     """
     valid_t = probs.shape[0]
-    if valid_t > 25:
+    if valid_t>25:
         p1_ = probs[:valid_t, :]
         l1_ = labels[:valid_t, :]
-        sc = valid_t / 25.0
-        p1 = p1_[1 :: int(sc), :][:25, :]
-        l1 = l1_[1 :: int(sc), :][:25, :]
+        sc = valid_t / 25.
+        p1 = p1_[1::int(sc), :][:25, :]
+        l1 = l1_[1::int(sc), :][:25, :]
         apm.add(p1, l1)
 
 
 def mask_probs(probs, mask):
     valid_t = int(sum(mask))
     p1_ = probs[:valid_t, :]
-    return p1_
+    return p1_ 
 
 
 def focal_loss(preds, targets):
-    """
-    Action focal loss.
-    """
-    targets = targets.transpose(1, 2)
-    pos_inds = targets.eq(1).float()
-    neg_inds = targets.lt(1).float()
+  ''' 
+  Action focal loss.
+  '''
+  targets=targets.transpose(1,2)
+  pos_inds = targets.eq(1).float()
+  neg_inds = targets.lt(1).float()
 
-    neg_weights = torch.pow(1 - targets, 4)
+  neg_weights = torch.pow(1 - targets, 4)
 
-    loss = 0
-    for pred in preds:
-        pred = torch.clamp(torch.sigmoid(pred), min=1e-4, max=1 - 1e-4)
-        pos_loss = torch.log(pred) * torch.pow(1 - pred, 2) * pos_inds
-        neg_loss = torch.log(1 - pred) * torch.pow(pred, 2) * neg_weights * neg_inds
+  loss = 0
+  for pred in preds:
+    pred = torch.clamp(torch.sigmoid(pred), min=1e-4, max=1 - 1e-4)
+    pos_loss = torch.log(pred) * torch.pow(1 - pred, 2) * pos_inds
+    neg_loss = torch.log(1 - pred) * torch.pow(pred, 2) * neg_weights * neg_inds
 
-        num_pos = pos_inds.float().sum()
-        pos_loss = pos_loss.sum()
-        neg_loss = neg_loss.sum()
+    num_pos = pos_inds.float().sum()
+    pos_loss = pos_loss.sum()
+    neg_loss = neg_loss.sum()
 
-        if num_pos == 0:
-            loss = loss - neg_loss
-        else:
-            loss = loss - (pos_loss + neg_loss) / num_pos
-    return loss / len(preds)
+    if num_pos == 0:
+      loss = loss - neg_loss
+    else:
+      loss = loss - (pos_loss + neg_loss) / num_pos
+  return loss / len(preds)
 
 
 def gaussian1D(ss, sigma=1):
-    m = (ss - 1.0) / 2.0
-    x = np.ogrid[-m : m + 1]
-    h = np.exp(-(x * x) / (sigma * sigma))
-    h[h < np.finfo(h.dtype).eps * h.max()] = 0
-    return h
+  m = (ss - 1.) / 2.
+  x = np.ogrid[-m:m + 1]
+  h = np.exp(-(x * x ) / (sigma * sigma))
+  h[h < np.finfo(h.dtype).eps * h.max()] = 0
+  return h
 
 
 def generate_gaussian(heatmap, center, radius, tau=3, k=1):
-    diameter = 2 * radius + 1
-    gaussian = gaussian1D(diameter, sigma=diameter / tau)
-    t = int(center)
-    T = heatmap.shape[0]
-    left, right = min(t, radius), min(T - t, radius + 1)
-    masked_heatmap = heatmap[t - left : t + right]
-    masked_gaussian = gaussian[radius - left : radius + right]
-    if min(masked_gaussian.shape) > 0 and min(masked_heatmap.shape) > 0:
-        np.maximum(masked_heatmap, masked_gaussian * k, out=masked_heatmap)
-    return heatmap
+  diameter = (2 * radius + 1)
+  gaussian = gaussian1D(diameter, sigma=diameter/tau)
+  t = int(center)
+  T = heatmap.shape[0]
+  left, right = min(t, radius), min(T - t, radius + 1)
+  masked_heatmap = heatmap[t - left:t + right]
+  masked_gaussian = gaussian[radius - left:radius + right]
+  if min(masked_gaussian.shape) > 0 and min(masked_heatmap.shape) > 0:
+    np.maximum(masked_heatmap, masked_gaussian * k, out=masked_heatmap)
+  return heatmap
 
 
 def video_to_tensor(pic):
-    return torch.from_numpy(pic.transpose([3, 0, 1, 2]))
+    return torch.from_numpy(pic.transpose([3,0,1,2]))
 
 
 def str2bool(v):
-    if v.lower() in ("yes", "true", "t", "y", "1"):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
-    elif v.lower() in ("no", "false", "f", "n", "0"):
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
         return False
     else:
-        raise argparse.ArgumentTypeError("Boolean value expected.")
+        raise argparse.ArgumentTypeError('Boolean value expected.')
