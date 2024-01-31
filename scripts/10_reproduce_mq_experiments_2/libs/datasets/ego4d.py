@@ -231,15 +231,16 @@ class Ego4dDataset(Dataset):
             all_video_features.append(feats)
         all_video_features = torch.cat(all_video_features, dim=0)
 
-        all_frame_features = []
-        for frame_feat_name in self.frame_feat_names:
-            current_frame_feature = torch.load(
-                os.path.join(
-                    frame_feat_name, self.file_prefix + clip_name + self.file_ext
+        if len(self.frame_feat_names) > 0:
+            all_frame_features = []
+            for frame_feat_name in self.frame_feat_names:
+                current_frame_feature = torch.load(
+                    os.path.join(
+                        frame_feat_name, self.file_prefix + clip_name + self.file_ext
+                    )
                 )
-            )
-            all_frame_features.append(current_frame_feature)
-        all_frame_features = torch.cat(all_frame_features, dim=0)
+                all_frame_features.append(current_frame_feature)
+            all_frame_features = torch.cat(all_frame_features, dim=0)
 
         # convert time stamp (in second) into temporal feature grids
         # ok to have small negative values here
@@ -271,7 +272,10 @@ class Ego4dDataset(Dataset):
         else:
             segments, labels = None, None
 
-        feats = torch.vstack((all_video_features, all_frame_features))
+        if len(self.frame_feat_names) > 0:
+            feats = torch.vstack((all_video_features, all_frame_features))
+        else:
+            feats = all_video_features
 
         # return a data dict
         data_dict = {
