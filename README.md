@@ -665,77 +665,65 @@ cd $CODE/scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_featu
 ./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
 
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
 
 
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
 
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 
-
-
-
-<!--
-(RUNNING)
-./05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
-
-(RUNNING)
-./05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
-
-(RUNNING)
-./05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val -->
 
 
 
@@ -782,36 +770,25 @@ CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_na
 (DONE)
 CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 1 --split train
 
-(RUNNING)
+(DONE)
 CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 2 --split train
 
-(RUNNING)
+(DONE)
 CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 3 --split train
 
 
-(NOT DONE)
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 4 --split train
+(DONE)
+CUDA_VISIBLE_DEVICES=3,7 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 4 --split train
 
-(NOT DONE)
+(DONE)
 CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 5 --split train
 
-(NOT DONE)
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 6 --split train
+(DONE)
+CUDA_VISIBLE_DEVICES=4,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 6 --split train
 
-(NOT DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 7 --split train
+(DONE)
+CUDA_VISIBLE_DEVICES=4,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 7 --split train
 
-(NOT DONE)
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 8 --split train
-
-(NOT DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 9 --split train
-
-(NOT DONE)
-CUDA_VISIBLE_DEVICES=2,6 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 10 --split train
-
-(NOT DONE)
-CUDA_VISIBLE_DEVICES=1,5 python3 01_extract_frame_features.py --frame_feature_name blip2_vqa --quarter_index 11 --split train
 
 ```
 
@@ -843,29 +820,80 @@ sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_fr
 (DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 3 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 4 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 5 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 6 -s val
 
-(RUNNING)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 7 -s val
 
-(NOT DONE)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 8 -s val
 
-(NOT DONE)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 9 -s val
 
-(NOT DONE)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 10 -s val
 
-(NOT DONE)
+(DONE)
 sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 11 -s val
+
+
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 0 -s test
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 1 -s test
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 2 -s test
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 3 -s test
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 4 -s test
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 5 -s test
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 6 -s test
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 7 -s test
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 8 -s test
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 9 -s test
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 10 -s test
+
+(DONE)
+sbatch --time 720 --cpus-per-task 2 --gres=gpu:2 --mem-per-cpu 50G 01_extract_frame_features.sh -f blip2_vqa -q 11 -s test
+
+(DONE)
+sbatch --time 720 --gres=gpu:2 --cpus-per-task=2 --mem 50G  01_extract_frame_features.sh -f blip2_vqa -q 8 -s train
+
+(DONE)
+sbatch --time 720 --gres=gpu:2 --cpus-per-task=2 --mem 50G 01_extract_frame_features.sh -f blip2_vqa -q 9 -s train
+
+(DONE)
+sbatch --time 720 --gres=gpu:2 --cpus-per-task=2 --mem 50G 01_extract_frame_features.sh -f blip2_vqa -q 10 -s train
+
+(DONE)
+sbatch --time 720 --gres=gpu:2 --cpus-per-task=2 --mem 50G 01_extract_frame_features.sh -f blip2_vqa -q 11 -s train
+
 
 ```
 
