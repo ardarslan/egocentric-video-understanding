@@ -20,7 +20,7 @@ class Ego4dDataset(Dataset):
         self,
         is_training,  # if in training mode
         split,  # split, a tuple/list allowing concat of subsets
-        video_feat_folder,  # folder for features
+        video_feat_names,  # folder for features
         frame_feat_names,
         json_file,  # json file for annotations
         feat_stride,  # temporal stride of the feats
@@ -40,7 +40,7 @@ class Ego4dDataset(Dataset):
         assert os.path.exists(json_file)
         assert isinstance(split, tuple) or isinstance(split, list)
         assert crop_ratio == None or len(crop_ratio) == 2
-        self.video_feat_folder = video_feat_folder
+        self.video_feat_names = video_feat_names
         self.frame_feat_names = frame_feat_names
         # self.use_hdf5 = '.hdf5' in feat_folder
         if file_prefix is not None:
@@ -172,64 +172,72 @@ class Ego4dDataset(Dataset):
         clip_name = clip_info["id"]
         segmentation_labels = clip_info["segmentation_labels"]
 
-        all_video_features = []
-        for f_t in self.video_feat_folder:
-            filename = os.path.join(f_t, self.file_prefix + clip_name + self.file_ext)
-            feats = torch.load(filename)
-            # case 1: variable length features for training
-            if self.feat_stride > 0 and (not self.force_upsampling):
-                # var length features
-                feat_stride, num_frames = self.feat_stride, self.num_frames
-                # only apply down sampling here
-                if self.downsample_rate > 1:
-                    feats = feats[:: self.downsample_rate, :]
-                    feat_stride = self.feat_stride * self.downsample_rate
-            # case 2: variable length features for input, yet resized for training
-            elif (
-                self.feat_stride > 0 and self.force_upsampling
-            ):  # activitynet 会upsample到fixed length
-                feat_stride = (
-                    float((feats.shape[0] - 1) * self.feat_stride + self.num_frames)
-                    / self.max_seq_len
+        if len(self.video_feat_names) > 0:
+            all_video_features = []
+            for f_t in self.video_feat_names:
+                filename = os.path.join(
+                    f_t, self.file_prefix + clip_name + self.file_ext
                 )
-                # center the features
-                num_frames = feat_stride
-            # case 3: fixed length features for input
-            else:
-                # deal with fixed length feature, recompute feat_stride, num_frames
-                seq_len = feats.shape[0]
-                assert seq_len <= self.max_seq_len
-                if self.force_upsampling:
-                    # reset to max_seq_len
-                    seq_len = self.max_seq_len
-                feat_stride = clip_info["duration"] * clip_info["fps"] / seq_len
-                # center the features
-                num_frames = feat_stride
-
-            # T x C -> C x T
-            feats = feats.permute(1, 0)
-
-            # resize the features if needed
-            if (feats.shape[-1] != self.max_seq_len) and self.force_upsampling:
-                resize_feats = F.interpolate(
-                    feats.unsqueeze(0),
-                    size=self.max_seq_len,
-                    mode="linear",
-                    align_corners=False,
-                )
-                segmentation_labels = (
-                    F.interpolate(
-                        segmentation_labels.unsqueeze(0).unsqueeze(0),
-                        size=(self.max_seq_len, self.num_classes),
-                        mode="nearest",
+                feats = torch.load(filename)
+                # case 1: variable length features for training
+                if self.feat_stride > 0 and (not self.force_upsampling):
+                    # var length features
+                    feat_stride, num_frames = self.feat_stride, self.num_frames
+                    # only apply down sampling here
+                    if self.downsample_rate > 1:
+                        feats = feats[:: self.downsample_rate, :]
+                        feat_stride = self.feat_stride * self.downsample_rate
+                # case 2: variable length features for input, yet resized for training
+                elif (
+                    self.feat_stride > 0 and self.force_upsampling
+                ):  # activitynet 会upsample到fixed length
+                    feat_stride = (
+                        float((feats.shape[0] - 1) * self.feat_stride + self.num_frames)
+                        / self.max_seq_len
                     )
-                    .squeeze(0)
-                    .squeeze(0)
-                )
-                feats = resize_feats.squeeze(0)  # [d,192]       upsample到一个fixed length
+                    # center the features
+                    num_frames = feat_stride
+                # case 3: fixed length features for input
+                else:
+                    # deal with fixed length feature, recompute feat_stride, num_frames
+                    seq_len = feats.shape[0]
+                    assert seq_len <= self.max_seq_len
+                    if self.force_upsampling:
+                        # reset to max_seq_len
+                        seq_len = self.max_seq_len
+                    feat_stride = clip_info["duration"] * clip_info["fps"] / seq_len
+                    # center the features
+                    num_frames = feat_stride
 
-            all_video_features.append(feats)
-        all_video_features = torch.cat(all_video_features, dim=0)
+                # T x C -> C x T
+                feats = feats.permute(1, 0)
+
+                # resize the features if needed
+                if (feats.shape[-1] != self.max_seq_len) and self.force_upsampling:
+                    resize_feats = F.interpolate(
+                        feats.unsqueeze(0),
+                        size=self.max_seq_len,
+                        mode="linear",
+                        align_corners=False,
+                    )
+                    segmentation_labels = (
+                        F.interpolate(
+                            segmentation_labels.unsqueeze(0).unsqueeze(0),
+                            size=(self.max_seq_len, self.num_classes),
+                            mode="nearest",
+                        )
+                        .squeeze(0)
+                        .squeeze(0)
+                    )
+                    feats = resize_feats.squeeze(
+                        0
+                    )  # [d,192]       upsample到一个fixed length
+
+                all_video_features.append(feats)
+            all_video_features = torch.cat(all_video_features, dim=0)
+            T = all_video_features.shape[1]
+        else:
+            T = 1024
 
         if len(self.frame_feat_names) > 0:
             all_frame_features = []
@@ -253,7 +261,7 @@ class Ego4dDataset(Dataset):
             # for activity net, we have a few videos with a bunch of missing frames
             # here is a quick fix for training
             if self.is_training:
-                vid_len = all_video_features.shape[1] + 0.5 * num_frames / feat_stride
+                vid_len = T + 0.5 * num_frames / feat_stride
                 valid_seg_list, valid_label_list = [], []
                 for seg, label in zip(segments, labels):
                     if seg[0] >= vid_len:
@@ -272,10 +280,16 @@ class Ego4dDataset(Dataset):
         else:
             segments, labels = None, None
 
-        if len(self.frame_feat_names) > 0:
+        if len(self.frame_feat_names) > 0 and len(self.video_feat_names) > 0:
             feats = torch.vstack((all_video_features, all_frame_features))
-        else:
+        elif len(self.frame_feat_names) > 0 and len(self.video_feat_names) == 0:
+            feats = all_frame_features
+        elif len(self.video_feat_names) > 0 and len(self.frame_feat_names) == 0:
             feats = all_video_features
+        else:
+            raise Exception(
+                "At least one of self.frame_feat_names or self.video_feat_names should have a size larger than 0."
+            )
 
         # return a data dict
         data_dict = {

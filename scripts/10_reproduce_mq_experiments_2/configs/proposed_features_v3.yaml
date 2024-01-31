@@ -4,7 +4,7 @@ val_split: ['val']
 init_rand_seed: 0
 dataset: {
   json_file: /home/aarslan/mq/scripts/08_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json,
-  video_feat_folder: [],
+  video_feat_names: [],
   frame_feat_names: ["encoder_outputs", "caption_sbert_embeddings"],
   file_prefix: ,
   file_ext: .pt,
