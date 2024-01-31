@@ -50,8 +50,8 @@ def main(args):
     # pprint(cfg)
 
     cfg["output_folder"] = os.path.join(os.environ["SCRATCH"], cfg["output_folder"])
-    video_feat_folder_names = cfg["dataset"]["video_feat_folder"]
-    cfg["dataset"]["video_feat_folder"] = [
+    video_feat_folder_names = cfg["dataset"]["video_feat_names"]
+    cfg["dataset"]["video_feat_names"] = [
         os.path.join(os.environ["SCRATCH"], video_feat_folder_name)
         for video_feat_folder_name in video_feat_folder_names
     ]
