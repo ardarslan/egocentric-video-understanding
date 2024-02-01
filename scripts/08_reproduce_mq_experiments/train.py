@@ -217,69 +217,21 @@ def main(args):
         #     )
 
         # ============= infer each epoch ==========
-        if not args.combine_train:
-            if epoch < max_epochs // 3:
-                # if epoch < 0:
-                continue
-            logger.info(f"start validate map&recall of epoch {epoch}")
-            with torch.no_grad():
-                cur_model = copy.deepcopy(model)
-                cur_model.load_state_dict(model_ema.module.state_dict())
-                mAP, avg_mAP, tiou_thresholds, eval_result = valid_one_epoch(
-                    val_loader,
-                    cur_model,
-                    epoch,
-                    evaluator=evaluator,
-                    tb_writer=None,
-                    logger=logger,
-                    dataset_name=cfg["dataset_name"],
-                    print_freq=100,
-                )
-
-            if avg_mAP > best_avgmap:
-                best_avgmap = avg_mAP
-                best_epoch_of_avgmap = epoch
-                best_recall = eval_result
-                best_map = mAP
-                save_states = {
-                    "epoch": epoch,
-                    "state_dict": model.state_dict(),
-                    "scheduler": scheduler.state_dict(),
-                    "optimizer": optimizer.state_dict(),
-                }
-                if model_ema is not None:
-                    save_states["state_dict_ema"] = model_ema.module.state_dict()
-                save_checkpoint(
-                    save_states,
-                    file_folder=ckpt_folder,
-                    file_name="best_performance.pth.tar".format(epoch),
-                )
-            if cfg["dataset_name"] == "ego4d":
-                tious = [0.1, 0.2, 0.3, 0.4, 0.5]
-                recalls = [1, 5]
-                recall1x5 = best_recall[4, 0]
-                logger.info(
-                    f"Current Best Recall 1@0.5 is : [epoch {best_epoch_of_avgmap}], {recall1x5 * 100: .2f} %"
-                )
-            logger.info(
-                f"Current Best Average Map is  : [epoch {best_epoch_of_avgmap}], {best_avgmap * 100: .2f} %"
+        if epoch > max_epochs - 5:
+            # if epoch == 11:
+            save_states = {
+                "epoch": epoch,
+                "state_dict": model.state_dict(),
+                "scheduler": scheduler.state_dict(),
+                "optimizer": optimizer.state_dict(),
+            }
+            if model_ema is not None:
+                save_states["state_dict_ema"] = model_ema.module.state_dict()
+            save_checkpoint(
+                save_states,
+                file_folder=ckpt_folder,
+                file_name="epoch_{:03d}.pth.tar".format(epoch),
             )
-        else:
-            if epoch > max_epochs - 5:
-                # if epoch == 11:
-                save_states = {
-                    "epoch": epoch,
-                    "state_dict": model.state_dict(),
-                    "scheduler": scheduler.state_dict(),
-                    "optimizer": optimizer.state_dict(),
-                }
-                if model_ema is not None:
-                    save_states["state_dict_ema"] = model_ema.module.state_dict()
-                save_checkpoint(
-                    save_states,
-                    file_folder=ckpt_folder,
-                    file_name="epoch_{:03d}.pth.tar".format(epoch),
-                )
         # ============= infer each epoch ==========
 
     # save ckpt once in a while
