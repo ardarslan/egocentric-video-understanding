@@ -234,7 +234,7 @@ class Ego4dDataset(Dataset):
                     )  # [d,192]       upsample到一个fixed length
 
                 all_video_features.append(feats)
-            all_video_features = torch.cat(all_video_features, dim=0)
+            all_video_features = torch.cat(all_video_features, dim=0).float()
             T = all_video_features.shape[1]
         else:
             feats = torch.load(
@@ -264,7 +264,7 @@ class Ego4dDataset(Dataset):
                     )
                 )
                 all_frame_features.append(current_frame_feature)
-            all_frame_features = torch.cat(all_frame_features, dim=0)
+            all_frame_features = torch.cat(all_frame_features, dim=0).float()
 
         # convert time stamp (in second) into temporal feature grids
         # ok to have small negative values here

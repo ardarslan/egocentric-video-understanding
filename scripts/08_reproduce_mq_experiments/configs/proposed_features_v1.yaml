@@ -25,9 +25,9 @@ model: {
   # 1024 -> 512 -> 256  -> 128 -> 64 -> 32 -> 16 -> 8 -> 4 -> 2
   # shrink the model for reduced input feature channels
   n_head: 16,
-  embd_dim: [256],
-  fpn_dim: 256,
-  head_dim: 256,
+  embd_dim: [128],
+  fpn_dim: 128,
+  head_dim: 128,
   use_abs_pe: True,
 }
 opt: {
