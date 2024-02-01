@@ -237,11 +237,13 @@ class Ego4dDataset(Dataset):
             all_video_features = torch.cat(all_video_features, dim=0)
             T = all_video_features.shape[1]
         else:
-            filename = os.path.join(
-                "ego4d_data/v2/internvideo",
-                self.file_prefix + clip_name + self.file_ext,
+            feats = torch.load(
+                os.path.join(
+                    os.environ["SCRATCH"],
+                    "ego4d_data/v2/internvideo",
+                    self.file_prefix + clip_name + self.file_ext,
+                )
             )
-            feats = torch.load(filename)
             feat_stride = (
                 float((feats.shape[0] - 1) * self.feat_stride + self.num_frames)
                 / self.max_seq_len
