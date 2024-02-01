@@ -50,10 +50,10 @@ def main(args):
     # pprint(cfg)
 
     cfg["output_folder"] = os.path.join(os.environ["SCRATCH"], cfg["output_folder"])
-    video_feat_folder_names = cfg["dataset"]["video_feat_folder"]
-    cfg["dataset"]["video_feat_folder"] = [
-        os.path.join(os.environ["SCRATCH"], video_feat_folder_name)
-        for video_feat_folder_name in video_feat_folder_names
+    video_feat_names_names = cfg["dataset"]["video_feat_names"]
+    cfg["dataset"]["video_feat_names"] = [
+        os.path.join(os.environ["SCRATCH"], video_feat_names_name)
+        for video_feat_names_name in video_feat_names_names
     ]
 
     # prep for output folder (based on time stamp)
@@ -311,7 +311,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Train a point-based transformer for action localization"
     )
-    parser.add_argument("--config", default="configs/proposed_features_v1.yaml", type=str)
+    parser.add_argument(
+        "--config", default="configs/proposed_features_v1.yaml", type=str
+    )
     parser.add_argument(
         "-p",
         "--print-freq",
