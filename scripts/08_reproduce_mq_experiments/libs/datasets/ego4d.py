@@ -244,7 +244,10 @@ class Ego4dDataset(Dataset):
             for frame_feat_name in self.frame_feat_names:
                 current_frame_feature = torch.load(
                     os.path.join(
-                        frame_feat_name, self.file_prefix + clip_name + self.file_ext
+                        os.environ["SCRATCH"],
+                        "ego4d_data/v2/frame_features",
+                        frame_feat_name,
+                        self.file_prefix + clip_name + self.file_ext,
                     )
                 )
                 all_frame_features.append(current_frame_feature)
