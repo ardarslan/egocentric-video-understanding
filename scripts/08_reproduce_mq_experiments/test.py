@@ -150,6 +150,7 @@ def main(args):
 
     if args.topk > 0:
         cfg["model"]["test_cfg"]["max_seg_num"] = args.topk
+
     pprint(cfg)
 
     # prep for output folder (based on time stamp)

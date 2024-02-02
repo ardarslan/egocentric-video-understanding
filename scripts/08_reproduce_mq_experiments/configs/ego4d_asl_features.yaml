@@ -4,10 +4,10 @@ val_split: ['val']
 init_rand_seed: 0
 dataset: {
   json_file: /home/aarslan/mq/scripts/08_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json,
-  video_feat_names: ['ego4d_data/v2/egovlp_egonce',
-                     'ego4d_data/v2/slowfast_clip',
-                     'ego4d_data/v2/omnivore_clip',
-                     'ego4d_data/v2/internvideo'],
+  video_feat_names: ['egovlp_egonce',
+                     'slowfast_clip',
+                     'omnivore_clip',
+                     'internvideo'],
   frame_feat_names: [],
   file_prefix: ,
   file_ext: .pt,
