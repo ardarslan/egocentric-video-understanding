@@ -50,11 +50,11 @@ def main(args):
     # pprint(cfg)
 
     cfg["output_folder"] = os.path.join(os.environ["SCRATCH"], cfg["output_folder"])
-    video_feat_names_names = cfg["dataset"]["video_feat_names"]
-    cfg["dataset"]["video_feat_names"] = [
-        os.path.join(os.environ["SCRATCH"], video_feat_names_name)
-        for video_feat_names_name in video_feat_names_names
-    ]
+    # video_feat_names_names = cfg["dataset"]["video_feat_names"]
+    # cfg["dataset"]["video_feat_names"] = [
+    #     os.path.join(os.environ["SCRATCH"], video_feat_names_name)
+    #     for video_feat_names_name in video_feat_names_names
+    # ]
 
     # prep for output folder (based on time stamp)
     if not os.path.exists(cfg["output_folder"]):

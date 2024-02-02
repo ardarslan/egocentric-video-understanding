@@ -176,7 +176,10 @@ class Ego4dDataset(Dataset):
             all_video_features = []
             for f_t in self.video_feat_names:
                 filename = os.path.join(
-                    f_t, self.file_prefix + clip_name + self.file_ext
+                    os.environ["SCRATCH"],
+                    "ego4d_data/v2",
+                    f_t,
+                    self.file_prefix + clip_name + self.file_ext,
                 )
                 feats = torch.load(filename)
                 # case 1: variable length features for training
