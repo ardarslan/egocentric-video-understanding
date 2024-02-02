@@ -256,7 +256,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--checkpoint",
         type=str,
-        default=os.path.join(os.environ["SCRATCH"], "ego4d_data/v2/"),
+        default=os.path.join(
+            os.environ["SCRATCH"], "checkpoints/ego4d_asl_features/epoch_011.pth.tar"
+        ),
         help="path to a checkpoint",
     )
     parser.add_argument(
