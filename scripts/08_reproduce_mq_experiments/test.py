@@ -110,7 +110,7 @@ if __name__ == "__main__":
         "--config",
         default=os.path.join(
             os.environ["CODE"],
-            "scripts/08_reproduce_mq_experiments/configs/ego4d_asl_features.yaml",
+            "scripts/08_reproduce_mq_experiments/configs/proposed_features_v5.yaml",
         ),
         type=str,
         metavar="DIR",
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         "--ckpt",
         default=os.path.join(
             os.environ["SCRATCH"],
-            "train_val_checkpoints/ego4d_asl_features/epoch_011.pth.tar",
+            "train_val_checkpoints/proposed_features_v5/epoch_011.pth.tar",
         ),
         type=str,
         metavar="DIR",

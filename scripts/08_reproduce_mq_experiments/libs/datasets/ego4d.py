@@ -13,7 +13,6 @@ from ..utils import remove_duplicate_annotations
 import pickle as pkl
 from transformers import CLIPTokenizer
 
-
 @register_dataset("ego4d")
 class Ego4dDataset(Dataset):
     def __init__(
