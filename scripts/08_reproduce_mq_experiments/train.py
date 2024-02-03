@@ -32,7 +32,7 @@ from libs.utils import (
     valid_one_epoch,
 )
 import logging
-from test import valid_performance
+from val import valid_performance
 
 ################################################################################
 
