@@ -110,7 +110,7 @@ if __name__ == "__main__":
         "--config",
         default=os.path.join(
             os.environ["CODE"],
-            "scripts/08_reproduce_mq_experiments/configs/proposed_features_v2.yaml",
+            "scripts/08_reproduce_mq_experiments/configs/proposed_features_v5.yaml",
         ),
         type=str,
         metavar="DIR",
