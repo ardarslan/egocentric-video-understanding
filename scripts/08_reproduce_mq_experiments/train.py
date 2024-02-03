@@ -264,7 +264,7 @@ if __name__ == "__main__":
         description="Train a point-based transformer for action localization"
     )
     parser.add_argument(
-        "--config", default="configs/proposed_features_v1.yaml", type=str
+        "--config", default="configs/proposed_features_v6.yaml", type=str
     )
     parser.add_argument(
         "-p",
