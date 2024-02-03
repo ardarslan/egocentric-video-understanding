@@ -915,7 +915,9 @@ mamba activate mq_model
 
 cd $CODE/scripts/08_reproduce_mq_experiments
 
-sbatch --time 7200 --gres=gpu:1 --cpus-per-task=5 --mem 60G train.sh
+sbatch --time 2880 --gres=gpu:1 --cpus-per-task=5 --mem 60G train.sh
+
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G val.sh ()
 
 sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G test.sh
 
