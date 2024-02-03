@@ -1,6 +1,6 @@
 dataset_name: ego4d
-train_split: ['train']
-val_split: ['val']
+train_split: ['train', 'val']
+val_split: ['test']
 init_rand_seed: 0
 dataset: {
   json_file: /home/aarslan/mq/scripts/08_reproduce_mq_experiments/data/ego4d/ego4d_clip_annotations_v3.json,
@@ -65,4 +65,4 @@ test_cfg: {
   nms_sigma: 0.99,
   duration_thresh: 0.01,
 }
-output_folder: checkpoints
+output_folder: train_val_checkpoints
