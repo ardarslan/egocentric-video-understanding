@@ -13,8 +13,6 @@ from ..utils import remove_duplicate_annotations
 import pickle as pkl
 from transformers import CLIPTokenizer
 
-import pdb
-
 @register_dataset("ego4d")
 class Ego4dDataset(Dataset):
     def __init__(
@@ -169,7 +167,6 @@ class Ego4dDataset(Dataset):
         # directly return a (truncated) data point (so it is very fast!)
         # auto batching will be disabled in the subsequent dataloader
         # instead the model will need to decide how to batch / preporcess the data
-        pdb.set_trace()
         clip_info = self.data_list[idx]
         clip_name = clip_info["id"]
         segmentation_labels = clip_info["segmentation_labels"]
