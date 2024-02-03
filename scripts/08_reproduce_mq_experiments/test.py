@@ -106,8 +106,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Train a point-based transformer for action localization"
     )
-    parser.add_argument("--config", default=os.path.join(os.environ["CODE"], "scripts/08_reproduce_mq_experiments/configs/ego4d_asl_features.yaml"), type=str, metavar="DIR", help="path to a config file")
-    parser.add_argument("--ckpt", default=os.path.join(os.environ["SCRATCH"], "train_val_checkpoints/ego4d_asl_features/epoch_011.pth.tar"), type=str, metavar="DIR", help="path to a checkpoint")
+    parser.add_argument("--config", default=os.path.join(os.environ["CODE"], "scripts/08_reproduce_mq_experiments/configs/proposed_features_v5.yaml"), type=str, metavar="DIR", help="path to a config file")
+    parser.add_argument("--ckpt", default=os.path.join(os.environ["SCRATCH"], "train_val_checkpoints/proposed_features_v5/epoch_011.pth.tar"), type=str, metavar="DIR", help="path to a checkpoint")
     parser.add_argument(
         "-t",
         "--topk",
