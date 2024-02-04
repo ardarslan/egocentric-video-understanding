@@ -19,7 +19,7 @@ if __name__ == "__main__":
         type=str,
         default=os.path.join(
             os.environ["CODE"],
-            "scripts/08_reproduce_mq_experiments/proposed_features_v5.json",
+            "scripts/08_reproduce_mq_experiments/proposed_features_v5_submission_final.json",
         ),
     )
     parser.add_argument(

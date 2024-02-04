@@ -296,6 +296,7 @@ if __name__ == "__main__":
         "--predictions_folder_name",
         type=str,
         choices=[
+            "ego4d_asl_features_max_per_label_predictions",
             "asl_ego4d_features_max_per_label_predictions",
             "proposed_features_v2_max_per_label_predictions",
             "proposed_features_v5_max_per_label_predictions",
