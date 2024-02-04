@@ -299,8 +299,12 @@ if __name__ == "__main__":
         default="ego4d_asl_features_max_per_label_predictions",
         choices=[
             "ego4d_asl_features_max_per_label_predictions",
+            "proposed_features_v1_max_per_label_predictions",
             "proposed_features_v2_max_per_label_predictions",
+            "proposed_features_v3_max_per_label_predictions",
+            "proposed_features_v4_max_per_label_predictions",
             "proposed_features_v5_max_per_label_predictions",
+            "proposed_features_v6_max_per_label_predictions",
             "blip2_dictionary_matching_max_per_label_predictions",
             "blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions",
             "blip2_sbert_matching_paraphrase-MiniLM-L6-v2_max_per_label_predictions",
