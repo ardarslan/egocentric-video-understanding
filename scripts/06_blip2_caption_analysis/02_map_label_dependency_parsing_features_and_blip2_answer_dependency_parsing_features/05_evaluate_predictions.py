@@ -1,5 +1,4 @@
 import os
-import pdb
 import json
 import pickle
 import argparse
@@ -498,8 +497,6 @@ if __name__ == "__main__":
                     frame_id
                 ] = current_one_hot_vector
 
-    pdb.set_trace()
-
     ground_truth_one_hot_vectors_list_w_background = []
     ground_truth_one_hot_vectors_list_wo_background = []
     question_index_predicted_one_hot_vectors_list_mapping_w_background = dict()
@@ -547,8 +544,6 @@ if __name__ == "__main__":
                         question_index
                     ][:-1]
                 )
-
-    pdb.set_trace()
 
     os.makedirs(args.output_folder_path, exist_ok=True)
     for (
