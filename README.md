@@ -665,92 +665,63 @@ cd $CODE/scripts/06_blip2_caption_analysis/02_map_label_dependency_parsing_featu
 ./04_max_per_question_per_label_postprocessing.sh -p blip2_sbert_matching_all-distilroberta-v1_predictions
 
 
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p ego4d_asl_features_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p ego4d_asl_features_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
 
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p ego4d_asl_features_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
 
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p ego4d_asl_features_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
 
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p ego4d_asl_features_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
 
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
-
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
-
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p ego4d_asl_features_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 
 
-(DONE)
+(RUNNING)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
-(DONE)
+(RUNNING)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
 
-(DONE)
+(RUNNING)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
 
-
-(DONE)
+(RUNNING)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
 
-(DONE)
+(RUNNING)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
 
-(DONE)
+(RUNNING)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 
 
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
 
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
 
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
 
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
 
-(DONE)
-sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p asl_ego4d_features_max_per_label_predictions -t no_temporal_aggregation -h max -s val
-
-
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 
 
-./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
-
-./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
-
-./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
-
-./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
-
-./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
-
-./05_evaluate_predictions.sh -p blip2_dictionary_matching_max_per_label_predictions -t no_temporal_aggregation -h max -s val
-
-
-./05_evaluate_predictions.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
-
-./05_evaluate_predictions.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
-
-./05_evaluate_predictions.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
-
-./05_evaluate_predictions.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
-
-./05_evaluate_predictions.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
-
-./05_evaluate_predictions.sh -p blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 ```
 
 # 07 - BLIP2 Embedding Analysis
@@ -920,7 +891,6 @@ sbatch --time 2880 --gres=gpu:1 --cpus-per-task=5 --mem 60G train.sh
 sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G val.sh (To infer results on the validation split)
 
 sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G test.sh (To infer results on the test split)
-
 python merge_submission.py
 ```
 
@@ -935,45 +905,3 @@ scp aarslan@robustus.ee.ethz.ch:/home/aarslan/mq/scripts/08_reproduce_mq_experim
 Login to https://eval.ai/auth/login
 
 Submit asl_original_predictions.json to https://eval.ai/web/challenges/challenge-page/1626/leaderboard
-
-# 08_02 - Reproduce our results
-
-(NOT IMPLEMENTED YET)
-
-# 08_03 - Evaluate on validation split
-
-export CODE=/home/aarslan/mq
-
-export SLURM_CONF=/home/sladmcvl/slurm/slurm.conf
-
-export SCRATCH=/srv/beegfs-benderdata/scratch/aarslan_data/data
-
-export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
-
-mamba activate mq_model
-
-cd $CODE/scripts/08_reproduce_mq_experiments
-
-chmod +x val.sh
-
-sbatch --time 720 --gres=gpu:2 --cpus-per-task 5 --mem-per-cpu 200G val.sh
-
-
-# Postprocess Data
-
-mamba activate mq_model
-
-
-
-sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 0
-sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 1
-sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 2
-sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 3
-sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 4
-sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 5
-sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 6
-sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 7
-sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 8
-sbatch --time 720 --cpus-per-task 1 --gres=gpu:0 --mem-per-cpu 50G postprocess_data.sh -q 9
-
-sbatch --time 720 --cpus-per-task 4 --gres=gpu:0 --mem-per-cpu 50G incremental_pca.sh

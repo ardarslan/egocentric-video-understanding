@@ -1,4 +1,5 @@
 import os
+import pdb
 import json
 import pickle
 import argparse
@@ -291,19 +292,19 @@ def no_temporal_aggregation_select_labels(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--split", type=str, required=True, choices=["train", "val"])
+    parser.add_argument("--split", type=str, default="train", choices=["train", "val"])
     parser.add_argument(
         "--predictions_folder_name",
         type=str,
+        default="ego4d_asl_features_max_per_label_predictions",
         choices=[
-            "asl_ego4d_features_max_per_label_predictions",
+            "ego4d_asl_features_max_per_label_predictions",
             "proposed_features_v2_max_per_label_predictions",
             "proposed_features_v5_max_per_label_predictions",
             "blip2_dictionary_matching_max_per_label_predictions",
             "blip2_sbert_matching_all-distilroberta-v1_max_per_label_predictions",
             "blip2_sbert_matching_paraphrase-MiniLM-L6-v2_max_per_label_predictions",
         ],
-        required=True,
     )
     parser.add_argument(
         "--temporal_aggregation",
@@ -311,9 +312,9 @@ if __name__ == "__main__":
         choices=[
             "no_temporal_aggregation",
         ],
-        required=True,
+        default="no_temporal_aggregation",
     )
-    parser.add_argument("--threshold", required=True)
+    parser.add_argument("--threshold", default=0.2, type=float)
     parser.add_argument(
         "--label_verb_noun_tool_mapping_file_path",
         type=str,
@@ -540,6 +541,8 @@ if __name__ == "__main__":
                         question_index
                     ][:-1]
                 )
+
+    pdb.set_trace()
 
     os.makedirs(args.output_folder_path, exist_ok=True)
     for (
