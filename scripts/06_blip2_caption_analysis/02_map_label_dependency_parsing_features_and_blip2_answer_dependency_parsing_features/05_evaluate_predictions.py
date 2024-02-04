@@ -292,7 +292,7 @@ def no_temporal_aggregation_select_labels(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--split", type=str, default="train", choices=["train", "val"])
+    parser.add_argument("--split", type=str, default="val", choices=["train", "val"])
     parser.add_argument(
         "--predictions_folder_name",
         type=str,
@@ -363,7 +363,7 @@ if __name__ == "__main__":
 
     with open(args.label_verb_noun_tool_mapping_file_path, "r") as reader:
         label_verb_noun_tool_mapping = json.load(reader)
-    distinct_ground_truth_labels = sorted(list(label_verb_noun_tool_mapping.keys()))
+        distinct_ground_truth_labels = sorted(list(label_verb_noun_tool_mapping.keys()))
 
     prediction_one_hot_vectors = []
     ground_truth_one_hot_vectors = []
