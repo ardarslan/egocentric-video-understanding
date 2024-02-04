@@ -494,6 +494,8 @@ if __name__ == "__main__":
                     frame_id
                 ] = current_one_hot_vector
 
+    pdb.set_trace()
+
     ground_truth_one_hot_vectors_list_w_background = []
     ground_truth_one_hot_vectors_list_wo_background = []
     question_index_predicted_one_hot_vectors_list_mapping_w_background = dict()
