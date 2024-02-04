@@ -15,3 +15,4 @@ scripts/08_reproduce_mq_experiments/proposed_features_v5.json
 scripts/04_extract_frame_features/gsam/gsam
 scripts/06_analyze_frame_features/assets
 nbs*
+scripts/08_reproduce_mq_experiments/*.json
