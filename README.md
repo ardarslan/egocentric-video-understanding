@@ -684,6 +684,28 @@ sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictio
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p ego4d_asl_features_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 
 
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v1_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v1_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v1_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v1_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v1_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v1_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+
+
+
+
 (RUNNING)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
@@ -703,6 +725,56 @@ sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictio
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v2_max_per_label_predictions -t no_temporal_aggregation -h max -s val
 
 
+
+
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v3_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v3_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v3_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v3_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v3_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v3_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+
+
+
+
+
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v4_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v4_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v4_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v4_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v4_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v4_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+
+
+
+
+
+
+
 (RUNNING)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
 
@@ -720,6 +792,31 @@ sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictio
 
 (RUNNING)
 sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v5_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+
+
+
+
+
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v6_max_per_label_predictions -t no_temporal_aggregation -h 0.2 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v6_max_per_label_predictions -t no_temporal_aggregation -h 0.4 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v6_max_per_label_predictions -t no_temporal_aggregation -h 0.6 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v6_max_per_label_predictions -t no_temporal_aggregation -h 0.8 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v6_max_per_label_predictions -t no_temporal_aggregation -h 1.0 -s val
+
+(RUNNING)
+sbatch --time 720 --gres=gpu:0 --cpus-per-task=4 --mem 50G 05_evaluate_predictions.sh -p proposed_features_v6_max_per_label_predictions -t no_temporal_aggregation -h max -s val
+
+
 
 
 ```
@@ -888,9 +985,9 @@ cd $CODE/scripts/08_reproduce_mq_experiments
 
 sbatch --time 2880 --gres=gpu:1 --cpus-per-task=5 --mem 60G train.sh
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G val.sh (To infer results on the validation split)
+sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 60G val.sh (To infer results on the validation split)
 
-sbatch --time 720 --gres=gpu:1 --cpus-per-task=5 --mem 50G test.sh (To infer results on the test split)
+sbatch --time 720 --gres=gpu:4 --cpus-per-task=5 --mem 50G test.sh (To infer results on the test split)
 python merge_submission.py
 ```
 

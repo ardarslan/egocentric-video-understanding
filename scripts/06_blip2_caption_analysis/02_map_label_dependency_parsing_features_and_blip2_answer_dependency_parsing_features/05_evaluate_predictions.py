@@ -317,7 +317,7 @@ if __name__ == "__main__":
         ],
         default="no_temporal_aggregation",
     )
-    parser.add_argument("--threshold", default=0.2, type=float)
+    parser.add_argument("--threshold", default=0.2)
     parser.add_argument(
         "--label_verb_noun_tool_mapping_file_path",
         type=str,
